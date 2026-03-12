@@ -665,3 +665,634 @@
     }
     .big-btn:hover { opacity: .9; }
     .
+      weightRecords: [],
+      gender: "남성",
+      height: "",
+      targetWeight: ""
+    };
+
+    // ── KST Time Helper ────────────────────────────────
+    function getLocalISOString() {
+      const offset = new Date().getTimezoneOffset() * 60000;
+      return new Date(Date.now() - offset).toISOString().slice(0, 16);
+    }
+
+    // ── Auth State ─────────────────────────────────────
+    getRedirectResult(auth).catch(console.error);
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      if (user) {
+        document.getElementById("login-screen").style.display = "none";
+        document.getElementById("app-screen").style.display = "flex";
+        document.getElementById("user-name").textContent = user.displayName || user.email;
+        document.getElementById("user-avatar").src = user.photoURL || "";
+        await loadData();
+        renderAll();
+      } else {
+        document.getElementById("login-screen").style.display = "flex";
+        document.getElementById("app-screen").style.display = "none";
+      }
+    });
+
+    window.doLogin = async () => {
+      try {
+        try { await signInWithPopup(auth, provider); } catch(e) { await signInWithRedirect(auth, provider); }
+      } catch(e) { console.error(e); }
+    };
+
+    window.doLogout = async () => {
+      await signOut(auth);
+    };
+
+    // ── Firestore ──────────────────────────────────────
+    async function loadData() {
+      if (!currentUser) return;
+      setSaveStatus("loading");
+      try {
+        const snap = await getDoc(doc(db, "users", currentUser.uid));
+        if (snap.exists()) {
+          appData = { ...appData, ...snap.data() };
+        }
+        setSaveStatus("saved");
+      } catch(e) {
+        setSaveStatus("error");
+      }
+    }
+
+    async function saveData() {
+      if (!currentUser) return;
+      setSaveStatus("saving");
+      try {
+        await setDoc(doc(db, "users", currentUser.uid), appData);
+        setSaveStatus("saved");
+      } catch(e) {
+        setSaveStatus("error");
+      }
+    }
+
+    function scheduleSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveData, 800);
+    }
+
+    function setSaveStatus(status) {
+      const el = document.getElementById("save-status");
+      if (!el) return;
+      const map = {
+        saved:   { text: "☁️ 저장됨",    bg: "#0f2a1a", color: "#4ade80", border: "#166534" },
+        saving:  { text: "⏳ 저장중...", bg: "#2a200a", color: "#facc15", border: "#713f12" },
+        error:   { text: "❌ 오류",      bg: "#2a0a0a", color: "#f87171", border: "#7f1d1d" },
+        loading: { text: "🔄 불러오는 중", bg: "#0a1a2a", color: "#60a5fa", border: "#1e3a5f" },
+      };
+      const s = map[status] || map.saved;
+      el.textContent = s.text;
+      el.style.background = s.bg;
+      el.style.color = s.color;
+      el.style.borderColor = s.border;
+    }
+
+    // ── App Logic ──────────────────────────────────────
+    const DRUG_CONFIG = {
+      "터제파타이드": { halfLife: 5,  color: "#60a5fa", emoji: "🔵", short: "터제" },
+      "레타트루타이드": { halfLife: 6, color: "#f87171", emoji: "🔴", short: "레타" },
+      "세마글루타이드": { halfLife: 7, color: "#4ade80", emoji: "🟢", short: "세마" },
+    };
+
+    function calcRemaining(drug) {
+      const cfg = DRUG_CONFIG[drug];
+      const now = Date.now();
+      let rem = 0;
+      (appData.records || []).filter(r => r.drug === drug).forEach(r => {
+        const hrs = (now - r.time) / 3600000;
+        if (hrs >= 0) rem += r.dose * Math.pow(0.5, hrs / (cfg.halfLife * 24));
+      });
+      return rem;
+    }
+
+    // ── Add Peptide Record ─────────────────────────────
+    window.submitAddRecord = () => {
+      const drug = document.getElementById("add-drug").value;
+      const dose = parseFloat(document.getElementById("add-dose").value);
+      const timeVal = document.getElementById("add-time").value;
+      if (!dose || !timeVal) return;
+      appData.records = appData.records || [];
+      appData.records.push({ id: Date.now(), drug, dose, time: new Date(timeVal).getTime() });
+      scheduleSave();
+      document.getElementById("add-modal").style.display = "none";
+      renderAll();
+    };
+
+    window.deleteRecord = (id) => {
+      appData.records = (appData.records || []).filter(r => r.id !== id);
+      scheduleSave();
+      renderAll();
+    };
+
+    // ── Add Weight Record ──────────────────────────────
+    window.submitAddWeight = () => {
+      const weight = parseFloat(document.getElementById("add-weight").value);
+      const timeVal = document.getElementById("add-weight-time").value;
+      if (!weight || !timeVal) return;
+      appData.weightRecords = appData.weightRecords || [];
+      appData.weightRecords.push({ id: Date.now(), weight, time: new Date(timeVal).getTime() });
+      scheduleSave();
+      document.getElementById("weight-modal").style.display = "none";
+      renderAll();
+    };
+
+    window.deleteWeightRecord = (id) => {
+      appData.weightRecords = (appData.weightRecords || []).filter(r => r.id !== id);
+      scheduleSave();
+      renderAll();
+    };
+
+    // ── Render ─────────────────────────────────────────
+    function renderAll() {
+      renderRemainingCards();
+      renderPeptideList();
+      renderPeptideGraph();
+      renderWeightStats();
+      renderWeightList();
+      renderWeightGraph();
+    }
+
+    function renderRemainingCards() {
+      const container = document.getElementById("remaining-cards");
+      if (!container) return;
+      container.innerHTML = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
+        const rem = calcRemaining(drug);
+        return `
+          <div class="card" style="border-color:${cfg.color}22; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">${cfg.emoji} ${drug}</div>
+              <div style="font-size:24px;font-weight:700;color:${cfg.color};font-family:'JetBrains Mono',monospace">${rem.toFixed(3)}<span style="font-size:13px;font-weight:400;margin-left:4px">mg</span></div>
+              <div style="font-size:11px;color:#4a5568;margin-top:4px">반감기 ${cfg.halfLife}일</div>
+            </div>
+            <button onclick="openEditRemModal('${drug}')" style="background:${cfg.color}18; color:${cfg.color}; border:1px solid ${cfg.color}44; padding:6px 14px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:0.2s;">수정</button>
+          </div>`;
+      }).join("");
+    }
+
+    function renderPeptideList() {
+      const filter = document.getElementById("peptide-filter")?.value || "전체";
+      const container = document.getElementById("peptide-list");
+      if (!container) return;
+      let recs = (appData.records || []).filter(r => {
+        if (filter === "전체") return true;
+        return DRUG_CONFIG[r.drug]?.short === filter;
+      }).sort((a,b) => b.time - a.time);
+
+      if (!recs.length) {
+        container.innerHTML = `<div style="text-align:center;color:#4a5568;padding:32px 0;font-size:14px">기록이 없습니다</div>`;
+        return;
+      }
+      container.innerHTML = recs.map(r => {
+        const cfg = DRUG_CONFIG[r.drug] || {};
+        const d = new Date(r.time).toLocaleString("ko-KR");
+        
+        // 수동 보정 기록인 경우 스타일 다르게 표시
+        if (r.isCalibration) {
+          return `
+            <div class="record-row" style="border-color:#facc1544; background:#1a1c0d;">
+              <div>
+                <div style="font-size:12px;color:#facc15;margin-bottom:3px">⚙️ 농도 수동 보정 (${r.drug})</div>
+                <div style="font-size:17px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace">${r.dose > 0 ? '+' : ''}${r.dose} mg</div>
+                <div style="font-size:11px;color:#4a5568;margin-top:2px">${d}</div>
+              </div>
+              <button class="del-btn" onclick="deleteRecord(${r.id})">삭제</button>
+            </div>`;
+        }
+
+        return `
+          <div class="record-row" style="border-color:${cfg.color}22">
+            <div>
+              <div style="font-size:12px;color:${cfg.color};margin-bottom:3px">${cfg.emoji||""} ${r.drug}</div>
+              <div style="font-size:17px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace">${r.dose} mg</div>
+              <div style="font-size:11px;color:#4a5568;margin-top:2px">${d}</div>
+            </div>
+            <button class="del-btn" onclick="deleteRecord(${r.id})">삭제</button>
+          </div>`;
+      }).join("");
+    }
+
+    // ── Peptide Graph (체내 농도) ──────────────────────
+    function renderPeptideGraph() {
+      const canvas = document.getElementById("peptide-chart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width = canvas.offsetWidth;
+      const H = canvas.height = 220;
+      ctx.clearRect(0, 0, W, H);
+
+      const records = appData.records || [];
+      if (!records.length) {
+        ctx.fillStyle = "#4a5568";
+        ctx.font = "14px 'Noto Sans KR'";
+        ctx.textAlign = "center";
+        ctx.fillText("기록이 없습니다", W/2, H/2);
+        return;
+      }
+
+      const now = Date.now();
+      const minTime = Math.min(...records.map(r => r.time)) - 86400000;
+      const maxTime = now + 7 * 86400000;
+      const totalMs = maxTime - minTime;
+
+      const PAD = { l: 45, r: 15, t: 15, b: 35 };
+      const gW = W - PAD.l - PAD.r;
+      const gH = H - PAD.t - PAD.b;
+
+      const STEPS = 200;
+      let globalMax = 0;
+
+      const curves = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
+        const drugRecs = records.filter(r => r.drug === drug);
+        if (!drugRecs.length) return null;
+        const points = [];
+        for (let i = 0; i <= STEPS; i++) {
+          const t = minTime + (i / STEPS) * totalMs;
+          let val = 0;
+          drugRecs.forEach(r => {
+            const hrs = (t - r.time) / 3600000;
+            if (hrs >= 0) val += r.dose * Math.pow(0.5, hrs / (cfg.halfLife * 24));
+          });
+          points.push({ t, val });
+          if (val > globalMax) globalMax = val;
+        }
+        return { drug, cfg, points };
+      }).filter(Boolean);
+
+      if (globalMax === 0) return;
+
+      ctx.strokeStyle = "#1f2937";
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = PAD.t + gH - (i / 4) * gH;
+        ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
+        ctx.fillStyle = "#4a5568";
+        ctx.font = "10px 'JetBrains Mono'";
+        ctx.textAlign = "right";
+        ctx.fillText((globalMax * i / 4).toFixed(2), PAD.l - 4, y + 4);
+      }
+
+      ctx.fillStyle = "#4a5568";
+      ctx.font = "10px 'Noto Sans KR'";
+      ctx.textAlign = "center";
+      for (let i = 0; i <= 4; i++) {
+        const t = minTime + (i / 4) * totalMs;
+        const x = PAD.l + (i / 4) * gW;
+        const d = new Date(t);
+        ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, x, H - 5);
+      }
+
+      curves.forEach(({ cfg, points }) => {
+        ctx.beginPath();
+        ctx.strokeStyle = cfg.color;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = cfg.color;
+        ctx.shadowBlur = 8;
+        points.forEach((p, i) => {
+          const x = PAD.l + ((p.t - minTime) / totalMs) * gW;
+          const y = PAD.t + gH - (p.val / globalMax) * gH;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        const lastP = points[points.length - 1];
+        const lastX = PAD.l + ((lastP.t - minTime) / totalMs) * gW;
+        ctx.lineTo(lastX, PAD.t + gH);
+        ctx.lineTo(PAD.l, PAD.t + gH);
+        ctx.closePath();
+        ctx.fillStyle = cfg.color + "18";
+        ctx.fill();
+      });
+
+      const nowX = PAD.l + ((now - minTime) / totalMs) * gW;
+      ctx.strokeStyle = "#ffffff44";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(nowX, PAD.t); ctx.lineTo(nowX, PAD.t + gH); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#ffffff66";
+      ctx.font = "10px 'Noto Sans KR'";
+      ctx.textAlign = "center";
+      ctx.fillText("현재", nowX, PAD.t + 10);
+
+      let lx = PAD.l;
+      curves.forEach(({ drug, cfg }) => {
+        ctx.fillStyle = cfg.color;
+        ctx.fillRect(lx, PAD.t, 12, 3);
+        ctx.fillStyle = "#9ca3af";
+        ctx.font = "10px 'Noto Sans KR'";
+        ctx.textAlign = "left";
+        ctx.fillText(cfg.short, lx + 16, PAD.t + 4);
+        lx += 60;
+      });
+    }
+
+    // ── Weight Graph ───────────────────────────────────
+    function renderWeightGraph() {
+      const canvas = document.getElementById("weight-chart");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width = canvas.offsetWidth;
+      const H = canvas.height = 200;
+      ctx.clearRect(0, 0, W, H);
+
+      const recs = (appData.weightRecords || []).sort((a, b) => a.time - b.time);
+      if (recs.length < 2) {
+        ctx.fillStyle = "#4a5568";
+        ctx.font = "14px 'Noto Sans KR'";
+        ctx.textAlign = "center";
+        ctx.fillText(recs.length === 0 ? "기록이 없습니다" : "2개 이상 기록 필요", W/2, H/2);
+        return;
+      }
+
+      const PAD = { l: 45, r: 15, t: 20, b: 35 };
+      const gW = W - PAD.l - PAD.r;
+      const gH = H - PAD.t - PAD.b;
+
+      const minT = recs[0].time, maxT = recs[recs.length-1].time;
+      const weights = recs.map(r => r.weight);
+      const minW = Math.min(...weights) - 1;
+      const maxW = Math.max(...weights) + 1;
+      const rangeW = maxW - minW || 1;
+      const rangeT = maxT - minT || 1;
+
+      ctx.strokeStyle = "#1f2937"; ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = PAD.t + (i / 4) * gH;
+        ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
+        ctx.fillStyle = "#4a5568";
+        ctx.font = "10px 'JetBrains Mono'";
+        ctx.textAlign = "right";
+        ctx.fillText((maxW - (i / 4) * rangeW).toFixed(1), PAD.l - 4, y + 4);
+      }
+
+      ctx.fillStyle = "#4a5568"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
+      [0, 0.25, 0.5, 0.75, 1].forEach(f => {
+        const t = minT + f * rangeT;
+        const x = PAD.l + f * gW;
+        const d = new Date(t);
+        ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, x, H - 5);
+      });
+
+      if (appData.targetWeight) {
+        const tw = parseFloat(appData.targetWeight);
+        const ty = PAD.t + gH - ((tw - minW) / rangeW) * gH;
+        if (ty >= PAD.t && ty <= PAD.t + gH) {
+          ctx.strokeStyle = "#facc1566"; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+          ctx.beginPath(); ctx.moveTo(PAD.l, ty); ctx.lineTo(PAD.l + gW, ty); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = "#facc15"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "left";
+          ctx.fillText(`목표 ${tw}kg`, PAD.l + 4, ty - 4);
+        }
+      }
+
+      const grad = ctx.createLinearGradient(0, PAD.t, 0, PAD.t + gH);
+      grad.addColorStop(0, "#4ade8044");
+      grad.addColorStop(1, "#4ade8000");
+      ctx.beginPath();
+      recs.forEach((r, i) => {
+        const x = PAD.l + ((r.time - minT) / rangeT) * gW;
+        const y = PAD.t + gH - ((r.weight - minW) / rangeW) * gH;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      const lastX = PAD.l + gW;
+      const firstX = PAD.l;
+      ctx.lineTo(lastX, PAD.t + gH);
+      ctx.lineTo(firstX, PAD.t + gH);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      ctx.beginPath(); ctx.strokeStyle = "#4ade80"; ctx.lineWidth = 2.5;
+      ctx.shadowColor = "#4ade80"; ctx.shadowBlur = 8;
+      recs.forEach((r, i) => {
+        const x = PAD.l + ((r.time - minT) / rangeT) * gW;
+        const y = PAD.t + gH - ((r.weight - minW) / rangeW) * gH;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke(); ctx.shadowBlur = 0;
+
+      recs.forEach(r => {
+        const x = PAD.l + ((r.time - minT) / rangeT) * gW;
+        const y = PAD.t + gH - ((r.weight - minW) / rangeW) * gH;
+        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = "#4ade80"; ctx.fill();
+        ctx.strokeStyle = "#0a0a14"; ctx.lineWidth = 2; ctx.stroke();
+      });
+    }
+
+    function renderWeightStats() {
+      const recs = (appData.weightRecords || []).sort((a, b) => b.time - a.time);
+      const latest = recs[0];
+      const h = parseFloat(appData.height) || 0;
+      const target = parseFloat(appData.targetWeight) || 0;
+
+      const el = id => document.getElementById(id);
+      if (!el("stat-weight")) return;
+
+      if (latest) {
+        el("stat-weight").textContent = latest.weight + " kg";
+        if (h) {
+          const bmi = latest.weight / Math.pow(h/100, 2);
+          const bmiLabels = [[18.5,"저체중","#60a5fa"],[23,"정상","#4ade80"],[25,"과체중","#facc15"],[30,"비만","#f97316"],[999,"고도비만","#ef4444"]];
+          const [,label,color] = bmiLabels.find(([v]) => bmi < v) || bmiLabels[4];
+          el("stat-bmi").textContent = bmi.toFixed(1) + " " + label;
+          el("stat-bmi").style.color = color;
+        }
+        if (target) {
+          const diff = latest.weight - target;
+          el("stat-target").textContent = diff <= 0 ? "🎉 목표 달성!" : `${diff.toFixed(1)} kg 남음`;
+          el("stat-target").style.color = diff <= 0 ? "#4ade80" : "#facc15";
+        }
+      } else {
+        el("stat-weight").textContent = "-- kg";
+        el("stat-bmi").textContent = "--";
+        el("stat-target").textContent = "--";
+      }
+
+      if (appData.gender) {
+        document.querySelectorAll(".gender-btn").forEach(b => {
+          b.classList.toggle("active", b.dataset.v === appData.gender);
+        });
+      }
+      if (el("s-height")) el("s-height").value = appData.height || "";
+      if (el("s-target")) el("s-target").value = appData.targetWeight || "";
+    }
+
+    function renderWeightList() {
+      const container = document.getElementById("weight-list");
+      if (!container) return;
+      const recs = (appData.weightRecords || []).sort((a,b) => b.time - a.time);
+      if (!recs.length) {
+        container.innerHTML = `<div style="text-align:center;color:#4a5568;padding:32px 0;font-size:14px">기록이 없습니다</div>`;
+        return;
+      }
+      container.innerHTML = recs.map(r => `
+        <div class="record-row" style="border-color:#4ade8022">
+          <div>
+            <div style="font-size:20px;font-weight:700;color:#4ade80;font-family:'JetBrains Mono',monospace">${r.weight} kg</div>
+            <div style="font-size:11px;color:#4a5568;margin-top:2px">${new Date(r.time).toLocaleString("ko-KR")}</div>
+          </div>
+          <button class="del-btn" onclick="deleteWeightRecord(${r.id})">삭제</button>
+        </div>`).join("");
+    }
+
+    // Modal helpers
+    window.openAddModal = () => {
+      document.getElementById("add-time").value = getLocalISOString();
+      document.getElementById("add-modal").style.display = "flex";
+    };
+    window.closeAddModal = () => document.getElementById("add-modal").style.display = "none";
+    window.openWeightModal = () => {
+      document.getElementById("add-weight-time").value = getLocalISOString();
+      document.getElementById("weight-modal").style.display = "flex";
+    };
+    window.closeWeightModal = () => document.getElementById("weight-modal").style.display = "none";
+
+    // ── Edit Remaining (체내 농도 수동 수정) ───────────
+    let currentEditDrug = "";
+    window.openEditRemModal = (drug) => {
+      currentEditDrug = drug;
+      document.getElementById("edit-rem-title").textContent = drug + " 농도 수정";
+      document.getElementById("edit-rem-val").value = calcRemaining(drug).toFixed(3);
+      document.getElementById("edit-rem-modal").style.display = "flex";
+    };
+    window.closeEditRemModal = () => document.getElementById("edit-rem-modal").style.display = "none";
+    
+    window.submitEditRem = () => {
+      const targetVal = parseFloat(document.getElementById("edit-rem-val").value);
+      if (isNaN(targetVal)) return;
+      const currentVal = calcRemaining(currentEditDrug);
+      const diff = targetVal - currentVal;
+
+      if (Math.abs(diff) > 0.0001) {
+        appData.records = appData.records || [];
+        // 보정용 더미 기록 삽입 (그래프와 농도를 즉시 맞춤)
+        appData.records.push({
+          id: Date.now(),
+          drug: currentEditDrug,
+          dose: parseFloat(diff.toFixed(3)),
+          time: Date.now(),
+          isCalibration: true
+        });
+        scheduleSave();
+        renderAll();
+      }
+      closeEditRemModal();
+    };
+
+    window.calcPeptide = () => {
+      const vial = parseFloat(document.getElementById("c-vial").value);
+      const water = parseFloat(document.getElementById("c-water").value);
+      const dose = parseFloat(document.getElementById("c-dose").value);
+      if (!vial||!water||!dose) return;
+      const conc = (vial * 1000) / water;
+      const volume = dose / conc;
+      const units = volume * 100;
+      const injPerVial = (vial * 1000) / dose;
+      document.getElementById("calc-result").innerHTML = `
+        <div class="result-card">
+          <div class="result-row"><span>농도</span><span>${conc.toFixed(0)} mcg/ml</span></div>
+          <div class="result-row"><span>1회 투여량</span><span>${(volume*1000).toFixed(0)} μL</span></div>
+          <div class="result-row"><span>인슐린 단위</span><span>${units.toFixed(1)} U</span></div>
+          <div class="result-row"><span>바이알당 횟수</span><span>${injPerVial.toFixed(0)}회</span></div>
+        </div>`;
+    };
+
+    window.switchTab = (tab) => {
+      document.querySelectorAll(".tab-panel").forEach(p => p.style.display = "none");
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("panel-" + tab).style.display = "block";
+      document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
+      if (tab === "peptide" || tab === "weight") setTimeout(() => { renderPeptideGraph(); renderWeightGraph(); }, 50);
+    };
+
+    window.setGender = (g) => {
+      appData.gender = g;
+      document.querySelectorAll(".gender-btn").forEach(b => b.classList.toggle("active", b.dataset.v === g));
+    };
+
+    window.setQuickVal = (field, val) => {
+      const el = document.getElementById(field);
+      if (el) { el.value = val; el.dispatchEvent(new Event("input")); }
+    };
+
+    window.addEventListener("resize", () => { renderPeptideGraph(); renderWeightGraph(); });
+
+    window.onFilterChange = renderPeptideList;
+    window.saveSettings = () => {
+      appData.gender = document.getElementById("s-gender") ? document.getElementById("s-gender").value : appData.gender;
+      appData.height = document.getElementById("s-height").value;
+      appData.targetWeight = document.getElementById("s-target").value;
+      scheduleSave();
+      renderAll();
+    };
+  </script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #0a0a14; color: #e2e8f0; font-family: 'Noto Sans KR', sans-serif; }
+
+    #login-screen {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 32px 20px; text-align: center;
+      background: radial-gradient(ellipse at 50% 20%, #1a1a3e 0%, #0a0a14 70%);
+    }
+    .login-logo { font-size: 56px; margin-bottom: 16px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+    .login-title { font-size: 26px; font-weight: 900; color: #e2e8f0; letter-spacing: -1px; margin-bottom: 8px; }
+    .login-sub { font-size: 14px; color: #6b7280; margin-bottom: 48px; }
+    .login-btn {
+      display: flex; align-items: center; gap: 12px; padding: 14px 28px;
+      background: #fff; border: none; border-radius: 12px; cursor: pointer;
+      font-size: 15px; font-weight: 700; color: #1f2937; font-family: inherit;
+      box-shadow: 0 4px 24px #00000066; transition: transform .15s;
+    }
+    .login-btn:hover { transform: scale(1.04); }
+    .google-icon { width: 22px; height: 22px; }
+
+    #app-screen { display: none; flex-direction: column; min-height: 100vh; }
+
+    .top-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; background: #0f0f1e;
+      border-bottom: 1px solid #1f2937; position: sticky; top: 0; z-index: 10;
+    }
+    .top-bar-left { display: flex; flex-direction: column; }
+    .top-bar-title { font-size: 18px; font-weight: 900; letter-spacing: -0.5px; }
+    .top-bar-right { display: flex; align-items: center; gap: 8px; }
+    #user-avatar { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #374151; }
+    #user-name { font-size: 12px; color: #9ca3af; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #save-status { font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid; transition: all .3s; }
+    .logout-btn { background: none; border: 1px solid #374151; border-radius: 8px; color: #6b7280; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
+
+    .tabs { display: flex; background: #0d0d1a; border-bottom: 1px solid #1f2937; }
+    .tab-btn {
+      flex: 1; padding: 12px 6px; font-size: 13px; font-weight: 500;
+      background: none; border: none; cursor: pointer; color: #6b7280;
+      border-bottom: 2px solid transparent; transition: all .2s; font-family: inherit;
+    }
+    .tab-btn.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+
+    .content { flex: 1; padding: 16px; max-width: 520px; margin: 0 auto; width: 100%; }
+    .tab-panel { display: none; }
+    .tab-panel:first-of-type { display: block; }
+
+    .card {
+      background: #12121e; border: 1px solid #1f2937; border-radius: 14px;
+      padding: 14px 16px; transition: border-color .2s;
+    }
+    .section-title { font-size: 13px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+
+    .big-btn {
+      width: 100%; padding: 13px; border: none; border-radius: 12px;
+      color: white; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: opacity .15s;
+    }
+    .big-btn:hover { opacity: .9; }
+    .
