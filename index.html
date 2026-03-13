@@ -117,7 +117,17 @@
       el.style.borderColor = s.border;
     }
 
-    // ── App Logic ──────────────────────────────────────
+    // ── KST Time Helper ───────────────────────────────
+    function kstNowInput() {
+      const now = new Date();
+      const kst = new Date(now.getTime() + (9*60 - now.getTimezoneOffset()) * 60000);
+      return kst.toISOString().slice(0, 16);
+    }
+    function toKSTString(ts) {
+      return new Date(ts).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
+    }
+
+        // ── App Logic ──────────────────────────────────────
     const DRUG_CONFIG = {
       "터제파타이드": { halfLife: 5,  color: "#60a5fa", emoji: "🔵", short: "터제" },
       "레타트루타이드": { halfLife: 6, color: "#f87171", emoji: "🔴", short: "레타" },
@@ -197,9 +207,14 @@
         const rem = calcRemaining(drug);
         return `
           <div class="card" style="border-color:${cfg.color}22">
-            <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">${cfg.emoji} ${drug}</div>
-            <div style="font-size:24px;font-weight:700;color:${cfg.color};font-family:'JetBrains Mono',monospace">${rem.toFixed(3)}<span style="font-size:13px;font-weight:400;margin-left:4px">mg</span></div>
-            <div style="font-size:11px;color:#4a5568;margin-top:4px">반감기 ${cfg.halfLife}일</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+              <div>
+                <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">${cfg.emoji} ${drug}</div>
+                <div style="font-size:24px;font-weight:700;color:${cfg.color};font-family:'JetBrains Mono',monospace">${rem.toFixed(3)}<span style="font-size:13px;font-weight:400;margin-left:4px">mg</span></div>
+                <div style="font-size:11px;color:#4a5568;margin-top:4px">반감기 ${cfg.halfLife}일</div>
+              </div>
+              <button onclick="openOverrideModal('${drug}')" style="background:#1f2937;border:1px solid #374151;border-radius:8px;color:#9ca3af;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;margin-top:4px">수동입력</button>
+            </div>
           </div>`;
       }).join("");
     }
@@ -219,7 +234,7 @@
       }
       container.innerHTML = recs.map(r => {
         const cfg = DRUG_CONFIG[r.drug] || {};
-        const d = new Date(r.time).toLocaleString("ko-KR");
+        const d = toKSTString(r.time);
         return `
           <div class="record-row" style="border-color:${cfg.color}22">
             <div>
@@ -231,6 +246,20 @@
           </div>`;
       }).join("");
     }
+
+    let graphRangeHours = 0; // 0 = all
+
+    window.setGraphRange = (hrs) => {
+      graphRangeHours = hrs;
+      ["6h","1d","7d","all"].forEach(k => {
+        const el = document.getElementById("graph-"+k);
+        if (el) el.classList.remove("active");
+      });
+      const map = {6:"6h",24:"1d",168:"7d",0:"all"};
+      const btn = document.getElementById("graph-"+(map[hrs]||"all"));
+      if (btn) btn.classList.add("active");
+      renderPeptideGraph();
+    };
 
     // ── Peptide Graph (체내 농도) ──────────────────────
     function renderPeptideGraph() {
@@ -250,10 +279,16 @@
         return;
       }
 
-      // time range: oldest record - 4 weeks from now
+      // time range based on selected interval
       const now = Date.now();
-      const minTime = Math.min(...records.map(r => r.time)) - 86400000;
-      const maxTime = now + 7 * 86400000;
+      let minTime, maxTime;
+      if (graphRangeHours > 0) {
+        minTime = now - graphRangeHours * 3600000;
+        maxTime = now;
+      } else {
+        minTime = Math.min(...records.map(r => r.time)) - 86400000;
+        maxTime = now + 7 * 86400000;
+      }
       const totalMs = maxTime - minTime;
 
       // compute concentration curve for each drug
@@ -303,7 +338,11 @@
         const t = minTime + (i / 4) * totalMs;
         const x = PAD.l + (i / 4) * gW;
         const d = new Date(t);
-        ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, x, H - 5);
+        if (graphRangeHours > 0 && graphRangeHours <= 24) {
+          ctx.fillText(`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`, x, H - 5);
+        } else {
+          ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, x, H - 5);
+        }
       }
 
       // draw curves
@@ -402,7 +441,11 @@
         const t = minT + f * rangeT;
         const x = PAD.l + f * gW;
         const d = new Date(t);
-        ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, x, H - 5);
+        if (graphRangeHours > 0 && graphRangeHours <= 24) {
+          ctx.fillText(`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`, x, H - 5);
+        } else {
+          ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, x, H - 5);
+        }
       });
 
       // target line
@@ -507,20 +550,44 @@
         <div class="record-row" style="border-color:#4ade8022">
           <div>
             <div style="font-size:20px;font-weight:700;color:#4ade80;font-family:'JetBrains Mono',monospace">${r.weight} kg</div>
-            <div style="font-size:11px;color:#4a5568;margin-top:2px">${new Date(r.time).toLocaleString("ko-KR")}</div>
+            <div style="font-size:11px;color:#4a5568;margin-top:2px">${toKSTString(r.time)}</div>
           </div>
           <button class="del-btn" onclick="deleteWeightRecord(${r.id})">삭제</button>
         </div>`).join("");
     }
 
+
+    window.openOverrideModal = (drug) => {
+      document.getElementById("override-drug-label").textContent = `${DRUG_CONFIG[drug]?.emoji || ""} ${drug}`;
+      document.getElementById("override-modal").dataset.drug = drug;
+      document.getElementById("override-time").value = kstNowInput();
+      document.getElementById("override-amount").value = "";
+      document.getElementById("override-modal").style.display = "flex";
+    };
+
+    window.submitOverride = () => {
+      const drug = document.getElementById("override-modal").dataset.drug;
+      const amount = parseFloat(document.getElementById("override-amount").value);
+      const timeVal = document.getElementById("override-time").value;
+      if (!amount || !timeVal || !drug) return;
+      const cfg = DRUG_CONFIG[drug];
+      const refTime = new Date(timeVal).getTime();
+      // Remove old records for this drug, add a synthetic one
+      appData.records = (appData.records || []).filter(r => r.drug !== drug);
+      appData.records.push({ id: Date.now(), drug, dose: amount, time: refTime, isOverride: true });
+      scheduleSave();
+      document.getElementById("override-modal").style.display = "none";
+      renderAll();
+    };
+
     // Modal helpers
     window.openAddModal = () => {
-      document.getElementById("add-time").value = new Date().toISOString().slice(0,16);
+      document.getElementById("add-time").value = kstNowInput();
       document.getElementById("add-modal").style.display = "flex";
     };
     window.closeAddModal = () => document.getElementById("add-modal").style.display = "none";
     window.openWeightModal = () => {
-      document.getElementById("add-weight-time").value = new Date().toISOString().slice(0,16);
+      document.getElementById("add-weight-time").value = kstNowInput();
       document.getElementById("weight-modal").style.display = "flex";
     };
     window.closeWeightModal = () => document.getElementById("weight-modal").style.display = "none";
@@ -762,7 +829,15 @@
 
       <!-- 체내 농도 그래프 -->
       <div class="chart-wrap">
-        <div class="chart-title">📈 체내 농도 변화 (시간별)</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="chart-title" style="margin:0">📈 체내 농도 변화</div>
+          <div style="display:flex;gap:4px">
+            <button class="qbtn" id="graph-6h" onclick="setGraphRange(6)" style="font-size:11px;padding:3px 8px">6시간</button>
+            <button class="qbtn" id="graph-1d" onclick="setGraphRange(24)" style="font-size:11px;padding:3px 8px">1일</button>
+            <button class="qbtn" id="graph-7d" onclick="setGraphRange(168)" style="font-size:11px;padding:3px 8px">7일</button>
+            <button class="qbtn active" id="graph-all" onclick="setGraphRange(0)" style="font-size:11px;padding:3px 8px">전체</button>
+          </div>
+        </div>
         <canvas id="peptide-chart"></canvas>
       </div>
 
@@ -911,6 +986,28 @@
     <div class="modal-actions">
       <button class="big-btn" style="background:#374151;flex:1" onclick="closeWeightModal()">취소</button>
       <button class="big-btn green" style="flex:2" onclick="submitAddWeight()">저장</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ MODAL: 수동 농도 입력 ══ -->
+<div id="override-modal" class="modal-overlay" onclick="if(event.target===this)document.getElementById('override-modal').style.display='none'">
+  <div class="modal-box">
+    <div class="modal-title">⚗️ 체내 농도 수동 입력</div>
+    <div style="font-size:12px;color:#9ca3af;margin-bottom:12px" id="override-drug-label"></div>
+    <div style="margin-bottom:12px">
+      <label>현재 체내 잔여량 (mg)</label>
+      <input id="override-amount" class="input-field" type="number" step="0.001" placeholder="예: 3.500" />
+    </div>
+    <div style="margin-bottom:12px">
+      <label>기준 시각 (지금 기준으로 역산)</label>
+      <input id="override-time" class="input-field" type="datetime-local" />
+    </div>
+    <div style="font-size:11px;color:#4a5568;margin-bottom:12px">💡 입력한 양을 입력한 시각에 투약한 것으로 기록해요</div>
+    <div class="modal-actions">
+      <button class="big-btn" style="background:#374151;flex:1" onclick="document.getElementById('override-modal').style.display='none'">취소</button>
+      <button class="big-btn blue" style="flex:2" onclick="submitOverride()">저장</button>
     </div>
   </div>
 </div>
