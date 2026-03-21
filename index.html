@@ -335,6 +335,8 @@
       appData.gender = document.querySelectorAll(".gender-btn.active")[0]?.dataset.v || appData.gender;
       appData.height = document.getElementById("s-height").value;
       appData.targetWeight = document.getElementById("s-target").value;
+      appData.age = document.getElementById("s-age")?.value || appData.age;
+      appData.activity = document.getElementById("s-activity")?.value || appData.activity || "1.55";
       scheduleSave(); renderAll();
     };
 
@@ -347,6 +349,8 @@
     window.setGraphRange = (hrs) => {
       graphRangeHours = hrs;
       graphZoom = { scale: 1, offsetX: 0 };
+      // 전체 범위일 때 현재 시각이 화면 중앙~오른쪽에 오도록 기본 오프셋 설정
+      // (offsetX는 renderPeptideGraph에서 자동 처리되므로 0으로 둠)
       document.querySelectorAll(".graph-range-btn").forEach(b => b.classList.remove("active"));
       document.querySelector(`.graph-range-btn[data-hrs="${hrs}"]`)?.classList.add("active");
       renderPeptideGraph();
@@ -484,8 +488,11 @@
         fullMinTime = now - graphRangeHours * 3600000;
         fullMaxTime = now;
       } else {
-        fullMinTime = Math.min(...records.map(r => r.time)) - 6 * 3600000;
-        fullMaxTime = now + 4 * 86400000;
+        // 전체 범위: 최초 기록 35일 이전 ~ 마지막 기록 35일 이후
+        const firstRec = Math.min(...records.map(r => r.time));
+        const lastRec = Math.max(...records.map(r => r.time));
+        fullMinTime = firstRec - 35 * 86400000;
+        fullMaxTime = lastRec + 35 * 86400000;
       }
       const fullRange = fullMaxTime - fullMinTime;
 
@@ -665,12 +672,12 @@
       const PAD_L = 52, PAD_R = 14;
 
       function getFullRange() {
-        const now = Date.now();
         const records = appData.records || [];
         if (graphRangeHours > 0) return graphRangeHours * 3600000;
         if (!records.length) return 7 * 86400000;
-        const minT = Math.min(...records.map(r => r.time)) - 6 * 3600000;
-        return (now + 4 * 86400000) - minT;
+        const firstRec = Math.min(...records.map(r => r.time));
+        const lastRec = Math.max(...records.map(r => r.time));
+        return (lastRec + 35 * 86400000) - (firstRec - 35 * 86400000);
       }
 
       let touchState = {
@@ -968,6 +975,8 @@
       }
       if (el("s-height")) el("s-height").value = appData.height || "";
       if (el("s-target")) el("s-target").value = appData.targetWeight || "";
+      if (el("s-age")) el("s-age").value = appData.age || "";
+      if (el("s-activity")) el("s-activity").value = appData.activity || "1.55";
       document.querySelectorAll(".gender-btn").forEach(b => b.classList.toggle("active", b.dataset.v === appData.gender));
     }
 
@@ -1038,8 +1047,8 @@
       const height = parseFloat(appData.height) || 0;
       const target = parseFloat(appData.targetWeight) || 0;
       const gender = appData.gender || "남성";
-      const age = parseFloat(document.getElementById("a-age")?.value) || 0;
-      const activity = parseFloat(document.getElementById("a-activity")?.value) || 1.55;
+      const age = parseFloat(appData.age) || 0;
+      const activity = parseFloat(appData.activity) || 1.55;
 
       const cardsEl = document.getElementById("analysis-cards");
       const predEl = document.getElementById("analysis-prediction");
@@ -1048,7 +1057,12 @@
       if (!cardsEl) return;
 
       if (!weight || !height) {
-        cardsEl.innerHTML = `<div class="card" style="color:#6b7280;font-size:13px;text-align:center;padding:24px">체중 탭에서 키와 체중을 먼저 입력하세요</div>`;
+        cardsEl.innerHTML = `<div class="card" style="text-align:center;padding:24px">
+          <div style="font-size:24px;margin-bottom:8px">⚙️</div>
+          <div style="font-size:14px;color:#e2e8f0;margin-bottom:6px">체중 탭 기본 설정을 먼저 입력하세요</div>
+          <div style="font-size:12px;color:#4a5568;margin-bottom:16px">키, 나이, 목표체중, 활동수준을 입력하면<br>BMR · TDEE · 목표 달성일 등을 자동 계산합니다</div>
+          <button onclick="switchTab('weight')" style="background:#1d4ed8;border:none;border-radius:10px;color:white;padding:10px 20px;font-size:13px;cursor:pointer;font-family:inherit">⚖️ 체중 탭으로 이동</button>
+        </div>`;
         return;
       }
 
@@ -1366,10 +1380,10 @@
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <div style="font-size:12px;color:#6b7280">📈 체내 약물 농도 변화</div>
           <div style="display:flex;gap:4px;flex-wrap:wrap">
-            <button class="graph-range-btn" data-hrs="24"  onclick="setGraphRange(24)">1일</button>
             <button class="graph-range-btn" data-hrs="72"  onclick="setGraphRange(72)">3일</button>
             <button class="graph-range-btn" data-hrs="168" onclick="setGraphRange(168)">7일</button>
             <button class="graph-range-btn" data-hrs="336" onclick="setGraphRange(336)">2주</button>
+            <button class="graph-range-btn" data-hrs="720" onclick="setGraphRange(720)">1달</button>
             <button class="graph-range-btn active" data-hrs="0" onclick="setGraphRange(0)">전체</button>
           </div>
         </div>
@@ -1460,7 +1474,17 @@
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
           <div><label>키 (cm)</label><input id="s-height" class="input-field" type="number" placeholder="170" /></div>
+          <div><label>나이</label><input id="s-age" class="input-field" type="number" placeholder="30" /></div>
           <div><label>목표 체중 (kg)</label><input id="s-target" class="input-field" type="number" placeholder="65" /></div>
+          <div><label>활동 수준</label>
+            <select id="s-activity" class="input-field">
+              <option value="1.2">거의 안 움직임</option>
+              <option value="1.375">가벼운 운동 1-3일/주</option>
+              <option value="1.55" selected>적당한 운동 3-5일/주</option>
+              <option value="1.725">격한 운동 6-7일/주</option>
+              <option value="1.9">매우 격렬/육체직</option>
+            </select>
+          </div>
         </div>
         <button class="big-btn green" onclick="saveSettings()">설정 저장</button>
       </div>
@@ -1470,47 +1494,11 @@
 
     <!-- 분석 패널 -->
     <div id="panel-analysis" class="tab-panel">
-      <div class="card" style="margin-bottom:12px">
-        <div class="section-title">신체 정보</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div><label>나이</label><input id="a-age" class="input-field" type="number" placeholder="35" oninput="renderAnalysis()"/></div>
-          <div><label>활동 수준</label>
-            <select id="a-activity" class="input-field" onchange="renderAnalysis()">
-              <option value="1.2">거의 안 움직임</option>
-              <option value="1.375">가벼운 운동 1-3일</option>
-              <option value="1.55" selected>적당한 운동 3-5일</option>
-              <option value="1.725">격한 운동 6-7일</option>
-              <option value="1.9">매우 격렬/육체직</option>
-            </select>
-          </div>
-        </div>
-        <div style="font-size:11px;color:#4a5568">키·체중·목표체중은 체중 탭 설정에서</div>
-      </div>
       <div id="analysis-cards"></div>
       <div id="analysis-prediction" class="card" style="margin-bottom:12px;display:none"></div>
       <div id="analysis-weekly" class="card" style="margin-bottom:12px;display:none"></div>
       <div id="analysis-tips" style="margin-bottom:12px"></div>
 
-      <!-- Firestore 보안 안내 -->
-      <div class="card" style="border-color:#1d4ed833;margin-bottom:12px">
-        <div class="section-title">🔐 Firestore 보안 Rules 설정 필요</div>
-        <div style="font-size:11px;color:#6b7280;line-height:1.8;font-family:'JetBrains Mono',monospace;background:#080810;border-radius:8px;padding:12px;margin-top:6px;overflow-x:auto;white-space:pre">rules_version = '2';
-service cloud.firestore {
-  match /databases/{db}/documents {
-    // 본인 데이터만 읽기/쓰기
-    match /users/{uid} {
-      allow read, write: if request.auth.uid == uid;
-    }
-    // 로그인 로그는 쓰기만 (읽기는 Console에서)
-    match /login_logs/{doc} {
-      allow create: if request.auth != null;
-      allow read: if false;
-    }
-  }
-}</div>
-        <div style="font-size:11px;color:#4a5568;margin-top:8px">Firebase Console → Firestore → Rules 탭에 위 내용 복붙 후 게시</div>
-        <div style="font-size:11px;color:#4a5568;margin-top:4px">로그인 기록: Console → Firestore → login_logs 컬렉션에서 확인 가능</div>
-      </div>
     </div>
 
   </div>
