@@ -50,8 +50,10 @@
 
     // ms → datetime-local input value (KST 표시)
     function msToKstInput(ms) {
-      const kst = new Date(ms + 9 * 3600000);
-      return kst.toISOString().slice(0, 16);
+      const d = new Date(ms);
+      const kst = new Date(d.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+      const pad = n => String(n).padStart(2, '0');
+      return `${kst.getFullYear()}-${pad(kst.getMonth()+1)}-${pad(kst.getDate())}T${pad(kst.getHours())}:${pad(kst.getMinutes())}`;
     }
 
     // ms → KST 표시 문자열
