@@ -582,14 +582,17 @@
     };
 
     // ══ 영양제 토글 ═══════════════════════════════════════
-    const DEFAULT_SUPPLEMENTS = [
-      { id: "omega3",     name: "오메가3",    timing: ["아침","저녁"] },
-      { id: "probio",     name: "유산균",     timing: ["아침"] },
-      { id: "vitd",       name: "비타민D",    timing: ["아침"] },
-      { id: "magnesium",  name: "마그네슘",   timing: ["저녁"] },
-      { id: "vitc",       name: "비타민C",    timing: ["아침"] },
-    ];
+    // timing: 시간대 배열. times: {아침:"08:00", 점심:"12:30", ...} 커스텀 시간
+    const TIMING_DEFAULT_TIMES = { "아침":"08:00", "점심":"12:30", "저녁":"19:00", "자기전":"22:30" };
+    const TIMING_ICONS = { "아침":"🌅", "점심":"☀️", "저녁":"🌆", "자기전":"🌙" };
     const ALL_TIMINGS = ["아침", "점심", "저녁", "자기전"];
+    const DEFAULT_SUPPLEMENTS = [
+      { id: "omega3",     name: "오메가3",    timing: ["아침","저녁"], times:{} },
+      { id: "probio",     name: "유산균",     timing: ["아침"],        times:{} },
+      { id: "vitd",       name: "비타민D",    timing: ["아침"],        times:{} },
+      { id: "magnesium",  name: "마그네슘",   timing: ["저녁"],        times:{} },
+      { id: "vitc",       name: "비타민C",    timing: ["아침"],        times:{} },
+    ];
 
     function getSupplements() {
       return appData.supplements || DEFAULT_SUPPLEMENTS.map(s => ({ ...s, taken: {} }));
@@ -614,15 +617,42 @@
     window.addCustomSupplement = () => {
       const name = document.getElementById("new-supp-name")?.value?.trim();
       if (!name) return;
-      const timing = [];
-      if (document.getElementById("new-supp-morning")?.checked) timing.push("아침");
-      if (document.getElementById("new-supp-evening")?.checked) timing.push("저녁");
+      // 선택된 시간대 읽기
+      const timing = ALL_TIMINGS.filter(t => {
+        const btn = document.getElementById("new-timing-" + t);
+        return btn?.dataset.active === "1";
+      });
       if (!timing.length) timing.push("아침");
       appData.supplements = getSupplements();
-      appData.supplements.push({ id: "s_" + Date.now(), name, timing, taken: {} });
+      appData.supplements.push({ id: "s_" + Date.now(), name, timing, times:{}, taken: {} });
       document.getElementById("new-supp-name").value = "";
+      // 선택 초기화
+      ALL_TIMINGS.forEach(t => {
+        const btn = document.getElementById("new-timing-" + t);
+        if (btn) { btn.dataset.active = "0"; btn.style.background = "#1f2937"; btn.style.color = "#6b7280"; btn.style.borderColor = "#374151"; }
+      });
       scheduleSave();
       renderSupplementPanel();
+    };
+
+    window.toggleNewTiming = (t) => {
+      const btn = document.getElementById("new-timing-" + t);
+      if (!btn) return;
+      const active = btn.dataset.active === "1";
+      btn.dataset.active = active ? "0" : "1";
+      btn.style.background = active ? "#1f2937" : "#1d4ed8";
+      btn.style.color = active ? "#6b7280" : "white";
+      btn.style.borderColor = active ? "#374151" : "#3b82f6";
+    };
+
+    window.setSupplTime = (id, timing, value) => {
+      appData.supplements = getSupplements();
+      const sup = appData.supplements.find(s => s.id === id);
+      if (!sup) return;
+      sup.times = sup.times || {};
+      sup.times[timing] = value;
+      scheduleSave();
+      // 시간 입력은 즉시 저장만, 리렌더 안 함 (포커스 유지)
     };
 
     window.removeSupplement = (id) => {
@@ -650,66 +680,99 @@
       if (!c) return;
       const supps = getSupplements();
       const today = getTodayKey();
-      const timings = ALL_TIMINGS;
+      let html = "";
 
-      c.innerHTML = timings.map(timing => {
+      ALL_TIMINGS.forEach(timing => {
         const relevant = supps.filter(s => s.timing?.includes(timing));
-        if (!relevant.length) return "";
-        const allDone = relevant.every(s => s.taken?.[today + "_" + timing]);
-        return `<div style="margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px">${timing}</div>
-            ${allDone ? '<div style="font-size:10px;color:#4ade80">✅ 완료</div>' : ''}
+        if (!relevant.length) return;
+        const allDone = relevant.every(s => s.taken?.[today+"_"+timing]);
+        const doneCount = relevant.filter(s => s.taken?.[today+"_"+timing]).length;
+        const dispTime = (relevant[0]?.times?.[timing]) || TIMING_DEFAULT_TIMES[timing] || "";
+
+        html += `<div style="margin-bottom:18px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+            <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;
+                        background:${allDone?"#0f2a1a":"#1a1a2e"};
+                        border:2px solid ${allDone?"#4ade80":"#2d3748"};
+                        display:flex;align-items:center;justify-content:center;font-size:16px">
+              ${TIMING_ICONS[timing]}
+            </div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <b style="font-size:14px;color:${allDone?"#4ade80":"#e2e8f0"}">${timing}</b>
+                <span style="font-size:11px;color:#4a5568">${doneCount}/${relevant.length} ${allDone?"✅":""}</span>
+              </div>
+              <input type="time" value="${dispTime}" onchange="setTimingTime('${timing}',this.value)"
+                style="font-size:11px;color:#4a5568;background:none;border:none;
+                       font-family:inherit;cursor:pointer;padding:0;outline:none;margin-top:1px" />
+            </div>
           </div>
-          ${relevant.map(s => {
-            const done = !!s.taken?.[today + "_" + timing];
-            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a1a2e">
-              <div style="display:flex;align-items:center;gap:8px;flex:1">
-                <span style="font-size:14px">${done ? '✅' : '⬜'}</span>
-                <div>
-                  <div style="font-size:13px;color:${done?'#4ade80':'#9ca3af'};${done?'text-decoration:line-through;':''}">${s.name}</div>
+          <div style="margin-left:18px;padding-left:14px;border-left:2px solid ${allDone?"#166534":"#1f2937"}">
+            ${relevant.map(s => {
+              const done = !!s.taken?.[today+"_"+timing];
+              return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #12121e">
+                <button onclick="toggleSupplement('${s.id}','${timing}')"
+                  style="width:24px;height:24px;border-radius:50%;flex-shrink:0;cursor:pointer;
+                         border:2px solid ${done?"#4ade80":"#374151"};
+                         background:${done?"#4ade80":"transparent"};
+                         font-size:12px;font-weight:700;color:#0a0a14;line-height:1">
+                  ${done?"✓":""}
+                </button>
+                <div style="flex:1">
+                  <div style="font-size:13px;color:${done?"#4ade80":"#e2e8f0"};
+                              ${done?"text-decoration:line-through;opacity:.65":""}">
+                    ${s.name}
+                  </div>
                   <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">
-                    ${ALL_TIMINGS.map(t => `<button onclick="toggleSupplTiming('${s.id}','${t}')"
-                      style="padding:1px 6px;border-radius:10px;font-size:10px;cursor:pointer;font-family:inherit;
-                             border:1px solid ${s.timing?.includes(t)?'#3b82f6':'#374151'};
-                             background:${s.timing?.includes(t)?'#1d4ed8':'transparent'};
-                             color:${s.timing?.includes(t)?'white':'#4a5568'}">${t}</button>`).join('')}
+                    ${ALL_TIMINGS.map(t =>
+                      `<button onclick="toggleSupplTiming('${s.id}','${t}')"
+                        style="padding:2px 7px;border-radius:10px;font-size:10px;cursor:pointer;font-family:inherit;
+                               border:1px solid ${s.timing?.includes(t)?"#3b82f6":"#2d3748"};
+                               background:${s.timing?.includes(t)?"#1d4ed8":"transparent"};
+                               color:${s.timing?.includes(t)?"white":"#4a5568"}">
+                        ${TIMING_ICONS[t]}${t}
+                      </button>`).join("")}
                   </div>
                 </div>
-              </div>
-              <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;margin-left:8px">
-                <button onclick="toggleSupplement('${s.id}','${timing}')"
-                  style="padding:5px 12px;border-radius:20px;border:1px solid ${done?'#166534':'#374151'};
-                         background:${done?'#0f2a1a':'#1f2937'};color:${done?'#4ade80':'#6b7280'};
-                         font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap">
-                  ${done ? '취소' : '복용'}
-                </button>
                 <button onclick="removeSupplement('${s.id}')"
-                  style="background:none;border:none;color:#374151;font-size:14px;cursor:pointer;padding:2px 4px">✕</button>
-              </div>
-            </div>`;
-          }).join('')}
+                  style="background:none;border:none;color:#2d3748;font-size:16px;
+                         cursor:pointer;padding:4px;flex-shrink:0">✕</button>
+              </div>`;
+            }).join("")}
+          </div>
         </div>`;
-      }).join('');
+      });
 
-      // 추가 입력 (아침/저녁 선택 포함)
-      c.innerHTML += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #1f2937">
-        <div style="font-size:11px;color:#6b7280;margin-bottom:8px">영양제 추가</div>
-        <div style="display:flex;gap:6px;margin-bottom:8px">
-          <input id="new-supp-name" class="input-field" placeholder="영양제 이름" style="flex:1" />
+      if (!supps.length) html += `<div style="text-align:center;color:#4a5568;padding:20px">영양제를 추가해주세요</div>`;
+
+      html += `<div style="padding-top:14px;border-top:1px solid #1f2937">
+        <div class="section-title" style="margin-bottom:8px">+ 영양제 추가</div>
+        <input id="new-supp-name" class="input-field" placeholder="영양제 이름" style="margin-bottom:10px" />
+        <div style="font-size:11px;color:#6b7280;margin-bottom:6px">복용 시간대</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+          ${ALL_TIMINGS.map(t =>
+            `<button id="new-timing-${t}" data-active="0" onclick="toggleNewTiming('${t}')"
+              style="padding:7px 12px;border-radius:20px;border:1px solid #374151;
+                     background:#1f2937;color:#6b7280;font-size:12px;cursor:pointer;font-family:inherit">
+              ${TIMING_ICONS[t]} ${t}
+            </button>`).join("")}
         </div>
-        <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center">
-          <span style="font-size:12px;color:#6b7280;white-space:nowrap">복용 시간:</span>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#9ca3af;cursor:pointer">
-            <input type="checkbox" id="new-supp-morning" checked style="accent-color:#60a5fa"> 아침
-          </label>
-          <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#9ca3af;cursor:pointer">
-            <input type="checkbox" id="new-supp-evening" style="accent-color:#60a5fa"> 저녁
-          </label>
-        </div>
-        <button onclick="addCustomSupplement()" class="big-btn blue" style="padding:10px 14px;font-size:13px">+ 추가</button>
+        <button onclick="addCustomSupplement()" class="big-btn blue" style="padding:11px">+ 추가</button>
       </div>`;
+
+      c.innerHTML = html;
     }
+
+    window.setTimingTime = (timing, value) => {
+      appData.supplements = getSupplements();
+      appData.supplements.forEach(s => {
+        if (s.timing?.includes(timing)) {
+          s.times = s.times || {};
+          s.times[timing] = value;
+        }
+      });
+      scheduleSave();
+    };
 
     window.saveSettings = () => {
       appData.gender = document.querySelectorAll(".gender-btn.active")[0]?.dataset.v || appData.gender;
@@ -1722,6 +1785,107 @@
         </div>`;
     };
 
+    // ── 역산 계산기 ────────────────────────────────────────
+    window.calcBodyComp = () => {
+      // 입력: 목표 체지방률 또는 목표 근육량으로 예상 체중 역산
+      const leanKgInput = parseFloat(document.getElementById("bc-lean").value); // 목표 제지방량
+      const bfPctInput = parseFloat(document.getElementById("bc-bfpct").value);  // 목표 체지방률
+      const heightVal = parseFloat(appData.height) || 0;
+
+      let resultHtml = "";
+
+      if (leanKgInput && bfPctInput) {
+        // 제지방량 고정, 목표 체지방률 → 예상 체중
+        const estWeight = leanKgInput / (1 - bfPctInput / 100);
+        const fatKg = estWeight - leanKgInput;
+        const bmi = heightVal ? estWeight / Math.pow(heightVal/100, 2) : null;
+        resultHtml = `<div class="result-card">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:10px">📊 역산 결과</div>
+          <div class="result-row"><span>예상 체중</span><span style="color:#60a5fa">${estWeight.toFixed(1)} kg</span></div>
+          <div class="result-row"><span>체지방량</span><span>${fatKg.toFixed(1)} kg</span></div>
+          <div class="result-row"><span>제지방량</span><span>${leanKgInput.toFixed(1)} kg</span></div>
+          ${bmi ? `<div class="result-row"><span>예상 BMI</span><span>${bmi.toFixed(1)}</span></div>` : ""}
+          <div class="result-row" style="border:none"><span>체지방률</span><span>${bfPctInput}%</span></div>
+        </div>`;
+      } else if (bfPctInput) {
+        // 현재 체중 기반, 목표 체지방률 달성 시 체중
+        const curWeight = parseFloat((appData.weightRecords||[]).sort((a,b)=>b.time-a.time)[0]?.weight) || 0;
+        const age = parseFloat(appData.age) || 30;
+        const gender = appData.gender || "남성";
+        const bmi = curWeight && heightVal ? curWeight / Math.pow(heightVal/100, 2) : 0;
+        const curBfp = bmi ? 1.20*bmi + 0.23*age - (gender==="남성"?10.8:0) - 5.4 : 0;
+        const curLean = curWeight * (1 - curBfp/100);
+        const targetWeight = curLean / (1 - bfPctInput/100);
+        const needLose = curWeight - targetWeight;
+        resultHtml = `<div class="result-card">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:10px">📊 현재 기준 역산</div>
+          <div class="result-row"><span>현재 체중</span><span>${curWeight.toFixed(1)} kg</span></div>
+          <div class="result-row"><span>현재 체지방률 추정</span><span>${curBfp.toFixed(1)}%</span></div>
+          <div class="result-row"><span>현재 제지방량</span><span>${curLean.toFixed(1)} kg</span></div>
+          <div class="result-row"><span>목표 체지방률 달성 체중</span><span style="color:#4ade80">${targetWeight.toFixed(1)} kg</span></div>
+          <div class="result-row" style="border:none"><span>감량 필요</span><span style="color:#facc15">${needLose.toFixed(1)} kg</span></div>
+        </div>`;
+      } else {
+        resultHtml = `<div style="color:#4a5568;font-size:13px;padding:16px;text-align:center">목표 체지방률을 입력하세요</div>`;
+      }
+      document.getElementById("bc-result").innerHTML = resultHtml;
+    };
+
+    // ── 미래 예측 계산기 ───────────────────────────────────
+    window.calcFuture = () => {
+      const weeks = parseFloat(document.getElementById("fut-weeks").value) || 12;
+      const wrecs = (appData.weightRecords||[]).sort((a,b)=>a.time-b.time);
+      const curWeight = parseFloat((appData.weightRecords||[]).sort((a,b)=>b.time-a.time)[0]?.weight) || 0;
+      const heightVal = parseFloat(appData.height) || 0;
+      const age = parseFloat(appData.age) || 30;
+      const gender = appData.gender || "남성";
+
+      let weeklyRate = 0;
+      if (wrecs.length >= 2) {
+        const days = (wrecs[wrecs.length-1].time - wrecs[0].time)/86400000;
+        weeklyRate = days > 0 ? (wrecs[0].weight - wrecs[wrecs.length-1].weight)/days*7 : 0;
+      }
+
+      const futWeight = Math.max(40, curWeight - weeklyRate * weeks);
+      const futBmi = heightVal ? futWeight / Math.pow(heightVal/100, 2) : 0;
+      const futBfp = futBmi ? 1.20*futBmi + 0.23*age - (gender==="남성"?10.8:0) - 5.4 : 0;
+      const futBmr = gender==="남성"
+        ? 10*futWeight + 6.25*heightVal - 5*age + 5
+        : 10*futWeight + 6.25*heightVal - 5*age - 161;
+      const bmiLabel = futBmi < 18.5?"저체중":futBmi < 23?"정상":futBmi < 25?"과체중":futBmi < 30?"비만":"고도비만";
+
+      const resultHtml = `<div class="result-card">
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px">🔮 ${weeks}주 후 예측 (현재 속도 유지 시)</div>
+        <div class="result-row"><span>현재 감량 속도</span><span>${weeklyRate > 0 ? "-"+weeklyRate.toFixed(2)+" kg/주" : "데이터 부족"}</span></div>
+        <div class="result-row"><span>예상 체중</span><span style="color:#60a5fa">${futWeight.toFixed(1)} kg</span></div>
+        <div class="result-row"><span>예상 BMI</span><span style="color:${futBmi<23?"#4ade80":futBmi<25?"#facc15":"#f97316"}">${futBmi.toFixed(1)} (${bmiLabel})</span></div>
+        <div class="result-row"><span>예상 체지방률</span><span>${futBfp.toFixed(1)}%</span></div>
+        <div class="result-row" style="border:none"><span>예상 BMR</span><span>${Math.round(futBmr)} kcal</span></div>
+      </div>`;
+      document.getElementById("fut-result").innerHTML = resultHtml;
+    };
+
+    // ── 영양소 역산 ────────────────────────────────────────
+    window.calcMacro = () => {
+      const targetCal = parseFloat(document.getElementById("mac-cal").value);
+      const proteinPct = parseFloat(document.getElementById("mac-protein").value) || 30;
+      const fatPct = parseFloat(document.getElementById("mac-fat").value) || 25;
+      const carbPct = 100 - proteinPct - fatPct;
+      if (!targetCal || carbPct < 0) {
+        document.getElementById("mac-result").innerHTML = `<div style="color:#f87171;font-size:12px;padding:8px">단백질+지방 합계가 100% 이하여야 합니다</div>`;
+        return;
+      }
+      const proteinG = (targetCal * proteinPct / 100) / 4;
+      const fatG = (targetCal * fatPct / 100) / 9;
+      const carbG = (targetCal * carbPct / 100) / 4;
+      document.getElementById("mac-result").innerHTML = `<div class="result-card">
+        <div style="font-size:12px;color:#6b7280;margin-bottom:10px">🍽️ 매크로 배분 (${targetCal} kcal)</div>
+        <div class="result-row"><span>단백질 (${proteinPct}%)</span><span style="color:#60a5fa">${proteinG.toFixed(0)}g</span></div>
+        <div class="result-row"><span>지방 (${fatPct}%)</span><span style="color:#f97316">${fatG.toFixed(0)}g</span></div>
+        <div class="result-row" style="border:none"><span>탄수화물 (${carbPct}%)</span><span style="color:#4ade80">${carbG.toFixed(0)}g</span></div>
+      </div>`;
+    };
+
     window.switchTab = (tab) => {
       document.querySelectorAll(".tab-panel").forEach(p => p.style.display = "none");
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -1935,6 +2099,13 @@
       if (el) el.value = val;
     };
 
+    window.switchCalcTab = (tab) => {
+      document.querySelectorAll(".ctab-panel").forEach(p => p.style.display = "none");
+      document.querySelectorAll(".calc-tab-btn").forEach(b => b.classList.remove("active"));
+      document.getElementById("ctab-" + tab).style.display = "block";
+      document.querySelector(`.calc-tab-btn[data-ctab="${tab}"]`)?.classList.add("active");
+    };
+
     window.onFilterChange = () => {
       graphDrugFilter = document.getElementById("peptide-filter")?.value || "전체";
       renderPeptideList();
@@ -2100,6 +2271,10 @@
     .gender-btn.active { background: #1d4ed8; color: white; }
 
     .zoom-hint { font-size: 10px; color: #2a2a3e; text-align: center; margin-top: 4px; padding-bottom: 4px; }
+    .calc-tab-btn { padding: 7px 12px; background: #1f2937; border: 1px solid #374151; border-radius: 20px; color: #6b7280; font-size: 12px; cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap; }
+    .calc-tab-btn.active { background: #1d4ed8; border-color: #3b82f6; color: white; }
+    body.light-mode .calc-tab-btn { background: #f3f4f6; border-color: #d1d5db; color: #6b7280; }
+    body.light-mode .calc-tab-btn.active { background: #2563eb; color: white; }
 
     .pk-info { background: #0d1a0d; border: 1px solid #14532d22; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 11px; color: #4b7c52; line-height: 1.6; }
 
@@ -2213,10 +2388,10 @@
 
   <div class="tabs">
     <button class="tab-btn active" data-tab="peptide" onclick="switchTab('peptide')">💉 투약</button>
-    <button class="tab-btn" data-tab="calc"    onclick="switchTab('calc')">🧮 계산기</button>
     <button class="tab-btn" data-tab="weight"  onclick="switchTab('weight')">⚖️ 체중</button>
+    <button class="tab-btn" data-tab="supple"  onclick="switchTab('supple')">💊 영양제</button>
     <button class="tab-btn" data-tab="analysis" onclick="switchTab('analysis')">📊 분석</button>
-    <button class="tab-btn" data-tab="supple" onclick="switchTab('supple')">💊 영양제</button>
+    <button class="tab-btn" data-tab="calc"    onclick="switchTab('calc')">🧮 계산</button>
   </div>
 
   <div class="content">
@@ -2258,37 +2433,119 @@
 
     <!-- ── 계산기 패널 ── -->
     <div id="panel-calc" class="tab-panel">
-      <div class="card" style="margin-bottom:12px">
-        <div class="section-title">바이알 용량 (mg)</div>
-        <div class="quick-btns">
-          <button class="qbtn" onclick="setQuickVal('c-vial','10')">10</button>
-          <button class="qbtn" onclick="setQuickVal('c-vial','30')">30</button>
-          <button class="qbtn" onclick="setQuickVal('c-vial','60')">60</button>
-        </div>
-        <input id="c-vial" class="input-field" type="number" placeholder="직접 입력" />
+
+      <!-- 계산기 탭 선택 -->
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="calc-tab-btn active" data-ctab="peptide" onclick="switchCalcTab('peptide')">💉 조제 계산</button>
+        <button class="calc-tab-btn" data-ctab="body" onclick="switchCalcTab('body')">💪 체성분 역산</button>
+        <button class="calc-tab-btn" data-ctab="future" onclick="switchCalcTab('future')">🔮 미래 예측</button>
+        <button class="calc-tab-btn" data-ctab="macro" onclick="switchCalcTab('macro')">🍽️ 영양소</button>
       </div>
-      <div class="card" style="margin-bottom:12px">
-        <div class="section-title">BAC Water (ml)</div>
-        <div class="quick-btns">
-          <button class="qbtn" onclick="setQuickVal('c-water','1.8')">1.8</button>
-          <button class="qbtn" onclick="setQuickVal('c-water','2.4')">2.4</button>
-          <button class="qbtn" onclick="setQuickVal('c-water','3.0')">3.0</button>
+
+      <!-- 조제 계산 -->
+      <div id="ctab-peptide" class="ctab-panel">
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title">바이알 용량 (mg)</div>
+          <div class="quick-btns">
+            <button class="qbtn" onclick="setQuickVal('c-vial','10')">10</button>
+            <button class="qbtn" onclick="setQuickVal('c-vial','30')">30</button>
+            <button class="qbtn" onclick="setQuickVal('c-vial','60')">60</button>
+          </div>
+          <input id="c-vial" class="input-field" type="number" placeholder="직접 입력" />
         </div>
-        <input id="c-water" class="input-field" type="number" placeholder="직접 입력" />
-      </div>
-      <div class="card" style="margin-bottom:12px">
-        <div class="section-title">1회 투여량 (mcg)</div>
-        <div class="quick-btns">
-          <button class="qbtn" onclick="setQuickVal('c-dose','250')">250</button>
-          <button class="qbtn" onclick="setQuickVal('c-dose','500')">500</button>
-          <button class="qbtn" onclick="setQuickVal('c-dose','1000')">1000</button>
-          <button class="qbtn" onclick="setQuickVal('c-dose','2000')">2000</button>
-          <button class="qbtn" onclick="setQuickVal('c-dose','4000')">4000</button>
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title">BAC Water (ml)</div>
+          <div class="quick-btns">
+            <button class="qbtn" onclick="setQuickVal('c-water','1.8')">1.8</button>
+            <button class="qbtn" onclick="setQuickVal('c-water','2.4')">2.4</button>
+            <button class="qbtn" onclick="setQuickVal('c-water','3.0')">3.0</button>
+          </div>
+          <input id="c-water" class="input-field" type="number" placeholder="직접 입력" />
         </div>
-        <input id="c-dose" class="input-field" type="number" placeholder="직접 입력" />
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title">1회 투여량 (mcg)</div>
+          <div class="quick-btns">
+            <button class="qbtn" onclick="setQuickVal('c-dose','250')">250</button>
+            <button class="qbtn" onclick="setQuickVal('c-dose','500')">500</button>
+            <button class="qbtn" onclick="setQuickVal('c-dose','1000')">1000</button>
+            <button class="qbtn" onclick="setQuickVal('c-dose','2000')">2000</button>
+            <button class="qbtn" onclick="setQuickVal('c-dose','4000')">4000</button>
+          </div>
+          <input id="c-dose" class="input-field" type="number" placeholder="직접 입력" />
+        </div>
+        <button class="big-btn blue" onclick="calcPeptide()" style="margin-bottom:14px">계산하기</button>
+        <div id="calc-result"></div>
       </div>
-      <button class="big-btn blue" onclick="calcPeptide()" style="margin-bottom:14px">계산하기</button>
-      <div id="calc-result"></div>
+
+      <!-- 체성분 역산 -->
+      <div id="ctab-body" class="ctab-panel" style="display:none">
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title" style="margin-bottom:4px">💪 체성분 역산 계산기</div>
+          <div style="font-size:11px;color:#4a5568;margin-bottom:12px">목표 체지방률로 달성 체중 계산 · Deurenberg 공식 기반</div>
+          <div style="margin-bottom:10px">
+            <label>목표 체지방률 (%)</label>
+            <div class="quick-btns" style="margin-bottom:6px">
+              <button class="qbtn" onclick="setQuickVal('bc-bfpct','15')">15% (운동)</button>
+              <button class="qbtn" onclick="setQuickVal('bc-bfpct','20')">20% (정상)</button>
+              <button class="qbtn" onclick="setQuickVal('bc-bfpct','25')">25% (표준)</button>
+            </div>
+            <input id="bc-bfpct" class="input-field" type="number" step="0.5" placeholder="예: 20" />
+          </div>
+          <div style="margin-bottom:12px">
+            <label>목표 제지방량 kg (선택 — 빈칸이면 현재 제지방량 사용)</label>
+            <input id="bc-lean" class="input-field" type="number" step="0.1" placeholder="예: 60 (공백 = 현재 유지)" />
+          </div>
+          <button class="big-btn blue" onclick="calcBodyComp()" style="margin-bottom:12px">역산하기</button>
+          <div id="bc-result"></div>
+        </div>
+      </div>
+
+      <!-- 미래 예측 -->
+      <div id="ctab-future" class="ctab-panel" style="display:none">
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title" style="margin-bottom:4px">🔮 미래 체중/건강 예측</div>
+          <div style="font-size:11px;color:#4a5568;margin-bottom:12px">현재 감량 속도 유지 시 N주 후 체중·체지방·BMR 예측</div>
+          <div style="margin-bottom:12px">
+            <label>예측 기간 (주)</label>
+            <div class="quick-btns" style="margin-bottom:6px">
+              <button class="qbtn" onclick="setQuickVal('fut-weeks','4')">4주</button>
+              <button class="qbtn" onclick="setQuickVal('fut-weeks','12')">12주</button>
+              <button class="qbtn" onclick="setQuickVal('fut-weeks','24')">24주</button>
+              <button class="qbtn" onclick="setQuickVal('fut-weeks','52')">1년</button>
+            </div>
+            <input id="fut-weeks" class="input-field" type="number" placeholder="예: 12" />
+          </div>
+          <button class="big-btn blue" onclick="calcFuture()" style="margin-bottom:12px">예측하기</button>
+          <div id="fut-result"></div>
+        </div>
+      </div>
+
+      <!-- 영양소 역산 -->
+      <div id="ctab-macro" class="ctab-panel" style="display:none">
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title" style="margin-bottom:4px">🍽️ 영양소 역산 계산기</div>
+          <div style="font-size:11px;color:#4a5568;margin-bottom:12px">목표 칼로리에서 단백질·지방·탄수화물 배분 계산</div>
+          <div style="margin-bottom:10px">
+            <label>목표 칼로리 (kcal)</label>
+            <div class="quick-btns" style="margin-bottom:6px">
+              <button class="qbtn" onclick="setQuickVal('mac-cal','1500')">1500</button>
+              <button class="qbtn" onclick="setQuickVal('mac-cal','1800')">1800</button>
+              <button class="qbtn" onclick="setQuickVal('mac-cal','2000')">2000</button>
+            </div>
+            <input id="mac-cal" class="input-field" type="number" placeholder="예: 1800" />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+            <div><label>단백질 비율 (%)</label>
+              <input id="mac-protein" class="input-field" type="number" value="30" placeholder="30" /></div>
+            <div><label>지방 비율 (%)</label>
+              <input id="mac-fat" class="input-field" type="number" value="25" placeholder="25" /></div>
+          </div>
+          <div style="font-size:11px;color:#4a5568;margin-bottom:10px">탄수화물 = 100 - 단백질 - 지방 자동 계산</div>
+          <button class="big-btn blue" onclick="calcMacro()" style="margin-bottom:12px">계산하기</button>
+          <div id="mac-result"></div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ── 체중 패널 (기록추가 최상단) ── -->
