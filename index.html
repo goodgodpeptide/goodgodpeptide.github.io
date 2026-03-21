@@ -155,19 +155,38 @@
     // 단, 절대값 파라미터 불필요 → 정규화: D 기준 상대농도
     // ka = ln(2)/Tmax_h, ke = ln(2)/(halfLife_days*24)
 
+    // doseDays: 사용자 설정 가능한 투약 주기 (기본값 = 임상 표준)
+    // appData.drugCycle[drug] 에 저장, 없으면 DRUG_CONFIG.defaultDoseDays 사용
     const DRUG_CONFIG = {
       "터제파타이드":   {
-        halfLifeDays: 5, tmaxHours: 24,
-        color: "#60a5fa", emoji: "🔵", short: "터제"
+        halfLifeDays: 5, tmaxHours: 24, defaultDoseDays: 7,
+        color: "#60a5fa", emoji: "🔵", short: "터제",
+        note: "반감기 5일 · 임상 표준 7일 주기"
       },
       "레타트루타이드": {
-        halfLifeDays: 6, tmaxHours: 48,   // 흡수상 ~12~72h, 중간값 48h 사용
-        color: "#f87171", emoji: "🔴", short: "레타"
+        halfLifeDays: 6, tmaxHours: 48, defaultDoseDays: 7,
+        color: "#f87171", emoji: "🔴", short: "레타",
+        note: "반감기 6일 · 임상 표준 7일 주기"
       },
       "세마글루타이드": {
-        halfLifeDays: 7, tmaxHours: 36,
-        color: "#4ade80", emoji: "🟢", short: "세마"
+        halfLifeDays: 7, tmaxHours: 36, defaultDoseDays: 7,
+        color: "#4ade80", emoji: "🟢", short: "세마",
+        note: "반감기 7일 · 임상 표준 7일 주기"
       },
+    };
+
+    // 약물별 투약 주기 반환 (사용자 커스텀 or 기본값)
+    function getDoseCycle(drug) {
+      return parseInt((appData.drugCycle || {})[drug]) || DRUG_CONFIG[drug]?.defaultDoseDays || 7;
+    }
+
+    // 투약 주기 변경 (최소 1일, 최대 14일)
+    window.setDrugCycle = (drug, days) => {
+      days = Math.max(1, Math.min(14, days));
+      appData.drugCycle = appData.drugCycle || {};
+      appData.drugCycle[drug] = days;
+      scheduleSave();
+      renderRemainingCards();
     };
 
     // 1-compartment oral PK: 흡수 + 소실 모델
@@ -218,7 +237,10 @@
       const timeVal = document.getElementById("add-time").value;
       if (!dose || !timeVal) return;
       appData.records = appData.records || [];
-      appData.records.push({ id: Date.now(), drug, dose, time: kstInputToMs(timeVal) });
+      const rec = { id: Date.now(), drug, dose, time: kstInputToMs(timeVal) };
+      if (selectedSite) rec.site = selectedSite;
+      appData.records.push(rec);
+      selectedSite = null;
       scheduleSave();
       document.getElementById("add-modal").style.display = "none";
       renderAll();
@@ -331,6 +353,125 @@
       }).join('');
     }
 
+    // ══ 주사 부위 로테이션 ══════════════════════════════
+    const INJECTION_SITES = [
+      { id: "belly_l",  label: "복부 좌",  emoji: "🫃" },
+      { id: "belly_r",  label: "복부 우",  emoji: "🫃" },
+      { id: "thigh_l",  label: "허벅지 좌", emoji: "🦵" },
+      { id: "thigh_r",  label: "허벅지 우", emoji: "🦵" },
+      { id: "arm_l",    label: "팔 좌",    emoji: "💪" },
+      { id: "arm_r",    label: "팔 우",    emoji: "💪" },
+    ];
+
+    function getLastInjectionSite() {
+      const recs = (appData.records || []).filter(r => r.site).sort((a,b) => b.time - a.time);
+      return recs[0]?.site || null;
+    }
+
+    function getNextSuggested() {
+      const last = getLastInjectionSite();
+      if (!last) return INJECTION_SITES[0];
+      const idx = INJECTION_SITES.findIndex(s => s.id === last);
+      return INJECTION_SITES[(idx + 1) % INJECTION_SITES.length];
+    }
+
+    window.renderSiteSelector = () => {
+      const c = document.getElementById("site-selector");
+      if (!c) return;
+      const next = getNextSuggested();
+      const last = getLastInjectionSite();
+      const lastLabel = last ? INJECTION_SITES.find(s => s.id === last)?.label : null;
+      c.innerHTML = `
+        <div style="font-size:11px;color:#6b7280;margin-bottom:6px">
+          💉 주사 부위${lastLabel ? ` · 이전: <span style="color:#facc15">${lastLabel}</span>` : ''}
+          ${next ? ` · 다음 추천: <span style="color:#4ade80">${next.label}</span>` : ''}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">
+          ${INJECTION_SITES.map(s => `
+            <button onclick="selectSite('${s.id}')" id="site-btn-${s.id}"
+              style="padding:7px 4px;border-radius:8px;border:1px solid ${s.id === next?.id ? '#4ade80' : '#374151'};
+                     background:${s.id === next?.id ? '#0d2a1a' : '#1f2937'};
+                     color:${s.id === next?.id ? '#4ade80' : '#9ca3af'};
+                     font-size:11px;cursor:pointer;font-family:inherit;text-align:center">
+              ${s.emoji}<br>${s.label}
+            </button>`).join('')}
+        </div>`;
+    };
+
+    let selectedSite = null;
+    window.selectSite = (siteId) => {
+      selectedSite = siteId;
+      document.querySelectorAll('[id^="site-btn-"]').forEach(b => {
+        const id = b.id.replace('site-btn-', '');
+        const s = INJECTION_SITES.find(x => x.id === id);
+        const isSelected = id === siteId;
+        b.style.background = isSelected ? '#1d4ed8' : '#1f2937';
+        b.style.borderColor = isSelected ? '#3b82f6' : '#374151';
+        b.style.color = isSelected ? 'white' : '#9ca3af';
+      });
+    };
+
+    // ══ 수분 트래킹 ═══════════════════════════════════════
+    function getWaterGoal() {
+      const weight = parseFloat((appData.weightRecords || []).sort((a,b)=>b.time-a.time)[0]?.weight) || 70;
+      return Math.round(weight * 33); // ml
+    }
+
+    function getTodayWater() {
+      const todayStart = new Date();
+      const kst = new Date(todayStart.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+      kst.setHours(0, 0, 0, 0);
+      const cutoff = kst.getTime() - 9 * 3600000; // KST → UTC
+      return (appData.waterLog || [])
+        .filter(w => w.time >= cutoff)
+        .reduce((sum, w) => sum + (w.ml || 0), 0);
+    }
+
+    window.addWater = (ml) => {
+      appData.waterLog = appData.waterLog || [];
+      appData.waterLog.push({ id: Date.now(), ml, time: Date.now() });
+      scheduleSave();
+      renderWaterTracker();
+    };
+
+    window.renderWaterTracker = () => {
+      const c = document.getElementById("water-tracker");
+      if (!c) return;
+      const goal = getWaterGoal();
+      const today = getTodayWater();
+      const pct = Math.min(100, Math.round(today / goal * 100));
+      const glasses = Math.round(today / 250);
+      c.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div>
+            <div style="font-size:20px;font-weight:700;color:#38bdf8;font-family:'JetBrains Mono'">${(today/1000).toFixed(1)}<span style="font-size:12px;color:#6b7280"> / ${(goal/1000).toFixed(1)}L</span></div>
+            <div style="font-size:11px;color:#4a5568">오늘 수분 섭취 (잔 약 ${glasses}잔)</div>
+          </div>
+          <div style="font-size:24px;font-weight:700;color:${pct>=100?'#4ade80':'#38bdf8'}">${pct}%</div>
+        </div>
+        <div style="height:8px;background:#1f2937;border-radius:4px;overflow:hidden;margin-bottom:10px">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#0ea5e9,${pct>=100?'#4ade80':'#38bdf8'});border-radius:4px;transition:width .5s"></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${[150,250,350,500].map(ml => `
+            <button onclick="addWater(${ml})"
+              style="padding:6px 12px;background:#0c1a2a;border:1px solid #1e3a5f;border-radius:8px;
+                     color:#38bdf8;font-size:12px;cursor:pointer;font-family:inherit">
+              +${ml}ml
+            </button>`).join('')}
+          <button onclick="addWater(0) || undoLastWater()"
+            style="padding:6px 12px;background:#1f2937;border:1px solid #374151;border-radius:8px;
+                   color:#6b7280;font-size:12px;cursor:pointer;font-family:inherit">↩️ 취소</button>
+        </div>`;
+    };
+
+    window.undoLastWater = () => {
+      if (!appData.waterLog?.length) return;
+      appData.waterLog.pop();
+      scheduleSave();
+      renderWaterTracker();
+    };
+
     window.saveSettings = () => {
       appData.gender = document.querySelectorAll(".gender-btn.active")[0]?.dataset.v || appData.gender;
       appData.height = document.getElementById("s-height").value;
@@ -375,6 +516,7 @@
       renderWeightStats();
       renderWeightList();
       renderWeightGraph();
+      renderWaterTracker();
     }
 
     function renderRemainingCards() {
@@ -383,24 +525,31 @@
       const now = Date.now();
       c.innerHTML = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
         const rem = calcRemaining(drug);
-        const in7d = calcConcentrationAt(drug, now + 7 * 86400000);
+        const cycDays = getDoseCycle(drug);
+        const in_cycleDay = calcConcentrationAt(drug, now + cycDays * 86400000);
         // 마지막 투약 기록
         const lastRec = (appData.records || [])
           .filter(r => r.drug === drug)
           .sort((a,b) => b.time - a.time)[0];
-        // 다음 주사 D-day (마지막 투약 + 7일)
+        // 다음 주사 D-day (마지막 투약 + 설정 주기)
         let ddayStr = "";
         if (lastRec) {
-          const nextDue = lastRec.time + 7 * 86400000;
+          const nextDue = lastRec.time + cycDays * 86400000;
           const diffMs = nextDue - now;
           const diffDays = Math.floor(diffMs / 86400000);
           const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
           if (diffMs > 0) {
-            ddayStr = diffDays > 0
-              ? `<span style="font-size:11px;color:#facc15">다음 주사 D-${diffDays}</span>`
-              : `<span style="font-size:11px;color:#f87171">오늘 주사일! (${diffHrs}h 후)</span>`;
+            if (diffDays > 0) {
+              ddayStr = `<span style="font-size:11px;color:#facc15">다음 주사 D-${diffDays} <span style="color:#374151;font-size:10px">(${cycDays}일 주기)</span></span>`;
+            } else {
+              ddayStr = `<span style="font-size:11px;color:#f87171">🔔 오늘 주사일! (${diffHrs}h 후)</span>`;
+            }
           } else {
-            ddayStr = `<span style="font-size:11px;color:#f87171">주사 ${Math.abs(diffDays)}일 지남</span>`;
+            const overDays = Math.abs(diffDays);
+            const overHrs = Math.abs(Math.floor((diffMs % 86400000) / 3600000));
+            ddayStr = overDays === 0
+              ? `<span style="font-size:11px;color:#f87171">주사 ${overHrs}시간 지남 ⚠️</span>`
+              : `<span style="font-size:11px;color:#f87171">주사 ${overDays}일 지남 ⚠️</span>`;
           }
         }
         // 최고농도 대비 현재 % (카드 진행바)
@@ -416,13 +565,20 @@
                   ${ddayStr}
                 </div>
                 <div style="font-size:28px;font-weight:700;color:${cfg.color};font-family:'JetBrains Mono',monospace;line-height:1">${rem.toFixed(3)}<span style="font-size:13px;font-weight:400;margin-left:4px;color:#9ca3af">mg</span></div>
-                <div style="display:flex;gap:10px;margin-top:5px;align-items:center">
+                <div style="display:flex;gap:8px;margin-top:5px;align-items:center;flex-wrap:wrap">
                   <span style="font-size:11px;color:#4a5568">반감기 ${cfg.halfLifeDays}일 · Tmax ~${cfg.tmaxHours}h</span>
                   ${lastRec ? `<span style="font-size:10px;color:#374151">최근: ${toKSTString(lastRec.time).slice(0,10)}</span>` : ''}
                 </div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
+                  <span style="font-size:10px;color:#4a5568">투약 주기:</span>
+                  <button onclick="setDrugCycle('${drug}', ${cycDays - 1})" style="background:#1f2937;border:1px solid #374151;border-radius:4px;color:#9ca3af;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;padding:0">−</button>
+                  <span style="font-size:12px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono';min-width:28px;text-align:center">${cycDays}일</span>
+                  <button onclick="setDrugCycle('${drug}', ${cycDays + 1})" style="background:#1f2937;border:1px solid #374151;border-radius:4px;color:#9ca3af;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;padding:0">+</button>
+                  ${cycDays !== cfg.defaultDoseDays ? `<button onclick="setDrugCycle('${drug}', ${cfg.defaultDoseDays})" style="background:none;border:none;font-size:10px;color:#374151;cursor:pointer;padding:0">리셋</button>` : ''}
+                </div>
                 ${rem > 0 ? `<div style="margin-top:8px">
                   <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a5568;margin-bottom:3px">
-                    <span>체내 잔류 ${pct}%</span><span>7일 후 ~${in7d.toFixed(2)}mg</span>
+                    <span>체내 잔류 ${pct}%</span><span>${cycDays}일 후 ~${in_cycleDay.toFixed(2)}mg</span>
                   </div>
                   <div style="height:5px;background:#1f2937;border-radius:3px;overflow:hidden">
                     <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cfg.color}88,${cfg.color});border-radius:3px;transition:width .5s"></div>
@@ -447,11 +603,12 @@
       if (!recs.length) { c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:32px 0;font-size:14px">기록이 없습니다</div>`; return; }
       c.innerHTML = recs.map(r => {
         const cfg = DRUG_CONFIG[r.drug] || {};
+        const siteInfo = r.site ? INJECTION_SITES.find(s => s.id === r.site) : null;
         return `<div class="record-row" style="border-color:${cfg.color}22">
           <div>
             <div style="font-size:12px;color:${cfg.color};margin-bottom:3px">${cfg.emoji||""} ${r.drug}${r.isOverride?' <span style="font-size:10px;color:#facc15">[수동]</span>':''}</div>
             <div style="font-size:17px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace">${r.dose} mg</div>
-            <div style="font-size:11px;color:#4a5568;margin-top:2px">${toKSTString(r.time)}</div>
+            <div style="font-size:11px;color:#4a5568;margin-top:2px">${toKSTString(r.time)}${siteInfo ? ` · <span style="color:#6b7280">${siteInfo.emoji}${siteInfo.label}</span>` : ''}</div>
           </div>
           <button class="del-btn" onclick="deleteRecord(${r.id})">삭제</button>
         </div>`;
@@ -680,29 +837,53 @@
         return (lastRec + 35 * 86400000) - (firstRec - 35 * 86400000);
       }
 
-      let touchState = {
-        mode: 'idle', // 'idle' | 'tooltip' | 'drag' | 'pinch'
+      // ── 터치 UX ──────────────────────────────────────────
+      // 동작 원칙:
+      //  1) 손가락 1개 터치 → 즉시 툴팁 표시
+      //  2) 손가락 유지한 채 좌우 이동 → 툴팁 x 위치만 업데이트 (수치 스크롤)
+      //     단, 빠른 스와이프(속도 임계값 초과) → 그래프 이동 + 툴팁 숨김
+      //  3) 손가락 뗌 → 마지막 위치 툴팁 0.8초 유지 후 사라짐
+      //  4) 핀치 → 확대/축소
+      // ─────────────────────────────────────────────────────
+      let ts = {
+        active: false,
+        isPinch: false,
         startX: 0,
+        lastX: 0,
         startOffset: 0,
         prevDist: 0,
-        moved: false,
+        velocity: 0,       // px/ms
+        lastTime: 0,
+        isDrag: false,     // 빠른 스와이프 감지 시만 true
       };
+      let tooltipHideTimer = null;
+
+      function clearTooltipTimer() {
+        if (tooltipHideTimer) { clearTimeout(tooltipHideTimer); tooltipHideTimer = null; }
+      }
 
       canvas.addEventListener("touchstart", e => {
         e.preventDefault();
-        if (e.touches.length === 1) {
-          const rect = canvas.getBoundingClientRect();
-          const x = e.touches[0].clientX - rect.left;
-          touchState = { mode: 'tooltip', startX: x, startOffset: graphZoom.offsetX, moved: false };
-          graphTooltip = { visible: true, x };
-          renderPeptideGraph();
-        } else if (e.touches.length === 2) {
-          touchState.mode = 'pinch';
-          touchState.prevDist = Math.hypot(
+        clearTooltipTimer();
+
+        if (e.touches.length === 2) {
+          ts.isPinch = true;
+          ts.prevDist = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
           graphTooltip.visible = false;
+          renderPeptideGraph();
+          return;
+        }
+
+        if (e.touches.length === 1) {
+          const rect = canvas.getBoundingClientRect();
+          const x = e.touches[0].clientX - rect.left;
+          ts = { active: true, isPinch: false, startX: x, lastX: x,
+                 startOffset: graphZoom.offsetX, prevDist: 0,
+                 velocity: 0, lastTime: Date.now(), isDrag: false };
+          graphTooltip = { visible: true, x };
           renderPeptideGraph();
         }
       }, { passive: false });
@@ -710,63 +891,76 @@
       canvas.addEventListener("touchmove", e => {
         e.preventDefault();
         const rect = canvas.getBoundingClientRect();
+        const now = Date.now();
 
-        if (e.touches.length === 2 || touchState.mode === 'pinch') {
+        // 핀치 줌
+        if (e.touches.length === 2 || ts.isPinch) {
           if (e.touches.length < 2) return;
-          touchState.mode = 'pinch';
+          ts.isPinch = true;
           graphTooltip.visible = false;
           const dist = Math.hypot(
             e.touches[0].clientX - e.touches[1].clientX,
             e.touches[0].clientY - e.touches[1].clientY
           );
-          if (touchState.prevDist > 0) {
-            const ratio = touchState.prevDist / dist;
-            const newScale = Math.min(80, Math.max(1, graphZoom.scale * (1 / ratio)));
+          if (ts.prevDist > 0) {
+            const ratio = ts.prevDist / dist;
+            const newScale = Math.min(80, Math.max(1, graphZoom.scale / ratio));
             const fullRange = getFullRange();
-            const maxOffset = fullRange - fullRange / newScale;
             graphZoom.scale = newScale;
-            graphZoom.offsetX = Math.max(0, Math.min(maxOffset, graphZoom.offsetX));
+            graphZoom.offsetX = Math.max(0, Math.min(fullRange - fullRange / newScale, graphZoom.offsetX));
           }
-          touchState.prevDist = dist;
+          ts.prevDist = dist;
           renderPeptideGraph();
           return;
         }
 
-        if (e.touches.length === 1) {
-          const x = e.touches[0].clientX - rect.left;
-          const dx = x - touchState.startX;
+        if (!ts.active || e.touches.length !== 1) return;
+        const x = e.touches[0].clientX - rect.left;
+        const dx = x - ts.lastX;
+        const dt = Math.max(1, now - ts.lastTime);
+        ts.velocity = dx / dt; // px/ms
+        ts.lastTime = now;
 
-          if (!touchState.moved && Math.abs(dx) > 8) {
-            // 드래그 시작
-            touchState.mode = 'drag';
-            touchState.moved = true;
-            graphTooltip.visible = false;
-          }
-
-          if (touchState.mode === 'drag') {
-            const fullRange = getFullRange();
-            const visRange = fullRange / graphZoom.scale;
-            const graphW = canvas.offsetWidth - PAD_L - PAD_R;
-            const msPerPx = visRange / graphW;
-            const newOffset = touchState.startOffset - dx * msPerPx;
-            graphZoom.offsetX = Math.max(0, Math.min(fullRange - visRange, newOffset));
-            renderPeptideGraph();
-          } else if (touchState.mode === 'tooltip') {
-            // 8px 이하 이동 → 툴팁 위치 업데이트
-            graphTooltip = { visible: true, x };
-            renderPeptideGraph();
-          }
+        // 속도 기반 판단: |velocity| > 0.8px/ms → 그래프 이동 모드
+        // 그 아래 → 툴팁 슬라이드 모드
+        const DRAG_SPEED = 0.5; // px/ms 임계값
+        if (Math.abs(ts.velocity) > DRAG_SPEED && !ts.isDrag) {
+          ts.isDrag = true;
         }
+
+        if (ts.isDrag) {
+          // 그래프 이동
+          graphTooltip.visible = false;
+          const totalDx = x - ts.startX;
+          const fullRange = getFullRange();
+          const visRange = fullRange / graphZoom.scale;
+          const graphW = canvas.offsetWidth - PAD_L - PAD_R;
+          const msPerPx = visRange / Math.max(graphW, 1);
+          graphZoom.offsetX = Math.max(0, Math.min(fullRange - visRange, ts.startOffset - totalDx * msPerPx));
+        } else {
+          // 툴팁 슬라이드 - x 위치만 업데이트
+          graphTooltip = { visible: true, x };
+        }
+
+        ts.lastX = x;
+        renderPeptideGraph();
       }, { passive: false });
 
       canvas.addEventListener("touchend", e => {
-        if (touchState.mode === 'tooltip' && !touchState.moved) {
-          // 탭: 툴팁 유지
-        } else {
+        if (ts.isDrag) {
+          // 드래그 후: 즉시 툴팁 숨김
           graphTooltip.visible = false;
           renderPeptideGraph();
+        } else if (graphTooltip.visible) {
+          // 툴팁 모드: 1.5초 유지 후 사라짐
+          clearTooltipTimer();
+          tooltipHideTimer = setTimeout(() => {
+            graphTooltip.visible = false;
+            renderPeptideGraph();
+          }, 1500);
         }
-        touchState.mode = 'idle';
+        ts.active = false;
+        ts.isPinch = false;
       }, { passive: false });
 
       // PC 마우스
@@ -1001,7 +1195,9 @@
     window.openAddModal = () => {
       document.getElementById("add-time").value = kstNow();
       document.getElementById("add-dose").value = "";
+      selectedSite = null;
       document.getElementById("add-modal").style.display = "flex";
+      setTimeout(renderSiteSelector, 50);
     };
     window.closeAddModal = () => document.getElementById("add-modal").style.display = "none";
     window.openWeightModal = () => {
@@ -1035,7 +1231,7 @@
       document.getElementById("panel-"+tab).style.display = "block";
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
       if (tab === "peptide") setTimeout(() => { renderPeptideGraph(); initGraphTouch(); }, 50);
-      if (tab === "weight") setTimeout(renderWeightGraph, 50);
+      if (tab === "weight") setTimeout(() => { renderWeightGraph(); renderWaterTracker(); }, 50);
       if (tab === "analysis") setTimeout(renderAnalysis, 50);
     };
 
@@ -1444,6 +1640,12 @@
       <!-- 빠른 기록 추가 (최상단) -->
       <button class="big-btn green" onclick="openWeightModal()" style="margin-bottom:12px">+ 체중 기록 추가</button>
 
+      <!-- 수분 트래커 -->
+      <div class="card" style="margin-bottom:12px;border-color:#0ea5e933">
+        <div class="section-title">💧 오늘 수분 섭취</div>
+        <div id="water-tracker"></div>
+      </div>
+
       <!-- 통계 -->
       <div class="stat-grid">
         <div class="stat-card"><div class="stat-label">현재 체중</div><div class="stat-val" id="stat-weight">-- kg</div></div>
@@ -1528,16 +1730,19 @@
 <div id="add-modal" class="modal-overlay" onclick="if(event.target===this)closeAddModal()">
   <div class="modal-box">
     <div class="modal-title">💊 약물 기록 추가</div>
-    <div style="margin-bottom:12px"><label>약물 선택</label>
+    <div style="margin-bottom:10px"><label>약물 선택</label>
       <select id="add-drug" class="input-field">
         <option>터제파타이드</option><option>레타트루타이드</option><option>세마글루타이드</option>
       </select>
     </div>
-    <div style="margin-bottom:12px"><label>용량 (mg)</label>
+    <div style="margin-bottom:10px"><label>용량 (mg)</label>
       <input id="add-dose" class="input-field" type="number" step="0.1" placeholder="예: 2.5" />
     </div>
-    <div style="margin-bottom:12px"><label>날짜 / 시간 (한국시간)</label>
+    <div style="margin-bottom:10px"><label>날짜 / 시간 (한국시간)</label>
       <input id="add-time" class="input-field" type="datetime-local" />
+    </div>
+    <div style="margin-bottom:12px" id="site-selector-wrap">
+      <div id="site-selector"></div>
     </div>
     <div class="modal-actions">
       <button class="big-btn" style="background:#374151;flex:1" onclick="closeAddModal()">취소</button>
