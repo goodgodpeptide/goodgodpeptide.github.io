@@ -126,6 +126,21 @@
     };
     window.doLogout = async () => { await signOut(auth); };
 
+    // 다크/라이트 모드
+    window.toggleTheme = () => {
+      const isLight = document.body.classList.toggle("light-mode");
+      document.getElementById("theme-toggle").textContent = isLight ? "☀️" : "🌙";
+      localStorage.setItem("theme", isLight ? "light" : "dark");
+    };
+    // 저장된 테마 복원
+    if (localStorage.getItem("theme") === "light") {
+      document.body.classList.add("light-mode");
+      document.addEventListener("DOMContentLoaded", () => {
+        const btn = document.getElementById("theme-toggle");
+        if (btn) btn.textContent = "☀️";
+      });
+    }
+
     // 외부 브라우저 열기
     window.openInExternalBrowser = () => {
       const url = window.location.href;
@@ -598,8 +613,12 @@
     window.addCustomSupplement = () => {
       const name = document.getElementById("new-supp-name")?.value?.trim();
       if (!name) return;
+      const timing = [];
+      if (document.getElementById("new-supp-morning")?.checked) timing.push("아침");
+      if (document.getElementById("new-supp-evening")?.checked) timing.push("저녁");
+      if (!timing.length) timing.push("아침");
       appData.supplements = getSupplements();
-      appData.supplements.push({ id: "s_" + Date.now(), name, timing: ["아침"], taken: {} });
+      appData.supplements.push({ id: "s_" + Date.now(), name, timing, taken: {} });
       document.getElementById("new-supp-name").value = "";
       scheduleSave();
       renderSupplementPanel();
@@ -649,10 +668,22 @@
         </div>`;
       }).join('');
 
-      // 추가 입력
-      c.innerHTML += `<div style="display:flex;gap:8px;margin-top:8px">
-        <input id="new-supp-name" class="input-field" placeholder="영양제 이름 추가" style="flex:1" />
-        <button onclick="addCustomSupplement()" class="big-btn blue" style="width:auto;padding:8px 14px;font-size:13px">추가</button>
+      // 추가 입력 (아침/저녁 선택 포함)
+      c.innerHTML += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #1f2937">
+        <div style="font-size:11px;color:#6b7280;margin-bottom:8px">영양제 추가</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <input id="new-supp-name" class="input-field" placeholder="영양제 이름" style="flex:1" />
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;align-items:center">
+          <span style="font-size:12px;color:#6b7280;white-space:nowrap">복용 시간:</span>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#9ca3af;cursor:pointer">
+            <input type="checkbox" id="new-supp-morning" checked style="accent-color:#60a5fa"> 아침
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:13px;color:#9ca3af;cursor:pointer">
+            <input type="checkbox" id="new-supp-evening" style="accent-color:#60a5fa"> 저녁
+          </label>
+        </div>
+        <button onclick="addCustomSupplement()" class="big-btn blue" style="padding:10px 14px;font-size:13px">+ 추가</button>
       </div>`;
     }
 
@@ -670,6 +701,7 @@
     // ══════════════════════════════════════════════
     let graphRangeHours = 0;
     let graphZoom = { scale: 1, offsetX: 0 };
+    let graphDrugFilter = "전체"; // 그래프 약물 필터
 
     window.setGraphRange = (hrs) => {
       graphRangeHours = hrs;
@@ -780,7 +812,7 @@
               style="padding:9px 16px;background:${cfg.color};border:none;border-radius:10px;
                      color:#0a0a14;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;
                      white-space:nowrap;flex-shrink:0">
-              💉 맞았어요
+              💉 투약
             </button>
           </div>
 
@@ -811,30 +843,48 @@
 
     // 원터치 투약
     window.quickInject = (drug) => {
-      const inputId = "quick-dose-" + drug.replace(/\s|\(|\)/g,'_');
+      const inputId = "quick-dose-" + drug.replace(/[\s\(\)]/g,'_');
       const input = document.getElementById(inputId);
       const recs = (appData.records || []).filter(r => r.drug === drug && !r.isOverride).sort((a,b) => b.time - a.time);
       const lastDose = recs[0]?.dose;
       const dose = parseFloat(input?.value) || lastDose;
       if (!dose) {
-        input?.focus();
-        input?.setAttribute("placeholder", "용량 입력 필요!");
+        if (input) { input.focus(); input.placeholder = "용량 입력 필요!"; }
         return;
       }
-      // 주사 부위 추천 팝업 대신 인라인 확인
-      const site = getNextSuggested();
-      const siteLabel = site ? site.label : "";
+      // 부위 선택 모달 띄우기
+      const m = document.getElementById("quick-site-modal");
+      m.dataset.drug = drug;
+      m.dataset.dose = dose;
+      m.dataset.inputId = inputId;
+      // 버튼 렌더
+      const next = getNextSuggested();
+      document.getElementById("quick-site-title").textContent = `💉 ${drug.split(' ')[0]} ${dose}mg · 주사 부위`;
+      document.getElementById("quick-site-btns").innerHTML = INJECTION_SITES.map(s => `
+        <button onclick="confirmQuickInject('${s.id}')"
+          style="padding:12px 8px;border-radius:10px;border:2px solid ${s.id===next?.id?'#4ade80':'#374151'};
+                 background:${s.id===next?.id?'#0d2a1a':'#1f2937'};
+                 color:${s.id===next?.id?'#4ade80':'#9ca3af'};
+                 font-size:12px;cursor:pointer;font-family:inherit;text-align:center;width:100%">
+          ${s.emoji}<br><b>${s.label}</b>${s.id===next?.id?' ✓':''}
+        </button>`).join('');
+      m.style.display = "flex";
+    };
+
+    window.confirmQuickInject = (siteId) => {
+      const m = document.getElementById("quick-site-modal");
+      const drug = m.dataset.drug;
+      const dose = parseFloat(m.dataset.dose);
+      const inputId = m.dataset.inputId;
+      const siteInfo = INJECTION_SITES.find(s => s.id === siteId);
       appData.records = appData.records || [];
-      appData.records.push({
-        id: Date.now(), drug, dose,
-        time: Date.now(),
-        site: site?.id || null
-      });
+      appData.records.push({ id: Date.now(), drug, dose, time: Date.now(), site: siteId });
+      const input = document.getElementById(inputId);
       if (input) input.value = "";
+      m.style.display = "none";
       scheduleSave();
       renderAll();
-      // 짧은 토스트 표시
-      showToast(`✅ ${drug.split(' ')[0]} ${dose}mg 기록 완료${siteLabel ? ' · ' + siteLabel : ''}`);
+      showToast(`✅ ${drug.split(' ')[0]} ${dose}mg · ${siteInfo?.label || ''} 기록 완료`);
     };
 
     // 토스트 메시지
@@ -923,6 +973,8 @@
       const STEPS = 400;
       let globalMax = 0;
       const curves = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
+        // 약물 필터 적용
+        if (graphDrugFilter !== "전체" && cfg.short !== graphDrugFilter) return null;
         const drugRecs = records.filter(r => r.drug === drug);
         if (!drugRecs.length) return null;
         const points = [];
@@ -938,13 +990,14 @@
       if (globalMax === 0) globalMax = 1;
 
       // 배경
-      ctx.fillStyle = "#080810";
+      const isLight = document.body.classList.contains("light-mode");
+      ctx.fillStyle = isLight ? "#f0f4f8" : "#080810";
       ctx.fillRect(PAD.l, PAD.t, gW, gH);
 
       // 가로 그리드 + y축 레이블
       const xLabelCount = 5;
       // 세로 그리드 먼저 (배경에 깔리도록)
-      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1;
+      ctx.strokeStyle = isLight ? "#dde3ea" : "#1a1a2e"; ctx.lineWidth = 1;
       for (let i = 0; i <= xLabelCount; i++) {
         const x = PAD.l + (i / xLabelCount) * gW;
         ctx.beginPath(); ctx.moveTo(x, PAD.t); ctx.lineTo(x, PAD.t + gH); ctx.stroke();
@@ -953,12 +1006,12 @@
       for (let i = 0; i <= 4; i++) {
         const y = PAD.t + gH - (i / 4) * gH;
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
-        ctx.fillStyle = "#4a5568"; ctx.font = `10px 'JetBrains Mono'`; ctx.textAlign = "right";
+        ctx.fillStyle = isLight ? "#6b7280" : "#4a5568"; ctx.font = `10px 'JetBrains Mono'`; ctx.textAlign = "right";
         ctx.fillText((globalMax * i / 4).toFixed(2), PAD.l - 5, y + 4);
       }
 
       // x축 레이블
-      ctx.fillStyle = "#4a5568"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
+      ctx.fillStyle = isLight ? "#6b7280" : "#4a5568"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
       for (let i = 0; i <= xLabelCount; i++) {
         const t = visMinTime + (i / xLabelCount) * visRange;
         const x = PAD.l + (i / xLabelCount) * gW;
@@ -1346,11 +1399,12 @@
       const rangeT = maxT - minT || 1;
 
       // 배경
-      ctx.fillStyle = "#080810";
+      const isLightW = document.body.classList.contains("light-mode");
+      ctx.fillStyle = isLightW ? "#f0f4f8" : "#080810";
       ctx.fillRect(PAD.l, PAD.t, gW, gH);
 
       // 그리드
-      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1;
+      ctx.strokeStyle = isLightW ? "#dde3ea" : "#1a1a2e"; ctx.lineWidth = 1;
       const xGridCount = 5;
       const ySteps = 4;
       // 세로 그리드
@@ -1652,6 +1706,7 @@
       if (tab === "peptide") setTimeout(() => { renderPeptideGraph(); initGraphTouch(); }, 50);
       if (tab === "weight") setTimeout(() => { renderWeightGraph(); renderWaterTracker(); initWeightTouch(); renderSupplementPanel(); }, 50);
       if (tab === "analysis") setTimeout(renderAnalysis, 50);
+      if (tab === "supple") setTimeout(renderSupplementPanel, 50);
     };
 
     // ══════════════════════════════════════════════
@@ -1845,7 +1900,11 @@
       if (el) el.value = val;
     };
 
-    window.onFilterChange = renderPeptideList;
+    window.onFilterChange = () => {
+      graphDrugFilter = document.getElementById("peptide-filter")?.value || "전체";
+      renderPeptideList();
+      renderPeptideGraph();
+    };
 
     // ── 체중 그래프 터치/마우스 ───────────────────────────
     function initWeightTouch() {
@@ -2019,6 +2078,42 @@
     }
     .drug-card:has(input:focus) { border-color: var(--drug-color); }
     .drug-card input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    /* ── 라이트 모드 ─────────────────────────── */
+    body.light-mode { background: #f0f2f5; color: #1a1a2e; }
+    body.light-mode .top-bar { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 1px 4px #0001; }
+    body.light-mode .top-bar-title { color: #1a1a2e; }
+    body.light-mode .tabs { background: #ffffff; border-color: #e2e8f0; }
+    body.light-mode .tab-btn { color: #6b7280; }
+    body.light-mode .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+    body.light-mode .card { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 1px 4px #0001; }
+    body.light-mode .drug-card { background: #ffffff; }
+    body.light-mode .record-row { background: #f8fafc; border-color: #e2e8f0; }
+    body.light-mode .stat-card { background: #ffffff; border-color: #e2e8f0; }
+    body.light-mode .chart-wrap { background: #f8fafc; border-color: #e2e8f0; }
+    body.light-mode .input-field { background: #f8fafc; border-color: #d1d5db; color: #1a1a2e; }
+    body.light-mode .modal-box { background: #ffffff; border-color: #e2e8f0; }
+    body.light-mode .modal-overlay { background: #00000055; }
+    body.light-mode .pk-info { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+    body.light-mode .zoom-hint { color: #9ca3af; }
+    body.light-mode .section-title { color: #9ca3af; }
+    body.light-mode #save-status { }
+    body.light-mode .logout-btn { border-color: #d1d5db; color: #6b7280; }
+    body.light-mode .big-btn.blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+    body.light-mode .big-btn.green { background: linear-gradient(135deg, #059669, #10b981); }
+    body.light-mode .del-btn { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+    body.light-mode .filter-btn { background: #f3f4f6; color: #6b7280; }
+    body.light-mode .filter-btn.active { background: #2563eb; color: white; }
+    body.light-mode .graph-range-btn, body.light-mode .wrange-btn { background: #f3f4f6; color: #6b7280; }
+    body.light-mode .graph-range-btn.active, body.light-mode .wrange-btn.active { background: #2563eb; color: white; }
+    body.light-mode .gender-btn { background: #f3f4f6; color: #6b7280; }
+    body.light-mode .gender-btn.active { background: #2563eb; color: white; }
+    body.light-mode .result-card { background: #eff6ff; border-color: #bfdbfe; }
+    body.light-mode .result-row span:last-child { color: #1a1a2e; }
+    body.light-mode #toast { background: #1f2937; color: #e2e8f0; }
+    body.light-mode .quick-btns .qbtn { background: #f3f4f6; color: #6b7280; }
+    #theme-toggle { background: none; border: 1px solid #374151; border-radius: 8px; padding: 4px 10px; font-size: 16px; cursor: pointer; transition: all .2s; }
+    body.light-mode #theme-toggle { border-color: #d1d5db; }
   </style>
 </head>
 <body>
@@ -2074,6 +2169,7 @@
     <div class="top-bar-title">⚖️ 체중관리 매니저</div>
     <div class="top-bar-right">
       <div id="save-status">☁️ 저장됨</div>
+      <button id="theme-toggle" onclick="toggleTheme()" title="다크/라이트 모드">🌙</button>
       <img id="user-avatar" src="" alt="" />
       <span id="user-name" style="display:none"></span>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
@@ -2085,6 +2181,7 @@
     <button class="tab-btn" data-tab="calc"    onclick="switchTab('calc')">🧮 계산기</button>
     <button class="tab-btn" data-tab="weight"  onclick="switchTab('weight')">⚖️ 체중</button>
     <button class="tab-btn" data-tab="analysis" onclick="switchTab('analysis')">📊 분석</button>
+    <button class="tab-btn" data-tab="supple" onclick="switchTab('supple')">💊 영양제</button>
   </div>
 
   <div class="content">
@@ -2224,11 +2321,7 @@
 
       <div id="weight-list"></div>
 
-      <!-- 영양제 섹션 -->
-      <div class="card" style="margin-top:12px;border-color:#a78bfa33">
-        <div class="section-title" style="margin-bottom:10px">💊 오늘 영양제</div>
-        <div id="supplement-panel"></div>
-      </div>
+
     </div>
 
     <!-- 분석 패널 -->
@@ -2240,6 +2333,24 @@
 
     </div>
 
+    <!-- 영양제 패널 -->
+    <div id="panel-supple" class="tab-panel">
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:4px">💊 오늘 영양제 복용 체크</div>
+        <div style="font-size:11px;color:#4a5568;margin-bottom:12px">매일 자정에 초기화됩니다</div>
+        <div id="supplement-panel"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- 모달: 주사 부위 선택 (투약) -->
+<div id="quick-site-modal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box">
+    <div class="modal-title" id="quick-site-title">💉 주사 부위 선택</div>
+    <div id="quick-site-btns" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
+    <button class="big-btn" style="background:#374151" onclick="document.getElementById('quick-site-modal').style.display='none'">취소</button>
   </div>
 </div>
 
