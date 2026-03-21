@@ -12,7 +12,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc }
+    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -76,8 +76,21 @@
       if (user) {
         document.getElementById("login-screen").style.display = "none";
         document.getElementById("app-screen").style.display = "flex";
-        document.getElementById("user-name").textContent = user.displayName || user.email;
         document.getElementById("user-avatar").src = user.photoURL || "";
+        // 아이디 숨김 - 아바타만 표시
+        document.getElementById("user-name").style.display = "none";
+        // 로그인 로그 기록 (Firestore logs 컬렉션)
+        try {
+          await addDoc(collection(db, "login_logs"), {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || "",
+            photoURL: user.photoURL || "",
+            loginAt: serverTimestamp(),
+            userAgent: navigator.userAgent,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          });
+        } catch(e) { /* 로그 실패는 조용히 */ }
         await loadData();
         renderAll();
       } else {
@@ -258,6 +271,66 @@
       scheduleSave(); renderAll();
     };
 
+    // ── 부작용 로그 ──────────────────────────────────
+    const SIDE_EFFECTS = ["메스꺼움","구토","설사","변비","식욕감소","피로감","두통","소화불량","어지러움","기타"];
+
+    window.openSideEffectModal = (drug) => {
+      const m = document.getElementById("side-effect-modal");
+      m.dataset.drug = drug;
+      document.getElementById("se-drug-title").textContent = DRUG_CONFIG[drug]?.emoji + " " + drug + " 부작용 기록";
+      document.getElementById("se-time").value = kstNow();
+      document.getElementById("se-note").value = "";
+      // 체크박스 초기화
+      document.getElementById("se-checkboxes").innerHTML = SIDE_EFFECTS.map(s =>
+        `<label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#9ca3af;padding:4px 0;cursor:pointer">
+          <input type="checkbox" value="${s}" style="width:16px;height:16px;accent-color:#f87171"> ${s}
+        </label>`
+      ).join('');
+      m.style.display = "flex";
+    };
+
+    window.submitSideEffect = () => {
+      const m = document.getElementById("side-effect-modal");
+      const drug = m.dataset.drug;
+      const checked = [...document.querySelectorAll("#se-checkboxes input:checked")].map(i => i.value);
+      const note = document.getElementById("se-note").value;
+      const timeVal = document.getElementById("se-time").value;
+      if (!checked.length && !note) return;
+      appData.sideEffects = appData.sideEffects || [];
+      appData.sideEffects.push({
+        id: Date.now(), drug, symptoms: checked, note,
+        time: kstInputToMs(timeVal)
+      });
+      scheduleSave();
+      m.style.display = "none";
+      renderSideEffectList();
+      alert("기록 완료");
+    };
+
+    window.deleteSideEffect = (id) => {
+      appData.sideEffects = (appData.sideEffects || []).filter(r => r.id !== id);
+      scheduleSave(); renderSideEffectList();
+    };
+
+    function renderSideEffectList() {
+      const c = document.getElementById("side-effect-list");
+      if (!c) return;
+      const recs = (appData.sideEffects || []).sort((a,b) => b.time - a.time);
+      if (!recs.length) { c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:20px 0;font-size:13px">기록 없음</div>`; return; }
+      c.innerHTML = recs.map(r => {
+        const cfg = DRUG_CONFIG[r.drug] || {};
+        return `<div class="record-row" style="border-color:#7f1d1d33">
+          <div style="flex:1">
+            <div style="font-size:11px;color:${cfg.color||'#f87171'};margin-bottom:3px">${cfg.emoji||'⚠️'} ${r.drug}</div>
+            <div style="font-size:13px;color:#fca5a5">${r.symptoms?.join(', ') || ''}</div>
+            ${r.note ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">${r.note}</div>` : ''}
+            <div style="font-size:10px;color:#374151;margin-top:2px">${toKSTString(r.time)}</div>
+          </div>
+          <button class="del-btn" onclick="deleteSideEffect(${r.id})">삭제</button>
+        </div>`;
+      }).join('');
+    }
+
     window.saveSettings = () => {
       appData.gender = document.querySelectorAll(".gender-btn.active")[0]?.dataset.v || appData.gender;
       appData.height = document.getElementById("s-height").value;
@@ -294,6 +367,7 @@
       renderRemainingCards();
       renderPeptideList();
       renderPeptideGraph();
+      renderSideEffectList();
       renderWeightStats();
       renderWeightList();
       renderWeightGraph();
@@ -305,28 +379,56 @@
       const now = Date.now();
       c.innerHTML = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
         const rem = calcRemaining(drug);
-        // 다음 주사까지 예상 잔류량 (7일 후)
         const in7d = calcConcentrationAt(drug, now + 7 * 86400000);
-        const steadyPct = rem > 0 ? Math.round((in7d / rem) * 100) : 0;
+        // 마지막 투약 기록
+        const lastRec = (appData.records || [])
+          .filter(r => r.drug === drug)
+          .sort((a,b) => b.time - a.time)[0];
+        // 다음 주사 D-day (마지막 투약 + 7일)
+        let ddayStr = "";
+        if (lastRec) {
+          const nextDue = lastRec.time + 7 * 86400000;
+          const diffMs = nextDue - now;
+          const diffDays = Math.floor(diffMs / 86400000);
+          const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+          if (diffMs > 0) {
+            ddayStr = diffDays > 0
+              ? `<span style="font-size:11px;color:#facc15">다음 주사 D-${diffDays}</span>`
+              : `<span style="font-size:11px;color:#f87171">오늘 주사일! (${diffHrs}h 후)</span>`;
+          } else {
+            ddayStr = `<span style="font-size:11px;color:#f87171">주사 ${Math.abs(diffDays)}일 지남</span>`;
+          }
+        }
+        // 최고농도 대비 현재 % (카드 진행바)
+        const peakDose = lastRec ? lastRec.dose : 0;
+        const pct = peakDose > 0 ? Math.min(100, Math.round(rem / peakDose * 100)) : 0;
+
         return `
           <div class="card" style="border-color:${cfg.color}33">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
               <div style="flex:1">
-                <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">${cfg.emoji} ${drug}</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+                  <span style="font-size:12px;color:#9ca3af">${cfg.emoji} ${drug}</span>
+                  ${ddayStr}
+                </div>
                 <div style="font-size:28px;font-weight:700;color:${cfg.color};font-family:'JetBrains Mono',monospace;line-height:1">${rem.toFixed(3)}<span style="font-size:13px;font-weight:400;margin-left:4px;color:#9ca3af">mg</span></div>
-                <div style="display:flex;gap:10px;margin-top:6px;align-items:center">
+                <div style="display:flex;gap:10px;margin-top:5px;align-items:center">
                   <span style="font-size:11px;color:#4a5568">반감기 ${cfg.halfLifeDays}일 · Tmax ~${cfg.tmaxHours}h</span>
+                  ${lastRec ? `<span style="font-size:10px;color:#374151">최근: ${toKSTString(lastRec.time).slice(0,10)}</span>` : ''}
                 </div>
                 ${rem > 0 ? `<div style="margin-top:8px">
-                  <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-bottom:3px">
-                    <span>체내 잔류</span><span>7일 후 ~${in7d.toFixed(2)}mg</span>
+                  <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a5568;margin-bottom:3px">
+                    <span>체내 잔류 ${pct}%</span><span>7일 후 ~${in7d.toFixed(2)}mg</span>
                   </div>
-                  <div style="height:4px;background:#1f2937;border-radius:2px;overflow:hidden">
-                    <div style="height:100%;width:${Math.min(100,Math.round(rem/Math.max(rem,0.001)*100))}%;background:${cfg.color};border-radius:2px;transition:width .5s"></div>
+                  <div style="height:5px;background:#1f2937;border-radius:3px;overflow:hidden">
+                    <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cfg.color}88,${cfg.color});border-radius:3px;transition:width .5s"></div>
                   </div>
                 </div>` : ''}
               </div>
-              <button onclick="openOverrideModal('${drug}')" style="background:#1f2937;border:1px solid #374151;border-radius:8px;color:#9ca3af;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;margin-left:10px">수동입력</button>
+              <div style="display:flex;flex-direction:column;gap:6px;margin-left:10px">
+                <button onclick="openOverrideModal('${drug}')" style="background:#1f2937;border:1px solid #374151;border-radius:8px;color:#9ca3af;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">수동입력</button>
+                <button onclick="openSideEffectModal('${drug}')" style="background:#1a0f0f;border:1px solid #7f1d1d33;border-radius:8px;color:#f87171;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">부작용</button>
+              </div>
             </div>
           </div>`;
       }).join("");
@@ -1238,13 +1340,13 @@
     <div class="top-bar-right">
       <div id="save-status">☁️ 저장됨</div>
       <img id="user-avatar" src="" alt="" />
-      <span id="user-name"></span>
+      <span id="user-name" style="display:none"></span>
       <button class="logout-btn" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="peptide" onclick="switchTab('peptide')">💉 펩타이드</button>
+    <button class="tab-btn active" data-tab="peptide" onclick="switchTab('peptide')">💊 다이어트약</button>
     <button class="tab-btn" data-tab="calc"    onclick="switchTab('calc')">🧮 계산기</button>
     <button class="tab-btn" data-tab="weight"  onclick="switchTab('weight')">⚖️ 체중</button>
     <button class="tab-btn" data-tab="analysis" onclick="switchTab('analysis')">📊 분석</button>
@@ -1252,17 +1354,17 @@
 
   <div class="content">
 
-    <!-- ── 펩타이드 패널 ── -->
+    <!-- ── 다이어트약 패널 ── -->
     <div id="panel-peptide" class="tab-panel" style="display:block">
       <div id="remaining-cards"></div>
 
       <div class="pk-info">
-        💡 레타트루타이드: 투약 후 약 48시간에 피크 도달 (Tmax ~12~72h), 이후 반감기 6일로 감소 · 1-compartment oral PK 모델 적용
+        💡 레타트루타이드 Tmax ~48h (12~72h), 반감기 6일 · 터제파타이드 Tmax ~24h, 반감기 5일 · 1-compartment PK 모델 적용
       </div>
 
       <div class="chart-wrap">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-size:12px;color:#6b7280">📈 체내 농도 변화</div>
+          <div style="font-size:12px;color:#6b7280">📈 체내 약물 농도 변화</div>
           <div style="display:flex;gap:4px;flex-wrap:wrap">
             <button class="graph-range-btn" data-hrs="24"  onclick="setGraphRange(24)">1일</button>
             <button class="graph-range-btn" data-hrs="72"  onclick="setGraphRange(72)">3일</button>
@@ -1275,7 +1377,7 @@
         <div class="zoom-hint">👆 드래그 이동 · 핀치 확대/축소 · 탭/클릭 수치확인</div>
       </div>
 
-      <button class="big-btn blue" onclick="openAddModal()" style="margin-bottom:12px">+ 투약 기록 추가</button>
+      <button class="big-btn blue" onclick="openAddModal()" style="margin-bottom:12px">+ 약물 기록 추가</button>
 
       <div class="filter-bar">
         <button class="filter-btn active" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='전체';onFilterChange()">전체</button>
@@ -1388,16 +1490,57 @@
       <div id="analysis-prediction" class="card" style="margin-bottom:12px;display:none"></div>
       <div id="analysis-weekly" class="card" style="margin-bottom:12px;display:none"></div>
       <div id="analysis-tips" style="margin-bottom:12px"></div>
+
+      <!-- Firestore 보안 안내 -->
+      <div class="card" style="border-color:#1d4ed833;margin-bottom:12px">
+        <div class="section-title">🔐 Firestore 보안 Rules 설정 필요</div>
+        <div style="font-size:11px;color:#6b7280;line-height:1.8;font-family:'JetBrains Mono',monospace;background:#080810;border-radius:8px;padding:12px;margin-top:6px;overflow-x:auto;white-space:pre">rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    // 본인 데이터만 읽기/쓰기
+    match /users/{uid} {
+      allow read, write: if request.auth.uid == uid;
+    }
+    // 로그인 로그는 쓰기만 (읽기는 Console에서)
+    match /login_logs/{doc} {
+      allow create: if request.auth != null;
+      allow read: if false;
+    }
+  }
+}</div>
+        <div style="font-size:11px;color:#4a5568;margin-top:8px">Firebase Console → Firestore → Rules 탭에 위 내용 복붙 후 게시</div>
+        <div style="font-size:11px;color:#4a5568;margin-top:4px">로그인 기록: Console → Firestore → login_logs 컬렉션에서 확인 가능</div>
+      </div>
     </div>
 
+  </div>
+</div>
+
+<!-- 모달: 부작용 기록 -->
+<div id="side-effect-modal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box">
+    <div class="modal-title" id="se-drug-title">⚠️ 부작용 기록</div>
+    <div style="margin-bottom:12px"><label>날짜 / 시간 (KST)</label>
+      <input id="se-time" class="input-field" type="datetime-local" />
+    </div>
+    <div style="margin-bottom:12px"><label>증상 선택 (복수 가능)</label>
+      <div id="se-checkboxes" style="display:grid;grid-template-columns:1fr 1fr;gap:2px;background:#0d0d1a;border:1px solid #374151;border-radius:10px;padding:10px"></div>
+    </div>
+    <div style="margin-bottom:12px"><label>메모 (선택)</label>
+      <input id="se-note" class="input-field" placeholder="예: 구역질 심함, 물 많이 마심" />
+    </div>
+    <div class="modal-actions">
+      <button class="big-btn" style="background:#374151;flex:1" onclick="document.getElementById('side-effect-modal').style.display='none'">취소</button>
+      <button class="big-btn" style="background:linear-gradient(135deg,#7f1d1d,#b91c1c);flex:2" onclick="submitSideEffect()">저장</button>
+    </div>
   </div>
 </div>
 
 <!-- 모달: 투약 추가 -->
 <div id="add-modal" class="modal-overlay" onclick="if(event.target===this)closeAddModal()">
   <div class="modal-box">
-    <div class="modal-title">💉 투약 기록 추가</div>
-    <div style="margin-bottom:12px"><label>약물</label>
+    <div class="modal-title">💊 약물 기록 추가</div>
+    <div style="margin-bottom:12px"><label>약물 선택</label>
       <select id="add-drug" class="input-field">
         <option>터제파타이드</option><option>레타트루타이드</option><option>세마글루타이드</option>
       </select>
