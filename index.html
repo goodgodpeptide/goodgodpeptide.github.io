@@ -173,11 +173,40 @@
     // ══════════════════════════════════════════════
     // Firestore
     // ══════════════════════════════════════════════
+    // 구 약물명 → 신 약물명 마이그레이션 맵
+    const DRUG_NAME_MIGRATION = {
+      "터제파타이드":   "마운자로 (티제파타이드)",
+      "레타트루타이드": "레타 (레타트루타이드)",
+      "세마글루타이드": "위고비 (세마글루타이드)",
+    };
+
+    function migrateData(data) {
+      // records, sideEffects 배열의 drug 필드 마이그레이션
+      ["records", "sideEffects"].forEach(key => {
+        if (!data[key]) return;
+        data[key] = data[key].map(r => ({
+          ...r,
+          drug: DRUG_NAME_MIGRATION[r.drug] || r.drug
+        }));
+      });
+      // drugCycle 키 마이그레이션
+      if (data.drugCycle) {
+        const migrated = {};
+        Object.entries(data.drugCycle).forEach(([k, v]) => {
+          migrated[DRUG_NAME_MIGRATION[k] || k] = v;
+        });
+        data.drugCycle = migrated;
+      }
+      return data;
+    }
+
     async function loadData() {
       setSaveStatus("loading");
       try {
         const snap = await getDoc(doc(db, "users", currentUser.uid));
-        if (snap.exists()) appData = { ...appData, ...snap.data() };
+        if (snap.exists()) {
+          appData = { ...appData, ...migrateData(snap.data()) };
+        }
         setSaveStatus("saved");
       } catch(e) { setSaveStatus("error"); }
     }
