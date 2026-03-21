@@ -583,12 +583,13 @@
 
     // ══ 영양제 토글 ═══════════════════════════════════════
     const DEFAULT_SUPPLEMENTS = [
-      { id: "omega3",  name: "오메가3",      timing: ["아침","저녁"] },
-      { id: "probio",  name: "유산균",       timing: ["아침"] },
-      { id: "vitd",    name: "비타민D",      timing: ["아침"] },
-      { id: "magnesium",name: "마그네슘",   timing: ["저녁"] },
-      { id: "vitc",    name: "비타민C",      timing: ["아침"] },
+      { id: "omega3",     name: "오메가3",    timing: ["아침","저녁"] },
+      { id: "probio",     name: "유산균",     timing: ["아침"] },
+      { id: "vitd",       name: "비타민D",    timing: ["아침"] },
+      { id: "magnesium",  name: "마그네슘",   timing: ["저녁"] },
+      { id: "vitc",       name: "비타민C",    timing: ["아침"] },
     ];
+    const ALL_TIMINGS = ["아침", "점심", "저녁", "자기전"];
 
     function getSupplements() {
       return appData.supplements || DEFAULT_SUPPLEMENTS.map(s => ({ ...s, taken: {} }));
@@ -630,12 +631,26 @@
       renderSupplementPanel();
     };
 
+    // 영양제 시간대 토글 (아침/점심/저녁/자기전)
+    window.toggleSupplTiming = (id, timing) => {
+      appData.supplements = getSupplements();
+      const sup = appData.supplements.find(s => s.id === id);
+      if (!sup) return;
+      sup.timing = sup.timing || [];
+      const idx = sup.timing.indexOf(timing);
+      if (idx >= 0) sup.timing.splice(idx, 1);
+      else sup.timing.push(timing);
+      if (!sup.timing.length) sup.timing.push("아침"); // 최소 1개
+      scheduleSave();
+      renderSupplementPanel();
+    };
+
     function renderSupplementPanel() {
       const c = document.getElementById("supplement-panel");
       if (!c) return;
       const supps = getSupplements();
       const today = getTodayKey();
-      const timings = ["아침", "저녁"];
+      const timings = ALL_TIMINGS;
 
       c.innerHTML = timings.map(timing => {
         const relevant = supps.filter(s => s.timing?.includes(timing));
@@ -649,15 +664,24 @@
           ${relevant.map(s => {
             const done = !!s.taken?.[today + "_" + timing];
             return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a1a2e">
-              <div style="display:flex;align-items:center;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;flex:1">
                 <span style="font-size:14px">${done ? '✅' : '⬜'}</span>
-                <span style="font-size:13px;color:${done?'#4ade80':'#9ca3af'};${done?'text-decoration:line-through;':''}">${s.name}</span>
+                <div>
+                  <div style="font-size:13px;color:${done?'#4ade80':'#9ca3af'};${done?'text-decoration:line-through;':''}">${s.name}</div>
+                  <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">
+                    ${ALL_TIMINGS.map(t => `<button onclick="toggleSupplTiming('${s.id}','${t}')"
+                      style="padding:1px 6px;border-radius:10px;font-size:10px;cursor:pointer;font-family:inherit;
+                             border:1px solid ${s.timing?.includes(t)?'#3b82f6':'#374151'};
+                             background:${s.timing?.includes(t)?'#1d4ed8':'transparent'};
+                             color:${s.timing?.includes(t)?'white':'#4a5568'}">${t}</button>`).join('')}
+                  </div>
+                </div>
               </div>
-              <div style="display:flex;gap:6px;align-items:center">
+              <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;margin-left:8px">
                 <button onclick="toggleSupplement('${s.id}','${timing}')"
-                  style="padding:5px 14px;border-radius:20px;border:1px solid ${done?'#166534':'#374151'};
+                  style="padding:5px 12px;border-radius:20px;border:1px solid ${done?'#166534':'#374151'};
                          background:${done?'#0f2a1a':'#1f2937'};color:${done?'#4ade80':'#6b7280'};
-                         font-size:12px;cursor:pointer;font-family:inherit">
+                         font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap">
                   ${done ? '취소' : '복용'}
                 </button>
                 <button onclick="removeSupplement('${s.id}')"
@@ -732,8 +756,8 @@
       renderWeightStats();
       renderWeightList();
       renderWeightGraph();
-      renderWaterTracker();
       renderSupplementPanel();
+      renderWaterTracker();
     }
 
     // 약별 마지막 입력 용량 기억
@@ -1706,7 +1730,7 @@
       if (tab === "peptide") setTimeout(() => { renderPeptideGraph(); initGraphTouch(); }, 50);
       if (tab === "weight") setTimeout(() => { renderWeightGraph(); renderWaterTracker(); initWeightTouch(); renderSupplementPanel(); }, 50);
       if (tab === "analysis") setTimeout(renderAnalysis, 50);
-      if (tab === "supple") setTimeout(renderSupplementPanel, 50);
+      if (tab === "supple") setTimeout(() => { renderSupplementPanel(); renderWaterTracker(); }, 50);
     };
 
     // ══════════════════════════════════════════════
@@ -1736,32 +1760,42 @@
         return;
       }
 
-      // ── 계산 ──
-      // Mifflin-St Jeor BMR
-      const bmr = gender === "남성"
-        ? 10 * weight + 6.25 * height - 5 * (age || 30) + 5
-        : 10 * weight + 6.25 * height - 5 * (age || 30) - 161;
-      const tdee = Math.round(bmr * activity);
+      // ── 계산 (과학적 공식 기반) ──
+      // BMR: Mifflin-St Jeor (1990) - 현재 가장 정확한 기초대사량 공식
+      // 남성: 10×체중(kg) + 6.25×키(cm) - 5×나이 + 5
+      // 여성: 10×체중(kg) + 6.25×키(cm) - 5×나이 - 161
+      // 출처: Mifflin MD et al., Am J Clin Nutr. 1990;51(2):241-7
+      const ageVal = age || null;
+      const bmr = ageVal
+        ? (gender === "남성"
+            ? 10 * weight + 6.25 * height - 5 * ageVal + 5
+            : 10 * weight + 6.25 * height - 5 * ageVal - 161)
+        : null;
+      const tdee = bmr ? Math.round(bmr * activity) : null;
       const bmi = weight / Math.pow(height/100, 2);
 
-      // 체지방률 추정 (Deurenberg 공식)
-      const bfp = gender === "남성"
-        ? 1.2 * bmi + 0.23 * (age||30) - 16.2
-        : 1.2 * bmi + 0.23 * (age||30) - 5.4;
-      const fatKg = weight * bfp / 100;
-      const leanKg = weight - fatKg;
+      // 체지방률: Deurenberg (1991) - BMI 기반 추정 (오차 ±4-5%)
+      // BF% = 1.20×BMI + 0.23×나이 - 10.8×성별(남1,여0) - 5.4
+      // 출처: Deurenberg P et al., Br J Nutr. 1991;65(2):105-14
+      const bfp = ageVal
+        ? 1.20 * bmi + 0.23 * ageVal - (gender === "남성" ? 10.8 : 0) - 5.4
+        : null;
+      const fatKg = bfp ? weight * bfp / 100 : null;
+      const leanKg = fatKg ? weight - fatKg : null;
 
-      // 이상체중 (Broca 변형)
+      // 이상체중: Broca 변형 공식 (한국·일본 임상 기준)
+      // 남성: (키-100)×0.9, 여성: (키-100)×0.85
       const idealWeight = gender === "남성"
         ? (height - 100) * 0.9
         : (height - 100) * 0.85;
 
-      // 수분권장량 (체중 × 33ml)
+      // 수분 권장: 체중×33ml (WHO/일반 임상 기준)
       const waterMl = Math.round(weight * 33);
 
-      // 칼로리 적자 시나리오
-      const deficit500 = tdee - 500;  // 주 0.5kg 감량
-      const deficit750 = tdee - 750;  // 주 0.75kg 감량
+      // 칼로리 적자 시나리오 (1kg지방=7700kcal 기준)
+      // 주 0.5kg 감량 = 일 500kcal 적자, 주 0.75kg = 일 750kcal 적자
+      const deficit500 = tdee ? tdee - 500 : null;
+      const deficit750 = tdee ? tdee - 750 : null;
 
       // 주간 감량 추이 (최근 체중 기록에서)
       const wrecs = (appData.weightRecords || []).sort((a,b)=>a.time-b.time);
@@ -1786,34 +1820,35 @@
          ${sub ? `<div style="font-size:10px;color:#4a5568;margin-top:3px">${sub}</div>` : ''}
          </div>`;
 
+      const needAge = !ageVal ? '<div style="font-size:10px;color:#f97316;margin-top:2px">나이 입력 필요</div>' : '';
       cardsEl.innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-          ${statCard("BMR (기초대사량)", Math.round(bmr).toString(), "kcal", "#60a5fa", "완전 안 움직여도 소모")}
-          ${statCard("TDEE (일일 소모)", tdee.toString(), "kcal", "#a78bfa", "활동량 반영 총 소모")}
+          ${bmr ? statCard("BMR (기초대사량)", Math.round(bmr).toString(), "kcal", "#60a5fa", "완전 안 움직여도 소모") : statCard("BMR", "나이 필요", "", "#4a5568", "나이를 입력하세요")}
+          ${tdee ? statCard("TDEE (일일 소모)", tdee.toString(), "kcal", "#a78bfa", "활동량 반영 총 소모") : statCard("TDEE", "나이 필요", "", "#4a5568", "")}
           ${statCard("BMI", bmi.toFixed(1), bmiLabel[0], bmiLabel[1])}
-          ${statCard("이상 체중", idealWeight.toFixed(1), "kg", "#4ade80", "Broca 변형 공식")}
-          ${statCard("체지방 추정", bfp.toFixed(1), "%", "#f97316", `~${fatKg.toFixed(1)}kg`)}
-          ${statCard("제지방 추정", leanKg.toFixed(1), "kg", "#22d3ee", "근육+뼈+수분")}
-          ${statCard("권장 수분", (waterMl/1000).toFixed(1), "L/일", "#38bdf8", `${waterMl}ml`)}
+          ${statCard("이상 체중", idealWeight.toFixed(1), "kg", "#4ade80", "Broca 변형 (한국 기준)")}
+          ${bfp !== null ? statCard("체지방 추정", bfp.toFixed(1), "%", "#f97316", `~${fatKg.toFixed(1)}kg · Deurenberg`) : statCard("체지방 추정", "나이 필요", "", "#4a5568", "")}
+          ${leanKg !== null ? statCard("제지방 추정", leanKg.toFixed(1), "kg", "#22d3ee", "근육+뼈+수분") : statCard("제지방 추정", "--", "", "#4a5568", "")}
+          ${statCard("권장 수분", (waterMl/1000).toFixed(1), "L/일", "#38bdf8", `체중×33ml`)}
           ${statCard("현재 체중", weight.toString(), "kg", "#e2e8f0")}
         </div>
-        <div class="card" style="margin-bottom:10px;border-color:#1d4ed833">
-          <div style="font-size:12px;color:#6b7280;margin-bottom:10px">🍽️ 칼로리 목표</div>
+        ${tdee ? `<div class="card" style="margin-bottom:10px;border-color:#1d4ed833">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:10px">🍽️ 칼로리 목표 (TDEE 기반)</div>
           <div style="display:flex;flex-direction:column;gap:8px">
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0d0d1a;border-radius:8px">
               <div><div style="font-size:12px;color:#4ade80">유지</div><div style="font-size:10px;color:#4a5568">체중 현상 유지</div></div>
               <div style="font-family:'JetBrains Mono';font-size:18px;font-weight:700;color:#4ade80">${tdee} kcal</div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0d0d1a;border-radius:8px">
-              <div><div style="font-size:12px;color:#facc15">적정 감량</div><div style="font-size:10px;color:#4a5568">주 0.5kg (-500)</div></div>
+              <div><div style="font-size:12px;color:#facc15">적정 감량</div><div style="font-size:10px;color:#4a5568">주 0.5kg (-500kcal/일)</div></div>
               <div style="font-family:'JetBrains Mono';font-size:18px;font-weight:700;color:#facc15">${deficit500} kcal</div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0d0d1a;border-radius:8px">
-              <div><div style="font-size:12px;color:#f97316">빠른 감량</div><div style="font-size:10px;color:#4a5568">주 0.75kg (-750)</div></div>
+              <div><div style="font-size:12px;color:#f97316">빠른 감량</div><div style="font-size:10px;color:#4a5568">주 0.75kg (-750kcal/일)</div></div>
               <div style="font-family:'JetBrains Mono';font-size:18px;font-weight:700;color:#f97316">${deficit750} kcal</div>
             </div>
           </div>
-        </div>
+        </div>` : ''}
       `;
 
       // ── 목표 달성 예측 ──
@@ -1877,10 +1912,10 @@
       // ── 권장사항 팁 ──
       const tips = [];
       if (bmi >= 25) tips.push({icon:"🍽️", text:`하루 ${deficit500}kcal 목표로 주 0.5kg 감량이 가장 지속 가능한 속도`});
-      if (bfp > (gender==="남성"?25:35)) tips.push({icon:"💪", text:"체지방률 감소를 위해 근력운동 주 3회 이상 권장"});
+      if (bfp !== null && bfp > (gender==="남성"?25:35)) tips.push({icon:"💪", text:"체지방률 감소를 위해 근력운동 주 3회 이상 권장"});
       if (weight > idealWeight + 5) tips.push({icon:"🎯", text:`이상체중(${idealWeight.toFixed(1)}kg)까지 ${(weight-idealWeight).toFixed(1)}kg 남음`});
       tips.push({icon:"💧", text:`하루 ${(waterMl/1000).toFixed(1)}L (${waterMl}ml) 수분 섭취 권장`});
-      if (weeklyLoss !== null && weeklyLoss > 1) tips.push({icon:"⚠️", text:"주 1kg 이상 감량은 근육 손실 위험 — 속도 조절 고려"});
+      if (weeklyLoss !== null && weeklyLoss > 0.9) tips.push({icon:"⚠️", text:"주 1kg 이상 감량은 근육 손실 위험 — 속도 조절 고려"});
       if (weeklyLoss !== null && weeklyLoss < 0) tips.push({icon:"📈", text:"체중이 증가 추세 — 칼로리 재점검 필요"});
 
       tipsEl.innerHTML = tips.map(t => `
@@ -2177,7 +2212,7 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="peptide" onclick="switchTab('peptide')">💊 다이어트약</button>
+    <button class="tab-btn active" data-tab="peptide" onclick="switchTab('peptide')">💉 투약</button>
     <button class="tab-btn" data-tab="calc"    onclick="switchTab('calc')">🧮 계산기</button>
     <button class="tab-btn" data-tab="weight"  onclick="switchTab('weight')">⚖️ 체중</button>
     <button class="tab-btn" data-tab="analysis" onclick="switchTab('analysis')">📊 분석</button>
@@ -2262,12 +2297,6 @@
       <!-- 빠른 기록 추가 (최상단) -->
       <button class="big-btn green" onclick="openWeightModal()" style="margin-bottom:12px">+ 체중 기록 추가</button>
 
-      <!-- 수분 트래커 -->
-      <div class="card" style="margin-bottom:12px;border-color:#0ea5e933">
-        <div class="section-title">💧 오늘 수분 섭취</div>
-        <div id="water-tracker"></div>
-      </div>
-
       <!-- 통계 -->
       <!-- 체중 요약 카드 -->
       <div class="card" style="margin-bottom:12px" id="weight-summary-card">
@@ -2295,29 +2324,7 @@
         <canvas id="weight-chart"></canvas>
       </div>
 
-      <!-- 설정 -->
-      <div class="card" style="margin-bottom:12px">
-        <div class="section-title">기본 설정</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <button class="gender-btn active" data-v="남성" onclick="setGender('남성')">남성</button>
-          <button class="gender-btn" data-v="여성" onclick="setGender('여성')">여성</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-          <div><label>키 (cm)</label><input id="s-height" class="input-field" type="number" placeholder="170" /></div>
-          <div><label>나이</label><input id="s-age" class="input-field" type="number" placeholder="30" /></div>
-          <div><label>목표 체중 (kg)</label><input id="s-target" class="input-field" type="number" placeholder="65" /></div>
-          <div><label>활동 수준</label>
-            <select id="s-activity" class="input-field">
-              <option value="1.2">거의 안 움직임</option>
-              <option value="1.375">가벼운 운동 1-3일/주</option>
-              <option value="1.55" selected>적당한 운동 3-5일/주</option>
-              <option value="1.725">격한 운동 6-7일/주</option>
-              <option value="1.9">매우 격렬/육체직</option>
-            </select>
-          </div>
-        </div>
-        <button class="big-btn green" onclick="saveSettings()">설정 저장</button>
-      </div>
+      <!-- 기본설정은 분석 탭으로 이동 -->
 
       <div id="weight-list"></div>
 
@@ -2326,18 +2333,68 @@
 
     <!-- 분석 패널 -->
     <div id="panel-analysis" class="tab-panel">
+
+      <!-- 기본 설정 (분석에 필요한 데이터) -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">⚙️ 기본 설정</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button class="gender-btn active" data-v="남성" onclick="setGender('남성')">남성</button>
+          <button class="gender-btn" data-v="여성" onclick="setGender('여성')">여성</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div><label>키 (cm)</label><input id="s-height" class="input-field" type="number" placeholder="170" oninput="saveSettings()" /></div>
+          <div><label>나이</label><input id="s-age" class="input-field" type="number" placeholder="30" oninput="saveSettings()" /></div>
+          <div><label>목표 체중 (kg)</label><input id="s-target" class="input-field" type="number" placeholder="65" oninput="saveSettings()" /></div>
+          <div><label>활동 수준</label>
+            <select id="s-activity" class="input-field" onchange="saveSettings()">
+              <option value="1.2">거의 안 움직임</option>
+              <option value="1.375">가벼운 운동 1-3일/주</option>
+              <option value="1.55" selected>적당한 운동 3-5일/주</option>
+              <option value="1.725">격한 운동 6-7일/주</option>
+              <option value="1.9">매우 격렬/육체직</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div id="analysis-cards"></div>
       <div id="analysis-prediction" class="card" style="margin-bottom:12px;display:none"></div>
       <div id="analysis-weekly" class="card" style="margin-bottom:12px;display:none"></div>
       <div id="analysis-tips" style="margin-bottom:12px"></div>
 
+      <!-- 공식 안내 카드 -->
+      <div class="card" style="margin-bottom:12px;border-color:#374151">
+        <div class="section-title" style="margin-bottom:8px">📐 사용 공식 출처</div>
+        <div style="font-size:11px;color:#4a5568;line-height:1.9">
+          <div><b style="color:#60a5fa">BMR</b> · Mifflin-St Jeor (1990)</div>
+          <div style="font-family:'JetBrains Mono';font-size:10px;color:#374151;margin-bottom:6px">남: 10×체중 + 6.25×키 - 5×나이 + 5 / 여: -161</div>
+          <div><b style="color:#a78bfa">TDEE</b> · BMR × 활동계수 (1.2~1.9)</div>
+          <div style="font-size:10px;color:#374151;margin-bottom:6px">비활동 1.2 · 가벼운운동 1.375 · 보통 1.55 · 격렬 1.725 · 매우격렬 1.9</div>
+          <div><b style="color:#f97316">체지방률</b> · Deurenberg (1991, Br J Nutr)</div>
+          <div style="font-family:'JetBrains Mono';font-size:10px;color:#374151;margin-bottom:6px">1.20×BMI + 0.23×나이 - 10.8×성별(남1) - 5.4 · 오차 ±4-5%</div>
+          <div><b style="color:#4ade80">이상체중</b> · Broca 변형 (한국·일본 임상)</div>
+          <div style="font-family:'JetBrains Mono';font-size:10px;color:#374151;margin-bottom:6px">남: (키-100)×0.9 / 여: (키-100)×0.85</div>
+          <div><b style="color:#38bdf8">수분 권장</b> · 체중(kg)×33ml (WHO 기준)</div>
+          <div style="font-size:10px;color:#374151;margin-bottom:2px">운동 시 추가 섭취 필요</div>
+          <div style="font-size:10px;color:#2a2a3e;margin-top:6px">⚠️ 모든 수치는 추정값입니다. 정확한 측정은 의료기관 방문 권장</div>
+        </div>
+      </div>
+
     </div>
 
     <!-- 영양제 패널 -->
     <div id="panel-supple" class="tab-panel">
+      <!-- 수분 트래커 -->
+      <div class="card" style="margin-bottom:12px;border-color:#0ea5e933">
+        <div class="section-title">💧 오늘 수분 섭취</div>
+        <div id="water-tracker"></div>
+      </div>
+      <!-- 영양제 -->
       <div class="card" style="margin-bottom:12px">
-        <div class="section-title" style="margin-bottom:4px">💊 오늘 영양제 복용 체크</div>
-        <div style="font-size:11px;color:#4a5568;margin-bottom:12px">매일 자정에 초기화됩니다</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div class="section-title" style="margin-bottom:0">💊 오늘 영양제</div>
+          <span style="font-size:10px;color:#4a5568">매일 자정 초기화</span>
+        </div>
         <div id="supplement-panel"></div>
       </div>
     </div>
