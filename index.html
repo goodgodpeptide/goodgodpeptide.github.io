@@ -209,9 +209,9 @@
     // ══════════════════════════════════════════════
     // 약물 설정 + PK 모델
     // ══════════════════════════════════════════════
-    // 레타트루타이드: Tmax 24~72h (흡수상 존재), 1-compartment oral PK
-    // 터제파타이드: Tmax 8~48h
-    // 세마글루타이드: Tmax 24~48h
+    // 레타 (레타트루타이드): Tmax 24~72h
+    // 마운자로 (티제파타이드): Tmax 8~48h
+    // 위고비 (세마글루타이드): Tmax 24~48h
     // C(t) = (F·D·ka) / (V·(ka-ke)) × (e^(-ke·t) - e^(-ka·t))  ... t > 0
     // 단, 절대값 파라미터 불필요 → 정규화: D 기준 상대농도
     // ka = ln(2)/Tmax_h, ke = ln(2)/(halfLife_days*24)
@@ -219,19 +219,19 @@
     // doseDays: 사용자 설정 가능한 투약 주기 (기본값 = 임상 표준)
     // appData.drugCycle[drug] 에 저장, 없으면 DRUG_CONFIG.defaultDoseDays 사용
     const DRUG_CONFIG = {
-      "터제파타이드":   {
+      "마운자로 (티제파타이드)":   {
         halfLifeDays: 5, tmaxHours: 24, defaultDoseDays: 7,
-        color: "#60a5fa", emoji: "🔵", short: "터제",
+        color: "#60a5fa", emoji: "🔵", short: "마운자로",
         note: "반감기 5일 · 임상 표준 7일 주기"
       },
-      "레타트루타이드": {
+      "레타 (레타트루타이드)": {
         halfLifeDays: 6, tmaxHours: 48, defaultDoseDays: 7,
         color: "#f87171", emoji: "🔴", short: "레타",
         note: "반감기 6일 · 임상 표준 7일 주기"
       },
-      "세마글루타이드": {
+      "위고비 (세마글루타이드)": {
         halfLifeDays: 7, tmaxHours: 36, defaultDoseDays: 7,
-        color: "#4ade80", emoji: "🟢", short: "세마",
+        color: "#4ade80", emoji: "🟢", short: "위고비",
         note: "반감기 7일 · 임상 표준 7일 주기"
       },
     };
@@ -1833,7 +1833,7 @@
       <div id="remaining-cards"></div>
 
       <div class="pk-info">
-        💡 레타트루타이드 Tmax ~48h (12~72h), 반감기 6일 · 터제파타이드 Tmax ~24h, 반감기 5일 · 1-compartment PK 모델 적용
+        💡 레타 Tmax ~48h, 반감기 6일 · 마운자로 Tmax ~24h, 반감기 5일 · 위고비 Tmax ~36h, 반감기 7일 · 1-compartment PK 모델
       </div>
 
       <div class="chart-wrap">
@@ -1855,9 +1855,9 @@
 
       <div class="filter-bar">
         <button class="filter-btn active" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='전체';onFilterChange()">전체</button>
-        <button class="filter-btn" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='터제';onFilterChange()">터제</button>
+        <button class="filter-btn" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='마운자로';onFilterChange()">마운자로</button>
         <button class="filter-btn" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='레타';onFilterChange()">레타</button>
-        <button class="filter-btn" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='세마';onFilterChange()">세마</button>
+        <button class="filter-btn" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='위고비';onFilterChange()">위고비</button>
         <input type="hidden" id="peptide-filter" value="전체" />
       </div>
       <div id="peptide-list"></div>
@@ -1996,7 +1996,7 @@
     <div class="modal-title">💊 약물 기록 추가</div>
     <div style="margin-bottom:10px"><label>약물 선택</label>
       <select id="add-drug" class="input-field">
-        <option>터제파타이드</option><option>레타트루타이드</option><option>세마글루타이드</option>
+        <option>마운자로 (티제파타이드)</option><option>레타 (레타트루타이드)</option><option>위고비 (세마글루타이드)</option>
       </select>
     </div>
     <div style="margin-bottom:10px"><label>용량 (mg)</label>
