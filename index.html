@@ -102,9 +102,13 @@
     // 인앱 브라우저 감지 (카카오, 네이버, 인스타, 라인 등)
     function isInAppBrowser() {
       const ua = navigator.userAgent || "";
-      return /KAKAOTALK|NAVER|Instagram|Line|FB_IAB|FBAN|FBAV|Twitter|Snapchat|WeChat|MicroMessenger/i.test(ua)
-          || /wv\)|\.0\.0\.0|WebView/i.test(ua)
-          || (ua.includes("Android") && ua.includes("Version/") && ua.includes("Chrome") && !ua.includes("Mobile Safari"));
+      // 카카오톡/네이버/인스타 등 명확한 인앱 브라우저만 감지
+      // Chrome, Samsung Browser, Safari 등 정상 브라우저는 절대 포함되지 않도록
+      const isKnownInApp = /KAKAOTALK|NAVER(App|Search)|Instagram|FBAN|FBAV|FB_IAB|Line\/|Snapchat|WeChat|MicroMessenger/i.test(ua);
+      // Chrome, Samsung, Firefox, Safari 정상 브라우저면 무조건 false
+      const isSafeBrowser = /CriOS|Chrome\/|SamsungBrowser|Firefox\/|EdgA\/|OPR\//.test(ua)
+        || (ua.includes("Safari") && ua.includes("Version/") && !isKnownInApp);
+      return isKnownInApp && !isSafeBrowser;
     }
 
     window.doLogin = async () => {
