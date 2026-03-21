@@ -190,9 +190,14 @@
     // ══════════════════════════════════════════════
     // 구 약물명 → 신 약물명 마이그레이션 맵
     const DRUG_NAME_MIGRATION = {
-      "터제파타이드":   "마운자로 (Tirzepatide)",
-      "레타트루타이드": "레타 (Retatrutide)",
-      "세마글루타이드": "위고비 (Semaglutide)",
+      // 원래 한국어 이름
+      "터제파타이드":            "마운자로 (Tirzepatide)",
+      "레타트루타이드":          "레타 (Retatrutide)",
+      "세마글루타이드":          "위고비 (Semaglutide)",
+      // 중간 단계 이름 (이전 버전에서 저장된 것)
+      "마운자로 (티제파타이드)": "마운자로 (Tirzepatide)",
+      "레타 (레타트루타이드)":   "레타 (Retatrutide)",
+      "위고비 (세마글루타이드)": "위고비 (Semaglutide)",
     };
 
     function migrateData(data) {
@@ -2342,24 +2347,34 @@
         }
 
         // 영양제
-        if (dayData.supps.length) {
+        {
           // 시간대별 그룹핑
           const suppByTiming = {};
-          dayData.supps.forEach(s => {
+          (dayData.supps || []).forEach(s => {
             if (!suppByTiming[s.timing]) suppByTiming[s.timing] = [];
             suppByTiming[s.timing].push(s.name);
           });
+          const hasSupps = Object.keys(suppByTiming).length > 0;
           html += `<div style="margin-bottom:10px">
-            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">💊 영양제</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px">💊 영양제</div>
+              <button onclick="calEditSupple('${calSelectedDate}')"
+                style="font-size:11px;color:#a78bfa;background:none;border:1px solid #a78bfa55;
+                       border-radius:6px;padding:3px 8px;cursor:pointer;font-family:inherit">수정</button>
+            </div>
             <div style="background:#a78bfa11;border:1px solid #a78bfa33;border-radius:8px;padding:8px 10px">`;
-          ALL_TIMINGS.forEach(t => {
-            if (!suppByTiming[t]?.length) return;
-            html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
-              <span style="font-size:12px">${TIMING_ICONS[t]}</span>
-              <span style="font-size:11px;color:#6b7280;min-width:36px">${t}</span>
-              <span style="font-size:12px;color:#a78bfa">${suppByTiming[t].join(', ')}</span>
-            </div>`;
-          });
+          if (hasSupps) {
+            ALL_TIMINGS.forEach(t => {
+              if (!suppByTiming[t]?.length) return;
+              html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                <span style="font-size:12px">${TIMING_ICONS[t]}</span>
+                <span style="font-size:11px;color:#6b7280;min-width:36px">${t}</span>
+                <span style="font-size:12px;color:#a78bfa">${suppByTiming[t].join(', ')}</span>
+              </div>`;
+            });
+          } else {
+            html += `<div style="font-size:12px;color:#4a5568;text-align:center;padding:8px">복용 기록 없음 · 수정 버튼으로 추가</div>`;
+          }
           html += `</div></div>`;
         }
 
@@ -2385,6 +2400,17 @@
 
       c.innerHTML = html;
     }
+
+    window.calEditSupple = (dateKey) => {
+      const sm = document.getElementById("cal-supp-modal");
+      if (!sm) return;
+      sm.dataset.date = dateKey;
+      const dObj = new Date(dateKey + 'T00:00:00+09:00');
+      document.getElementById("cal-supp-date-label").textContent =
+        `${dObj.getFullYear()}년 ${dObj.getMonth()+1}월 ${dObj.getDate()}일 영양제`;
+      renderCalSuppModal(dateKey);
+      sm.style.display = "flex";
+    };
 
     window.calNav = (dir) => {
       calMonth += dir;
@@ -2424,6 +2450,72 @@
       document.getElementById("add-weight-time").value = m.dataset.date + "T07:00";
       document.getElementById("add-weight").value = "";
       document.getElementById("weight-modal").style.display = "flex";
+    };
+
+    // 달력에서 영양제 복용 체크
+    window.calAddSupple = () => {
+      const m = document.getElementById("cal-add-modal");
+      const dateKey = m.dataset.date;
+      m.style.display = "none";
+      // 영양제 탭으로 이동해서 해당 날짜 체크 가능하게
+      // 단, 달력에서 직접 특정 날짜의 영양제 토글을 위해 별도 모달 표시
+      const sm = document.getElementById("cal-supp-modal");
+      if (!sm) { switchTab('supple'); return; }
+      sm.dataset.date = dateKey;
+      // 날짜 라벨
+      const dObj = new Date(dateKey + 'T00:00:00+09:00');
+      document.getElementById("cal-supp-date-label").textContent =
+        `${dObj.getFullYear()}년 ${dObj.getMonth()+1}월 ${dObj.getDate()}일 영양제`;
+      renderCalSuppModal(dateKey);
+      sm.style.display = "flex";
+    };
+
+    function renderCalSuppModal(dateKey) {
+      const c = document.getElementById("cal-supp-list");
+      if (!c) return;
+      const supps = getSupplements();
+      let html = "";
+      ALL_TIMINGS.forEach(timing => {
+        const relevant = supps.filter(s => s.timing?.includes(timing));
+        if (!relevant.length) return;
+        const doneAll = relevant.every(s => s.taken?.[dateKey+"_"+timing]);
+        html += `<div style="margin-bottom:14px">
+          <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+            <span>${TIMING_ICONS[timing]}</span><span style="text-transform:uppercase;letter-spacing:1px">${timing}</span>
+            ${doneAll?'<span style="color:#4ade80;font-size:10px">✅</span>':''}
+          </div>
+          ${relevant.map(s => {
+            const done = !!s.taken?.[dateKey+"_"+timing];
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 10px;
+                                background:${done?'#0f2a1a':'#1a1a2e'};border:1px solid ${done?'#166534':'#2d3748'};
+                                border-radius:10px;margin-bottom:6px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <button onclick="calToggleSuppl('${s.id}','${timing}','${dateKey}')"
+                  style="width:24px;height:24px;border-radius:50%;border:2px solid ${done?'#4ade80':'#374151'};
+                         background:${done?'#4ade80':'transparent'};cursor:pointer;
+                         font-size:12px;font-weight:700;color:#0a0a14;line-height:1">
+                  ${done?'✓':''}
+                </button>
+                <span style="font-size:13px;color:${done?'#4ade80':'#e2e8f0'}">${s.name}</span>
+              </div>
+              <span style="font-size:11px;color:#4a5568">${s.times?.[timing]||TIMING_DEFAULT_TIMES[timing]||''}</span>
+            </div>`;
+          }).join('')}
+        </div>`;
+      });
+      c.innerHTML = html || '<div style="color:#4a5568;text-align:center;padding:20px">등록된 영양제 없음</div>';
+    }
+
+    window.calToggleSuppl = (id, timing, dateKey) => {
+      appData.supplements = getSupplements();
+      const sup = appData.supplements.find(s => s.id === id);
+      if (!sup) return;
+      sup.taken = sup.taken || {};
+      const key = dateKey + "_" + timing;
+      sup.taken[key] = !sup.taken[key];
+      scheduleSave();
+      renderCalSuppModal(dateKey);
+      renderCalendar(); // 달력 도트 업데이트
     };
 
     window.switchCalcTab = (tab) => {
@@ -3012,9 +3104,24 @@
                color:#4ade80;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left">
         ⚖️ 체중 기록 추가
       </button>
+      <button onclick="calAddSupple()"
+        style="padding:14px;background:#120930;border:1px solid #a78bfa66;border-radius:12px;
+               color:#a78bfa;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left">
+        💊 영양제 복용 체크
+      </button>
     </div>
     <button class="big-btn" style="background:#374151;margin-top:14px"
       onclick="document.getElementById('cal-add-modal').style.display='none'">취소</button>
+  </div>
+</div>
+
+<!-- 모달: 달력 영양제 체크 -->
+<div id="cal-supp-modal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box" style="max-width:380px;max-height:80vh;overflow-y:auto">
+    <div class="modal-title" id="cal-supp-date-label">💊 영양제 복용 체크</div>
+    <div id="cal-supp-list" style="margin-bottom:14px"></div>
+    <button class="big-btn" style="background:#374151"
+      onclick="document.getElementById('cal-supp-modal').style.display='none'">닫기</button>
   </div>
 </div>
 
