@@ -190,9 +190,9 @@
     // ══════════════════════════════════════════════
     // 구 약물명 → 신 약물명 마이그레이션 맵
     const DRUG_NAME_MIGRATION = {
-      "터제파타이드":   "마운자로 (티제파타이드)",
-      "레타트루타이드": "레타 (레타트루타이드)",
-      "세마글루타이드": "위고비 (세마글루타이드)",
+      "터제파타이드":   "마운자로 (Tirzepatide)",
+      "레타트루타이드": "레타 (Retatrutide)",
+      "세마글루타이드": "위고비 (Semaglutide)",
     };
 
     function migrateData(data) {
@@ -267,17 +267,17 @@
     // doseDays: 사용자 설정 가능한 투약 주기 (기본값 = 임상 표준)
     // appData.drugCycle[drug] 에 저장, 없으면 DRUG_CONFIG.defaultDoseDays 사용
     const DRUG_CONFIG = {
-      "마운자로 (티제파타이드)":   {
+      "마운자로 (Tirzepatide)":   {
         halfLifeDays: 5, tmaxHours: 24, defaultDoseDays: 7,
         color: "#60a5fa", emoji: "🔵", short: "마운자로",
         note: "반감기 5일 · 임상 표준 7일 주기"
       },
-      "레타 (레타트루타이드)": {
+      "레타 (Retatrutide)": {
         halfLifeDays: 6, tmaxHours: 48, defaultDoseDays: 7,
         color: "#f87171", emoji: "🔴", short: "레타",
         note: "반감기 6일 · 임상 표준 7일 주기"
       },
-      "위고비 (세마글루타이드)": {
+      "위고비 (Semaglutide)": {
         halfLifeDays: 7, tmaxHours: 36, defaultDoseDays: 7,
         color: "#4ade80", emoji: "🟢", short: "위고비",
         note: "반감기 7일 · 임상 표준 7일 주기"
@@ -821,6 +821,7 @@
       renderWeightGraph();
       renderSupplementPanel();
       renderWaterTracker();
+      if (document.getElementById("panel-calendar")?.style.display !== "none") renderCalendar();
     }
 
     // 약별 마지막 입력 용량 기억
@@ -1893,6 +1894,7 @@
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
       if (tab === "peptide") setTimeout(() => { renderPeptideGraph(); initGraphTouch(); }, 50);
       if (tab === "weight") setTimeout(() => { renderWeightGraph(); renderWaterTracker(); initWeightTouch(); renderSupplementPanel(); }, 50);
+      if (tab === "calendar") setTimeout(renderCalendar, 50);
       if (tab === "analysis") setTimeout(renderAnalysis, 50);
       if (tab === "supple") setTimeout(() => { renderSupplementPanel(); renderWaterTracker(); }, 50);
     };
@@ -2099,6 +2101,331 @@
       if (el) el.value = val;
     };
 
+
+    // ══════════════════════════════════════════════════════
+    // 📅 달력 시스템
+    // ══════════════════════════════════════════════════════
+
+    // 대한민국 법정 공휴일 (음력 제외, 양력 고정)
+    function getKoreanHolidays(year) {
+      const h = {};
+      const add = (m, d, name) => { h[`${year}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`] = name; };
+      add(1,1,'새해');
+      add(3,1,'삼일절');
+      add(5,5,'어린이날');
+      add(6,6,'현충일');
+      add(8,15,'광복절');
+      add(10,3,'개천절');
+      add(10,9,'한글날');
+      add(12,25,'성탄절');
+      // 대체공휴일 (단순 처리)
+      // 음력 기반 (설날·추석·석가탄신일·어버이날 등)은 연도별 하드코딩
+      const lunar = {
+        2024: {'2024-02-09':'설날 전날','2024-02-10':'설날','2024-02-11':'설날 다음날','2024-02-12':'대체공휴일','2024-05-15':'석가탄신일','2024-09-16':'추석 전날','2024-09-17':'추석','2024-09-18':'추석 다음날'},
+        2025: {'2025-01-28':'설날 전날','2025-01-29':'설날','2025-01-30':'설날 다음날','2025-05-05':'석가탄신일','2025-10-05':'추석 전날','2025-10-06':'추석','2025-10-07':'추석 다음날','2025-10-08':'대체공휴일'},
+        2026: {'2026-02-16':'설날 전날','2026-02-17':'설날','2026-02-18':'설날 다음날','2026-05-24':'석가탄신일','2026-09-24':'추석 전날','2026-09-25':'추석','2026-09-26':'추석 다음날'},
+      };
+      Object.assign(h, lunar[year] || {});
+      return h;
+    }
+
+    let calYear = new Date().getFullYear();
+    let calMonth = new Date().getMonth(); // 0-based
+    let calSelectedDate = null;
+
+    function kstDateStr(ts) {
+      // ms → "YYYY-MM-DD" (KST)
+      const d = new Date(ts + 9*3600000);
+      return d.toISOString().slice(0,10);
+    }
+
+    function getCalendarData() {
+      // 날짜별 이벤트 집계
+      const data = {}; // "YYYY-MM-DD" → { drugs:[], weights:[], supps:[], sideEffects:[] }
+
+      function ensure(key) {
+        if (!data[key]) data[key] = { drugs:[], weights:[], supps:[], sideEffects:[] };
+        return data[key];
+      }
+
+      // 투약 기록
+      (appData.records || []).forEach(r => {
+        const key = kstDateStr(r.time);
+        const cfg = DRUG_CONFIG[r.drug] || {};
+        ensure(key).drugs.push({ drug: r.drug, dose: r.dose, emoji: cfg.emoji||'💉', color: cfg.color||'#60a5fa', time: r.time, site: r.site });
+      });
+
+      // 체중 기록
+      (appData.weightRecords || []).forEach(r => {
+        const key = kstDateStr(r.time);
+        ensure(key).weights.push({ weight: r.weight, time: r.time });
+      });
+
+      // 영양제 복용 기록 (taken 키에서 날짜 추출)
+      const supps = getSupplements();
+      supps.forEach(s => {
+        Object.entries(s.taken || {}).forEach(([key, done]) => {
+          if (!done) return;
+          const [dateKey, timing] = key.split('_');
+          if (!dateKey) return;
+          ensure(dateKey).supps.push({ name: s.name, timing });
+        });
+      });
+
+      // 부작용 기록
+      (appData.sideEffects || []).forEach(r => {
+        const key = kstDateStr(r.time);
+        const cfg = DRUG_CONFIG[r.drug] || {};
+        ensure(key).sideEffects.push({ drug: r.drug, symptoms: r.symptoms, emoji: cfg.emoji||'⚠️' });
+      });
+
+      return data;
+    }
+
+    function renderCalendar() {
+      const c = document.getElementById("calendar-container");
+      if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
+      const data = getCalendarData();
+      const holidays = getKoreanHolidays(calYear);
+      const today = kstDateStr(Date.now());
+
+      // 달 첫째날 요일, 마지막 날
+      const firstDay = new Date(calYear, calMonth, 1);
+      const lastDay = new Date(calYear, calMonth+1, 0);
+      const startDow = firstDay.getDay(); // 0=일
+      const daysInMonth = lastDay.getDate();
+
+      const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+      const dowNames = ['일','월','화','수','목','금','토'];
+
+      // ── 헤더 ──
+      let html = `
+        <div style="background:${isLight?'#fff':'#12121e'};border:1px solid ${isLight?'#e2e8f0':'#1f2937'};border-radius:16px;overflow:hidden;margin-bottom:12px">
+
+          <!-- 달 네비게이션 -->
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:${isLight?'#f8fafc':'#0d0d1a'}">
+            <button onclick="calNav(-1)" style="background:none;border:1px solid ${isLight?'#d1d5db':'#374151'};border-radius:8px;color:${isLight?'#374151':'#9ca3af'};width:32px;height:32px;cursor:pointer;font-size:16px">‹</button>
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:900;color:${isLight?'#1a1a2e':'#e2e8f0'}">${calYear}년 ${monthNames[calMonth]}</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:2px">대한민국 공휴일 포함</div>
+            </div>
+            <button onclick="calNav(1)" style="background:none;border:1px solid ${isLight?'#d1d5db':'#374151'};border-radius:8px;color:${isLight?'#374151':'#9ca3af'};width:32px;height:32px;cursor:pointer;font-size:16px">›</button>
+          </div>
+
+          <!-- 요일 헤더 -->
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid ${isLight?'#e2e8f0':'#1f2937'}">
+            ${dowNames.map((d,i) => `<div style="text-align:center;padding:8px 2px;font-size:11px;font-weight:700;
+              color:${i===0?'#ef4444':i===6?'#3b82f6':isLight?'#6b7280':'#4a5568'}">${d}</div>`).join('')}
+          </div>
+
+          <!-- 날짜 그리드 -->
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid ${isLight?'#e2e8f0':'#1f2937'}">`;
+
+      // 빈칸 채우기
+      for (let i = 0; i < startDow; i++) {
+        html += `<div style="min-height:56px;border-right:1px solid ${isLight?'#f3f4f6':'#1a1a2e'};border-bottom:1px solid ${isLight?'#f3f4f6':'#1a1a2e'}"></div>`;
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateKey = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dow = (startDow + d - 1) % 7;
+        const isSun = dow === 0, isSat = dow === 6;
+        const isToday = dateKey === today;
+        const isSelected = dateKey === calSelectedDate;
+        const holiday = holidays[dateKey];
+        const dayData = data[dateKey];
+        const hasData = dayData && (dayData.drugs.length || dayData.weights.length || dayData.supps.length || dayData.sideEffects.length);
+
+        const numColor = holiday || isSun ? '#ef4444' : isSat ? '#3b82f6' : isLight?'#1a1a2e':'#e2e8f0';
+
+        html += `<div onclick="calSelectDate('${dateKey}')" style="min-height:56px;padding:4px;cursor:pointer;
+          border-right:1px solid ${isLight?'#f3f4f6':'#1a1a2e'};
+          border-bottom:1px solid ${isLight?'#f3f4f6':'#1a1a2e'};
+          background:${isSelected?'#1d4ed822':isToday?'#0f2a1a':isLight&&isToday?'#f0fdf4':'transparent'};
+          ${isSelected?'outline:2px solid #3b82f6;outline-offset:-2px;':''};
+          transition:background .1s">
+          <!-- 날짜 숫자 -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
+            <span style="font-size:13px;font-weight:${isToday?'900':'500'};color:${numColor};
+              ${isToday?'background:#4ade80;color:#0a0a14;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;':''}">
+              ${d}
+            </span>
+            ${holiday ? `<span style="font-size:8px;color:#ef4444;line-height:1.1;text-align:right;max-width:28px">${holiday}</span>` : ''}
+          </div>
+          <!-- 이벤트 도트 -->
+          <div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">
+            ${dayData ? [
+              ...dayData.drugs.slice(0,2).map(dr => `<div style="width:6px;height:6px;border-radius:50%;background:${dr.color}" title="${dr.drug}"></div>`),
+              dayData.weights.length ? `<div style="width:6px;height:6px;border-radius:50%;background:#4ade80" title="체중"></div>` : '',
+              dayData.supps.length ? `<div style="width:6px;height:6px;border-radius:50%;background:#a78bfa" title="영양제"></div>` : '',
+              dayData.sideEffects.length ? `<div style="width:6px;height:6px;border-radius:2px;background:#f87171" title="부작용"></div>` : '',
+            ].filter(Boolean).join('') : ''}
+          </div>
+        </div>`;
+      }
+
+      html += `</div></div>`;
+
+      // ── 월간 요약 바 ──
+      const monthKeys = Object.keys(data).filter(k => k.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`));
+      const monthDrugs = monthKeys.reduce((a,k) => a + data[k].drugs.length, 0);
+      const monthWeights = monthKeys.reduce((a,k) => a + data[k].weights.length, 0);
+      const monthSupps = monthKeys.reduce((a,k) => a + data[k].supps.length, 0);
+
+      html += `<div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="flex:1;background:${isLight?'#eff6ff':'#0d1b2a'};border:1px solid #1d4ed833;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:#60a5fa">${monthDrugs}</div>
+          <div style="font-size:10px;color:#6b7280">이달 투약</div>
+        </div>
+        <div style="flex:1;background:${isLight?'#f0fdf4':'#0d1a0f'};border:1px solid #4ade8033;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:#4ade80">${monthWeights}</div>
+          <div style="font-size:10px;color:#6b7280">체중 기록</div>
+        </div>
+        <div style="flex:1;background:${isLight?'#faf5ff':'#12093a'};border:1px solid #a78bfa33;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:18px;font-weight:700;color:#a78bfa">${monthSupps}</div>
+          <div style="font-size:10px;color:#6b7280">영양제 복용</div>
+        </div>
+      </div>`;
+
+      // ── 선택 날짜 상세 ──
+      if (calSelectedDate) {
+        const dayData = data[calSelectedDate] || { drugs:[], weights:[], supps:[], sideEffects:[] };
+        const holiday = holidays[calSelectedDate];
+        const dObj = new Date(calSelectedDate + 'T00:00:00+09:00');
+        const dowLabel = ['일','월','화','수','목','금','토'][dObj.getDay()];
+        const kstDate = `${dObj.getFullYear()}년 ${dObj.getMonth()+1}월 ${dObj.getDate()}일 (${dowLabel})`;
+
+        html += `<div style="background:${isLight?'#fff':'#12121e'};border:1px solid ${isLight?'#e2e8f0':'#1f2937'};border-radius:14px;padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div>
+              <div style="font-size:15px;font-weight:700;color:${isLight?'#1a1a2e':'#e2e8f0'}">${kstDate}</div>
+              ${holiday?`<div style="font-size:11px;color:#ef4444;margin-top:2px">🎌 ${holiday}</div>`:''}
+            </div>
+            <button onclick="calOpenAddMenu('${calSelectedDate}')"
+              style="background:#1d4ed8;border:none;border-radius:8px;color:white;padding:7px 14px;font-size:12px;cursor:pointer;font-family:inherit">
+              + 기록 추가
+            </button>
+          </div>`;
+
+        // 투약
+        if (dayData.drugs.length) {
+          html += `<div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">💉 투약</div>`;
+          dayData.drugs.forEach(dr => {
+            const site = dr.site ? (INJECTION_SITES.find(s=>s.id===dr.site)?.label||'') : '';
+            const timeStr = toKSTString(dr.time).slice(5,16);
+            html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:${dr.color}11;border:1px solid ${dr.color}33;border-radius:8px;margin-bottom:5px">
+              <span style="font-size:14px">${dr.emoji}</span>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:700;color:${dr.color}">${dr.drug}</div>
+                <div style="font-size:11px;color:#6b7280">${timeStr}${site?' · '+site:''}</div>
+              </div>
+              <span style="font-size:14px;font-weight:700;color:${dr.color};font-family:'JetBrains Mono'">${dr.dose}mg</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+
+        // 체중
+        if (dayData.weights.length) {
+          html += `<div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">⚖️ 체중</div>`;
+          dayData.weights.forEach(w => {
+            const timeStr = toKSTString(w.time).slice(5,16);
+            html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#4ade8011;border:1px solid #4ade8033;border-radius:8px;margin-bottom:5px">
+              <span style="font-size:11px;color:#6b7280">${timeStr}</span>
+              <span style="font-size:16px;font-weight:700;color:#4ade80;font-family:'JetBrains Mono'">${w.weight} kg</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+
+        // 영양제
+        if (dayData.supps.length) {
+          // 시간대별 그룹핑
+          const suppByTiming = {};
+          dayData.supps.forEach(s => {
+            if (!suppByTiming[s.timing]) suppByTiming[s.timing] = [];
+            suppByTiming[s.timing].push(s.name);
+          });
+          html += `<div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">💊 영양제</div>
+            <div style="background:#a78bfa11;border:1px solid #a78bfa33;border-radius:8px;padding:8px 10px">`;
+          ALL_TIMINGS.forEach(t => {
+            if (!suppByTiming[t]?.length) return;
+            html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+              <span style="font-size:12px">${TIMING_ICONS[t]}</span>
+              <span style="font-size:11px;color:#6b7280;min-width:36px">${t}</span>
+              <span style="font-size:12px;color:#a78bfa">${suppByTiming[t].join(', ')}</span>
+            </div>`;
+          });
+          html += `</div></div>`;
+        }
+
+        // 부작용
+        if (dayData.sideEffects.length) {
+          html += `<div style="margin-bottom:6px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">⚠️ 부작용</div>`;
+          dayData.sideEffects.forEach(se => {
+            html += `<div style="padding:7px 10px;background:#f8717111;border:1px solid #f8717133;border-radius:8px;margin-bottom:5px">
+              <div style="font-size:12px;color:#f87171">${se.emoji} ${se.drug}</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:2px">${(se.symptoms||[]).join(', ')}</div>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+
+        if (!dayData.drugs.length && !dayData.weights.length && !dayData.supps.length && !dayData.sideEffects.length) {
+          html += `<div style="text-align:center;color:#4a5568;padding:20px;font-size:13px">이 날의 기록이 없습니다</div>`;
+        }
+
+        html += `</div>`;
+      }
+
+      c.innerHTML = html;
+    }
+
+    window.calNav = (dir) => {
+      calMonth += dir;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      renderCalendar();
+    };
+
+    window.calSelectDate = (dateKey) => {
+      calSelectedDate = calSelectedDate === dateKey ? null : dateKey;
+      renderCalendar();
+    };
+
+    // 달력에서 "+ 기록 추가" 버튼 → 해당 날짜로 모달 열기
+    window.calOpenAddMenu = (dateKey) => {
+      const m = document.getElementById("cal-add-modal");
+      m.dataset.date = dateKey;
+      const dObj = new Date(dateKey + 'T00:00:00+09:00');
+      const label = document.getElementById("cal-add-date-label");
+      if (label) label.textContent = `${dObj.getFullYear()}년 ${dObj.getMonth()+1}월 ${dObj.getDate()}일`;
+      m.style.display = "flex";
+    };
+
+    window.calAddDrug = () => {
+      const m = document.getElementById("cal-add-modal");
+      m.style.display = "none";
+      document.getElementById("add-time").value = m.dataset.date + "T08:00";
+      document.getElementById("add-dose").value = "";
+      selectedSite = null;
+      document.getElementById("add-modal").style.display = "flex";
+      setTimeout(renderSiteSelector, 50);
+    };
+
+    window.calAddWeight = () => {
+      const m = document.getElementById("cal-add-modal");
+      m.style.display = "none";
+      document.getElementById("add-weight-time").value = m.dataset.date + "T07:00";
+      document.getElementById("add-weight").value = "";
+      document.getElementById("weight-modal").style.display = "flex";
+    };
+
     window.switchCalcTab = (tab) => {
       document.querySelectorAll(".ctab-panel").forEach(p => p.style.display = "none");
       document.querySelectorAll(".calc-tab-btn").forEach(b => b.classList.remove("active"));
@@ -2271,6 +2598,10 @@
     .gender-btn.active { background: #1d4ed8; color: white; }
 
     .zoom-hint { font-size: 10px; color: #2a2a3e; text-align: center; margin-top: 4px; padding-bottom: 4px; }
+    /* 달력 */
+    #calendar-container { padding-bottom: 20px; }
+    .cal-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
     .calc-tab-btn { padding: 7px 12px; background: #1f2937; border: 1px solid #374151; border-radius: 20px; color: #6b7280; font-size: 12px; cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap; }
     .calc-tab-btn.active { background: #1d4ed8; border-color: #3b82f6; color: white; }
     body.light-mode .calc-tab-btn { background: #f3f4f6; border-color: #d1d5db; color: #6b7280; }
@@ -2390,6 +2721,7 @@
     <button class="tab-btn active" data-tab="peptide" onclick="switchTab('peptide')">💉 투약</button>
     <button class="tab-btn" data-tab="weight"  onclick="switchTab('weight')">⚖️ 체중</button>
     <button class="tab-btn" data-tab="supple"  onclick="switchTab('supple')">💊 영양제</button>
+    <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar')">📅 달력</button>
     <button class="tab-btn" data-tab="analysis" onclick="switchTab('analysis')">📊 분석</button>
     <button class="tab-btn" data-tab="calc"    onclick="switchTab('calc')">🧮 계산</button>
   </div>
@@ -2401,7 +2733,7 @@
       <div id="remaining-cards"></div>
 
       <div class="pk-info">
-        💡 레타 Tmax ~48h, 반감기 6일 · 마운자로 Tmax ~24h, 반감기 5일 · 위고비 Tmax ~36h, 반감기 7일 · 1-compartment PK 모델
+        💡 레타(Retatrutide) Tmax ~48h, t½ 6일 · 마운자로(Tirzepatide) Tmax ~24h, t½ 5일 · 위고비(Semaglutide) Tmax ~36h, t½ 7일
       </div>
 
       <div class="chart-wrap">
@@ -2588,7 +2920,12 @@
 
     </div>
 
-    <!-- 분석 패널 -->
+    <!-- 달력 패널 -->
+    <div id="panel-calendar" class="tab-panel">
+      <div id="calendar-container"></div>
+    </div>
+
+        <!-- 분석 패널 -->
     <div id="panel-analysis" class="tab-panel">
 
       <!-- 기본 설정 (분석에 필요한 데이터) -->
@@ -2659,6 +2996,28 @@
   </div>
 </div>
 
+<!-- 모달: 달력 기록 추가 선택 -->
+<div id="cal-add-modal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box" style="max-width:320px">
+    <div class="modal-title">📅 기록 추가</div>
+    <div id="cal-add-date-label" style="font-size:13px;color:#6b7280;margin-bottom:16px"></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="calAddDrug()"
+        style="padding:14px;background:#0d1b2a;border:1px solid #3b82f666;border-radius:12px;
+               color:#60a5fa;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left">
+        💉 투약 기록 추가
+      </button>
+      <button onclick="calAddWeight()"
+        style="padding:14px;background:#0d1a0f;border:1px solid #4ade8066;border-radius:12px;
+               color:#4ade80;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left">
+        ⚖️ 체중 기록 추가
+      </button>
+    </div>
+    <button class="big-btn" style="background:#374151;margin-top:14px"
+      onclick="document.getElementById('cal-add-modal').style.display='none'">취소</button>
+  </div>
+</div>
+
 <!-- 모달: 주사 부위 선택 (투약) -->
 <div id="quick-site-modal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal-box">
@@ -2694,7 +3053,7 @@
     <div class="modal-title">💊 약물 기록 추가</div>
     <div style="margin-bottom:10px"><label>약물 선택</label>
       <select id="add-drug" class="input-field">
-        <option>마운자로 (티제파타이드)</option><option>레타 (레타트루타이드)</option><option>위고비 (세마글루타이드)</option>
+        <option>마운자로 (Tirzepatide)</option><option>레타 (Retatrutide)</option><option>위고비 (Semaglutide)</option>
       </select>
     </div>
     <div style="margin-bottom:10px"><label>용량 (mg)</label>
