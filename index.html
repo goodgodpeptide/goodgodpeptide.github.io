@@ -738,7 +738,7 @@
 
       const PAD = { l: 48, r: 16, t: 24, b: 34 };
       const gW = cW - PAD.l - PAD.r, gH = cH - PAD.t - PAD.b;
-      const minT = allRecs[0].time, maxT = allRecs[allRecs.length-1].time;
+      const minT = weightRangeDays > 0 ? Date.now() - weightRangeDays * 86400000 : allRecs[0].time, maxT = Date.now();
       const weights = allRecs.map(r => r.weight);
       const target = parseFloat(appData.targetWeight) || null;
       const allWeights = target ? [...weights, target] : weights;
@@ -925,6 +925,183 @@
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
       if (tab === "peptide") setTimeout(() => { renderPeptideGraph(); initGraphTouch(); }, 50);
       if (tab === "weight") setTimeout(renderWeightGraph, 50);
+      if (tab === "analysis") setTimeout(renderAnalysis, 50);
+    };
+
+    // ══════════════════════════════════════════════
+    // 분석 탭 렌더링
+    // ══════════════════════════════════════════════
+    window.renderAnalysis = function() {
+      const weight = parseFloat((appData.weightRecords || []).sort((a,b)=>b.time-a.time)[0]?.weight) || 0;
+      const height = parseFloat(appData.height) || 0;
+      const target = parseFloat(appData.targetWeight) || 0;
+      const gender = appData.gender || "남성";
+      const age = parseFloat(document.getElementById("a-age")?.value) || 0;
+      const activity = parseFloat(document.getElementById("a-activity")?.value) || 1.55;
+
+      const cardsEl = document.getElementById("analysis-cards");
+      const predEl = document.getElementById("analysis-prediction");
+      const weeklyEl = document.getElementById("analysis-weekly");
+      const tipsEl = document.getElementById("analysis-tips");
+      if (!cardsEl) return;
+
+      if (!weight || !height) {
+        cardsEl.innerHTML = `<div class="card" style="color:#6b7280;font-size:13px;text-align:center;padding:24px">체중 탭에서 키와 체중을 먼저 입력하세요</div>`;
+        return;
+      }
+
+      // ── 계산 ──
+      // Mifflin-St Jeor BMR
+      const bmr = gender === "남성"
+        ? 10 * weight + 6.25 * height - 5 * (age || 30) + 5
+        : 10 * weight + 6.25 * height - 5 * (age || 30) - 161;
+      const tdee = Math.round(bmr * activity);
+      const bmi = weight / Math.pow(height/100, 2);
+
+      // 체지방률 추정 (Deurenberg 공식)
+      const bfp = gender === "남성"
+        ? 1.2 * bmi + 0.23 * (age||30) - 16.2
+        : 1.2 * bmi + 0.23 * (age||30) - 5.4;
+      const fatKg = weight * bfp / 100;
+      const leanKg = weight - fatKg;
+
+      // 이상체중 (Broca 변형)
+      const idealWeight = gender === "남성"
+        ? (height - 100) * 0.9
+        : (height - 100) * 0.85;
+
+      // 수분권장량 (체중 × 33ml)
+      const waterMl = Math.round(weight * 33);
+
+      // 칼로리 적자 시나리오
+      const deficit500 = tdee - 500;  // 주 0.5kg 감량
+      const deficit750 = tdee - 750;  // 주 0.75kg 감량
+
+      // 주간 감량 추이 (최근 체중 기록에서)
+      const wrecs = (appData.weightRecords || []).sort((a,b)=>a.time-b.time);
+      let weeklyLoss = null, daysToGoal = null;
+      if (wrecs.length >= 2) {
+        const first = wrecs[0], last = wrecs[wrecs.length-1];
+        const daysDiff = (last.time - first.time) / 86400000;
+        const totalLoss = first.weight - last.weight;
+        weeklyLoss = daysDiff > 0 ? (totalLoss / daysDiff) * 7 : 0;
+        if (weeklyLoss > 0 && target > 0 && last.weight > target) {
+          daysToGoal = Math.round((last.weight - target) / weeklyLoss * 7);
+        }
+      }
+
+      // BMI 등급
+      const bmiLabel = bmi < 18.5 ? ["저체중","#60a5fa"] : bmi < 23 ? ["정상","#4ade80"] : bmi < 25 ? ["과체중","#facc15"] : bmi < 30 ? ["비만","#f97316"] : ["고도비만","#ef4444"];
+
+      // ── 카드 렌더 ──
+      const statCard = (label, val, unit="", color="#e2e8f0", sub="") =>
+        `<div class="stat-card"><div class="stat-label">${label}</div>
+         <div class="stat-val" style="color:${color};font-size:${val.length>7?'16px':'20px'}">${val}<span style="font-size:12px;color:#6b7280;font-weight:400"> ${unit}</span></div>
+         ${sub ? `<div style="font-size:10px;color:#4a5568;margin-top:3px">${sub}</div>` : ''}
+         </div>`;
+
+      cardsEl.innerHTML = `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          ${statCard("BMR (기초대사량)", Math.round(bmr).toString(), "kcal", "#60a5fa", "완전 안 움직여도 소모")}
+          ${statCard("TDEE (일일 소모)", tdee.toString(), "kcal", "#a78bfa", "활동량 반영 총 소모")}
+          ${statCard("BMI", bmi.toFixed(1), bmiLabel[0], bmiLabel[1])}
+          ${statCard("이상 체중", idealWeight.toFixed(1), "kg", "#4ade80", "Broca 변형 공식")}
+          ${statCard("체지방 추정", bfp.toFixed(1), "%", "#f97316", `~${fatKg.toFixed(1)}kg`)}
+          ${statCard("제지방 추정", leanKg.toFixed(1), "kg", "#22d3ee", "근육+뼈+수분")}
+          ${statCard("권장 수분", (waterMl/1000).toFixed(1), "L/일", "#38bdf8", `${waterMl}ml`)}
+          ${statCard("현재 체중", weight.toString(), "kg", "#e2e8f0")}
+        </div>
+        <div class="card" style="margin-bottom:10px;border-color:#1d4ed833">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:10px">🍽️ 칼로리 목표</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0d0d1a;border-radius:8px">
+              <div><div style="font-size:12px;color:#4ade80">유지</div><div style="font-size:10px;color:#4a5568">체중 현상 유지</div></div>
+              <div style="font-family:'JetBrains Mono';font-size:18px;font-weight:700;color:#4ade80">${tdee} kcal</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0d0d1a;border-radius:8px">
+              <div><div style="font-size:12px;color:#facc15">적정 감량</div><div style="font-size:10px;color:#4a5568">주 0.5kg (-500)</div></div>
+              <div style="font-family:'JetBrains Mono';font-size:18px;font-weight:700;color:#facc15">${deficit500} kcal</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#0d0d1a;border-radius:8px">
+              <div><div style="font-size:12px;color:#f97316">빠른 감량</div><div style="font-size:10px;color:#4a5568">주 0.75kg (-750)</div></div>
+              <div style="font-family:'JetBrains Mono';font-size:18px;font-weight:700;color:#f97316">${deficit750} kcal</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // ── 목표 달성 예측 ──
+      if (target > 0 && wrecs.length >= 2 && weeklyLoss !== null) {
+        predEl.style.display = "block";
+        const remainKg = weight - target;
+        const goalDate = daysToGoal ? new Date(Date.now() + daysToGoal * 86400000) : null;
+        const goalStr = goalDate ? goalDate.toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", month:"long", day:"numeric" }) : "-";
+        predEl.innerHTML = `
+          <div style="font-size:12px;color:#6b7280;margin-bottom:10px">🎯 목표 달성 예측</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="text-align:center;padding:10px;background:#0d0d1a;border-radius:8px">
+              <div style="font-size:10px;color:#6b7280">남은 kg</div>
+              <div style="font-size:18px;font-weight:700;color:#facc15;font-family:'JetBrains Mono'">${remainKg.toFixed(1)}</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:#0d0d1a;border-radius:8px">
+              <div style="font-size:10px;color:#6b7280">주간 감량</div>
+              <div style="font-size:18px;font-weight:700;color:${weeklyLoss>0?'#4ade80':'#f87171'};font-family:'JetBrains Mono'">${weeklyLoss>0?'-':''}${Math.abs(weeklyLoss).toFixed(2)}</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:#0d0d1a;border-radius:8px">
+              <div style="font-size:10px;color:#6b7280">예상 달성일</div>
+              <div style="font-size:13px;font-weight:700;color:${daysToGoal?'#4ade80':'#6b7280'}">${daysToGoal ? goalStr : (weeklyLoss<=0?'증가중':'-')}</div>
+            </div>
+          </div>
+          ${daysToGoal ? `<div style="margin-top:8px;font-size:11px;color:#4a5568;text-align:center">현재 속도 유지 시 약 ${daysToGoal}일 후 (${Math.ceil(daysToGoal/7)}주)</div>` : ''}
+        `;
+      } else {
+        predEl.style.display = "none";
+      }
+
+      // ── 주간 변화표 ──
+      if (wrecs.length >= 2) {
+        weeklyEl.style.display = "block";
+        // 주 단위로 묶기
+        const weekGroups = {};
+        wrecs.forEach(r => {
+          const d = new Date(r.time + 9*3600000);
+          const weekStart = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - ((d.getUTCDay()||7)-1)*86400000);
+          const key = weekStart.toISOString().slice(0,10);
+          if (!weekGroups[key]) weekGroups[key] = [];
+          weekGroups[key].push(r.weight);
+        });
+        const weeks = Object.entries(weekGroups).sort(([a],[b])=>a<b?1:-1).slice(0,6);
+        weeklyEl.innerHTML = `
+          <div style="font-size:12px;color:#6b7280;margin-bottom:10px">📅 주간 평균 체중</div>
+          ${weeks.map(([key, ws], i) => {
+            const avg = ws.reduce((a,b)=>a+b,0)/ws.length;
+            const prevAvg = weeks[i+1] ? weeks[i+1][1].reduce((a,b)=>a+b,0)/weeks[i+1][1].length : null;
+            const diff = prevAvg ? avg - prevAvg : null;
+            const d = new Date(key);
+            const label = `${d.getUTCMonth()+1}/${d.getUTCDate()} 주`;
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #1f2937">
+              <span style="font-size:12px;color:#6b7280">${label}</span>
+              <span style="font-family:'JetBrains Mono';font-size:14px;color:#e2e8f0">${avg.toFixed(2)} kg</span>
+              ${diff !== null ? `<span style="font-size:12px;color:${diff<0?'#4ade80':'#f87171'};font-family:'JetBrains Mono'">${diff>0?'+':''}${diff.toFixed(2)}</span>` : '<span></span>'}
+            </div>`;
+          }).join('')}
+        `;
+      } else { weeklyEl.style.display = "none"; }
+
+      // ── 권장사항 팁 ──
+      const tips = [];
+      if (bmi >= 25) tips.push({icon:"🍽️", text:`하루 ${deficit500}kcal 목표로 주 0.5kg 감량이 가장 지속 가능한 속도`});
+      if (bfp > (gender==="남성"?25:35)) tips.push({icon:"💪", text:"체지방률 감소를 위해 근력운동 주 3회 이상 권장"});
+      if (weight > idealWeight + 5) tips.push({icon:"🎯", text:`이상체중(${idealWeight.toFixed(1)}kg)까지 ${(weight-idealWeight).toFixed(1)}kg 남음`});
+      tips.push({icon:"💧", text:`하루 ${(waterMl/1000).toFixed(1)}L (${waterMl}ml) 수분 섭취 권장`});
+      if (weeklyLoss !== null && weeklyLoss > 1) tips.push({icon:"⚠️", text:"주 1kg 이상 감량은 근육 손실 위험 — 속도 조절 고려"});
+      if (weeklyLoss !== null && weeklyLoss < 0) tips.push({icon:"📈", text:"체중이 증가 추세 — 칼로리 재점검 필요"});
+
+      tipsEl.innerHTML = tips.map(t => `
+        <div style="display:flex;gap:10px;padding:10px 12px;background:#12121e;border:1px solid #1f2937;border-radius:10px;margin-bottom:8px;align-items:flex-start">
+          <span style="font-size:16px">${t.icon}</span>
+          <span style="font-size:12px;color:#9ca3af;line-height:1.5">${t.text}</span>
+        </div>`).join('');
     };
 
     window.setGender = (g) => {
@@ -1070,6 +1247,7 @@
     <button class="tab-btn active" data-tab="peptide" onclick="switchTab('peptide')">💉 펩타이드</button>
     <button class="tab-btn" data-tab="calc"    onclick="switchTab('calc')">🧮 계산기</button>
     <button class="tab-btn" data-tab="weight"  onclick="switchTab('weight')">⚖️ 체중</button>
+    <button class="tab-btn" data-tab="analysis" onclick="switchTab('analysis')">📊 분석</button>
   </div>
 
   <div class="content">
@@ -1186,6 +1364,30 @@
       </div>
 
       <div id="weight-list"></div>
+    </div>
+
+    <!-- 분석 패널 -->
+    <div id="panel-analysis" class="tab-panel">
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title">신체 정보</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div><label>나이</label><input id="a-age" class="input-field" type="number" placeholder="35" oninput="renderAnalysis()"/></div>
+          <div><label>활동 수준</label>
+            <select id="a-activity" class="input-field" onchange="renderAnalysis()">
+              <option value="1.2">거의 안 움직임</option>
+              <option value="1.375">가벼운 운동 1-3일</option>
+              <option value="1.55" selected>적당한 운동 3-5일</option>
+              <option value="1.725">격한 운동 6-7일</option>
+              <option value="1.9">매우 격렬/육체직</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#4a5568">키·체중·목표체중은 체중 탭 설정에서</div>
+      </div>
+      <div id="analysis-cards"></div>
+      <div id="analysis-prediction" class="card" style="margin-bottom:12px;display:none"></div>
+      <div id="analysis-weekly" class="card" style="margin-bottom:12px;display:none"></div>
+      <div id="analysis-tips" style="margin-bottom:12px"></div>
     </div>
 
   </div>
