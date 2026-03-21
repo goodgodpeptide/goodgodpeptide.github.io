@@ -34,21 +34,39 @@
     let saveTimer = null;
     let appData = { records: [], weightRecords: [], gender: "남성", height: "", targetWeight: "" };
 
-    // ── 한국시간 헬퍼 ──────────────────────────────────
-    function kstNow() {
-      // 항상 한국시간(UTC+9) 기준으로 datetime-local 입력값 반환
-      const now = new Date();
-      const kstOffset = 9 * 60; // 분
-      const localOffset = now.getTimezoneOffset(); // 분 (한국이면 -540)
-      const kst = new Date(now.getTime() + (kstOffset + localOffset) * 60000);
+    // ══════════════════════════════════════════════
+    // KST 헬퍼 (완전 수정)
+    // ══════════════════════════════════════════════
+    // datetime-local input value → ms (항상 KST로 해석)
+    function kstInputToMs(val) {
+      // val: "2026-03-21T07:10" 형태 → KST로 파싱
+      if (!val) return Date.now();
+      const [datePart, timePart] = val.split("T");
+      const [y, mo, d] = datePart.split("-").map(Number);
+      const [h, mi] = timePart.split(":").map(Number);
+      // KST = UTC+9 → UTC ms
+      return Date.UTC(y, mo - 1, d, h - 9, mi);
+    }
+
+    // ms → datetime-local input value (KST 표시)
+    function msToKstInput(ms) {
+      const kst = new Date(ms + 9 * 3600000);
       return kst.toISOString().slice(0, 16);
     }
 
+    // ms → KST 표시 문자열
     function toKSTString(ts) {
       return new Date(ts).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" });
     }
 
-    // ── Auth ───────────────────────────────────────────
+    // 현재 시각 → KST input value
+    function kstNow() {
+      return msToKstInput(Date.now());
+    }
+
+    // ══════════════════════════════════════════════
+    // Auth
+    // ══════════════════════════════════════════════
     getRedirectResult(auth).catch(console.error);
 
     onAuthStateChanged(auth, async (user) => {
@@ -72,7 +90,9 @@
     };
     window.doLogout = async () => { await signOut(auth); };
 
-    // ── Firestore ──────────────────────────────────────
+    // ══════════════════════════════════════════════
+    // Firestore
+    // ══════════════════════════════════════════════
     async function loadData() {
       setSaveStatus("loading");
       try {
@@ -110,39 +130,80 @@
       el.textContent = text;
     }
 
-    // ── 약물 설정 ──────────────────────────────────────
-    // 반감기 계산식: C(t) = C0 × 0.5^(t / t½)
-    // t½ = 반감기(시간), t = 경과시간(시간)
+    // ══════════════════════════════════════════════
+    // 약물 설정 + PK 모델
+    // ══════════════════════════════════════════════
+    // 레타트루타이드: Tmax 24~72h (흡수상 존재), 1-compartment oral PK
+    // 터제파타이드: Tmax 8~48h
+    // 세마글루타이드: Tmax 24~48h
+    // C(t) = (F·D·ka) / (V·(ka-ke)) × (e^(-ke·t) - e^(-ka·t))  ... t > 0
+    // 단, 절대값 파라미터 불필요 → 정규화: D 기준 상대농도
+    // ka = ln(2)/Tmax_h, ke = ln(2)/(halfLife_days*24)
+
     const DRUG_CONFIG = {
-      "터제파타이드":  { halfLifeDays: 5,  color: "#60a5fa", emoji: "🔵", short: "터제" },
-      "레타트루타이드": { halfLifeDays: 6,  color: "#f87171", emoji: "🔴", short: "레타" },
-      "세마글루타이드": { halfLifeDays: 7,  color: "#4ade80", emoji: "🟢", short: "세마" },
+      "터제파타이드":   {
+        halfLifeDays: 5, tmaxHours: 24,
+        color: "#60a5fa", emoji: "🔵", short: "터제"
+      },
+      "레타트루타이드": {
+        halfLifeDays: 6, tmaxHours: 48,   // 흡수상 ~12~72h, 중간값 48h 사용
+        color: "#f87171", emoji: "🔴", short: "레타"
+      },
+      "세마글루타이드": {
+        halfLifeDays: 7, tmaxHours: 36,
+        color: "#4ade80", emoji: "🟢", short: "세마"
+      },
     };
 
-    // 체내 농도 계산 (반감기 공식)
+    // 1-compartment oral PK: 흡수 + 소실 모델
+    // 반환값: 상대농도 (dose 단위 기준 mg 환산)
+    function pkConcentration(dose, elapsedHours, cfg) {
+      if (elapsedHours < 0) return 0;
+      const ke = Math.LN2 / (cfg.halfLifeDays * 24); // 1/hr
+      const ka = Math.LN2 / cfg.tmaxHours;           // 1/hr
+      if (Math.abs(ka - ke) < 1e-10) {
+        // ka ≈ ke: 단순 반감기 사용
+        return dose * Math.pow(0.5, elapsedHours / (cfg.halfLifeDays * 24));
+      }
+      // 정규화 상수: 피크를 dose로 맞추기 위해
+      // C_peak = dose × (ka/(ka-ke)) × (e^(-ke*Tmax) - e^(-ka*Tmax))
+      // 여기서는 상대적 형태 그대로 → 실제 잔류량은 dose 단위로 표현
+      const tmax_h = Math.log(ka / ke) / (ka - ke);
+      const peakFactor = (ka / (ka - ke)) * (Math.exp(-ke * tmax_h) - Math.exp(-ka * tmax_h));
+      const raw = (ka / (ka - ke)) * (Math.exp(-ke * elapsedHours) - Math.exp(-ka * elapsedHours));
+      return dose * (raw / peakFactor);
+    }
+
     function calcConcentrationAt(drug, targetTime) {
       const cfg = DRUG_CONFIG[drug];
-      const halfLifeHrs = cfg.halfLifeDays * 24;
+      if (!cfg) return 0;
       let total = 0;
       (appData.records || []).filter(r => r.drug === drug && r.time <= targetTime).forEach(r => {
         const hrs = (targetTime - r.time) / 3600000;
-        total += r.dose * Math.pow(0.5, hrs / halfLifeHrs);
+        // isOverride: 단순 반감기 (현재 잔류량 직접 지정이므로)
+        if (r.isOverride) {
+          total += r.dose * Math.pow(0.5, hrs / (cfg.halfLifeDays * 24));
+        } else {
+          total += pkConcentration(r.dose, hrs, cfg);
+        }
       });
-      return total;
+      return Math.max(0, total);
     }
 
     function calcRemaining(drug) {
       return calcConcentrationAt(drug, Date.now());
     }
 
-    // ── 투약 기록 추가 ─────────────────────────────────
+    // ══════════════════════════════════════════════
+    // 투약 기록
+    // ══════════════════════════════════════════════
     window.submitAddRecord = () => {
       const drug = document.getElementById("add-drug").value;
       const dose = parseFloat(document.getElementById("add-dose").value);
       const timeVal = document.getElementById("add-time").value;
       if (!dose || !timeVal) return;
       appData.records = appData.records || [];
-      appData.records.push({ id: Date.now(), drug, dose, time: new Date(timeVal).getTime() });
+      appData.records.push({ id: Date.now(), drug, dose, time: kstInputToMs(timeVal) });
       scheduleSave();
       document.getElementById("add-modal").style.display = "none";
       renderAll();
@@ -153,7 +214,6 @@
       scheduleSave(); renderAll();
     };
 
-    // ── 수동 농도 입력 ─────────────────────────────────
     window.openOverrideModal = (drug) => {
       const cfg = DRUG_CONFIG[drug];
       document.getElementById("override-title").textContent = `${cfg.emoji} ${drug} 수동 입력`;
@@ -170,20 +230,22 @@
       if (isNaN(amount) || !timeVal) return;
       appData.records = (appData.records || []).filter(r => r.drug !== drug);
       if (amount > 0) {
-        appData.records.push({ id: Date.now(), drug, dose: amount, time: new Date(timeVal).getTime(), isOverride: true });
+        appData.records.push({ id: Date.now(), drug, dose: amount, time: kstInputToMs(timeVal), isOverride: true });
       }
       scheduleSave();
       document.getElementById("override-modal").style.display = "none";
       renderAll();
     };
 
-    // ── 체중 기록 ──────────────────────────────────────
+    // ══════════════════════════════════════════════
+    // 체중 기록
+    // ══════════════════════════════════════════════
     window.submitAddWeight = () => {
       const weight = parseFloat(document.getElementById("add-weight").value);
       const timeVal = document.getElementById("add-weight-time").value;
       if (!weight || !timeVal) return;
       appData.weightRecords = appData.weightRecords || [];
-      appData.weightRecords.push({ id: Date.now(), weight, time: new Date(timeVal).getTime() });
+      appData.weightRecords.push({ id: Date.now(), weight, time: kstInputToMs(timeVal) });
       scheduleSave();
       document.getElementById("weight-modal").style.display = "none";
       renderAll();
@@ -201,10 +263,11 @@
       scheduleSave(); renderAll();
     };
 
-    // ── 그래프 상태 ────────────────────────────────────
-    let graphRangeHours = 0; // 0=전체
+    // ══════════════════════════════════════════════
+    // 그래프 상태
+    // ══════════════════════════════════════════════
+    let graphRangeHours = 0;
     let graphZoom = { scale: 1, offsetX: 0 };
-    let graphDrag = { active: false, startX: 0, startOffset: 0, lastTouchDist: 0 };
 
     window.setGraphRange = (hrs) => {
       graphRangeHours = hrs;
@@ -214,7 +277,17 @@
       renderPeptideGraph();
     };
 
-    // ── 렌더링 ─────────────────────────────────────────
+    let weightRangeDays = 0; // 0=전체
+    window.setWeightRange = (days) => {
+      weightRangeDays = days;
+      document.querySelectorAll(".wrange-btn").forEach(b => b.classList.remove("active"));
+      document.querySelector(`.wrange-btn[data-days="${days}"]`)?.classList.add("active");
+      renderWeightGraph();
+    };
+
+    // ══════════════════════════════════════════════
+    // 렌더링
+    // ══════════════════════════════════════════════
     function renderAll() {
       renderRemainingCards();
       renderPeptideList();
@@ -227,17 +300,31 @@
     function renderRemainingCards() {
       const c = document.getElementById("remaining-cards");
       if (!c) return;
+      const now = Date.now();
       c.innerHTML = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
         const rem = calcRemaining(drug);
+        // 다음 주사까지 예상 잔류량 (7일 후)
+        const in7d = calcConcentrationAt(drug, now + 7 * 86400000);
+        const steadyPct = rem > 0 ? Math.round((in7d / rem) * 100) : 0;
         return `
           <div class="card" style="border-color:${cfg.color}33">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
-              <div>
+              <div style="flex:1">
                 <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">${cfg.emoji} ${drug}</div>
-                <div style="font-size:26px;font-weight:700;color:${cfg.color};font-family:'JetBrains Mono',monospace">${rem.toFixed(3)}<span style="font-size:13px;font-weight:400;margin-left:4px;color:#9ca3af">mg</span></div>
-                <div style="font-size:11px;color:#4a5568;margin-top:3px">반감기 ${cfg.halfLifeDays}일</div>
+                <div style="font-size:28px;font-weight:700;color:${cfg.color};font-family:'JetBrains Mono',monospace;line-height:1">${rem.toFixed(3)}<span style="font-size:13px;font-weight:400;margin-left:4px;color:#9ca3af">mg</span></div>
+                <div style="display:flex;gap:10px;margin-top:6px;align-items:center">
+                  <span style="font-size:11px;color:#4a5568">반감기 ${cfg.halfLifeDays}일 · Tmax ~${cfg.tmaxHours}h</span>
+                </div>
+                ${rem > 0 ? `<div style="margin-top:8px">
+                  <div style="display:flex;justify-content:space-between;font-size:10px;color:#6b7280;margin-bottom:3px">
+                    <span>체내 잔류</span><span>7일 후 ~${in7d.toFixed(2)}mg</span>
+                  </div>
+                  <div style="height:4px;background:#1f2937;border-radius:2px;overflow:hidden">
+                    <div style="height:100%;width:${Math.min(100,Math.round(rem/Math.max(rem,0.001)*100))}%;background:${cfg.color};border-radius:2px;transition:width .5s"></div>
+                  </div>
+                </div>` : ''}
               </div>
-              <button onclick="openOverrideModal('${drug}')" style="background:#1f2937;border:1px solid #374151;border-radius:8px;color:#9ca3af;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit">수동입력</button>
+              <button onclick="openOverrideModal('${drug}')" style="background:#1f2937;border:1px solid #374151;border-radius:8px;color:#9ca3af;padding:6px 12px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;margin-left:10px">수동입력</button>
             </div>
           </div>`;
       }).join("");
@@ -263,16 +350,22 @@
       }).join("");
     }
 
-    // ── 체내 농도 그래프 (터치 드래그 + 확대) ─────────
+    // ══════════════════════════════════════════════
+    // 체내 농도 그래프
+    // ══════════════════════════════════════════════
+    let graphTooltip = { visible: false, x: 0 };
+
     function renderPeptideGraph() {
       const canvas = document.getElementById("peptide-chart");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
-      const W = canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      const H = canvas.height = 240 * window.devicePixelRatio;
-      canvas.style.height = "240px";
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-      const cW = canvas.offsetWidth, cH = 240;
+      const dpr = window.devicePixelRatio || 1;
+      const cW = canvas.offsetWidth;
+      const cH = 260;
+      canvas.width = cW * dpr;
+      canvas.height = cH * dpr;
+      canvas.style.height = cH + "px";
+      ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, cW, cH);
 
       const records = appData.records || [];
@@ -287,21 +380,20 @@
         fullMinTime = now - graphRangeHours * 3600000;
         fullMaxTime = now;
       } else {
-        fullMinTime = Math.min(...records.map(r => r.time)) - 3600000;
-        fullMaxTime = now + 3 * 86400000;
+        fullMinTime = Math.min(...records.map(r => r.time)) - 6 * 3600000;
+        fullMaxTime = now + 4 * 86400000;
       }
       const fullRange = fullMaxTime - fullMinTime;
 
-      // 줌/드래그 적용
       const visRange = fullRange / graphZoom.scale;
       const visMinTime = fullMinTime + graphZoom.offsetX;
       const visMaxTime = visMinTime + visRange;
 
-      const PAD = { l: 48, r: 12, t: 28, b: 32 };
+      const PAD = { l: 52, r: 14, t: 30, b: 34 };
       const gW = cW - PAD.l - PAD.r;
       const gH = cH - PAD.t - PAD.b;
 
-      const STEPS = 300;
+      const STEPS = 400;
       let globalMax = 0;
       const curves = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
         const drugRecs = records.filter(r => r.drug === drug);
@@ -319,33 +411,47 @@
       if (globalMax === 0) globalMax = 1;
 
       // 배경
-      ctx.fillStyle = "#0d0d1a";
+      ctx.fillStyle = "#080810";
       ctx.fillRect(PAD.l, PAD.t, gW, gH);
 
-      // 가로 그리드
-      ctx.strokeStyle = "#1f2937"; ctx.lineWidth = 1;
+      // 가로 그리드 + y축 레이블
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1;
       for (let i = 0; i <= 4; i++) {
         const y = PAD.t + gH - (i / 4) * gH;
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
-        ctx.fillStyle = "#4a5568"; ctx.font = "10px 'JetBrains Mono'"; ctx.textAlign = "right";
-        ctx.fillText((globalMax * i / 4).toFixed(2), PAD.l - 4, y + 4);
+        ctx.fillStyle = "#4a5568"; ctx.font = `10px 'JetBrains Mono'`; ctx.textAlign = "right";
+        ctx.fillText((globalMax * i / 4).toFixed(2), PAD.l - 5, y + 4);
       }
 
-      // x축 레이블 (범위에 따라 단위 자동)
+      // x축 레이블
       ctx.fillStyle = "#4a5568"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
       const xLabelCount = 5;
       for (let i = 0; i <= xLabelCount; i++) {
         const t = visMinTime + (i / xLabelCount) * visRange;
         const x = PAD.l + (i / xLabelCount) * gW;
-        const d = new Date(t);
+        const d = new Date(t + 9 * 3600000); // KST 보정
         let label;
-        if (visRange <= 2 * 3600000) label = `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-        else if (visRange <= 48 * 3600000) label = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}시`;
-        else label = `${d.getMonth()+1}/${d.getDate()}`;
-        ctx.fillText(label, x, cH - 4);
+        if (visRange <= 2 * 3600000) label = `${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+        else if (visRange <= 48 * 3600000) label = `${d.getUTCMonth()+1}/${d.getUTCDate()} ${d.getUTCHours()}시`;
+        else label = `${d.getUTCMonth()+1}/${d.getUTCDate()}`;
+        ctx.fillText(label, x, cH - 5);
       }
 
-      // 곡선 그리기
+      // 세로 그리드 (투약 시점 마킹)
+      records.forEach(r => {
+        const x = PAD.l + ((r.time - visMinTime) / visRange) * gW;
+        if (x < PAD.l || x > PAD.l + gW) return;
+        const cfg = DRUG_CONFIG[r.drug];
+        if (!cfg) return;
+        ctx.strokeStyle = cfg.color + "33"; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+        ctx.beginPath(); ctx.moveTo(x, PAD.t); ctx.lineTo(x, PAD.t + gH); ctx.stroke();
+        ctx.setLineDash([]);
+        // 투약 마커 (위쪽 작은 삼각형)
+        ctx.fillStyle = cfg.color + "88";
+        ctx.beginPath(); ctx.moveTo(x, PAD.t + 3); ctx.lineTo(x - 4, PAD.t - 4); ctx.lineTo(x + 4, PAD.t - 4); ctx.closePath(); ctx.fill();
+      });
+
+      // 곡선
       curves.forEach(({ cfg, points }) => {
         // fill
         ctx.beginPath();
@@ -355,15 +461,16 @@
           i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         });
         const lastX = PAD.l + ((points[points.length-1].t - visMinTime) / visRange) * gW;
-        ctx.lineTo(lastX, PAD.t + gH);
-        ctx.lineTo(PAD.l, PAD.t + gH);
+        ctx.lineTo(lastX, PAD.t + gH); ctx.lineTo(PAD.l, PAD.t + gH);
         ctx.closePath();
-        ctx.fillStyle = cfg.color + "20"; ctx.fill();
+        const grad = ctx.createLinearGradient(0, PAD.t, 0, PAD.t + gH);
+        grad.addColorStop(0, cfg.color + "30"); grad.addColorStop(1, cfg.color + "05");
+        ctx.fillStyle = grad; ctx.fill();
 
         // line
         ctx.beginPath();
         ctx.strokeStyle = cfg.color; ctx.lineWidth = 2;
-        ctx.shadowColor = cfg.color; ctx.shadowBlur = 6;
+        ctx.shadowColor = cfg.color; ctx.shadowBlur = 8;
         points.forEach((p, i) => {
           const x = PAD.l + ((p.t - visMinTime) / visRange) * gW;
           const y = PAD.t + gH - (p.val / globalMax) * gH;
@@ -375,60 +482,60 @@
       // 현재 시각 선
       const nowX = PAD.l + ((now - visMinTime) / visRange) * gW;
       if (nowX >= PAD.l && nowX <= PAD.l + gW) {
-        ctx.strokeStyle = "#ffffff55"; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+        ctx.strokeStyle = "#ffffff44"; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
         ctx.beginPath(); ctx.moveTo(nowX, PAD.t); ctx.lineTo(nowX, PAD.t + gH); ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle = "#ffffff88"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
-        ctx.fillText("현재", nowX, PAD.t + 10);
+        ctx.fillStyle = "#ffffffaa"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
+        ctx.fillText("현재", nowX, PAD.t - 4);
       }
 
       // 범례
       let lx = PAD.l + 4;
       curves.forEach(({ drug, cfg }) => {
-        ctx.fillStyle = cfg.color; ctx.fillRect(lx, PAD.t - 14, 12, 3);
+        ctx.fillStyle = cfg.color; ctx.fillRect(lx, 10, 14, 3);
         ctx.fillStyle = "#9ca3af"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "left";
-        ctx.fillText(cfg.short, lx + 14, PAD.t - 10);
+        ctx.fillText(cfg.short, lx + 17, 14);
         lx += 56;
       });
 
-      // 터치 툴팁 그리기
+      // 툴팁
       if (graphTooltip.visible) {
         const tx = graphTooltip.x;
         if (tx >= PAD.l && tx <= PAD.l + gW) {
           const t = visMinTime + ((tx - PAD.l) / gW) * visRange;
-          ctx.strokeStyle = "#ffffff44"; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+
+          ctx.strokeStyle = "#ffffff55"; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
           ctx.beginPath(); ctx.moveTo(tx, PAD.t); ctx.lineTo(tx, PAD.t + gH); ctx.stroke();
           ctx.setLineDash([]);
 
-          const lines = [];
-          const d = new Date(t);
+          const d = new Date(t + 9 * 3600000); // KST
           let timeLabel;
-          if (visRange <= 2 * 3600000) timeLabel = `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-          else timeLabel = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
-          lines.push({ text: timeLabel, color: "#e2e8f0" });
+          if (visRange <= 2 * 3600000)
+            timeLabel = `${d.getUTCMonth()+1}/${d.getUTCDate()} ${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+          else
+            timeLabel = `${d.getUTCMonth()+1}/${d.getUTCDate()} ${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
 
+          const lines = [{ text: timeLabel, color: "#e2e8f0" }];
           curves.forEach(({ drug, cfg }) => {
             const val = calcConcentrationAt(drug, t);
             if (val > 0.001) lines.push({ text: `${cfg.short}: ${val.toFixed(3)}mg`, color: cfg.color });
-            // dot
             const y = PAD.t + gH - (val / globalMax) * gH;
-            ctx.beginPath(); ctx.arc(tx, y, 4, 0, Math.PI*2);
+            ctx.beginPath(); ctx.arc(tx, y, 5, 0, Math.PI*2);
             ctx.fillStyle = cfg.color; ctx.fill();
-            ctx.strokeStyle = "#0a0a14"; ctx.lineWidth = 1.5; ctx.stroke();
+            ctx.strokeStyle = "#080810"; ctx.lineWidth = 2; ctx.stroke();
           });
 
-          // 툴팁 박스
-          const bw = 130, bh = lines.length * 16 + 12;
-          let bx = tx + 8, by = PAD.t + 8;
-          if (bx + bw > cW - 4) bx = tx - bw - 8;
-          ctx.fillStyle = "#1a1a2eee";
-          ctx.strokeStyle = "#374151";
-          ctx.lineWidth = 1;
-          roundRect(ctx, bx, by, bw, bh, 6);
-          ctx.fill(); ctx.stroke();
+          const bw = 148, bh = lines.length * 17 + 14;
+          let bx = tx + 10, by = PAD.t + 6;
+          if (bx + bw > cW - 4) bx = tx - bw - 10;
+          if (by + bh > PAD.t + gH) by = PAD.t + gH - bh - 4;
+          ctx.fillStyle = "#12122aee"; ctx.strokeStyle = "#374151"; ctx.lineWidth = 1;
+          roundRect(ctx, bx, by, bw, bh, 8); ctx.fill(); ctx.stroke();
           lines.forEach((l, i) => {
-            ctx.fillStyle = l.color; ctx.font = `${i===0?'11':'12'}px 'JetBrains Mono'`; ctx.textAlign = "left";
-            ctx.fillText(l.text, bx + 8, by + 14 + i * 16);
+            ctx.fillStyle = l.color;
+            ctx.font = `${i===0?'10px':'12px'} 'JetBrains Mono'`;
+            ctx.textAlign = "left";
+            ctx.fillText(l.text, bx + 10, by + 14 + i * 17);
           });
         }
       }
@@ -443,40 +550,48 @@
       ctx.closePath();
     }
 
-    // ── 그래프 툴팁/드래그/핀치줌 ─────────────────────
-    let graphTooltip = { visible: false, x: 0 };
-
+    // ══════════════════════════════════════════════
+    // 그래프 터치/마우스 (완전 재작성)
+    // ══════════════════════════════════════════════
     function initGraphTouch() {
       const canvas = document.getElementById("peptide-chart");
       if (!canvas || canvas._touchInit) return;
       canvas._touchInit = true;
 
-      const PAD_L = 48;
-      let lastTouches = [];
-      let isDragging = false;
-      let dragStartX = 0;
-      let dragStartOffset = 0;
+      const PAD_L = 52, PAD_R = 14;
 
       function getFullRange() {
         const now = Date.now();
         const records = appData.records || [];
         if (graphRangeHours > 0) return graphRangeHours * 3600000;
         if (!records.length) return 7 * 86400000;
-        const minT = Math.min(...records.map(r => r.time)) - 3600000;
-        return (now + 3 * 86400000) - minT;
+        const minT = Math.min(...records.map(r => r.time)) - 6 * 3600000;
+        return (now + 4 * 86400000) - minT;
       }
+
+      let touchState = {
+        mode: 'idle', // 'idle' | 'tooltip' | 'drag' | 'pinch'
+        startX: 0,
+        startOffset: 0,
+        prevDist: 0,
+        moved: false,
+      };
 
       canvas.addEventListener("touchstart", e => {
         e.preventDefault();
-        lastTouches = Array.from(e.touches);
         if (e.touches.length === 1) {
           const rect = canvas.getBoundingClientRect();
           const x = e.touches[0].clientX - rect.left;
-          isDragging = false;
-          dragStartX = x;
-          dragStartOffset = graphZoom.offsetX;
-          // 짧은 탭 = 툴팁
+          touchState = { mode: 'tooltip', startX: x, startOffset: graphZoom.offsetX, moved: false };
           graphTooltip = { visible: true, x };
+          renderPeptideGraph();
+        } else if (e.touches.length === 2) {
+          touchState.mode = 'pinch';
+          touchState.prevDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          graphTooltip.visible = false;
           renderPeptideGraph();
         }
       }, { passive: false });
@@ -485,158 +600,241 @@
         e.preventDefault();
         const rect = canvas.getBoundingClientRect();
 
-        if (e.touches.length === 2) {
-          // 핀치 줌
+        if (e.touches.length === 2 || touchState.mode === 'pinch') {
+          if (e.touches.length < 2) return;
+          touchState.mode = 'pinch';
           graphTooltip.visible = false;
-          const t1 = e.touches[0], t2 = e.touches[1];
-          const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
-          if (lastTouches.length === 2) {
-            const prevDist = Math.hypot(lastTouches[0].clientX - lastTouches[1].clientX, lastTouches[0].clientY - lastTouches[1].clientY);
-            const ratio = prevDist / dist;
+          const dist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          if (touchState.prevDist > 0) {
+            const ratio = touchState.prevDist / dist;
+            const newScale = Math.min(80, Math.max(1, graphZoom.scale * (1 / ratio)));
             const fullRange = getFullRange();
-            const maxOffset = fullRange - fullRange / graphZoom.scale;
-            const newScale = Math.min(50, Math.max(1, graphZoom.scale * (1 / ratio)));
+            const maxOffset = fullRange - fullRange / newScale;
             graphZoom.scale = newScale;
             graphZoom.offsetX = Math.max(0, Math.min(maxOffset, graphZoom.offsetX));
           }
-          lastTouches = Array.from(e.touches);
+          touchState.prevDist = dist;
           renderPeptideGraph();
-        } else if (e.touches.length === 1) {
+          return;
+        }
+
+        if (e.touches.length === 1) {
           const x = e.touches[0].clientX - rect.left;
-          const dx = x - dragStartX;
-          if (Math.abs(dx) > 5) {
-            isDragging = true;
+          const dx = x - touchState.startX;
+
+          if (!touchState.moved && Math.abs(dx) > 8) {
+            // 드래그 시작
+            touchState.mode = 'drag';
+            touchState.moved = true;
             graphTooltip.visible = false;
-            // 드래그로 이동
+          }
+
+          if (touchState.mode === 'drag') {
             const fullRange = getFullRange();
             const visRange = fullRange / graphZoom.scale;
-            const msPerPx = visRange / (canvas.offsetWidth - 48 - 12);
-            graphZoom.offsetX = Math.max(0, Math.min(fullRange - visRange, dragStartOffset - dx * msPerPx));
-          } else {
+            const graphW = canvas.offsetWidth - PAD_L - PAD_R;
+            const msPerPx = visRange / graphW;
+            const newOffset = touchState.startOffset - dx * msPerPx;
+            graphZoom.offsetX = Math.max(0, Math.min(fullRange - visRange, newOffset));
+            renderPeptideGraph();
+          } else if (touchState.mode === 'tooltip') {
+            // 8px 이하 이동 → 툴팁 위치 업데이트
             graphTooltip = { visible: true, x };
+            renderPeptideGraph();
           }
-          renderPeptideGraph();
         }
       }, { passive: false });
 
       canvas.addEventListener("touchend", e => {
-        lastTouches = Array.from(e.touches);
-        if (!isDragging) {
-          // 탭 종료 시 툴팁 유지
+        if (touchState.mode === 'tooltip' && !touchState.moved) {
+          // 탭: 툴팁 유지
+        } else {
+          graphTooltip.visible = false;
+          renderPeptideGraph();
         }
-      });
+        touchState.mode = 'idle';
+      }, { passive: false });
 
-      // 마우스 드래그 (PC)
-      let mouseDown = false;
+      // PC 마우스
+      let mouseDown = false, mouseDragStartX = 0, mouseDragOffset = 0, mouseMoved = false;
       canvas.addEventListener("mousedown", e => {
-        mouseDown = true; isDragging = false;
-        dragStartX = e.offsetX; dragStartOffset = graphZoom.offsetX;
+        mouseDown = true; mouseMoved = false;
+        mouseDragStartX = e.offsetX; mouseDragOffset = graphZoom.offsetX;
       });
       canvas.addEventListener("mousemove", e => {
+        const x = e.offsetX;
         if (!mouseDown) {
-          graphTooltip = { visible: true, x: e.offsetX };
+          graphTooltip = { visible: true, x };
+          renderPeptideGraph();
         } else {
-          const dx = e.offsetX - dragStartX;
+          const dx = x - mouseDragStartX;
           if (Math.abs(dx) > 3) {
-            isDragging = true; graphTooltip.visible = false;
+            mouseMoved = true;
+            graphTooltip.visible = false;
             const fullRange = getFullRange();
             const visRange = fullRange / graphZoom.scale;
-            const msPerPx = visRange / (canvas.offsetWidth - 60);
-            graphZoom.offsetX = Math.max(0, Math.min(fullRange - visRange, dragStartOffset - dx * msPerPx));
+            const graphW = canvas.offsetWidth - PAD_L - PAD_R;
+            const msPerPx = visRange / graphW;
+            graphZoom.offsetX = Math.max(0, Math.min(fullRange - visRange, mouseDragOffset - dx * msPerPx));
+            renderPeptideGraph();
           }
         }
-        renderPeptideGraph();
       });
       canvas.addEventListener("mouseup", () => { mouseDown = false; });
-      canvas.addEventListener("mouseleave", () => { mouseDown = false; graphTooltip.visible = false; renderPeptideGraph(); });
-
-      // 휠 줌 (PC)
+      canvas.addEventListener("mouseleave", () => {
+        mouseDown = false;
+        graphTooltip.visible = false;
+        renderPeptideGraph();
+      });
       canvas.addEventListener("wheel", e => {
         e.preventDefault();
-        const ratio = e.deltaY > 0 ? 1.2 : 0.8;
-        graphZoom.scale = Math.min(50, Math.max(1, graphZoom.scale * ratio));
+        const ratio = e.deltaY > 0 ? 1.25 : 0.8;
+        graphZoom.scale = Math.min(80, Math.max(1, graphZoom.scale * ratio));
+        const fullRange = getFullRange();
+        const maxOffset = fullRange - fullRange / graphZoom.scale;
+        graphZoom.offsetX = Math.min(maxOffset, graphZoom.offsetX);
         renderPeptideGraph();
       }, { passive: false });
     }
 
-    // ── 체중 그래프 ────────────────────────────────────
+    // ══════════════════════════════════════════════
+    // 체중 그래프
+    // ══════════════════════════════════════════════
     function renderWeightGraph() {
       const canvas = document.getElementById("weight-chart");
       if (!canvas) return;
       const ctx = canvas.getContext("2d");
-      const W = canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      const H = canvas.height = 200 * window.devicePixelRatio;
-      canvas.style.height = "200px";
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-      const cW = canvas.offsetWidth, cH = 200;
+      const dpr = window.devicePixelRatio || 1;
+      const cW = canvas.offsetWidth;
+      const cH = 220;
+      canvas.width = cW * dpr;
+      canvas.height = cH * dpr;
+      canvas.style.height = cH + "px";
+      ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, cW, cH);
 
-      const recs = (appData.weightRecords || []).sort((a, b) => a.time - b.time);
-      if (recs.length < 2) {
-        ctx.fillStyle = "#4a5568"; ctx.font = "14px 'Noto Sans KR'"; ctx.textAlign = "center";
-        ctx.fillText(recs.length === 0 ? "기록이 없습니다" : "2개 이상 기록 필요", cW/2, cH/2); return;
+      let allRecs = (appData.weightRecords || []).sort((a, b) => a.time - b.time);
+
+      // 기간 필터
+      if (weightRangeDays > 0) {
+        const cutoff = Date.now() - weightRangeDays * 86400000;
+        allRecs = allRecs.filter(r => r.time >= cutoff);
       }
 
-      const PAD = { l: 45, r: 15, t: 20, b: 32 };
-      const gW = cW - PAD.l - PAD.r, gH = cH - PAD.t - PAD.b;
-      const minT = recs[0].time, maxT = recs[recs.length-1].time;
-      const weights = recs.map(r => r.weight);
-      const minW = Math.min(...weights) - 1, maxW = Math.max(...weights) + 1;
-      const rangeW = maxW - minW, rangeT = maxT - minT || 1;
+      if (allRecs.length < 1) {
+        ctx.fillStyle = "#4a5568"; ctx.font = "14px 'Noto Sans KR'"; ctx.textAlign = "center";
+        ctx.fillText(allRecs.length === 0 ? "기록이 없습니다" : "해당 기간 기록 없음", cW/2, cH/2); return;
+      }
+      if (allRecs.length < 2) {
+        // 단일 기록 → 점만 표시
+        ctx.fillStyle = "#4ade80"; ctx.font = "13px 'Noto Sans KR'"; ctx.textAlign = "center";
+        ctx.fillText(`${allRecs[0].weight}kg (${toKSTString(allRecs[0].time)})`, cW/2, cH/2); return;
+      }
 
-      ctx.strokeStyle = "#1f2937"; ctx.lineWidth = 1;
-      for (let i = 0; i <= 4; i++) {
-        const y = PAD.t + (i / 4) * gH;
+      const PAD = { l: 48, r: 16, t: 24, b: 34 };
+      const gW = cW - PAD.l - PAD.r, gH = cH - PAD.t - PAD.b;
+      const minT = allRecs[0].time, maxT = allRecs[allRecs.length-1].time;
+      const weights = allRecs.map(r => r.weight);
+      const target = parseFloat(appData.targetWeight) || null;
+      const allWeights = target ? [...weights, target] : weights;
+      const minW = Math.min(...allWeights) - 1.5;
+      const maxW = Math.max(...allWeights) + 1.5;
+      const rangeW = maxW - minW;
+      const rangeT = maxT - minT || 1;
+
+      // 배경
+      ctx.fillStyle = "#080810";
+      ctx.fillRect(PAD.l, PAD.t, gW, gH);
+
+      // y 그리드
+      ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1;
+      const ySteps = 4;
+      for (let i = 0; i <= ySteps; i++) {
+        const y = PAD.t + (i / ySteps) * gH;
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
         ctx.fillStyle = "#4a5568"; ctx.font = "10px 'JetBrains Mono'"; ctx.textAlign = "right";
-        ctx.fillText((maxW - (i / 4) * rangeW).toFixed(1), PAD.l - 4, y + 4);
+        ctx.fillText((maxW - (i / ySteps) * rangeW).toFixed(1), PAD.l - 5, y + 4);
       }
 
+      // x축 레이블 (KST 보정)
       ctx.fillStyle = "#4a5568"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
-      [0, 0.25, 0.5, 0.75, 1].forEach(f => {
-        const d = new Date(minT + f * rangeT);
-        ctx.fillText(`${d.getMonth()+1}/${d.getDate()}`, PAD.l + f * gW, cH - 4);
-      });
+      const xCount = Math.min(allRecs.length, 5);
+      for (let i = 0; i < xCount; i++) {
+        const f = i / (xCount - 1);
+        const t = minT + f * rangeT;
+        const d = new Date(t + 9 * 3600000);
+        const label = `${d.getUTCMonth()+1}/${d.getUTCDate()}`;
+        ctx.fillText(label, PAD.l + f * gW, cH - 6);
+      }
 
-      if (appData.targetWeight) {
-        const tw = parseFloat(appData.targetWeight);
-        const ty = PAD.t + gH - ((tw - minW) / rangeW) * gH;
+      // 목표 체중선
+      if (target) {
+        const ty = PAD.t + gH - ((target - minW) / rangeW) * gH;
         if (ty >= PAD.t && ty <= PAD.t + gH) {
-          ctx.strokeStyle = "#facc1566"; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = "#facc1555"; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]);
           ctx.beginPath(); ctx.moveTo(PAD.l, ty); ctx.lineTo(PAD.l + gW, ty); ctx.stroke();
           ctx.setLineDash([]);
-          ctx.fillStyle = "#facc15"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "left";
-          ctx.fillText(`목표 ${tw}kg`, PAD.l + 4, ty - 4);
+          ctx.fillStyle = "#facc15bb"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "left";
+          ctx.fillText(`목표 ${target}kg`, PAD.l + 4, ty - 5);
         }
       }
 
+      // 면적
       const grad = ctx.createLinearGradient(0, PAD.t, 0, PAD.t + gH);
-      grad.addColorStop(0, "#4ade8040"); grad.addColorStop(1, "#4ade8000");
+      grad.addColorStop(0, "#4ade8040"); grad.addColorStop(1, "#4ade8008");
       ctx.beginPath();
-      recs.forEach((r, i) => {
+      allRecs.forEach((r, i) => {
         const x = PAD.l + ((r.time - minT) / rangeT) * gW;
         const y = PAD.t + gH - ((r.weight - minW) / rangeW) * gH;
         i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       });
-      ctx.lineTo(PAD.l + gW, PAD.t + gH); ctx.lineTo(PAD.l, PAD.t + gH);
-      ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+      ctx.lineTo(PAD.l + ((allRecs[allRecs.length-1].time - minT) / rangeT) * gW, PAD.t + gH);
+      ctx.lineTo(PAD.l, PAD.t + gH); ctx.closePath();
+      ctx.fillStyle = grad; ctx.fill();
 
+      // 선
       ctx.beginPath(); ctx.strokeStyle = "#4ade80"; ctx.lineWidth = 2.5;
-      ctx.shadowColor = "#4ade80"; ctx.shadowBlur = 6;
-      recs.forEach((r, i) => {
+      ctx.shadowColor = "#4ade80"; ctx.shadowBlur = 8;
+      allRecs.forEach((r, i) => {
         const x = PAD.l + ((r.time - minT) / rangeT) * gW;
         const y = PAD.t + gH - ((r.weight - minW) / rangeW) * gH;
         i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       });
       ctx.stroke(); ctx.shadowBlur = 0;
 
-      recs.forEach(r => {
+      // 점 + 레이블 (데이터 밀집 방지)
+      const minPxBetween = 36;
+      let lastLabelX = -999;
+      allRecs.forEach((r, idx) => {
         const x = PAD.l + ((r.time - minT) / rangeT) * gW;
         const y = PAD.t + gH - ((r.weight - minW) / rangeW) * gH;
-        ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI*2);
-        ctx.fillStyle = "#4ade80"; ctx.fill();
-        ctx.strokeStyle = "#0a0a14"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, y, idx === allRecs.length - 1 ? 5 : 3.5, 0, Math.PI*2);
+        ctx.fillStyle = idx === allRecs.length - 1 ? "#4ade80" : "#22c55e";
+        ctx.fill();
+        ctx.strokeStyle = "#080810"; ctx.lineWidth = 1.5; ctx.stroke();
+        // 레이블: 너무 가까우면 생략
+        if (x - lastLabelX >= minPxBetween || idx === allRecs.length - 1) {
+          ctx.fillStyle = idx === allRecs.length - 1 ? "#4ade80" : "#9ca3af";
+          ctx.font = `${idx === allRecs.length - 1 ? 'bold ' : ''}10px 'JetBrains Mono'`;
+          ctx.textAlign = "center";
+          const labelY = y > PAD.t + 16 ? y - 8 : y + 16;
+          ctx.fillText(r.weight.toFixed(1), x, labelY);
+          lastLabelX = x;
+        }
       });
+
+      // 변화량 표시 (좌상단)
+      if (allRecs.length >= 2) {
+        const first = allRecs[0].weight, last = allRecs[allRecs.length-1].weight;
+        const diff = last - first;
+        ctx.fillStyle = diff < 0 ? "#4ade80" : "#f87171";
+        ctx.font = "bold 11px 'JetBrains Mono'";
+        ctx.textAlign = "left";
+        ctx.fillText(`${diff > 0 ? '+' : ''}${diff.toFixed(1)}kg`, PAD.l + 4, PAD.t + 14);
+      }
     }
 
     function renderWeightStats() {
@@ -659,7 +857,11 @@
           el("stat-target").textContent = diff <= 0 ? "🎉 목표 달성!" : `${diff.toFixed(1)} kg 남음`;
           el("stat-target").style.color = diff <= 0 ? "#4ade80" : "#facc15";
         }
-      } else { el("stat-weight").textContent = "-- kg"; el("stat-bmi").textContent = "--"; el("stat-target").textContent = "--"; }
+      } else {
+        el("stat-weight").textContent = "-- kg";
+        el("stat-bmi").textContent = "--";
+        el("stat-target").textContent = "--";
+      }
       if (el("s-height")) el("s-height").value = appData.height || "";
       if (el("s-target")) el("s-target").value = appData.targetWeight || "";
       document.querySelectorAll(".gender-btn").forEach(b => b.classList.toggle("active", b.dataset.v === appData.gender));
@@ -680,7 +882,9 @@
         </div>`).join("");
     }
 
-    // ── 모달 헬퍼 ──────────────────────────────────────
+    // ══════════════════════════════════════════════
+    // 모달 헬퍼
+    // ══════════════════════════════════════════════
     window.openAddModal = () => {
       document.getElementById("add-time").value = kstNow();
       document.getElementById("add-dose").value = "";
@@ -717,7 +921,7 @@
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("panel-"+tab).style.display = "block";
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
-      if (tab === "peptide") { setTimeout(() => { renderPeptideGraph(); initGraphTouch(); }, 50); }
+      if (tab === "peptide") setTimeout(() => { renderPeptideGraph(); initGraphTouch(); }, 50);
       if (tab === "weight") setTimeout(renderWeightGraph, 50);
     };
 
@@ -734,8 +938,6 @@
     window.onFilterChange = renderPeptideList;
 
     window.addEventListener("resize", () => { renderPeptideGraph(); renderWeightGraph(); });
-
-    // 초기화 후 그래프 터치 이벤트 등록
     window.addEventListener("load", () => setTimeout(initGraphTouch, 500));
   </script>
 
@@ -763,21 +965,21 @@
     #app-screen { display: none; flex-direction: column; min-height: 100vh; }
     .top-bar {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 14px; background: #0f0f1e; border-bottom: 1px solid #1f2937;
+      padding: 10px 14px; background: #0f0f1e; border-bottom: 1px solid #1f2937;
       position: sticky; top: 0; z-index: 10;
     }
-    .top-bar-title { font-size: 17px; font-weight: 900; letter-spacing: -0.5px; }
+    .top-bar-title { font-size: 16px; font-weight: 900; letter-spacing: -0.5px; }
     .top-bar-right { display: flex; align-items: center; gap: 8px; }
-    #user-avatar { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #374151; }
-    #user-name { font-size: 11px; color: #9ca3af; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #user-avatar { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #374151; }
+    #user-name { font-size: 11px; color: #9ca3af; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #save-status { font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid; transition: all .3s; }
     .logout-btn { background: none; border: 1px solid #374151; border-radius: 8px; color: #6b7280; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
 
     .tabs { display: flex; background: #0d0d1a; border-bottom: 1px solid #1f2937; }
-    .tab-btn { flex: 1; padding: 12px 4px; font-size: 13px; font-weight: 500; background: none; border: none; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; transition: all .2s; font-family: inherit; }
+    .tab-btn { flex: 1; padding: 11px 4px; font-size: 13px; font-weight: 500; background: none; border: none; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; transition: all .2s; font-family: inherit; }
     .tab-btn.active { color: #60a5fa; border-bottom-color: #60a5fa; }
 
-    .content { flex: 1; padding: 14px; max-width: 520px; margin: 0 auto; width: 100%; }
+    .content { flex: 1; padding: 12px; max-width: 520px; margin: 0 auto; width: 100%; }
     .tab-panel { display: none; }
 
     .card { background: #12121e; border: 1px solid #1f2937; border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
@@ -789,18 +991,18 @@
     .big-btn.green { background: linear-gradient(135deg, #065f46, #059669); }
 
     .record-row { background: #0d0d1a; border: 1px solid #1f2937; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .del-btn { background: #7f1d1d; border: none; border-radius: 8px; color: #fca5a5; padding: 6px 12px; cursor: pointer; font-size: 12px; font-family: inherit; }
+    .del-btn { background: #7f1d1d; border: none; border-radius: 8px; color: #fca5a5; padding: 6px 12px; cursor: pointer; font-size: 12px; font-family: inherit; white-space: nowrap; }
 
     .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
     .filter-btn { padding: 5px 14px; background: #1f2937; border: none; border-radius: 20px; color: #6b7280; font-size: 12px; cursor: pointer; font-family: inherit; transition: all .15s; }
     .filter-btn.active { background: #1d4ed8; color: white; }
 
     .quick-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
-    .qbtn { padding: 5px 12px; background: #1f2937; border: none; border-radius: 8px; color: #9ca3af; font-size: 13px; cursor: pointer; font-family: inherit; transition: all .15s; }
-    .qbtn:active, .qbtn.active { background: #1d4ed8; color: white; }
+    .qbtn { padding: 5px 12px; background: #1f2937; border: none; border-radius: 8px; color: #9ca3af; font-size: 13px; cursor: pointer; font-family: inherit; }
+    .qbtn:active { background: #1d4ed8; color: white; }
 
-    .graph-range-btn { padding: 4px 10px; background: #1f2937; border: none; border-radius: 8px; color: #6b7280; font-size: 11px; cursor: pointer; font-family: inherit; transition: all .15s; }
-    .graph-range-btn.active { background: #1d4ed8; color: white; }
+    .graph-range-btn, .wrange-btn { padding: 4px 10px; background: #1f2937; border: none; border-radius: 8px; color: #6b7280; font-size: 11px; cursor: pointer; font-family: inherit; transition: all .15s; }
+    .graph-range-btn.active, .wrange-btn.active { background: #1d4ed8; color: white; }
 
     .input-field { width: 100%; padding: 10px 12px; background: #0d0d1a; border: 1px solid #374151; border-radius: 10px; color: #e2e8f0; font-size: 14px; font-family: inherit; outline: none; transition: border-color .15s; }
     .input-field:focus { border-color: #3b82f6; }
@@ -811,7 +1013,7 @@
     .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #e2e8f0; }
     .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
 
-    .chart-wrap { background: #0d0d1a; border: 1px solid #1f2937; border-radius: 14px; padding: 12px; margin-bottom: 14px; }
+    .chart-wrap { background: #0a0a14; border: 1px solid #1f2937; border-radius: 14px; padding: 10px 10px 4px; margin-bottom: 12px; }
     canvas { display: block; width: 100%; touch-action: none; cursor: crosshair; }
 
     .result-card { background: #0d1b2a; border: 1px solid #1d4ed8; border-radius: 12px; padding: 14px; }
@@ -819,7 +1021,7 @@
     .result-row span:first-child { color: #9ca3af; }
     .result-row span:last-child { color: #e2e8f0; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
 
-    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
     .stat-card { background: #12121e; border: 1px solid #1f2937; border-radius: 12px; padding: 14px; }
     .stat-label { font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
     .stat-val { font-size: 20px; font-weight: 700; color: #e2e8f0; font-family: 'JetBrains Mono', monospace; }
@@ -827,12 +1029,14 @@
     .gender-btn { flex: 1; padding: 8px; background: #1f2937; border: none; border-radius: 8px; color: #6b7280; cursor: pointer; font-family: inherit; font-size: 14px; transition: all .15s; }
     .gender-btn.active { background: #1d4ed8; color: white; }
 
-    .zoom-hint { font-size: 11px; color: #374151; text-align: center; margin-top: 4px; }
+    .zoom-hint { font-size: 10px; color: #2a2a3e; text-align: center; margin-top: 4px; padding-bottom: 4px; }
+
+    .pk-info { background: #0d1a0d; border: 1px solid #14532d22; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 11px; color: #4b7c52; line-height: 1.6; }
   </style>
 </head>
 <body>
 
-<!-- ══ 로그인 ══ -->
+<!-- 로그인 -->
 <div id="login-screen">
   <div class="login-logo">⚖️</div>
   <div class="login-title">체중관리 매니저</div>
@@ -848,7 +1052,7 @@
   </button>
 </div>
 
-<!-- ══ 앱 ══ -->
+<!-- 앱 -->
 <div id="app-screen">
   <div class="top-bar">
     <div class="top-bar-title">⚖️ 체중관리 매니저</div>
@@ -872,22 +1076,26 @@
     <div id="panel-peptide" class="tab-panel" style="display:block">
       <div id="remaining-cards"></div>
 
+      <div class="pk-info">
+        💡 레타트루타이드: 투약 후 약 48시간에 피크 도달 (Tmax ~12~72h), 이후 반감기 6일로 감소 · 1-compartment oral PK 모델 적용
+      </div>
+
       <div class="chart-wrap">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <div style="font-size:12px;color:#6b7280">📈 체내 농도 변화</div>
-          <div style="display:flex;gap:4px">
-            <button class="graph-range-btn" data-hrs="1"   onclick="setGraphRange(1)">1시간</button>
-            <button class="graph-range-btn" data-hrs="6"   onclick="setGraphRange(6)">6시간</button>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
             <button class="graph-range-btn" data-hrs="24"  onclick="setGraphRange(24)">1일</button>
+            <button class="graph-range-btn" data-hrs="72"  onclick="setGraphRange(72)">3일</button>
             <button class="graph-range-btn" data-hrs="168" onclick="setGraphRange(168)">7일</button>
+            <button class="graph-range-btn" data-hrs="336" onclick="setGraphRange(336)">2주</button>
             <button class="graph-range-btn active" data-hrs="0" onclick="setGraphRange(0)">전체</button>
           </div>
         </div>
         <canvas id="peptide-chart"></canvas>
-        <div class="zoom-hint">👆 터치 드래그로 이동 · 핀치로 확대/축소 · 탭하면 수치 확인</div>
+        <div class="zoom-hint">👆 드래그 이동 · 핀치 확대/축소 · 탭/클릭 수치확인</div>
       </div>
 
-      <button class="big-btn blue" onclick="openAddModal()" style="margin-bottom:14px">+ 투약 기록 추가</button>
+      <button class="big-btn blue" onclick="openAddModal()" style="margin-bottom:12px">+ 투약 기록 추가</button>
 
       <div class="filter-bar">
         <button class="filter-btn active" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='전체';onFilterChange()">전체</button>
@@ -934,8 +1142,34 @@
       <div id="calc-result"></div>
     </div>
 
-    <!-- ── 체중 패널 ── -->
+    <!-- ── 체중 패널 (기록추가 최상단) ── -->
     <div id="panel-weight" class="tab-panel">
+
+      <!-- 빠른 기록 추가 (최상단) -->
+      <button class="big-btn green" onclick="openWeightModal()" style="margin-bottom:12px">+ 체중 기록 추가</button>
+
+      <!-- 통계 -->
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">현재 체중</div><div class="stat-val" id="stat-weight">-- kg</div></div>
+        <div class="stat-card"><div class="stat-label">BMI</div><div class="stat-val" id="stat-bmi">--</div></div>
+        <div class="stat-card" style="grid-column:1/-1"><div class="stat-label">목표까지</div><div class="stat-val" id="stat-target">--</div></div>
+      </div>
+
+      <!-- 체중 그래프 -->
+      <div class="chart-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:12px;color:#6b7280">📉 체중 변화 추이</div>
+          <div style="display:flex;gap:4px">
+            <button class="wrange-btn" data-days="7"   onclick="setWeightRange(7)">1주</button>
+            <button class="wrange-btn" data-days="30"  onclick="setWeightRange(30)">1달</button>
+            <button class="wrange-btn" data-days="90"  onclick="setWeightRange(90)">3달</button>
+            <button class="wrange-btn active" data-days="0" onclick="setWeightRange(0)">전체</button>
+          </div>
+        </div>
+        <canvas id="weight-chart"></canvas>
+      </div>
+
+      <!-- 설정 -->
       <div class="card" style="margin-bottom:12px">
         <div class="section-title">기본 설정</div>
         <div style="display:flex;gap:8px;margin-bottom:12px">
@@ -949,25 +1183,13 @@
         <button class="big-btn green" onclick="saveSettings()">설정 저장</button>
       </div>
 
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">현재 체중</div><div class="stat-val" id="stat-weight">-- kg</div></div>
-        <div class="stat-card"><div class="stat-label">BMI</div><div class="stat-val" id="stat-bmi">--</div></div>
-        <div class="stat-card" style="grid-column:1/-1"><div class="stat-label">목표까지</div><div class="stat-val" id="stat-target">--</div></div>
-      </div>
-
-      <div class="chart-wrap">
-        <div style="font-size:12px;color:#6b7280;margin-bottom:8px">📉 체중 변화 추이</div>
-        <canvas id="weight-chart"></canvas>
-      </div>
-
-      <button class="big-btn green" onclick="openWeightModal()" style="margin-bottom:14px">+ 체중 기록 추가</button>
       <div id="weight-list"></div>
     </div>
 
   </div>
 </div>
 
-<!-- ══ 모달: 투약 추가 ══ -->
+<!-- 모달: 투약 추가 -->
 <div id="add-modal" class="modal-overlay" onclick="if(event.target===this)closeAddModal()">
   <div class="modal-box">
     <div class="modal-title">💉 투약 기록 추가</div>
@@ -989,7 +1211,7 @@
   </div>
 </div>
 
-<!-- ══ 모달: 수동 농도 입력 ══ -->
+<!-- 모달: 수동 농도 입력 -->
 <div id="override-modal" class="modal-overlay" onclick="if(event.target===this)document.getElementById('override-modal').style.display='none'">
   <div class="modal-box">
     <div class="modal-title" id="override-title">⚗️ 체내 농도 수동 입력</div>
@@ -999,7 +1221,7 @@
     <div style="margin-bottom:12px"><label>기준 시각 (한국시간)</label>
       <input id="override-time" class="input-field" type="datetime-local" />
     </div>
-    <div style="font-size:11px;color:#4a5568;margin-bottom:4px">💡 입력한 양을 입력한 시각에 투약한 것으로 기록해요</div>
+    <div style="font-size:11px;color:#4a5568;margin-bottom:4px">💡 입력한 양을 입력한 시각 기준으로 단순 반감기 계산 적용</div>
     <div class="modal-actions">
       <button class="big-btn" style="background:#374151;flex:1" onclick="document.getElementById('override-modal').style.display='none'">취소</button>
       <button class="big-btn blue" style="flex:2" onclick="submitOverride()">저장</button>
@@ -1007,7 +1229,7 @@
   </div>
 </div>
 
-<!-- ══ 모달: 체중 추가 ══ -->
+<!-- 모달: 체중 추가 -->
 <div id="weight-modal" class="modal-overlay" onclick="if(event.target===this)closeWeightModal()">
   <div class="modal-box">
     <div class="modal-title">⚖️ 체중 기록 추가</div>
