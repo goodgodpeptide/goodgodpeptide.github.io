@@ -99,11 +99,72 @@
       }
     });
 
+    // 인앱 브라우저 감지 (카카오, 네이버, 인스타, 라인 등)
+    function isInAppBrowser() {
+      const ua = navigator.userAgent || "";
+      return /KAKAOTALK|NAVER|Instagram|Line|FB_IAB|FBAN|FBAV|Twitter|Snapchat|WeChat|MicroMessenger/i.test(ua)
+          || /wv\)|\.0\.0\.0|WebView/i.test(ua)
+          || (ua.includes("Android") && ua.includes("Version/") && ua.includes("Chrome") && !ua.includes("Mobile Safari"));
+    }
+
     window.doLogin = async () => {
+      if (isInAppBrowser()) {
+        // 인앱 브라우저에서는 Google OAuth 차단됨 → 외부 브라우저로 유도
+        document.getElementById("inapp-notice").style.display = "flex";
+        return;
+      }
       try { await signInWithPopup(auth, provider); }
-      catch(e) { try { await signInWithRedirect(auth, provider); } catch(e2) { console.error(e2); } }
+      catch(e) {
+        if (e.code === "auth/popup-blocked" || e.code === "auth/cancelled-popup-request") {
+          try { await signInWithRedirect(auth, provider); } catch(e2) { console.error(e2); }
+        } else { console.error(e); }
+      }
     };
     window.doLogout = async () => { await signOut(auth); };
+
+    // 외부 브라우저 열기
+    window.openInExternalBrowser = () => {
+      const url = window.location.href;
+      // intent:// scheme for Android Chrome
+      const intentUrl = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+      try {
+        window.location.href = intentUrl;
+      } catch(e) {
+        // fallback: 그냥 현재 URL 복사 안내
+        copyUrl();
+      }
+    };
+
+    window.copyUrl = () => {
+      const url = window.location.href;
+      const el = document.getElementById("url-display");
+      if (el) el.textContent = url;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          const msg = document.getElementById("copy-msg");
+          if (msg) { msg.style.display = "block"; setTimeout(() => msg.style.display = "none", 2000); }
+        });
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = url;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        const msg = document.getElementById("copy-msg");
+        if (msg) { msg.style.display = "block"; setTimeout(() => msg.style.display = "none", 2000); }
+      }
+    };
+
+    // 페이지 로드 시 인앱 브라우저이면 자동으로 안내 표시
+    window.addEventListener("DOMContentLoaded", () => {
+      if (isInAppBrowser()) {
+        setTimeout(() => {
+          const notice = document.getElementById("inapp-notice");
+          if (notice) notice.style.display = "flex";
+        }, 300);
+      }
+    });
 
     // ══════════════════════════════════════════════
     // Firestore
@@ -1715,6 +1776,35 @@
     </svg>
     Google로 시작하기
   </button>
+
+  <!-- 인앱 브라우저 안내 (평소엔 숨김) -->
+  <div id="inapp-notice" style="display:none;position:fixed;inset:0;background:#000000ee;z-index:200;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center">
+    <div style="font-size:40px;margin-bottom:16px">🚫</div>
+    <div style="font-size:18px;font-weight:700;color:#e2e8f0;margin-bottom:12px">카카오톡 브라우저에서는<br>Google 로그인이 차단됩니다</div>
+    <div style="font-size:13px;color:#9ca3af;margin-bottom:28px;line-height:1.7">
+      Google 정책으로 인해 카카오톡, 인스타그램 등<br>
+      앱 내 브라우저에서는 로그인이 불가합니다.<br>
+      <b style="color:#facc15">크롬 또는 사파리로 열어주세요.</b>
+    </div>
+    <button onclick="openInExternalBrowser()"
+      style="background:linear-gradient(135deg,#1d4ed8,#2563eb);border:none;border-radius:14px;
+             color:white;padding:14px 28px;font-size:15px;font-weight:700;cursor:pointer;
+             font-family:inherit;margin-bottom:12px;width:100%;max-width:280px">
+      🌐 외부 브라우저로 열기
+    </button>
+    <div style="font-size:11px;color:#4a5568;margin-bottom:16px">또는 주소를 복사해서 크롬/사파리에 붙여넣기</div>
+    <div style="background:#1f2937;border:1px solid #374151;border-radius:10px;padding:10px 14px;
+                font-size:12px;color:#60a5fa;font-family:monospace;word-break:break-all;max-width:300px"
+         onclick="copyUrl()" id="url-display">
+      goodgodpeptide.github.io
+    </div>
+    <div id="copy-msg" style="font-size:11px;color:#4ade80;margin-top:8px;display:none">✅ 복사됨!</div>
+    <button onclick="document.getElementById('inapp-notice').style.display='none'"
+      style="background:none;border:1px solid #374151;border-radius:10px;color:#6b7280;
+             padding:10px 20px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:16px">
+      닫기
+    </button>
+  </div>
 </div>
 
 <!-- 앱 -->
