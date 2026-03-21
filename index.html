@@ -553,7 +553,7 @@
                      color:#38bdf8;font-size:12px;cursor:pointer;font-family:inherit">
               +${ml}ml
             </button>`).join('')}
-          <button onclick="addWater(0) || undoLastWater()"
+          <button onclick="undoLastWater()"
             style="padding:6px 12px;background:#1f2937;border:1px solid #374151;border-radius:8px;
                    color:#6b7280;font-size:12px;cursor:pointer;font-family:inherit">↩️ 취소</button>
         </div>`;
@@ -565,6 +565,96 @@
       scheduleSave();
       renderWaterTracker();
     };
+
+    // ══ 영양제 토글 ═══════════════════════════════════════
+    const DEFAULT_SUPPLEMENTS = [
+      { id: "omega3",  name: "오메가3",      timing: ["아침","저녁"] },
+      { id: "probio",  name: "유산균",       timing: ["아침"] },
+      { id: "vitd",    name: "비타민D",      timing: ["아침"] },
+      { id: "magnesium",name: "마그네슘",   timing: ["저녁"] },
+      { id: "vitc",    name: "비타민C",      timing: ["아침"] },
+    ];
+
+    function getSupplements() {
+      return appData.supplements || DEFAULT_SUPPLEMENTS.map(s => ({ ...s, taken: {} }));
+    }
+
+    function getTodayKey() {
+      const d = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    window.toggleSupplement = (id, timing) => {
+      appData.supplements = getSupplements();
+      const sup = appData.supplements.find(s => s.id === id);
+      if (!sup) return;
+      sup.taken = sup.taken || {};
+      const key = getTodayKey() + "_" + timing;
+      sup.taken[key] = !sup.taken[key];
+      scheduleSave();
+      renderSupplementPanel();
+    };
+
+    window.addCustomSupplement = () => {
+      const name = document.getElementById("new-supp-name")?.value?.trim();
+      if (!name) return;
+      appData.supplements = getSupplements();
+      appData.supplements.push({ id: "s_" + Date.now(), name, timing: ["아침"], taken: {} });
+      document.getElementById("new-supp-name").value = "";
+      scheduleSave();
+      renderSupplementPanel();
+    };
+
+    window.removeSupplement = (id) => {
+      appData.supplements = getSupplements().filter(s => s.id !== id);
+      scheduleSave();
+      renderSupplementPanel();
+    };
+
+    function renderSupplementPanel() {
+      const c = document.getElementById("supplement-panel");
+      if (!c) return;
+      const supps = getSupplements();
+      const today = getTodayKey();
+      const timings = ["아침", "저녁"];
+
+      c.innerHTML = timings.map(timing => {
+        const relevant = supps.filter(s => s.timing?.includes(timing));
+        if (!relevant.length) return "";
+        const allDone = relevant.every(s => s.taken?.[today + "_" + timing]);
+        return `<div style="margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px">${timing}</div>
+            ${allDone ? '<div style="font-size:10px;color:#4ade80">✅ 완료</div>' : ''}
+          </div>
+          ${relevant.map(s => {
+            const done = !!s.taken?.[today + "_" + timing];
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a1a2e">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:14px">${done ? '✅' : '⬜'}</span>
+                <span style="font-size:13px;color:${done?'#4ade80':'#9ca3af'};${done?'text-decoration:line-through;':''}">${s.name}</span>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button onclick="toggleSupplement('${s.id}','${timing}')"
+                  style="padding:5px 14px;border-radius:20px;border:1px solid ${done?'#166534':'#374151'};
+                         background:${done?'#0f2a1a':'#1f2937'};color:${done?'#4ade80':'#6b7280'};
+                         font-size:12px;cursor:pointer;font-family:inherit">
+                  ${done ? '취소' : '복용'}
+                </button>
+                <button onclick="removeSupplement('${s.id}')"
+                  style="background:none;border:none;color:#374151;font-size:14px;cursor:pointer;padding:2px 4px">✕</button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>`;
+      }).join('');
+
+      // 추가 입력
+      c.innerHTML += `<div style="display:flex;gap:8px;margin-top:8px">
+        <input id="new-supp-name" class="input-field" placeholder="영양제 이름 추가" style="flex:1" />
+        <button onclick="addCustomSupplement()" class="big-btn blue" style="width:auto;padding:8px 14px;font-size:13px">추가</button>
+      </div>`;
+    }
 
     window.saveSettings = () => {
       appData.gender = document.querySelectorAll(".gender-btn.active")[0]?.dataset.v || appData.gender;
@@ -611,7 +701,15 @@
       renderWeightList();
       renderWeightGraph();
       renderWaterTracker();
+      renderSupplementPanel();
     }
+
+    // 약별 마지막 입력 용량 기억
+    function getLastDose(drug) {
+      const recs = (appData.records || []).filter(r => r.drug === drug && !r.isOverride).sort((a,b) => b.time - a.time);
+      return recs[0]?.dose || cfg_lastDose[drug] || "";
+    }
+    const cfg_lastDose = {};
 
     function renderRemainingCards() {
       const c = document.getElementById("remaining-cards");
@@ -621,71 +719,137 @@
         const rem = calcRemaining(drug);
         const cycDays = getDoseCycle(drug);
         const in_cycleDay = calcConcentrationAt(drug, now + cycDays * 86400000);
-        // 마지막 투약 기록
-        const lastRec = (appData.records || [])
-          .filter(r => r.drug === drug)
-          .sort((a,b) => b.time - a.time)[0];
-        // 다음 주사 D-day (마지막 투약 + 설정 주기)
-        let ddayStr = "";
+        const lastRec = (appData.records || []).filter(r => r.drug === drug).sort((a,b) => b.time - a.time)[0];
+        const lastDose = lastRec?.dose || "";
+
+        // D-day 계산
+        let ddayColor = "#facc15", ddayText = "";
         if (lastRec) {
           const nextDue = lastRec.time + cycDays * 86400000;
           const diffMs = nextDue - now;
           const diffDays = Math.floor(diffMs / 86400000);
           const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
           if (diffMs > 0) {
-            if (diffDays > 0) {
-              ddayStr = `<span style="font-size:11px;color:#facc15">다음 주사 D-${diffDays} <span style="color:#374151;font-size:10px">(${cycDays}일 주기)</span></span>`;
-            } else {
-              ddayStr = `<span style="font-size:11px;color:#f87171">🔔 오늘 주사일! (${diffHrs}h 후)</span>`;
-            }
+            if (diffDays > 0) { ddayText = `D-${diffDays}`; ddayColor = "#facc15"; }
+            else { ddayText = `오늘! +${diffHrs}h`; ddayColor = "#f97316"; }
           } else {
-            const overDays = Math.abs(diffDays);
-            const overHrs = Math.abs(Math.floor((diffMs % 86400000) / 3600000));
-            ddayStr = overDays === 0
-              ? `<span style="font-size:11px;color:#f87171">주사 ${overHrs}시간 지남 ⚠️</span>`
-              : `<span style="font-size:11px;color:#f87171">주사 ${overDays}일 지남 ⚠️</span>`;
+            const od = Math.abs(diffDays);
+            ddayText = od === 0 ? `+${Math.abs(diffHrs)}h 지남` : `+${od}일 지남`;
+            ddayColor = "#f87171";
           }
         }
-        // 최고농도 대비 현재 % (카드 진행바)
-        const peakDose = lastRec ? lastRec.dose : 0;
-        const pct = peakDose > 0 ? Math.min(100, Math.round(rem / peakDose * 100)) : 0;
 
-        return `
-          <div class="card" style="border-color:${cfg.color}33">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start">
-              <div style="flex:1">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                  <span style="font-size:12px;color:#9ca3af">${cfg.emoji} ${drug}</span>
-                  ${ddayStr}
-                </div>
-                <div style="font-size:28px;font-weight:700;color:${cfg.color};font-family:'JetBrains Mono',monospace;line-height:1">${rem.toFixed(3)}<span style="font-size:13px;font-weight:400;margin-left:4px;color:#9ca3af">mg</span></div>
-                <div style="display:flex;gap:8px;margin-top:5px;align-items:center;flex-wrap:wrap">
-                  <span style="font-size:11px;color:#4a5568">반감기 ${cfg.halfLifeDays}일 · Tmax ~${cfg.tmaxHours}h</span>
-                  ${lastRec ? `<span style="font-size:10px;color:#374151">최근: ${toKSTString(lastRec.time).slice(0,10)}</span>` : ''}
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;margin-top:6px">
-                  <span style="font-size:10px;color:#4a5568">투약 주기:</span>
-                  <button onclick="setDrugCycle('${drug}', ${cycDays - 1})" style="background:#1f2937;border:1px solid #374151;border-radius:4px;color:#9ca3af;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;padding:0">−</button>
-                  <span style="font-size:12px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono';min-width:28px;text-align:center">${cycDays}일</span>
-                  <button onclick="setDrugCycle('${drug}', ${cycDays + 1})" style="background:#1f2937;border:1px solid #374151;border-radius:4px;color:#9ca3af;width:20px;height:20px;font-size:12px;cursor:pointer;line-height:1;padding:0">+</button>
-                  ${cycDays !== cfg.defaultDoseDays ? `<button onclick="setDrugCycle('${drug}', ${cfg.defaultDoseDays})" style="background:none;border:none;font-size:10px;color:#374151;cursor:pointer;padding:0">리셋</button>` : ''}
-                </div>
-                ${rem > 0 ? `<div style="margin-top:8px">
-                  <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a5568;margin-bottom:3px">
-                    <span>체내 잔류 ${pct}%</span><span>${cycDays}일 후 ~${in_cycleDay.toFixed(2)}mg</span>
-                  </div>
-                  <div style="height:5px;background:#1f2937;border-radius:3px;overflow:hidden">
-                    <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cfg.color}88,${cfg.color});border-radius:3px;transition:width .5s"></div>
-                  </div>
-                </div>` : ''}
-              </div>
-              <div style="display:flex;flex-direction:column;gap:6px;margin-left:10px">
-                <button onclick="openOverrideModal('${drug}')" style="background:#1f2937;border:1px solid #374151;border-radius:8px;color:#9ca3af;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">수동입력</button>
-                <button onclick="openSideEffectModal('${drug}')" style="background:#1a0f0f;border:1px solid #7f1d1d33;border-radius:8px;color:#f87171;padding:5px 10px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">부작용</button>
-              </div>
+        const pct = lastDose > 0 ? Math.min(100, Math.round(rem / lastDose * 100)) : 0;
+        const siteNext = getNextSuggested();
+
+        return `<div class="drug-card" style="--drug-color:${cfg.color}">
+          <!-- 헤더 -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:14px">${cfg.emoji}</span>
+              <span style="font-size:13px;font-weight:700;color:#e2e8f0">${drug}</span>
             </div>
-          </div>`;
+            ${ddayText ? `<div style="background:${ddayColor}22;border:1px solid ${ddayColor}55;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${ddayColor}">${ddayText}</div>` : ''}
+          </div>
+
+          <!-- 체내 농도 -->
+          <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:6px">
+            <div style="font-size:32px;font-weight:900;color:${cfg.color};font-family:'JetBrains Mono',monospace;line-height:1">${rem.toFixed(2)}</div>
+            <div style="padding-bottom:3px">
+              <div style="font-size:11px;color:#9ca3af">mg 체내 잔류</div>
+              <div style="font-size:10px;color:#4a5568">${cycDays}일 후 ~${in_cycleDay.toFixed(2)}mg</div>
+            </div>
+          </div>
+
+          <!-- 잔류 진행바 -->
+          ${rem > 0 ? `<div style="height:4px;background:#1f2937;border-radius:2px;overflow:hidden;margin-bottom:10px">
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cfg.color}66,${cfg.color});border-radius:2px;transition:width .6s"></div>
+          </div>` : '<div style="height:4px;margin-bottom:10px"></div>'}
+
+          <!-- 원터치 투약 버튼 -->
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <div style="flex:1;display:flex;gap:6px;align-items:center">
+              <input id="quick-dose-${drug.replace(/\s|\(|\)/g,'_')}" type="number" step="0.1" placeholder="${lastDose || '용량 mg'}"
+                style="flex:1;padding:9px 10px;background:#0d0d1a;border:1px solid #374151;border-radius:10px;
+                       color:#e2e8f0;font-size:14px;font-family:'JetBrains Mono',monospace;outline:none;min-width:0"
+                onfocus="this.style.borderColor='${cfg.color}'" onblur="this.style.borderColor='#374151'"
+              />
+              <span style="font-size:12px;color:#4a5568;white-space:nowrap">mg</span>
+            </div>
+            <button onclick="quickInject('${drug}')"
+              style="padding:9px 16px;background:${cfg.color};border:none;border-radius:10px;
+                     color:#0a0a14;font-size:13px;font-weight:900;cursor:pointer;font-family:inherit;
+                     white-space:nowrap;flex-shrink:0">
+              💉 맞았어요
+            </button>
+          </div>
+
+          <!-- 부가 정보 행 -->
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="display:flex;gap:10px;align-items:center">
+              <span style="font-size:10px;color:#374151">반감기 ${cfg.halfLifeDays}일</span>
+              ${lastRec ? `<span style="font-size:10px;color:#374151">최근: ${toKSTString(lastRec.time).slice(0,10)}</span>` : '<span style="font-size:10px;color:#374151">기록 없음</span>'}
+            </div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <!-- 주기 설정 -->
+              <div style="display:flex;align-items:center;gap:4px">
+                <button onclick="setDrugCycle('${drug}', ${cycDays-1})" style="background:#1f2937;border:1px solid #2d3748;border-radius:4px;color:#6b7280;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0">−</button>
+                <span style="font-size:10px;color:#6b7280;min-width:24px;text-align:center">${cycDays}일</span>
+                <button onclick="setDrugCycle('${drug}', ${cycDays+1})" style="background:#1f2937;border:1px solid #2d3748;border-radius:4px;color:#6b7280;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0">+</button>
+              </div>
+              <button onclick="openSideEffectModal('${drug}')" title="부작용 기록"
+                style="background:#1a0f0f;border:1px solid #7f1d1d44;border-radius:6px;color:#f87171;
+                       padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">⚠️</button>
+              <button onclick="openOverrideModal('${drug}')" title="체내 농도 수동 설정"
+                style="background:#1f2937;border:1px solid #2d3748;border-radius:6px;color:#6b7280;
+                       padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">⚙️</button>
+            </div>
+          </div>
+        </div>`;
       }).join("");
+    }
+
+    // 원터치 투약
+    window.quickInject = (drug) => {
+      const inputId = "quick-dose-" + drug.replace(/\s|\(|\)/g,'_');
+      const input = document.getElementById(inputId);
+      const recs = (appData.records || []).filter(r => r.drug === drug && !r.isOverride).sort((a,b) => b.time - a.time);
+      const lastDose = recs[0]?.dose;
+      const dose = parseFloat(input?.value) || lastDose;
+      if (!dose) {
+        input?.focus();
+        input?.setAttribute("placeholder", "용량 입력 필요!");
+        return;
+      }
+      // 주사 부위 추천 팝업 대신 인라인 확인
+      const site = getNextSuggested();
+      const siteLabel = site ? site.label : "";
+      appData.records = appData.records || [];
+      appData.records.push({
+        id: Date.now(), drug, dose,
+        time: Date.now(),
+        site: site?.id || null
+      });
+      if (input) input.value = "";
+      scheduleSave();
+      renderAll();
+      // 짧은 토스트 표시
+      showToast(`✅ ${drug.split(' ')[0]} ${dose}mg 기록 완료${siteLabel ? ' · ' + siteLabel : ''}`);
+    };
+
+    // 토스트 메시지
+    function showToast(msg) {
+      let t = document.getElementById("toast");
+      if (!t) {
+        t = document.createElement("div");
+        t.id = "toast";
+        t.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;border:1px solid #374151;border-radius:12px;padding:10px 20px;font-size:13px;color:#e2e8f0;z-index:999;transition:opacity .3s;max-width:90vw;text-align:center";
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      t.style.opacity = "1";
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => { t.style.opacity = "0"; }, 2500);
     }
 
     function renderPeptideList() {
@@ -1351,6 +1515,7 @@
       const target = parseFloat(appData.targetWeight) || 0;
       const el = id => document.getElementById(id);
       if (!el("stat-weight")) return;
+
       if (latest) {
         el("stat-weight").textContent = latest.weight + " kg";
         if (h) {
@@ -1359,15 +1524,67 @@
           el("stat-bmi").textContent = bmi.toFixed(1)+" "+label;
           el("stat-bmi").style.color = color;
         }
-        if (target) {
+
+        // 목표 달성률 + 진행바
+        const targetRow = el("stat-target-row");
+        if (targetRow && target) {
+          const allRecs = (appData.weightRecords || []).sort((a,b) => a.time - b.time);
+          const startWeight = allRecs[0]?.weight || latest.weight;
           const diff = latest.weight - target;
-          el("stat-target").textContent = diff <= 0 ? "🎉 목표 달성!" : `${diff.toFixed(1)} kg 남음`;
-          el("stat-target").style.color = diff <= 0 ? "#4ade80" : "#facc15";
-        }
+          const totalLoss = startWeight - target;
+          const achievedLoss = startWeight - latest.weight;
+          const pct = totalLoss > 0 ? Math.min(100, Math.round(achievedLoss / totalLoss * 100)) : 0;
+
+          // 주간 감량 속도로 예상 달성일 계산
+          let estDateStr = "";
+          if (allRecs.length >= 2 && diff > 0) {
+            const daysDiff = (allRecs[allRecs.length-1].time - allRecs[0].time) / 86400000;
+            const weeklyRate = daysDiff > 0 ? (allRecs[0].weight - latest.weight) / daysDiff * 7 : 0;
+            if (weeklyRate > 0.05) {
+              const weeksLeft = diff / weeklyRate;
+              const estDate = new Date(Date.now() + weeksLeft * 7 * 86400000);
+              estDateStr = estDate.toLocaleDateString("ko-KR", { timeZone:"Asia/Seoul", month:"long", day:"numeric" });
+            }
+          }
+
+          targetRow.innerHTML = `
+            <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+              <span style="font-size:12px;color:#9ca3af">목표 ${target}kg까지</span>
+              <span style="font-size:13px;font-weight:700;color:${diff<=0?'#4ade80':'#facc15'}">${diff<=0?'🎉 달성!':diff.toFixed(1)+'kg 남음'}</span>
+            </div>
+            <div style="height:8px;background:#1f2937;border-radius:4px;overflow:hidden;margin-bottom:4px">
+              <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#3b82f6,#4ade80);border-radius:4px;transition:width .6s"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a5568">
+              <span>달성률 ${pct}%</span>
+              ${estDateStr ? `<span>예상: ${estDateStr}</span>` : ''}
+            </div>`;
+        } else if (targetRow) { targetRow.innerHTML = ""; }
+
+        // 최근 추세
+        const trendRow = el("stat-trend-row");
+        if (trendRow && recs.length >= 4) {
+          const last7 = recs.filter(r => r.time >= Date.now() - 7*86400000);
+          const prev7 = recs.filter(r => r.time >= Date.now() - 14*86400000 && r.time < Date.now() - 7*86400000);
+          if (last7.length && prev7.length) {
+            const avg7 = last7.reduce((s,r) => s+r.weight, 0) / last7.length;
+            const avgPrev = prev7.reduce((s,r) => s+r.weight, 0) / prev7.length;
+            const weekDiff = avg7 - avgPrev;
+            trendRow.innerHTML = `
+              <div style="display:flex;gap:8px;font-size:11px;color:#4a5568;align-items:center">
+                <span>주간 추세</span>
+                <span style="font-weight:700;color:${weekDiff<0?'#4ade80':'#f87171'};font-family:'JetBrains Mono'">${weekDiff>0?'+':''}${weekDiff.toFixed(2)}kg/주</span>
+                <span>·</span>
+                <span>이번주 평균 ${avg7.toFixed(1)}kg</span>
+              </div>`;
+          } else { trendRow.innerHTML = ""; }
+        } else if (trendRow) { trendRow.innerHTML = ""; }
+
       } else {
         el("stat-weight").textContent = "-- kg";
         el("stat-bmi").textContent = "--";
-        el("stat-target").textContent = "--";
+        const targetRow = el("stat-target-row");
+        if (targetRow) targetRow.innerHTML = "";
       }
       if (el("s-height")) el("s-height").value = appData.height || "";
       if (el("s-target")) el("s-target").value = appData.targetWeight || "";
@@ -1433,7 +1650,7 @@
       document.getElementById("panel-"+tab).style.display = "block";
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
       if (tab === "peptide") setTimeout(() => { renderPeptideGraph(); initGraphTouch(); }, 50);
-      if (tab === "weight") setTimeout(() => { renderWeightGraph(); renderWaterTracker(); initWeightTouch(); }, 50);
+      if (tab === "weight") setTimeout(() => { renderWeightGraph(); renderWaterTracker(); initWeightTouch(); renderSupplementPanel(); }, 50);
       if (tab === "analysis") setTimeout(renderAnalysis, 50);
     };
 
@@ -1791,6 +2008,17 @@
     .zoom-hint { font-size: 10px; color: #2a2a3e; text-align: center; margin-top: 4px; padding-bottom: 4px; }
 
     .pk-info { background: #0d1a0d; border: 1px solid #14532d22; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 11px; color: #4b7c52; line-height: 1.6; }
+
+    .drug-card {
+      background: #12121e;
+      border: 1px solid color-mix(in srgb, var(--drug-color) 20%, #1f2937);
+      border-radius: 16px;
+      padding: 14px 14px 12px;
+      margin-bottom: 10px;
+      transition: border-color .2s;
+    }
+    .drug-card:has(input:focus) { border-color: var(--drug-color); }
+    .drug-card input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
   </style>
 </head>
 <body>
@@ -1884,7 +2112,7 @@
         <div class="zoom-hint">👆 드래그 이동 · 핀치 확대/축소 · 탭/클릭 수치확인</div>
       </div>
 
-      <button class="big-btn blue" onclick="openAddModal()" style="margin-bottom:12px">+ 약물 기록 추가</button>
+      <button class="big-btn blue" onclick="openAddModal()" style="margin-bottom:12px">+ 고급 기록 추가 (날짜 지정)</button>
 
       <div class="filter-bar">
         <button class="filter-btn active" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='전체';onFilterChange()">전체</button>
@@ -1944,10 +2172,16 @@
       </div>
 
       <!-- 통계 -->
-      <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">현재 체중</div><div class="stat-val" id="stat-weight">-- kg</div></div>
-        <div class="stat-card"><div class="stat-label">BMI</div><div class="stat-val" id="stat-bmi">--</div></div>
-        <div class="stat-card" style="grid-column:1/-1"><div class="stat-label">목표까지</div><div class="stat-val" id="stat-target">--</div></div>
+      <!-- 체중 요약 카드 -->
+      <div class="card" style="margin-bottom:12px" id="weight-summary-card">
+        <div id="weight-summary-content">
+          <div class="stat-grid" style="margin-bottom:10px">
+            <div class="stat-card"><div class="stat-label">현재 체중</div><div class="stat-val" id="stat-weight">-- kg</div></div>
+            <div class="stat-card"><div class="stat-label">BMI</div><div class="stat-val" id="stat-bmi">--</div></div>
+          </div>
+          <div id="stat-target-row"></div>
+          <div id="stat-trend-row" style="margin-top:8px"></div>
+        </div>
       </div>
 
       <!-- 체중 그래프 -->
@@ -1989,6 +2223,12 @@
       </div>
 
       <div id="weight-list"></div>
+
+      <!-- 영양제 섹션 -->
+      <div class="card" style="margin-top:12px;border-color:#a78bfa33">
+        <div class="section-title" style="margin-bottom:10px">💊 오늘 영양제</div>
+        <div id="supplement-panel"></div>
+      </div>
     </div>
 
     <!-- 분석 패널 -->
