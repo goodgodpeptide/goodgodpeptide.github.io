@@ -619,6 +619,7 @@
     // 체내 농도 그래프
     // ══════════════════════════════════════════════
     let graphTooltip = { visible: false, x: 0 };
+    let weightTooltip = { visible: false, x: 0 };
 
     function renderPeptideGraph() {
       const canvas = document.getElementById("peptide-chart");
@@ -683,7 +684,14 @@
       ctx.fillRect(PAD.l, PAD.t, gW, gH);
 
       // 가로 그리드 + y축 레이블
+      const xLabelCount = 5;
+      // 세로 그리드 먼저 (배경에 깔리도록)
       ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1;
+      for (let i = 0; i <= xLabelCount; i++) {
+        const x = PAD.l + (i / xLabelCount) * gW;
+        ctx.beginPath(); ctx.moveTo(x, PAD.t); ctx.lineTo(x, PAD.t + gH); ctx.stroke();
+      }
+      // 가로 그리드
       for (let i = 0; i <= 4; i++) {
         const y = PAD.t + gH - (i / 4) * gH;
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
@@ -693,7 +701,6 @@
 
       // x축 레이블
       ctx.fillStyle = "#4a5568"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
-      const xLabelCount = 5;
       for (let i = 0; i <= xLabelCount; i++) {
         const t = visMinTime + (i / xLabelCount) * visRange;
         const x = PAD.l + (i / xLabelCount) * gW;
@@ -756,6 +763,36 @@
         ctx.fillStyle = "#ffffffaa"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
         ctx.fillText("현재", nowX, PAD.t - 4);
       }
+
+      // ── 다음 주사 D-day 수직선 (약물별) ────────────────
+      Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+        const drugRecs = (appData.records || []).filter(r => r.drug === drug && !r.isOverride);
+        if (!drugRecs.length) return;
+        const lastRec = drugRecs.sort((a, b) => b.time - a.time)[0];
+        const cycDays = getDoseCycle(drug);
+        const nextDue = lastRec.time + cycDays * 86400000;
+        if (nextDue <= now) return; // 이미 지난 경우 표시 안함
+        const nx = PAD.l + ((nextDue - visMinTime) / visRange) * gW;
+        if (nx < PAD.l || nx > PAD.l + gW) return;
+        // 수직선
+        ctx.strokeStyle = cfg.color + "99"; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+        ctx.beginPath(); ctx.moveTo(nx, PAD.t); ctx.lineTo(nx, PAD.t + gH); ctx.stroke();
+        ctx.setLineDash([]);
+        // 상단 레이블
+        const daysLeft = Math.round((nextDue - now) / 86400000);
+        const label = daysLeft === 0 ? `${cfg.short} 오늘!` : `${cfg.short} D-${daysLeft}`;
+        ctx.fillStyle = cfg.color;
+        ctx.font = "bold 10px 'Noto Sans KR'";
+        ctx.textAlign = nx > cW - 50 ? "right" : "center";
+        ctx.fillText(label, nx + (nx > cW - 50 ? -4 : 0), PAD.t + 10);
+        // 삼각형 마커 (하단)
+        ctx.fillStyle = cfg.color + "cc";
+        ctx.beginPath();
+        ctx.moveTo(nx, PAD.t + gH + 2);
+        ctx.lineTo(nx - 5, PAD.t + gH + 10);
+        ctx.lineTo(nx + 5, PAD.t + gH + 10);
+        ctx.closePath(); ctx.fill();
+      });
 
       // 범례
       let lx = PAD.l + 4;
@@ -1054,9 +1091,16 @@
       ctx.fillStyle = "#080810";
       ctx.fillRect(PAD.l, PAD.t, gW, gH);
 
-      // y 그리드
+      // 그리드
       ctx.strokeStyle = "#1a1a2e"; ctx.lineWidth = 1;
+      const xGridCount = 5;
       const ySteps = 4;
+      // 세로 그리드
+      for (let i = 0; i <= xGridCount; i++) {
+        const x = PAD.l + (i / xGridCount) * gW;
+        ctx.beginPath(); ctx.moveTo(x, PAD.t); ctx.lineTo(x, PAD.t + gH); ctx.stroke();
+      }
+      // 가로 그리드 + y축 레이블
       for (let i = 0; i <= ySteps; i++) {
         const y = PAD.t + (i / ySteps) * gH;
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
@@ -1064,11 +1108,10 @@
         ctx.fillText((maxW - (i / ySteps) * rangeW).toFixed(1), PAD.l - 5, y + 4);
       }
 
-      // x축 레이블 (KST 보정)
+      // x축 레이블 (KST 보정) - 그리드 개수에 맞춰
       ctx.fillStyle = "#4a5568"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
-      const xCount = Math.min(allRecs.length, 5);
-      for (let i = 0; i < xCount; i++) {
-        const f = i / (xCount - 1);
+      for (let i = 0; i <= xGridCount; i++) {
+        const f = i / xGridCount;
         const t = minT + f * rangeT;
         const d = new Date(t + 9 * 3600000);
         const label = `${d.getUTCMonth()+1}/${d.getUTCDate()}`;
@@ -1139,6 +1182,71 @@
         ctx.font = "bold 11px 'JetBrains Mono'";
         ctx.textAlign = "left";
         ctx.fillText(`${diff > 0 ? '+' : ''}${diff.toFixed(1)}kg`, PAD.l + 4, PAD.t + 14);
+      }
+
+      // ── 체중 그래프 툴팁 ──────────────────────────────
+      if (weightTooltip.visible) {
+        const tx = weightTooltip.x;
+        if (tx >= PAD.l && tx <= PAD.l + gW) {
+          // 해당 시점 계산
+          const t = minT + ((tx - PAD.l) / gW) * rangeT;
+
+          // 선형 보간으로 체중 추정
+          let estWeight = null;
+          for (let i = 0; i < allRecs.length - 1; i++) {
+            if (t >= allRecs[i].time && t <= allRecs[i+1].time) {
+              const ratio = (t - allRecs[i].time) / (allRecs[i+1].time - allRecs[i].time);
+              estWeight = allRecs[i].weight + ratio * (allRecs[i+1].weight - allRecs[i].weight);
+              break;
+            }
+          }
+          if (!estWeight && t >= allRecs[allRecs.length-1].time) estWeight = allRecs[allRecs.length-1].weight;
+          if (!estWeight && t <= allRecs[0].time) estWeight = allRecs[0].weight;
+
+          // 약물 농도
+          const drugConcs = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
+            const val = calcConcentrationAt(drug, t);
+            return val > 0.001 ? { short: cfg.short, color: cfg.color, val } : null;
+          }).filter(Boolean);
+
+          // 수직선
+          ctx.strokeStyle = "#ffffff55"; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+          ctx.beginPath(); ctx.moveTo(tx, PAD.t); ctx.lineTo(tx, PAD.t + gH); ctx.stroke();
+          ctx.setLineDash([]);
+
+          // 체중 추정 점
+          if (estWeight !== null) {
+            const wy = PAD.t + gH - ((estWeight - minW) / rangeW) * gH;
+            if (wy >= PAD.t && wy <= PAD.t + gH) {
+              ctx.beginPath(); ctx.arc(tx, wy, 5, 0, Math.PI * 2);
+              ctx.fillStyle = "#4ade80"; ctx.fill();
+              ctx.strokeStyle = "#080810"; ctx.lineWidth = 2; ctx.stroke();
+            }
+          }
+
+          // 툴팁 박스
+          const d = new Date(t + 9 * 3600000);
+          const timeStr = `${d.getUTCMonth()+1}/${d.getUTCDate()} ${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+          const lines = [
+            { text: timeStr, color: "#9ca3af" },
+          ];
+          if (estWeight !== null) lines.push({ text: `체중: ${estWeight.toFixed(2)}kg`, color: "#4ade80" });
+          drugConcs.forEach(dc => lines.push({ text: `${dc.short}: ${dc.val.toFixed(3)}mg`, color: dc.color }));
+
+          const bw = 160, bh = lines.length * 17 + 14;
+          let bx = tx + 10, by = PAD.t + 6;
+          if (bx + bw > cW - 4) bx = tx - bw - 10;
+          if (by + bh > PAD.t + gH) by = PAD.t + gH - bh - 4;
+
+          ctx.fillStyle = "#12122aee"; ctx.strokeStyle = "#374151"; ctx.lineWidth = 1;
+          roundRect(ctx, bx, by, bw, bh, 8); ctx.fill(); ctx.stroke();
+          lines.forEach((l, i) => {
+            ctx.fillStyle = l.color;
+            ctx.font = `${i === 0 ? '10' : '12'}px 'JetBrains Mono'`;
+            ctx.textAlign = "left";
+            ctx.fillText(l.text, bx + 10, by + 13 + i * 17);
+          });
+        }
       }
     }
 
@@ -1231,7 +1339,7 @@
       document.getElementById("panel-"+tab).style.display = "block";
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
       if (tab === "peptide") setTimeout(() => { renderPeptideGraph(); initGraphTouch(); }, 50);
-      if (tab === "weight") setTimeout(() => { renderWeightGraph(); renderWaterTracker(); }, 50);
+      if (tab === "weight") setTimeout(() => { renderWeightGraph(); renderWaterTracker(); initWeightTouch(); }, 50);
       if (tab === "analysis") setTimeout(renderAnalysis, 50);
     };
 
@@ -1428,8 +1536,74 @@
 
     window.onFilterChange = renderPeptideList;
 
+    // ── 체중 그래프 터치/마우스 ───────────────────────────
+    function initWeightTouch() {
+      const canvas = document.getElementById("weight-chart");
+      if (!canvas || canvas._wTouchInit) return;
+      canvas._wTouchInit = true;
+
+      const PAD_L = 48, PAD_R = 16;
+      let wts = { active: false, isDrag: false, startX: 0, velocity: 0, lastX: 0, lastTime: 0 };
+      let wHideTimer = null;
+
+      function clearWTimer() { if (wHideTimer) { clearTimeout(wHideTimer); wHideTimer = null; } }
+
+      function setWT(x) {
+        weightTooltip = { visible: true, x };
+        renderWeightGraph();
+      }
+      function hideWT(delay = 0) {
+        clearWTimer();
+        if (delay > 0) {
+          wHideTimer = setTimeout(() => { weightTooltip.visible = false; renderWeightGraph(); }, delay);
+        } else {
+          weightTooltip.visible = false;
+          renderWeightGraph();
+        }
+      }
+
+      // 터치
+      canvas.addEventListener("touchstart", e => {
+        e.preventDefault();
+        clearWTimer();
+        if (e.touches.length !== 1) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.touches[0].clientX - rect.left;
+        wts = { active: true, isDrag: false, startX: x, lastX: x,
+                velocity: 0, lastTime: Date.now() };
+        setWT(x);
+      }, { passive: false });
+
+      canvas.addEventListener("touchmove", e => {
+        e.preventDefault();
+        if (!wts.active || e.touches.length !== 1) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.touches[0].clientX - rect.left;
+        const now = Date.now();
+        const dt = Math.max(1, now - wts.lastTime);
+        wts.velocity = (x - wts.lastX) / dt;
+        wts.lastTime = now; wts.lastX = x;
+        // 체중 그래프는 드래그 없이 항상 툴팁 슬라이드
+        setWT(x);
+      }, { passive: false });
+
+      canvas.addEventListener("touchend", () => {
+        wts.active = false;
+        hideWT(1500);
+      }, { passive: false });
+
+      // 마우스 (PC)
+      canvas.addEventListener("mousemove", e => {
+        clearWTimer();
+        setWT(e.offsetX);
+      });
+      canvas.addEventListener("mouseleave", () => hideWT(0));
+    }
+
     window.addEventListener("resize", () => { renderPeptideGraph(); renderWeightGraph(); });
-    window.addEventListener("load", () => setTimeout(initGraphTouch, 500));
+    window.addEventListener("load", () => {
+      setTimeout(() => { initGraphTouch(); initWeightTouch(); }, 500);
+    });
   </script>
 
   <style>
