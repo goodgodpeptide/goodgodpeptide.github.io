@@ -582,6 +582,78 @@
         // STEP 임상 용량 단계 (mg)
         doseSteps: [0.25, 0.5, 1, 1.7, 2.4], clinicalMax: 2.4
       },
+      "KLOW (GHK-Cu+TB500+BPC157+KPV)": {
+        halfLifeDays: 0.2, tmaxHours: 1.5, defaultDoseDays: 1,
+        color: "#a3e635", emoji: "🌱", short: "KLOW",
+        note: "반감기 ~5시간 · 4-펩타이드 복합 · 재생/항염",
+        doseSteps: [0.8, 1.6, 2, 2.4, 3.2], clinicalMax: 3.2
+      },
+      "카그릴린타이드 (Cagrilintide)": {
+        halfLifeDays: 7.5, tmaxHours: 48, defaultDoseDays: 7,
+        color: "#f9a8d4", emoji: "🌸", short: "카그릴",
+        note: "반감기 7.5일 · 아밀린 유사체 · 주 1회",
+        doseSteps: [0.16, 0.3, 0.45, 0.6, 0.9, 1.2, 1.7, 2.4], clinicalMax: 2.4
+      },
+      "에피탈론 (Epithalon)": {
+        halfLifeDays: 0.125, tmaxHours: 1, defaultDoseDays: 1,
+        color: "#c084fc", emoji: "🟣", short: "에피탈론",
+        note: "반감기 ~3시간 · 텔로머레이스 · 코스 투여",
+        doseSteps: [5, 10, 15, 20], clinicalMax: 20
+      },
+      "티모신알파1 (Thymosin α1)": {
+        halfLifeDays: 0.125, tmaxHours: 1.5, defaultDoseDays: 3,
+        color: "#fb923c", emoji: "🟠", short: "Tα1",
+        note: "반감기 ~3시간 · 면역조절 · 주 2회",
+        doseSteps: [0.5, 1, 1.6, 3.2], clinicalMax: 3.2
+      },
+      "GHK-Cu (구리펩타이드)": {
+        halfLifeDays: 0.083, tmaxHours: 1, defaultDoseDays: 1,
+        color: "#d97706", emoji: "🟤", short: "GHK-Cu",
+        note: "반감기 ~2시간 · 조직재생 · 항산화",
+        doseSteps: [1, 2, 3, 5], clinicalMax: 5
+      },
+      "세맥스 (Semax)": {
+        halfLifeDays: 0.021, tmaxHours: 0.25, defaultDoseDays: 1,
+        color: "#e879f9", emoji: "💜", short: "세맥스",
+        note: "반감기 ~30분 · 비강 투여 · 노트로픽",
+        doseSteps: [0.3, 0.6, 1, 1.5, 3], clinicalMax: 3
+      },
+      "셀랑크 (Selank)": {
+        halfLifeDays: 0.021, tmaxHours: 0.25, defaultDoseDays: 1,
+        color: "#86efac", emoji: "🌿", short: "셀랑크",
+        note: "반감기 ~30분 · 비강 투여 · 항불안",
+        doseSteps: [0.25, 0.5, 1, 1.5], clinicalMax: 1.5
+      },
+      "CJC-1295+Ipamorelin": {
+        halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 1,
+        color: "#facc15", emoji: "🟡", short: "CJC+Ipa",
+        note: "반감기 ~2시간 · GHRH+GHRP · 성장호르몬 방출",
+        doseSteps: [0.1, 0.15, 0.2, 0.3], clinicalMax: 0.3
+      },
+      "테사모렐린 (Tesamorelin)": {
+        halfLifeDays: 0.1, tmaxHours: 1, defaultDoseDays: 1,
+        color: "#2dd4bf", emoji: "💎", short: "테사모렐린",
+        note: "반감기 ~2.4시간 · GHRH 유사체 · FDA 승인",
+        doseSteps: [1, 2], clinicalMax: 2
+      },
+      "SS-31 (Elamipretide)": {
+        halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 1,
+        color: "#38bdf8", emoji: "⚡", short: "SS-31",
+        note: "반감기 ~2시간 · 미토콘드리아 보호",
+        doseSteps: [0.1, 0.25, 0.5, 1], clinicalMax: 1
+      },
+      "MOTS-c": {
+        halfLifeDays: 0.125, tmaxHours: 1, defaultDoseDays: 3,
+        color: "#818cf8", emoji: "🔋", short: "MOTS-c",
+        note: "반감기 ~3시간 · 미토콘드리아 유래 · 대사조절",
+        doseSteps: [5, 10, 15], clinicalMax: 15
+      },
+      "NAD+": {
+        halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 3,
+        color: "#fbbf24", emoji: "⭐", short: "NAD+",
+        note: "반감기 ~2시간 · 세포 에너지 · SC/IV",
+        doseSteps: [50, 100, 250, 500, 1000], clinicalMax: 1000
+      },
     };
 
     // 약물별 투약 주기 반환 (사용자 커스텀 or 기본값)
@@ -1113,6 +1185,7 @@
     // ══════════════════════════════════════════════
     function renderAll() {
       renderRemainingCards();
+      renderPeptideFilterBar();
       renderPeptideList();
       renderPeptideGraph();
       renderSideEffectList();
@@ -1530,11 +1603,23 @@
       }).filter(Boolean);
 
       if (globalMax === 0) globalMax = 1;
-      // Y축 최소 높이: 표시된 약물 중 임상 최대값으로 플로어 설정
-      curves.forEach(({ drug }) => {
-        const cm = DRUG_CONFIG[drug]?.clinicalMax || 0;
-        if (cm > globalMax) globalMax = cm;
-      });
+
+      // 다약제 정규화 모드: 약물이 2개 이상이면 각 약물을 clinicalMax 기준 % 정규화
+      // (NAD+ 1000mg vs Tirzepatide 15mg 같은 스케일 차이 해결)
+      const normalizeMode = curves.length > 1;
+      if (!normalizeMode) {
+        // 단독 약물: 임상 최대값으로 Y축 플로어 설정
+        curves.forEach(({ drug }) => {
+          const cm = DRUG_CONFIG[drug]?.clinicalMax || 0;
+          if (cm > globalMax) globalMax = cm;
+        });
+      }
+
+      // 정규화 함수: normalizeMode면 val/clinicalMax (0~1), 아니면 val/globalMax (절대량)
+      function plotRatio(val, clinicalMax) {
+        if (normalizeMode) return Math.min(1, val / (clinicalMax || 1));
+        return val / globalMax;
+      }
 
       // 배경
       const isLight = document.body.classList.contains("light-mode");
@@ -1554,7 +1639,8 @@
         const y = PAD.t + gH - (i / 4) * gH;
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
         ctx.fillStyle = isLight ? "#6b7280" : "#4a5568"; ctx.font = `10px 'JetBrains Mono'`; ctx.textAlign = "right";
-        ctx.fillText((globalMax * i / 4).toFixed(2), PAD.l - 5, y + 4);
+        const yLabel = normalizeMode ? `${(i * 25)}%` : (globalMax * i / 4).toFixed(2);
+        ctx.fillText(yLabel, PAD.l - 5, y + 4);
       }
 
       // x축 레이블
@@ -1586,9 +1672,11 @@
 
       // ── 임상 용량 기준 수평선 (매우 연하게, 곡선 뒤) ──────
       curves.forEach(({ drug, cfg }) => {
+        const cm = cfg.clinicalMax || 1;
         (cfg.doseSteps || []).forEach(dose => {
-          if (dose > globalMax * 1.05) return;
-          const y = PAD.t + gH - (dose / globalMax) * gH;
+          const ratio = plotRatio(dose, cm);
+          if (ratio > 1.05) return;
+          const y = PAD.t + gH - ratio * gH;
           ctx.strokeStyle = cfg.color + "20"; ctx.lineWidth = 1; ctx.setLineDash([2, 6]);
           ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
           ctx.setLineDash([]);
@@ -1598,12 +1686,13 @@
       });
 
       // 곡선
-      curves.forEach(({ cfg, points }) => {
+      curves.forEach(({ drug, cfg, points }) => {
+        const cm = cfg.clinicalMax || 1;
         // fill
         ctx.beginPath();
         points.forEach((p, i) => {
           const x = PAD.l + ((p.t - visMinTime) / visRange) * gW;
-          const y = PAD.t + gH - (p.val / globalMax) * gH;
+          const y = PAD.t + gH - plotRatio(p.val, cm) * gH;
           i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         });
         const lastX = PAD.l + ((points[points.length-1].t - visMinTime) / visRange) * gW;
@@ -1619,7 +1708,7 @@
         ctx.shadowColor = cfg.color; ctx.shadowBlur = 8;
         points.forEach((p, i) => {
           const x = PAD.l + ((p.t - visMinTime) / visRange) * gW;
-          const y = PAD.t + gH - (p.val / globalMax) * gH;
+          const y = PAD.t + gH - plotRatio(p.val, cm) * gH;
           i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         });
         ctx.stroke(); ctx.shadowBlur = 0;
@@ -1627,16 +1716,21 @@
 
       // ── 현재 체내 농도 수평 점선 (곡선 위) ─────────────────
       curves.forEach(({ drug, cfg }) => {
+        const cm = cfg.clinicalMax || 1;
         const rem = calcConcentrationAt(drug, now);
-        if (rem < 0.005) return;
-        const y = PAD.t + gH - (rem / globalMax) * gH;
+        const remRatio = plotRatio(rem, cm);
+        if (rem < 0.0001) return;
+        const y = PAD.t + gH - remRatio * gH;
         if (y < PAD.t - 4 || y > PAD.t + gH + 4) return;
         ctx.strokeStyle = cfg.color + "bb"; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
         ctx.setLineDash([]);
-        // 오른쪽 레이블
+        // 오른쪽 레이블 (정규화 모드: %, 단독: mg)
         ctx.fillStyle = cfg.color; ctx.font = "bold 9px 'JetBrains Mono'"; ctx.textAlign = "right";
-        ctx.fillText(rem.toFixed(3) + 'mg', PAD.l + gW - 2, y - 3);
+        const remLabel = normalizeMode
+          ? `${cfg.short} ${(remRatio * 100).toFixed(1)}%`
+          : rem.toFixed(3) + 'mg';
+        ctx.fillText(remLabel, PAD.l + gW - 2, y - 3);
       });
 
       // 현재 시각 선
@@ -2252,10 +2346,22 @@
     // ══════════════════════════════════════════════
     // 모달 헬퍼
     // ══════════════════════════════════════════════
-    window.openAddModal = () => {
+    window.openAddModal = (prefillDrug) => {
       document.getElementById("add-time").value = kstNow();
       document.getElementById("add-dose").value = "";
       selectedSite = null;
+      // 드롭다운 동적 생성 (DRUG_CONFIG 기반)
+      const sel = document.getElementById("add-drug");
+      sel.innerHTML = Object.keys(DRUG_CONFIG).map(d =>
+        `<option value="${d}">${DRUG_CONFIG[d].emoji} ${d}</option>`
+      ).join('');
+      if (prefillDrug && DRUG_CONFIG[prefillDrug]) sel.value = prefillDrug;
+      // 용량 자동 채우기
+      sel.onchange = () => {
+        const lastDose = getLastDose(sel.value);
+        if (lastDose) document.getElementById("add-dose").value = lastDose;
+      };
+      sel.dispatchEvent(new Event("change"));
       document.getElementById("add-modal").style.display = "flex";
       setTimeout(renderSiteSelector, 50);
     };
@@ -3457,6 +3563,30 @@
       renderPeptideGraph();
     };
 
+    function renderPeptideFilterBar() {
+      const bar = document.getElementById("peptide-filter-bar");
+      if (!bar) return;
+      const cur = document.getElementById("peptide-filter")?.value || "전체";
+      // 기존 버튼만 제거 (hidden input 유지)
+      [...bar.querySelectorAll(".filter-btn")].forEach(b => b.remove());
+      // 전체 버튼
+      const allBtn = document.createElement("button");
+      allBtn.className = "filter-btn" + (cur === "전체" ? " active" : "");
+      allBtn.textContent = "전체";
+      allBtn.onclick = () => { document.getElementById("peptide-filter").value = "전체"; renderPeptideFilterBar(); onFilterChange(); };
+      bar.insertBefore(allBtn, bar.querySelector("input"));
+      // 약물별 버튼 (기록 있는 것만)
+      const usedDrugs = new Set((appData.records || []).map(r => r.drug));
+      Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+        if (!usedDrugs.has(drug)) return;
+        const btn = document.createElement("button");
+        btn.className = "filter-btn" + (cur === cfg.short ? " active" : "");
+        btn.textContent = cfg.emoji + " " + cfg.short;
+        btn.onclick = () => { document.getElementById("peptide-filter").value = cfg.short; renderPeptideFilterBar(); onFilterChange(); };
+        bar.insertBefore(btn, bar.querySelector("input"));
+      });
+    }
+
     // ── 체중 그래프 터치/마우스 ───────────────────────────
     function initWeightTouch() {
       const canvas = document.getElementById("weight-chart");
@@ -3845,7 +3975,7 @@
       <div id="remaining-cards"></div>
 
       <div class="pk-info">
-        💡 레타(Retatrutide) Tmax ~48h, t½ 6일 · 마운자로(Tirzepatide) Tmax ~24h, t½ 5일 · 위고비(Semaglutide) Tmax ~36h, t½ 7일
+        💡 GLP-1: 마운자로 t½ 5일 · 레타 t½ 6일 · 위고비 t½ 7일 · 카그릴 t½ 7.5일 | 단기: 세맥스/셀랑크 t½ ~30분 · SS-31/GHK-Cu/NAD+ t½ ~2h
       </div>
 
       <div class="chart-wrap">
@@ -3862,11 +3992,8 @@
 
       <button class="big-btn blue" onclick="openAddModal()" style="margin-bottom:12px">+ 고급 기록 추가 (날짜 지정)</button>
 
-      <div class="filter-bar">
-        <button class="filter-btn active" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='전체';onFilterChange()">전체</button>
-        <button class="filter-btn" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='마운자로';onFilterChange()">마운자로</button>
-        <button class="filter-btn" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='레타';onFilterChange()">레타</button>
-        <button class="filter-btn" onclick="this.closest('.filter-bar').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('peptide-filter').value='위고비';onFilterChange()">위고비</button>
+      <div class="filter-bar" id="peptide-filter-bar">
+        <!-- renderPeptideFilterBar()에서 동적 생성 -->
         <input type="hidden" id="peptide-filter" value="전체" />
       </div>
       <div id="peptide-list"></div>
@@ -4327,7 +4454,7 @@
     <div class="modal-title">💊 약물 기록 추가</div>
     <div style="margin-bottom:10px"><label>약물 선택</label>
       <select id="add-drug" class="input-field">
-        <option>마운자로 (Tirzepatide)</option><option>레타 (Retatrutide)</option><option>위고비 (Semaglutide)</option>
+        <!-- openAddModal()에서 DRUG_CONFIG 기반 동적 생성 -->
       </select>
     </div>
     <div style="margin-bottom:10px"><label>용량 (mg)</label>
