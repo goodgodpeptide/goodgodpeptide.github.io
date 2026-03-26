@@ -1116,6 +1116,7 @@
       renderSupplementPanel();
       renderWaterTracker();
       if (document.getElementById("panel-calendar")?.style.display !== "none") renderCalendar();
+      if (document.getElementById("wtab-inbody")?.style.display !== "none") renderInbodyPanel();
       startLiveUpdate();
     }
 
@@ -2337,9 +2338,8 @@
       } else {
         stopLiveUpdate();
       }
-      if (tab === "weight") setTimeout(() => { renderWeightGraph(); renderWaterTracker(); initWeightTouch(); renderSupplementPanel(); }, 50);
+      if (tab === "weight") setTimeout(() => { switchWeightTab(currentWeightSubTab || 'record'); }, 50);
       if (tab === "calendar") setTimeout(renderCalendar, 50);
-      if (tab === "analysis") setTimeout(renderAnalysis, 50);
       if (tab === "supple") setTimeout(() => { renderSupplementPanel(); renderWaterTracker(); }, 50);
       if (tab === "encyclopedia") setTimeout(loadEncyclopedia, 50);
     };
@@ -2641,7 +2641,7 @@
           <div style="font-size:24px;margin-bottom:8px">⚙️</div>
           <div style="font-size:14px;color:#e2e8f0;margin-bottom:6px">체중 탭 기본 설정을 먼저 입력하세요</div>
           <div style="font-size:12px;color:#4a5568;margin-bottom:16px">키, 나이, 목표체중, 활동수준을 입력하면<br>BMR · TDEE · 목표 달성일 등을 자동 계산합니다</div>
-          <button onclick="switchTab('weight')" style="background:#1d4ed8;border:none;border-radius:10px;color:white;padding:10px 20px;font-size:13px;cursor:pointer;font-family:inherit">⚖️ 체중 탭으로 이동</button>
+          <button onclick="switchWeightTab('record')" style="background:#1d4ed8;border:none;border-radius:10px;color:white;padding:10px 20px;font-size:13px;cursor:pointer;font-family:inherit">⚖️ 기록 탭으로 이동</button>
         </div>`;
         return;
       }
@@ -3240,6 +3240,159 @@
       document.querySelector(`.calc-tab-btn[data-ctab="${tab}"]`)?.classList.add("active");
     };
 
+    let currentWeightSubTab = 'record';
+    window.switchWeightTab = function(tab) {
+      currentWeightSubTab = tab;
+      document.querySelectorAll(".wtab-panel").forEach(p => p.style.display = "none");
+      document.querySelectorAll(".wtab-btn").forEach(b => b.classList.remove("active"));
+      const panel = document.getElementById("wtab-" + tab);
+      if (panel) panel.style.display = "block";
+      const btn = document.querySelector(`.wtab-btn[data-wtab="${tab}"]`);
+      if (btn) btn.classList.add("active");
+      if (tab === 'record') setTimeout(() => { renderWeightGraph(); initWeightTouch(); }, 50);
+      if (tab === 'inbody') setTimeout(renderInbodyPanel, 50);
+      if (tab === 'analysis') setTimeout(renderAnalysis, 50);
+    };
+
+    // ── 인바디 기록 ─────────────────────────────────────
+    window.openInbodyModal = function() {
+      const m = document.getElementById("inbody-modal");
+      if (!m) return;
+      document.getElementById("inbody-time").value = kstNow();
+      ["ib-weight","ib-sm","ib-bfm","ib-bfp","ib-vfl","ib-bmr"].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = "";
+      });
+      m.style.display = "flex";
+    };
+    window.closeInbodyModal = function() {
+      document.getElementById("inbody-modal").style.display = "none";
+    };
+    window.submitInbody = function() {
+      const t = document.getElementById("inbody-time").value;
+      const weight = parseFloat(document.getElementById("ib-weight").value);
+      if (!t || !weight) { alert("날짜와 체중은 필수입니다"); return; }
+      appData.inbodyRecords = appData.inbodyRecords || [];
+      appData.inbodyRecords.push({
+        id: Date.now(), time: kstInputToMs(t), weight,
+        sm:   parseFloat(document.getElementById("ib-sm").value)  || 0,
+        bfm:  parseFloat(document.getElementById("ib-bfm").value) || 0,
+        bfp:  parseFloat(document.getElementById("ib-bfp").value) || 0,
+        vfl:  parseFloat(document.getElementById("ib-vfl").value) || 0,
+        bmr:  parseFloat(document.getElementById("ib-bmr").value) || 0,
+      });
+      appData.inbodyRecords.sort((a, b) => a.time - b.time);
+      scheduleSave();
+      closeInbodyModal();
+      renderInbodyPanel();
+    };
+    window.deleteInbody = function(id) {
+      appData.inbodyRecords = (appData.inbodyRecords || []).filter(r => r.id !== id);
+      scheduleSave();
+      renderInbodyPanel();
+    };
+
+    window.renderInbodyPanel = function() {
+      renderInbodyGraph();
+      const c = document.getElementById("inbody-list");
+      if (!c) return;
+      const recs = [...(appData.inbodyRecords || [])].sort((a, b) => b.time - a.time);
+      const isLight = document.body.classList.contains("light-mode");
+      const bg = isLight ? '#ffffff' : '#111827';
+      const border = isLight ? '#e2e8f0' : '#1f2937';
+      const textMain = isLight ? '#1a1a2e' : '#e2e8f0';
+      const textSub = isLight ? '#64748b' : '#6b7280';
+      if (!recs.length) {
+        c.innerHTML = `<div style="text-align:center;padding:32px;color:${textSub};font-size:13px">인바디 기록이 없습니다.<br>측정 후 결과를 추가하세요.</div>`;
+        return;
+      }
+      c.innerHTML = recs.map(r => {
+        const fields = [
+          r.weight ? { label: '체중', val: r.weight + 'kg', color: textMain } : null,
+          r.sm  ? { label: '골격근량', val: r.sm + 'kg',  color: '#60a5fa' } : null,
+          r.bfm ? { label: '체지방량', val: r.bfm + 'kg', color: '#f87171' } : null,
+          r.bfp ? { label: '체지방률', val: r.bfp + '%',  color: '#fbbf24' } : null,
+          r.vfl ? { label: '내장지방', val: 'Lv.' + r.vfl, color: r.vfl >= 10 ? '#f87171' : r.vfl >= 5 ? '#fbbf24' : '#4ade80' } : null,
+          r.bmr ? { label: 'BMR',     val: r.bmr + 'kcal', color: textMain } : null,
+        ].filter(Boolean);
+        return `<div style="background:${bg};border:1px solid ${border};border-radius:12px;padding:12px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:700;color:${textMain}">${toKSTString(r.time).slice(0,10)}</span>
+        <button onclick="deleteInbody(${r.id})" style="background:transparent;border:none;color:#f87171;font-size:12px;cursor:pointer">🗑️</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
+        ${fields.map(f => `<div style="text-align:center"><div style="color:${textSub}">${f.label}</div><div style="font-weight:700;color:${f.color}">${f.val}</div></div>`).join('')}
+      </div>
+    </div>`;
+      }).join('');
+    };
+
+    function renderInbodyGraph() {
+      const canvas = document.getElementById("inbody-chart");
+      if (!canvas) return;
+      const recs = [...(appData.inbodyRecords || [])].sort((a, b) => a.time - b.time);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = canvas.offsetWidth * dpr;
+      canvas.height = 150 * dpr;
+      canvas.style.height = "150px";
+      const ctx = canvas.getContext("2d");
+      ctx.scale(dpr, dpr);
+      const W = canvas.offsetWidth, H = 150;
+      const isLight = document.body.classList.contains("light-mode");
+      ctx.fillStyle = isLight ? "#f0f4f8" : "#080810";
+      ctx.fillRect(0, 0, W, H);
+      if (recs.length < 2) {
+        ctx.fillStyle = isLight ? "#6b7280" : "#4a5568";
+        ctx.font = "12px 'Noto Sans KR'"; ctx.textAlign = "center";
+        ctx.fillText("2개 이상의 기록이 있으면 추이 그래프가 표시됩니다", W / 2, H / 2);
+        return;
+      }
+      const PAD = { l: 42, r: 12, t: 20, b: 26 };
+      const gW = W - PAD.l - PAD.r, gH = H - PAD.t - PAD.b;
+      const tMin = recs[0].time, tMax = recs[recs.length - 1].time, tRange = tMax - tMin || 1;
+      ctx.strokeStyle = isLight ? "#dde3ea" : "#1a1a2e"; ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = PAD.t + (i / 4) * gH;
+        ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
+      }
+      function drawSeries(key, color, allRecs) {
+        const pts = allRecs.filter(r => r[key] > 0);
+        if (pts.length < 2) return;
+        const vals = pts.map(r => r[key]);
+        const vMin = Math.min(...vals) * 0.97, vMax = Math.max(...vals) * 1.03;
+        ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+        ctx.beginPath();
+        pts.forEach((r, i) => {
+          const x = PAD.l + ((r.time - tMin) / tRange) * gW;
+          const y = PAD.t + gH - ((r[key] - vMin) / (vMax - vMin || 1)) * gH;
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        pts.forEach(r => {
+          const x = PAD.l + ((r.time - tMin) / tRange) * gW;
+          const y = PAD.t + gH - ((r[key] - vMin) / (vMax - vMin || 1)) * gH;
+          ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.fillStyle = isLight ? "#6b7280" : "#4a5568"; ctx.font = "9px 'JetBrains Mono'"; ctx.textAlign = "right";
+        ctx.fillText(vMax.toFixed(1), PAD.l - 3, PAD.t + 4);
+        ctx.fillText(vMin.toFixed(1), PAD.l - 3, PAD.t + gH);
+      }
+      drawSeries('sm',  '#60a5fa', recs);
+      drawSeries('bfm', '#f87171', recs);
+      let lx = PAD.l + 4;
+      [['#60a5fa','골격근량'],['#f87171','체지방량']].forEach(([col, label]) => {
+        ctx.fillStyle = col; ctx.fillRect(lx, 8, 14, 3);
+        ctx.fillStyle = isLight ? '#475569' : '#9ca3af'; ctx.font = "9px 'Noto Sans KR'"; ctx.textAlign = "left";
+        ctx.fillText(label, lx + 17, 13);
+        lx += 58;
+      });
+      ctx.fillStyle = isLight ? "#6b7280" : "#4a5568"; ctx.font = "9px 'Noto Sans KR'"; ctx.textAlign = "center";
+      [0, 0.5, 1].forEach(ratio => {
+        const t2 = tMin + ratio * tRange;
+        const d = new Date(t2 + 9 * 3600000);
+        ctx.fillText(`${d.getUTCMonth()+1}/${d.getUTCDate()}`, PAD.l + ratio * gW, H - 4);
+      });
+    }
+
     window.onFilterChange = () => {
       graphDrugFilter = document.getElementById("peptide-filter")?.value || "전체";
       renderPeptideList();
@@ -3619,8 +3772,6 @@
     <button class="tab-btn" data-tab="weight"  onclick="switchTab('weight')">⚖️ 체중</button>
     <button class="tab-btn" data-tab="supple"  onclick="switchTab('supple')">💊 영양제</button>
     <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar')">📅 달력</button>
-    <button class="tab-btn" data-tab="analysis" onclick="switchTab('analysis')">📊 분석</button>
-    <button class="tab-btn" data-tab="calc"    onclick="switchTab('calc')">🧮 계산</button>
     <button class="tab-btn" data-tab="encyclopedia" onclick="switchTab('encyclopedia')">🔬 백과사전</button>
   </div>
 
@@ -3667,22 +3818,12 @@
         <input type="hidden" id="peptide-filter" value="전체" />
       </div>
       <div id="peptide-list"></div>
-    </div>
-
-    <!-- ── 계산기 패널 ── -->
-    <div id="panel-calc" class="tab-panel">
-
-      <!-- 계산기 탭 선택 -->
-      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
-        <button class="calc-tab-btn active" data-ctab="peptide" onclick="switchCalcTab('peptide')">💉 조제 계산</button>
-        <button class="calc-tab-btn" data-ctab="body" onclick="switchCalcTab('body')">💪 체성분 역산</button>
-        <button class="calc-tab-btn" data-ctab="future" onclick="switchCalcTab('future')">🔮 미래 예측</button>
-        <button class="calc-tab-btn" data-ctab="macro" onclick="switchCalcTab('macro')">🍽️ 영양소</button>
-      </div>
 
       <!-- 조제 계산 -->
-      <div id="ctab-peptide" class="ctab-panel">
-        <div class="card" style="margin-bottom:12px">
+      <div class="card" style="margin-top:4px;margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:4px">🧪 조제 계산</div>
+        <div style="font-size:11px;color:#4a5568;margin-bottom:12px">바이알 용량 · BAC Water · 1회 투여량으로 주사 농도 계산</div>
+        <div class="card" style="margin-bottom:10px;background:#0d0d1a">
           <div class="section-title">바이알 용량 (mg)</div>
           <div class="quick-btns">
             <button class="qbtn" onclick="setQuickVal('c-vial','10')">10</button>
@@ -3691,7 +3832,7 @@
           </div>
           <input id="c-vial" class="input-field" type="number" placeholder="직접 입력" />
         </div>
-        <div class="card" style="margin-bottom:12px">
+        <div class="card" style="margin-bottom:10px;background:#0d0d1a">
           <div class="section-title">BAC Water (ml)</div>
           <div class="quick-btns">
             <button class="qbtn" onclick="setQuickVal('c-water','1.8')">1.8</button>
@@ -3700,7 +3841,7 @@
           </div>
           <input id="c-water" class="input-field" type="number" placeholder="직접 입력" />
         </div>
-        <div class="card" style="margin-bottom:12px">
+        <div class="card" style="margin-bottom:12px;background:#0d0d1a">
           <div class="section-title">1회 투여량 (mcg)</div>
           <div class="quick-btns">
             <button class="qbtn" onclick="setQuickVal('c-dose','250')">250</button>
@@ -3714,9 +3855,87 @@
         <button class="big-btn blue" onclick="calcPeptide()" style="margin-bottom:14px">계산하기</button>
         <div id="calc-result"></div>
       </div>
+    </div>
 
-      <!-- 체성분 역산 -->
-      <div id="ctab-body" class="ctab-panel" style="display:none">
+    <!-- ── 체중 패널 ── -->
+    <div id="panel-weight" class="tab-panel">
+      <!-- 서브탭 네비게이션 -->
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="calc-tab-btn wtab-btn active" data-wtab="record" onclick="switchWeightTab('record')">⚖️ 기록/그래프</button>
+        <button class="calc-tab-btn wtab-btn" data-wtab="inbody" onclick="switchWeightTab('inbody')">🏋️ 인바디</button>
+        <button class="calc-tab-btn wtab-btn" data-wtab="analysis" onclick="switchWeightTab('analysis')">📊 분석</button>
+      </div>
+
+      <!-- wtab: 기록/그래프 -->
+      <div id="wtab-record" class="wtab-panel">
+        <button class="big-btn green" onclick="openWeightModal()" style="margin-bottom:12px">+ 체중 기록 추가</button>
+        <div class="card" style="margin-bottom:12px" id="weight-summary-card">
+          <div id="weight-summary-content">
+            <div class="stat-grid" style="margin-bottom:10px">
+              <div class="stat-card"><div class="stat-label">현재 체중</div><div class="stat-val" id="stat-weight">-- kg</div></div>
+              <div class="stat-card"><div class="stat-label">BMI</div><div class="stat-val" id="stat-bmi">--</div></div>
+            </div>
+            <div id="stat-target-row"></div>
+            <div id="stat-trend-row" style="margin-top:8px"></div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:12px;color:#6b7280">📉 체중 변화 추이</div>
+            <div style="display:flex;gap:4px">
+              <button class="wrange-btn" data-days="7"   onclick="setWeightRange(7)">1주</button>
+              <button class="wrange-btn" data-days="30"  onclick="setWeightRange(30)">1달</button>
+              <button class="wrange-btn" data-days="90"  onclick="setWeightRange(90)">3달</button>
+              <button class="wrange-btn active" data-days="0" onclick="setWeightRange(0)">전체</button>
+            </div>
+          </div>
+          <canvas id="weight-chart"></canvas>
+        </div>
+        <div id="weight-list"></div>
+      </div>
+
+      <!-- wtab: 인바디 -->
+      <div id="wtab-inbody" class="wtab-panel" style="display:none">
+        <button class="big-btn blue" onclick="openInbodyModal()" style="margin-bottom:12px">+ 인바디 기록 추가</button>
+        <div class="chart-wrap" style="margin-bottom:12px">
+          <div style="font-size:12px;color:#6b7280;margin-bottom:8px">📈 골격근량 · 체지방량 추이</div>
+          <canvas id="inbody-chart"></canvas>
+        </div>
+        <div id="inbody-list"></div>
+      </div>
+
+      <!-- wtab: 분석 -->
+      <div id="wtab-analysis" class="wtab-panel" style="display:none">
+
+        <!-- 기본 설정 -->
+        <div class="card" style="margin-bottom:12px">
+          <div class="section-title">⚙️ 기본 설정</div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <button class="gender-btn active" data-v="남성" onclick="setGender('남성')">남성</button>
+            <button class="gender-btn" data-v="여성" onclick="setGender('여성')">여성</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+            <div><label>키 (cm)</label><input id="s-height" class="input-field" type="number" placeholder="170" oninput="saveSettings()" /></div>
+            <div><label>나이</label><input id="s-age" class="input-field" type="number" placeholder="30" oninput="saveSettings()" /></div>
+            <div><label>목표 체중 (kg)</label><input id="s-target" class="input-field" type="number" placeholder="65" oninput="saveSettings()" /></div>
+            <div><label>활동 수준</label>
+              <select id="s-activity" class="input-field" onchange="saveSettings()">
+                <option value="1.2">거의 안 움직임</option>
+                <option value="1.375">가벼운 운동 1-3일/주</option>
+                <option value="1.55" selected>적당한 운동 3-5일/주</option>
+                <option value="1.725">격한 운동 6-7일/주</option>
+                <option value="1.9">매우 격렬/육체직</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="analysis-cards"></div>
+        <div id="analysis-prediction" class="card" style="margin-bottom:12px;display:none"></div>
+        <div id="analysis-weekly" class="card" style="margin-bottom:12px;display:none"></div>
+        <div id="analysis-tips" style="margin-bottom:12px"></div>
+
+        <!-- 체성분 역산 -->
         <div class="card" style="margin-bottom:12px">
           <div class="section-title" style="margin-bottom:4px">💪 체성분 역산 계산기</div>
           <div style="font-size:11px;color:#4a5568;margin-bottom:12px">목표 체지방률로 달성 체중 계산 · Deurenberg 공식 기반</div>
@@ -3736,10 +3955,8 @@
           <button class="big-btn blue" onclick="calcBodyComp()" style="margin-bottom:12px">역산하기</button>
           <div id="bc-result"></div>
         </div>
-      </div>
 
-      <!-- 미래 예측 -->
-      <div id="ctab-future" class="ctab-panel" style="display:none">
+        <!-- 미래 예측 -->
         <div class="card" style="margin-bottom:12px">
           <div class="section-title" style="margin-bottom:4px">🔮 미래 체중/건강 예측</div>
           <div style="font-size:11px;color:#4a5568;margin-bottom:12px">현재 감량 속도 유지 시 N주 후 체중·체지방·BMR 예측</div>
@@ -3756,130 +3973,32 @@
           <button class="big-btn blue" onclick="calcFuture()" style="margin-bottom:12px">예측하기</button>
           <div id="fut-result"></div>
         </div>
-      </div>
 
-      <!-- 영양소 역산 -->
-      <div id="ctab-macro" class="ctab-panel" style="display:none">
-        <div class="card" style="margin-bottom:12px">
-          <div class="section-title" style="margin-bottom:4px">🍽️ 영양소 역산 계산기</div>
-          <div style="font-size:11px;color:#4a5568;margin-bottom:12px">목표 칼로리에서 단백질·지방·탄수화물 배분 계산</div>
-          <div style="margin-bottom:10px">
-            <label>목표 칼로리 (kcal)</label>
-            <div class="quick-btns" style="margin-bottom:6px">
-              <button class="qbtn" onclick="setQuickVal('mac-cal','1500')">1500</button>
-              <button class="qbtn" onclick="setQuickVal('mac-cal','1800')">1800</button>
-              <button class="qbtn" onclick="setQuickVal('mac-cal','2000')">2000</button>
-            </div>
-            <input id="mac-cal" class="input-field" type="number" placeholder="예: 1800" />
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-            <div><label>단백질 비율 (%)</label>
-              <input id="mac-protein" class="input-field" type="number" value="30" placeholder="30" /></div>
-            <div><label>지방 비율 (%)</label>
-              <input id="mac-fat" class="input-field" type="number" value="25" placeholder="25" /></div>
-          </div>
-          <div style="font-size:11px;color:#4a5568;margin-bottom:10px">탄수화물 = 100 - 단백질 - 지방 자동 계산</div>
-          <button class="big-btn blue" onclick="calcMacro()" style="margin-bottom:12px">계산하기</button>
-          <div id="mac-result"></div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ── 체중 패널 (기록추가 최상단) ── -->
-    <div id="panel-weight" class="tab-panel">
-
-      <!-- 빠른 기록 추가 (최상단) -->
-      <button class="big-btn green" onclick="openWeightModal()" style="margin-bottom:12px">+ 체중 기록 추가</button>
-
-      <!-- 통계 -->
-      <!-- 체중 요약 카드 -->
-      <div class="card" style="margin-bottom:12px" id="weight-summary-card">
-        <div id="weight-summary-content">
-          <div class="stat-grid" style="margin-bottom:10px">
-            <div class="stat-card"><div class="stat-label">현재 체중</div><div class="stat-val" id="stat-weight">-- kg</div></div>
-            <div class="stat-card"><div class="stat-label">BMI</div><div class="stat-val" id="stat-bmi">--</div></div>
-          </div>
-          <div id="stat-target-row"></div>
-          <div id="stat-trend-row" style="margin-top:8px"></div>
-        </div>
-      </div>
-
-      <!-- 체중 그래프 -->
-      <div class="chart-wrap">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-size:12px;color:#6b7280">📉 체중 변화 추이</div>
-          <div style="display:flex;gap:4px">
-            <button class="wrange-btn" data-days="7"   onclick="setWeightRange(7)">1주</button>
-            <button class="wrange-btn" data-days="30"  onclick="setWeightRange(30)">1달</button>
-            <button class="wrange-btn" data-days="90"  onclick="setWeightRange(90)">3달</button>
-            <button class="wrange-btn active" data-days="0" onclick="setWeightRange(0)">전체</button>
+        <!-- 공식 안내 카드 -->
+        <div class="card" style="margin-bottom:12px;border-color:#374151">
+          <div class="section-title" style="margin-bottom:8px">📐 사용 공식 출처</div>
+          <div style="font-size:11px;color:#4a5568;line-height:1.9">
+            <div><b style="color:#60a5fa">BMR</b> · Mifflin-St Jeor (1990)</div>
+            <div style="font-family:'JetBrains Mono';font-size:10px;color:#374151;margin-bottom:6px">남: 10×체중 + 6.25×키 - 5×나이 + 5 / 여: -161</div>
+            <div><b style="color:#a78bfa">TDEE</b> · BMR × 활동계수 (1.2~1.9)</div>
+            <div style="font-size:10px;color:#374151;margin-bottom:6px">비활동 1.2 · 가벼운운동 1.375 · 보통 1.55 · 격렬 1.725 · 매우격렬 1.9</div>
+            <div><b style="color:#f97316">체지방률</b> · Deurenberg (1991, Br J Nutr)</div>
+            <div style="font-family:'JetBrains Mono';font-size:10px;color:#374151;margin-bottom:6px">1.20×BMI + 0.23×나이 - 10.8×성별(남1) - 5.4 · 오차 ±4-5%</div>
+            <div><b style="color:#4ade80">이상체중</b> · Broca 변형 (한국·일본 임상)</div>
+            <div style="font-family:'JetBrains Mono';font-size:10px;color:#374151;margin-bottom:6px">남: (키-100)×0.9 / 여: (키-100)×0.85</div>
+            <div><b style="color:#38bdf8">수분 권장</b> · 체중(kg)×33ml (WHO 기준)</div>
+            <div style="font-size:10px;color:#374151;margin-bottom:2px">운동 시 추가 섭취 필요</div>
+            <div style="font-size:10px;color:#2a2a3e;margin-top:6px">⚠️ 모든 수치는 추정값입니다. 정확한 측정은 의료기관 방문 권장</div>
           </div>
         </div>
-        <canvas id="weight-chart"></canvas>
-      </div>
 
-      <!-- 기본설정은 분석 탭으로 이동 -->
+      </div><!-- /wtab-analysis -->
 
-      <div id="weight-list"></div>
-
-
-    </div>
+    </div><!-- /panel-weight -->
 
     <!-- 달력 패널 -->
     <div id="panel-calendar" class="tab-panel">
       <div id="calendar-container"></div>
-    </div>
-
-        <!-- 분석 패널 -->
-    <div id="panel-analysis" class="tab-panel">
-
-      <!-- 기본 설정 (분석에 필요한 데이터) -->
-      <div class="card" style="margin-bottom:12px">
-        <div class="section-title">⚙️ 기본 설정</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <button class="gender-btn active" data-v="남성" onclick="setGender('남성')">남성</button>
-          <button class="gender-btn" data-v="여성" onclick="setGender('여성')">여성</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-          <div><label>키 (cm)</label><input id="s-height" class="input-field" type="number" placeholder="170" oninput="saveSettings()" /></div>
-          <div><label>나이</label><input id="s-age" class="input-field" type="number" placeholder="30" oninput="saveSettings()" /></div>
-          <div><label>목표 체중 (kg)</label><input id="s-target" class="input-field" type="number" placeholder="65" oninput="saveSettings()" /></div>
-          <div><label>활동 수준</label>
-            <select id="s-activity" class="input-field" onchange="saveSettings()">
-              <option value="1.2">거의 안 움직임</option>
-              <option value="1.375">가벼운 운동 1-3일/주</option>
-              <option value="1.55" selected>적당한 운동 3-5일/주</option>
-              <option value="1.725">격한 운동 6-7일/주</option>
-              <option value="1.9">매우 격렬/육체직</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div id="analysis-cards"></div>
-      <div id="analysis-prediction" class="card" style="margin-bottom:12px;display:none"></div>
-      <div id="analysis-weekly" class="card" style="margin-bottom:12px;display:none"></div>
-      <div id="analysis-tips" style="margin-bottom:12px"></div>
-
-      <!-- 공식 안내 카드 -->
-      <div class="card" style="margin-bottom:12px;border-color:#374151">
-        <div class="section-title" style="margin-bottom:8px">📐 사용 공식 출처</div>
-        <div style="font-size:11px;color:#4a5568;line-height:1.9">
-          <div><b style="color:#60a5fa">BMR</b> · Mifflin-St Jeor (1990)</div>
-          <div style="font-family:'JetBrains Mono';font-size:10px;color:#374151;margin-bottom:6px">남: 10×체중 + 6.25×키 - 5×나이 + 5 / 여: -161</div>
-          <div><b style="color:#a78bfa">TDEE</b> · BMR × 활동계수 (1.2~1.9)</div>
-          <div style="font-size:10px;color:#374151;margin-bottom:6px">비활동 1.2 · 가벼운운동 1.375 · 보통 1.55 · 격렬 1.725 · 매우격렬 1.9</div>
-          <div><b style="color:#f97316">체지방률</b> · Deurenberg (1991, Br J Nutr)</div>
-          <div style="font-family:'JetBrains Mono';font-size:10px;color:#374151;margin-bottom:6px">1.20×BMI + 0.23×나이 - 10.8×성별(남1) - 5.4 · 오차 ±4-5%</div>
-          <div><b style="color:#4ade80">이상체중</b> · Broca 변형 (한국·일본 임상)</div>
-          <div style="font-family:'JetBrains Mono';font-size:10px;color:#374151;margin-bottom:6px">남: (키-100)×0.9 / 여: (키-100)×0.85</div>
-          <div><b style="color:#38bdf8">수분 권장</b> · 체중(kg)×33ml (WHO 기준)</div>
-          <div style="font-size:10px;color:#374151;margin-bottom:2px">운동 시 추가 섭취 필요</div>
-          <div style="font-size:10px;color:#2a2a3e;margin-top:6px">⚠️ 모든 수치는 추정값입니다. 정확한 측정은 의료기관 방문 권장</div>
-        </div>
-      </div>
-
     </div>
 
     <!-- 백과사전 패널 -->
@@ -3930,6 +4049,30 @@
           <span style="font-size:10px;color:#4a5568">매일 자정 초기화</span>
         </div>
         <div id="supplement-panel"></div>
+      </div>
+
+      <!-- 영양소 배분 -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:4px">🍽️ 영양소 배분 계산기</div>
+        <div style="font-size:11px;color:#4a5568;margin-bottom:12px">목표 칼로리에서 단백질·지방·탄수화물 배분 계산</div>
+        <div style="margin-bottom:10px">
+          <label>목표 칼로리 (kcal)</label>
+          <div class="quick-btns" style="margin-bottom:6px">
+            <button class="qbtn" onclick="setQuickVal('mac-cal','1500')">1500</button>
+            <button class="qbtn" onclick="setQuickVal('mac-cal','1800')">1800</button>
+            <button class="qbtn" onclick="setQuickVal('mac-cal','2000')">2000</button>
+          </div>
+          <input id="mac-cal" class="input-field" type="number" placeholder="예: 1800" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+          <div><label>단백질 비율 (%)</label>
+            <input id="mac-protein" class="input-field" type="number" value="30" placeholder="30" /></div>
+          <div><label>지방 비율 (%)</label>
+            <input id="mac-fat" class="input-field" type="number" value="25" placeholder="25" /></div>
+        </div>
+        <div style="font-size:11px;color:#4a5568;margin-bottom:10px">탄수화물 = 100 - 단백질 - 지방 자동 계산</div>
+        <button class="big-btn blue" onclick="calcMacro()" style="margin-bottom:12px">계산하기</button>
+        <div id="mac-result"></div>
       </div>
     </div>
 
@@ -4099,6 +4242,29 @@
     <div class="modal-actions">
       <button class="big-btn" style="background:#374151;flex:1" onclick="document.getElementById('side-effect-modal').style.display='none'">취소</button>
       <button class="big-btn" style="background:linear-gradient(135deg,#7f1d1d,#b91c1c);flex:2" onclick="submitSideEffect()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 모달: 인바디 기록 추가 -->
+<div id="inbody-modal" class="modal-overlay" onclick="if(event.target===this)closeInbodyModal()">
+  <div class="modal-box">
+    <div class="modal-title">🏋️ 인바디 기록 추가</div>
+    <div style="margin-bottom:10px"><label>측정일시</label>
+      <input id="inbody-time" class="input-field" type="datetime-local" />
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><label>체중 (kg) *</label><input id="ib-weight" class="input-field" type="number" step="0.1" placeholder="70.5" /></div>
+      <div><label>골격근량 (kg)</label><input id="ib-sm" class="input-field" type="number" step="0.1" placeholder="30.0" /></div>
+      <div><label>체지방량 (kg)</label><input id="ib-bfm" class="input-field" type="number" step="0.1" placeholder="15.0" /></div>
+      <div><label>체지방률 (%)</label><input id="ib-bfp" class="input-field" type="number" step="0.1" placeholder="20.0" /></div>
+      <div><label>내장지방 레벨</label><input id="ib-vfl" class="input-field" type="number" step="1" placeholder="5" /></div>
+      <div><label>BMR (kcal)</label><input id="ib-bmr" class="input-field" type="number" step="1" placeholder="1500" /></div>
+    </div>
+    <div style="font-size:11px;color:#4a5568;margin-bottom:12px">* 체중 필수, 나머지 선택 입력</div>
+    <div class="modal-actions">
+      <button class="big-btn" style="background:#374151;flex:1" onclick="closeInbodyModal()">취소</button>
+      <button class="big-btn blue" style="flex:2" onclick="submitInbody()">저장</button>
     </div>
   </div>
 </div>
