@@ -4429,17 +4429,17 @@
       const monthSupps = monthKeys.reduce((a,k) => a + data[k].supps.length, 0);
 
       html += `<div style="display:flex;gap:8px;margin-bottom:12px">
-        <div style="flex:1;background:${isLight?'#eff6ff':'#0d1b2a'};border:1px solid #1d4ed833;border-radius:10px;padding:10px;text-align:center">
+        <div onclick="openMonthSummaryModal('drug')" style="flex:1;background:${isLight?'#eff6ff':'#0d1b2a'};border:1px solid #1d4ed833;border-radius:10px;padding:10px;text-align:center;cursor:pointer;active:opacity:.8" ontouchstart="this.style.opacity='.7'" ontouchend="this.style.opacity='1'">
           <div style="font-size:18px;font-weight:700;color:#60a5fa">${monthDrugs}</div>
-          <div style="font-size:10px;color:#6b7280">이달 투약</div>
+          <div style="font-size:10px;color:#6b7280">이달 투약 ›</div>
         </div>
-        <div style="flex:1;background:${isLight?'#f0fdf4':'#0d1a0f'};border:1px solid #4ade8033;border-radius:10px;padding:10px;text-align:center">
+        <div onclick="openMonthSummaryModal('weight')" style="flex:1;background:${isLight?'#f0fdf4':'#0d1a0f'};border:1px solid #4ade8033;border-radius:10px;padding:10px;text-align:center;cursor:pointer" ontouchstart="this.style.opacity='.7'" ontouchend="this.style.opacity='1'">
           <div style="font-size:18px;font-weight:700;color:#4ade80">${monthWeights}</div>
-          <div style="font-size:10px;color:#6b7280">체중 기록</div>
+          <div style="font-size:10px;color:#6b7280">체중 기록 ›</div>
         </div>
-        <div style="flex:1;background:${isLight?'#faf5ff':'#12093a'};border:1px solid #a78bfa33;border-radius:10px;padding:10px;text-align:center">
+        <div onclick="openMonthSummaryModal('supp')" style="flex:1;background:${isLight?'#faf5ff':'#12093a'};border:1px solid #a78bfa33;border-radius:10px;padding:10px;text-align:center;cursor:pointer" ontouchstart="this.style.opacity='.7'" ontouchend="this.style.opacity='1'">
           <div style="font-size:18px;font-weight:700;color:#a78bfa">${monthSupps}</div>
-          <div style="font-size:10px;color:#6b7280">영양제 복용</div>
+          <div style="font-size:10px;color:#6b7280">영양제 복용 ›</div>
         </div>
       </div>`;
 
@@ -4694,6 +4694,105 @@
       scheduleSave();
       renderCalSuppModal(dateKey);
       renderCalendar(); // 달력 도트 업데이트
+    };
+
+    // 월간 요약 카드 클릭 → 상세 목록 모달
+    window.openMonthSummaryModal = function(type) {
+      const isLight = document.body.classList.contains("light-mode");
+      const monthStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+      const monthLabel = `${calYear}년 ${calMonth+1}월`;
+      const bg = isLight?'#fff':'#13131f', txt = isLight?'#1a1a2e':'#e2e8f0', sub = '#6b7280';
+      let title = '', html = '';
+
+      if (type === 'drug') {
+        title = `💉 ${monthLabel} 투약 기록`;
+        const recs = (appData.records||[])
+          .filter(r => msToKstInput(r.time).startsWith(monthStr))
+          .sort((a,b) => b.time - a.time);
+        if (!recs.length) { html = `<div style="color:${sub};text-align:center;padding:24px">기록 없음</div>`; }
+        else {
+          // 날짜별 그룹
+          const byDate = {};
+          recs.forEach(r => {
+            const d = msToKstInput(r.time).slice(0,10);
+            (byDate[d] = byDate[d]||[]).push(r);
+          });
+          Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(d => {
+            html += `<div style="font-size:11px;font-weight:700;color:${sub};margin:10px 0 4px;letter-spacing:.5px">${d}</div>`;
+            byDate[d].forEach(r => {
+              const cfg = DRUG_CONFIG[r.drug]||{};
+              const ri = ADMIN_ROUTES.find(x=>x.id===(r.route||cfg.defaultRoute||'SC'));
+              const timeStr = msToKstInput(r.time).slice(11,16);
+              html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:${(cfg.color||'#60a5fa')}11;border:1px solid ${(cfg.color||'#60a5fa')}33;border-radius:8px;margin-bottom:5px">
+                <span style="font-size:15px">${cfg.emoji||'💉'}</span>
+                <div style="flex:1">
+                  <div style="font-size:13px;font-weight:600;color:${cfg.color||'#60a5fa'}">${r.drug.split(' ')[0]}</div>
+                  <div style="font-size:11px;color:${sub}">${r.dose}mg · ${ri?ri.label:'SC'} · ${timeStr}</div>
+                </div>
+              </div>`;
+            });
+          });
+        }
+      } else if (type === 'weight') {
+        title = `⚖️ ${monthLabel} 체중 기록`;
+        const recs = (appData.weightRecords||[])
+          .filter(r => msToKstInput(r.time).startsWith(monthStr))
+          .sort((a,b) => b.time - a.time);
+        if (!recs.length) { html = `<div style="color:${sub};text-align:center;padding:24px">기록 없음</div>`; }
+        else {
+          // 변화량 계산용 (오래된 순)
+          const sorted = [...recs].sort((a,b)=>a.time-b.time);
+          const first = sorted[0].weight, last = sorted[sorted.length-1].weight;
+          const diff = last - first;
+          const diffStr = (diff >= 0 ? '+' : '') + diff.toFixed(1);
+          const diffColor = diff < 0 ? '#4ade80' : diff > 0 ? '#f87171' : sub;
+          html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:${isLight?'#f0fdf4':'#0d1a0f'};border:1px solid #4ade8033;border-radius:10px;margin-bottom:10px">
+            <div style="font-size:12px;color:${sub}">이달 변화</div>
+            <div style="font-size:16px;font-weight:700;color:${diffColor}">${diffStr}kg</div>
+          </div>`;
+          recs.forEach(r => {
+            const dateStr = msToKstInput(r.time).slice(0,10);
+            const timeStr = msToKstInput(r.time).slice(11,16);
+            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid ${isLight?'#f3f4f6':'#1a1a2e'}">
+              <span style="font-size:12px;color:${sub}">${dateStr} ${timeStr}</span>
+              <span style="font-size:15px;font-weight:700;color:#4ade80">${r.weight}kg</span>
+            </div>`;
+          });
+        }
+      } else if (type === 'supp') {
+        title = `💊 ${monthLabel} 영양제 복용`;
+        const supps = getSupplements();
+        // 이달 taken 집계
+        const entries = [];
+        supps.forEach(s => {
+          Object.entries(s.taken||{}).forEach(([key, done]) => {
+            if (!done) return;
+            const [d, timing] = key.split('_');
+            if (d.startsWith(monthStr)) entries.push({ d, timing, name: s.name });
+          });
+        });
+        entries.sort((a,b) => b.d.localeCompare(a.d) || (a.timing > b.timing ? 1 : -1));
+        if (!entries.length) { html = `<div style="color:${sub};text-align:center;padding:24px">기록 없음</div>`; }
+        else {
+          const byDate = {};
+          entries.forEach(e => (byDate[e.d] = byDate[e.d]||[]).push(e));
+          Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(d => {
+            html += `<div style="font-size:11px;font-weight:700;color:${sub};margin:10px 0 4px">${d}</div>`;
+            byDate[d].forEach(e => {
+              html += `<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid ${isLight?'#f3f4f6':'#1a1a2e'}">
+                <span style="font-size:13px">💊</span>
+                <span style="font-size:13px;color:#a78bfa;font-weight:500">${e.name}</span>
+                <span style="font-size:11px;color:${sub}">${e.timing}</span>
+              </div>`;
+            });
+          });
+        }
+      }
+
+      const m = document.getElementById('month-summary-modal');
+      document.getElementById('month-summary-title').textContent = title;
+      document.getElementById('month-summary-body').innerHTML = html;
+      m.style.display = 'flex';
     };
 
     window.switchCalcTab = (tab) => {
@@ -5848,6 +5947,15 @@
     </div>
     <button class="big-btn" style="background:#374151;margin-top:14px"
       onclick="document.getElementById('cal-add-modal').style.display='none'">취소</button>
+  </div>
+</div>
+
+<!-- 모달: 월간 요약 상세 -->
+<div id="month-summary-modal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'" style="display:none">
+  <div class="modal-box" style="max-width:420px;max-height:82vh;overflow-y:auto">
+    <div class="modal-title" id="month-summary-title">월간 요약</div>
+    <div id="month-summary-body" style="margin-bottom:14px"></div>
+    <button class="big-btn" style="background:#374151" onclick="document.getElementById('month-summary-modal').style.display='none'">닫기</button>
   </div>
 </div>
 
