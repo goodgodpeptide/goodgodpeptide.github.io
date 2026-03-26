@@ -463,10 +463,11 @@ appData.costCalc.customConsumables = [
 - ✅ 달력 체크리스트 약물 주기 버그 수정 (isDrugDueOnDate — 마지막 투약일 기준 계산)
 - ✅ 투약 목록 경로 뱃지 한국어 표시 (SC→피하주사, IM→근육주사, IN→비강)
 - ✅ 달력 하단 범례 추가 (✅⚠️🔵 인디케이터 + 도트 색상 설명)
-- ✅ 영양제 추가 모달 (이름+시간대 한번에 설정, 시간대 헤더 time input 제거)
-- ✅ 비용 계산기: 배송비/소모품 통화 선택 + 박스당 개수 입력 + 기타 소모품 동적 추가
+- ✅ 영양제 추가 모달 개편 (아침/점심/저녁 버튼 제거 → 시간 직접 입력, timeToTiming() 자동 분류)
+- ✅ 비용 계산기: 소모품 박스 단위 UI (박스 가격 + 박스당 개수 → 회당 비용 자동 계산 + hint 표시)
 - ✅ 투여 경로 시스템 (ADMIN_ROUTES, defaultRoute, 모달 선택, 뱃지 표시)
 - ✅ 사이클 스케줄 (5종: daily/interval/weekdays/cycle/course)
+- ✅ 달력 영양제 체크리스트 ↔ 영양제탭 통일 (toggleCalendarCheck → supplements[].taken 직접 저장)
 - ✅ 달력 체크리스트 연동 (인디케이터 + 오늘 할 일 + calendarChecks)
 - ✅ 조제 재고 관리 (reconVials, +/-조정, 소진 예상일)
 - ✅ 약 재고 관리 (inventory, 키트 단위, 14일 경고)
@@ -474,6 +475,9 @@ appData.costCalc.customConsumables = [
 - ✅ 비용 계산기 개선 (X일에 한번, 키트, 배송비)
 - ✅ 펩타이드 15종 DRUG_CONFIG 추가 (GLP-1 3+카그릴 / KLOW / 에피탈론 / Tα1 / GHK-Cu / 세맥스 / 셀랑크 / CJC+Ipa / 테사모렐린 / SS-31 / MOTS-c / NAD+)
 - ✅ 다약제 동시 그래프 정규화 (0-100%) — NAD+ 1000mg vs Tirzepatide 15mg 혼합 표시 해결
+- ✅ 투약 카드 SC 표시 → 피하주사 한국어 표시 (renderRemainingCards 부가정보행 ri.label)
+- ✅ 조제 재고 새 조제 버튼: drug null 가드 + 모달 내 약물 선택 드롭다운으로 개선
+- ✅ 사용 약물 목록 접기/펼치기 (toggleDrugListPanel, drugListExpanded, 요약 표시)
 - ✅ 투약 카드 📖 버튼 → 백과사전 직접 연동 (encyclopediaId 필드)
 - ✅ 백과사전 모달 라이트모드 색상 대응 (C 색상 객체 분기)
 - ✅ 날짜 표기 버그 수정 (toKSTString.slice → msToKstInput.slice)
@@ -514,12 +518,21 @@ removeCustomConsumable(id)   // 기타 소모품 제거
 
 ### 영양제 탭 핵심 함수 추가분
 ```js
-openAddSuppModal()           // 영양제 추가 모달 열기 (이름 + 시간대 한번에)
-toggleModalTiming(t)         // 모달 내 시간대 버튼 토글
-submitAddSupp()              // 모달 확인 → appData.supplements에 추가
+openAddSuppModal()           // 영양제 추가 모달 (이름 + 시간 직접 입력)
+addSuppTime()                // 시간 추가 버튼 → _suppModalTimes[] 배열에 push
+renderSuppTimeList()         // 시간 목록 렌더 (각 시간 옆에 자동 분류 뱃지)
+submitAddSupp()              // 모달 확인 → timeToTiming() 변환 → appData.supplements에 추가
+timeToTiming(timeStr)        // HH:MM → 아침(5-10시)/점심(11-13시)/저녁(14-19시)/자기전
+timingToEmoji(timing)        // 타이밍 → 이모지
 ```
-- 영양제 추가 UX: `+ 영양제 추가` 버튼 → 모달 (이름, 시간대 선택) → 저장
-- 시간대 그룹 헤더에서 `<input type="time">` 제거 (불필요한 UX 복잡도)
+- 영양제 추가 UX: `+ 영양제 추가` 버튼 → 모달 (이름 + 복수 시간 입력) → 저장
+- 시간 자동 분류: `timeToTiming()` 로 아침/점심/저녁/자기전 결정, 중복 제거
+- `_suppModalTimes[]` 배열로 복수 시간 관리
+
+### 달력 체크리스트 ↔ 영양제탭 통일
+- `toggleCalendarCheck(dateStr, key)`: 영양제 키(`s_`로 시작)이면 `supplements[].taken[dateStr+'_'+timing]` 직접 토글
+- `getScheduledItemsForDate()`: 영양제 done 판단 = `s.taken`만 참조 (calendarChecks 중복 제거)
+- 약물 체크는 `calendarChecks` 유지 (실제 records와 구분된 수동 체크용)
 
 ### 날짜 표시 규칙 (중요)
 - **날짜만 표시**: `msToKstInput(ts).slice(0,10)` → `"YYYY-MM-DD"` ✅
