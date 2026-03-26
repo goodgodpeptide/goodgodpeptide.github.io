@@ -312,7 +312,15 @@ openEncyclopediaModal(id)  // 상세 정보 바텀시트 모달
 - ✅ 투약 탭 사용 약물 토글 (activeDrugs) + 1초 실시간 농도/그래프 업데이트
 - ✅ 탭 7개→5개 통합 (분석+계산 제거, 체중 서브탭 3개, 인바디 신규)
 - ✅ 체중 그래프 X축 = 첫 투약일 시작 / 약물 그래프 X축 끝 = 5×반감기 소실 시점
+- ✅ 약물 그래프: 범위 버튼 제거(줌 초기화만), 임상 용량 기준선, 현재 농도 수평 점선
 - [ ] 운동 탭 추가 예정
+
+### 약물 그래프 임상 기준선 (DRUG_CONFIG.doseSteps / clinicalMax)
+- 마운자로: doseSteps [2.5,5,7.5,10,12.5,15], clinicalMax 15 (SURMOUNT)
+- 레타: doseSteps [1,2,4,8,12], clinicalMax 12 (NEJM 2023 Phase 2)
+- 위고비: doseSteps [0.25,0.5,1,1.7,2.4], clinicalMax 2.4 (STEP)
+- Y축 최솟값 = max(실제 데이터 피크, clinicalMax) 로 스케일 고정
+- 현재 체내 농도 수평 점선: `calcConcentrationAt(drug, now)` 기준
 
 ---
 
