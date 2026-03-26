@@ -1395,35 +1395,59 @@
       renderSupplementPanel();
     };
 
-    window.addCustomSupplement = () => {
-      const name = document.getElementById("new-supp-name")?.value?.trim();
-      if (!name) return;
-      // 선택된 시간대 읽기
-      const timing = ALL_TIMINGS.filter(t => {
-        const btn = document.getElementById("new-timing-" + t);
-        return btn?.dataset.active === "1";
-      });
-      if (!timing.length) timing.push("아침");
-      appData.supplements = getSupplements();
-      appData.supplements.push({ id: "s_" + Date.now(), name, timing, times:{}, taken: {} });
-      document.getElementById("new-supp-name").value = "";
-      // 선택 초기화
-      ALL_TIMINGS.forEach(t => {
-        const btn = document.getElementById("new-timing-" + t);
-        if (btn) { btn.dataset.active = "0"; btn.style.background = "#1f2937"; btn.style.color = "#6b7280"; btn.style.borderColor = "#374151"; }
-      });
-      scheduleSave();
-      renderSupplementPanel();
+    window.openAddSuppModal = function() {
+      const isLight = document.body.classList.contains("light-mode");
+      const inputStyle = `width:100%;padding:10px;background:${isLight?'#f8fafc':'#1e293b'};border:1px solid ${isLight?'#e2e8f0':'#374151'};border-radius:8px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;`;
+      const modalHtml = `
+        <div id="add-supp-modal" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-end">
+          <div style="background:${isLight?'#fff':'#0f172a'};border-top:2px solid #a78bfa;border-radius:20px 20px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 32px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-family:inherit">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <div style="font-size:16px;font-weight:700">💊 영양제 추가</div>
+              <button onclick="document.getElementById('add-supp-modal').remove()" style="background:none;border:none;color:#6b7280;font-size:22px;cursor:pointer">✕</button>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:4px">영양제 이름</div>
+              <input id="modal-supp-name" type="text" placeholder="예: 오메가3, 비타민D" style="${inputStyle}" />
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:6px">복용 시간대 (복수 선택 가능)</div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                ${ALL_TIMINGS.map(t => `<button id="modal-timing-${t}" onclick="toggleModalTiming('${t}')"
+                  style="padding:8px 14px;border-radius:20px;border:1px solid #374151;background:${isLight?'#f3f4f6':'#1f2937'};color:#6b7280;font-size:12px;cursor:pointer;font-family:inherit">
+                  ${TIMING_ICONS[t]} ${t}</button>`).join('')}
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button onclick="document.getElementById('add-supp-modal').remove()" style="flex:1;padding:12px;background:${isLight?'#f3f4f6':'#374151'};border:none;border-radius:10px;color:#9ca3af;font-size:13px;cursor:pointer;font-family:inherit">취소</button>
+              <button onclick="submitAddSupp()" style="flex:2;padding:12px;background:#7c3aed;border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 추가</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
     };
 
-    window.toggleNewTiming = (t) => {
-      const btn = document.getElementById("new-timing-" + t);
+    window.toggleModalTiming = function(t) {
+      const btn = document.getElementById('modal-timing-' + t);
       if (!btn) return;
-      const active = btn.dataset.active === "1";
-      btn.dataset.active = active ? "0" : "1";
-      btn.style.background = active ? "#1f2937" : "#1d4ed8";
-      btn.style.color = active ? "#6b7280" : "white";
-      btn.style.borderColor = active ? "#374151" : "#3b82f6";
+      const isLight = document.body.classList.contains("light-mode");
+      const active = btn.dataset.active === '1';
+      btn.dataset.active = active ? '0' : '1';
+      btn.style.background = active ? (isLight ? '#f3f4f6' : '#1f2937') : '#5b21b6';
+      btn.style.color = active ? '#6b7280' : 'white';
+      btn.style.borderColor = active ? '#374151' : '#7c3aed';
+    };
+
+    window.submitAddSupp = function() {
+      const name = document.getElementById('modal-supp-name')?.value?.trim();
+      if (!name) { showToast('⚠️ 영양제 이름을 입력하세요'); return; }
+      const timing = ALL_TIMINGS.filter(t => document.getElementById('modal-timing-' + t)?.dataset.active === '1');
+      if (!timing.length) timing.push('아침');
+      appData.supplements = getSupplements();
+      appData.supplements.push({ id: 's_' + Date.now(), name, timing, times: {}, taken: {} });
+      scheduleSave();
+      document.getElementById('add-supp-modal')?.remove();
+      renderSupplementPanel();
+      showToast('✅ 영양제 추가됨');
     };
 
     window.setSupplTime = (id, timing, value) => {
@@ -1459,6 +1483,7 @@
     function renderSupplementPanel() {
       const c = document.getElementById("supplement-panel");
       if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
       const supps = getSupplements();
       const today = getTodayKey();
       const todayStr = kstDateStr(Date.now());
@@ -1489,9 +1514,6 @@
                 <b style="font-size:14px;color:${allDone?"#4ade80":"#e2e8f0"}">${timing}</b>
                 <span style="font-size:11px;color:#4a5568">${doneCount}/${relevant.length} ${allDone?"✅":""}</span>
               </div>
-              <input type="time" value="${dispTime}" onchange="setTimingTime('${timing}',this.value)"
-                style="font-size:11px;color:#4a5568;background:none;border:none;
-                       font-family:inherit;cursor:pointer;padding:0;outline:none;margin-top:1px" />
             </div>
           </div>
           <div style="margin-left:18px;padding-left:14px;border-left:2px solid ${allDone?"#166534":"#1f2937"}">
@@ -1546,19 +1568,8 @@
 
       if (!supps.length) html += `<div style="text-align:center;color:#4a5568;padding:20px">영양제를 추가해주세요</div>`;
 
-      html += `<div style="padding-top:14px;border-top:1px solid #1f2937">
-        <div class="section-title" style="margin-bottom:8px">+ 영양제 추가</div>
-        <input id="new-supp-name" class="input-field" placeholder="영양제 이름" style="margin-bottom:10px" />
-        <div style="font-size:11px;color:#6b7280;margin-bottom:6px">복용 시간대</div>
-        <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
-          ${ALL_TIMINGS.map(t =>
-            `<button id="new-timing-${t}" data-active="0" onclick="toggleNewTiming('${t}')"
-              style="padding:7px 12px;border-radius:20px;border:1px solid #374151;
-                     background:#1f2937;color:#6b7280;font-size:12px;cursor:pointer;font-family:inherit">
-              ${TIMING_ICONS[t]} ${t}
-            </button>`).join("")}
-        </div>
-        <button onclick="addCustomSupplement()" class="big-btn blue" style="padding:11px">+ 추가</button>
+      html += `<div style="padding-top:14px;border-top:1px solid ${isLight?'#e2e8f0':'#1f2937'}">
+        <button onclick="openAddSuppModal()" class="big-btn" style="padding:11px;background:#5b21b6;border-color:#7c3aed;color:white;width:100%">+ 영양제 추가</button>
       </div>`;
 
       c.innerHTML = html;
@@ -1960,7 +1971,7 @@
         const routeInfo = ADMIN_ROUTES.find(rt => rt.id === (r.route || cfg.defaultRoute || 'SC'));
         return `<div class="record-row" style="border-color:${cfg.color}22">
           <div>
-            <div style="font-size:12px;color:${cfg.color};margin-bottom:3px">${cfg.emoji||""} ${r.drug}${r.isOverride?' <span style="font-size:10px;color:#facc15">[수동]</span>':''}${routeInfo ? ` <span style="font-size:9px;background:${routeInfo.color}22;border:1px solid ${routeInfo.color}55;border-radius:6px;padding:1px 5px;color:${routeInfo.color}">${routeInfo.emoji} ${routeInfo.id}</span>` : ''}</div>
+            <div style="font-size:12px;color:${cfg.color};margin-bottom:3px">${cfg.emoji||""} ${r.drug}${r.isOverride?' <span style="font-size:10px;color:#facc15">[수동]</span>':''}${routeInfo ? ` <span style="font-size:9px;background:${routeInfo.color}22;border:1px solid ${routeInfo.color}55;border-radius:6px;padding:1px 5px;color:${routeInfo.color}">${routeInfo.emoji} ${routeInfo.label}</span>` : ''}</div>
             <div style="font-size:17px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace">${r.dose} mg</div>
             <div style="font-size:11px;color:#4a5568;margin-top:2px">${toKSTString(r.time)}${siteInfo ? ` · <span style="color:#6b7280">${siteInfo.emoji}${siteInfo.label}</span>` : ''}</div>
           </div>
@@ -2914,13 +2925,19 @@
       const purchasePrice = parseFloat(document.getElementById("cost-price")?.value) || 0;
       const purchaseCurrency = document.getElementById("cost-currency")?.value || "USD";
       const intervalDays = parseFloat(document.getElementById("cost-interval")?.value) || 7;
-      const shipping = parseFloat(document.getElementById("cost-shipping")?.value) || 0;
+      const shippingAmt = parseFloat(document.getElementById("cost-shipping")?.value) || 0;
+      const shippingCurrency = document.getElementById("cost-shipping-currency")?.value || "KRW";
       const purchaseUnit = document.querySelector('.cost-unit-btn[style*="background:#1d4ed8"]')?.dataset?.unit || 'vial';
       const vialsPerKit = parseFloat(document.getElementById("cost-vials-per-kit")?.value) || 1;
-      // 소모품
-      const syringeCost = parseFloat(document.getElementById("cost-syringe")?.value) || 0;
-      const bacWaterCost = parseFloat(document.getElementById("cost-bac")?.value) || 0;
-      const swabCost = parseFloat(document.getElementById("cost-swab")?.value) || 0;
+      // 소모품 (통화 + 박스 단위)
+      const syringeAmt = parseFloat(document.getElementById("cost-syringe")?.value) || 0;
+      const syringeCurrency = document.getElementById("cost-syringe-currency")?.value || "KRW";
+      const syringeQty = parseFloat(document.getElementById("cost-syringe-qty")?.value) || 1;
+      const bacAmt = parseFloat(document.getElementById("cost-bac")?.value) || 0;
+      const bacCurrency = document.getElementById("cost-bac-currency")?.value || "KRW";
+      const swabAmt = parseFloat(document.getElementById("cost-swab")?.value) || 0;
+      const swabCurrency = document.getElementById("cost-swab-currency")?.value || "KRW";
+      const swabQty = parseFloat(document.getElementById("cost-swab-qty")?.value) || 1;
       // 바이알 정보 (조제계산에서 가져오기)
       const vial = parseFloat(document.getElementById("c-vial")?.value) || 0;
       const dose = parseFloat(document.getElementById("c-dose")?.value) || 0;
@@ -2934,12 +2951,24 @@
       }
 
       const purchaseKRW = toKRW(purchasePrice, purchaseCurrency);
-      // 총 구매 비용 = 구매가(KRW) + 배송비
-      const totalPurchaseKRW = purchaseKRW + shipping;
+      const shippingKRW = toKRW(shippingAmt, shippingCurrency);
+      // 총 구매 비용 = 구매가(KRW) + 배송비(KRW)
+      const totalPurchaseKRW = purchaseKRW + shippingKRW;
       // 바이알당 KRW (키트 단위면 키트당 바이알 수로 나눔)
       const vialKRW = purchaseUnit === 'kit' ? totalPurchaseKRW / vialsPerKit : totalPurchaseKRW;
       // 소모품 총 비용 (KRW, 회당)
-      const consumablePerInj = syringeCost + swabCost + (injPerVial > 0 ? bacWaterCost / injPerVial : 0);
+      const syringePerInj = syringeAmt ? toKRW(syringeAmt, syringeCurrency) / syringeQty : 0;
+      const swabPerInj = swabAmt ? toKRW(swabAmt, swabCurrency) / swabQty : 0;
+      const bacPerInj = bacAmt && injPerVial > 0 ? toKRW(bacAmt, bacCurrency) / injPerVial : 0;
+      // 기타 소모품 합산
+      let customPerInj = 0;
+      (appData.costCalc?.customConsumables || []).forEach(item => {
+        const price = parseFloat(document.getElementById('cc-price-' + item.id)?.value) || item.price || 0;
+        const qty = parseFloat(document.getElementById('cc-qty-' + item.id)?.value) || item.qty || 1;
+        const cur = document.getElementById('cc-cur-' + item.id)?.value || item.currency || 'KRW';
+        if (price) customPerInj += toKRW(price, cur) / qty;
+      });
+      const consumablePerInj = syringePerInj + swabPerInj + bacPerInj + customPerInj;
       // 약물 회당 비용
       const drugPerInj = injPerVial > 0 ? vialKRW / injPerVial : 0;
       const totalPerInj = drugPerInj + consumablePerInj;
@@ -2995,15 +3024,22 @@
     window.saveCostSettings = function() {
       const purchaseUnit = document.querySelector('.cost-unit-btn[style*="background:#1d4ed8"]')?.dataset?.unit || 'vial';
       appData.costCalc = {
+        ...(appData.costCalc || {}),
         currency: document.getElementById("cost-currency")?.value || "USD",
         price: document.getElementById("cost-price")?.value || "",
         intervalDays: document.getElementById("cost-interval")?.value || "7",
         shipping: document.getElementById("cost-shipping")?.value || "0",
+        shippingCurrency: document.getElementById("cost-shipping-currency")?.value || "KRW",
         purchaseUnit,
         vialsPerKit: document.getElementById("cost-vials-per-kit")?.value || "1",
         syringe: document.getElementById("cost-syringe")?.value || "0",
+        syringeCurrency: document.getElementById("cost-syringe-currency")?.value || "KRW",
+        syringeQty: document.getElementById("cost-syringe-qty")?.value || "1",
         bac: document.getElementById("cost-bac")?.value || "0",
+        bacCurrency: document.getElementById("cost-bac-currency")?.value || "KRW",
         swab: document.getElementById("cost-swab")?.value || "0",
+        swabCurrency: document.getElementById("cost-swab-currency")?.value || "KRW",
+        swabQty: document.getElementById("cost-swab-qty")?.value || "1",
       };
       scheduleSave();
     };
@@ -3015,15 +3051,69 @@
       set("cost-price", c.price);
       set("cost-interval", c.intervalDays);
       set("cost-shipping", c.shipping);
+      set("cost-shipping-currency", c.shippingCurrency);
       set("cost-vials-per-kit", c.vialsPerKit);
       set("cost-syringe", c.syringe);
+      set("cost-syringe-currency", c.syringeCurrency);
+      set("cost-syringe-qty", c.syringeQty);
       set("cost-bac", c.bac);
+      set("cost-bac-currency", c.bacCurrency);
       set("cost-swab", c.swab);
+      set("cost-swab-currency", c.swabCurrency);
+      set("cost-swab-qty", c.swabQty);
       // 단위 버튼 복원
       if (c.purchaseUnit) {
         setTimeout(() => setCostUnit(c.purchaseUnit), 100);
       }
+      // 기타 소모품 렌더
+      renderCustomConsumables();
     }
+
+    function renderCustomConsumables() {
+      const container = document.getElementById('custom-consumables');
+      if (!container) return;
+      const items = appData.costCalc?.customConsumables || [];
+      if (!items.length) { container.innerHTML = ''; return; }
+      const isLight = document.body.classList.contains("light-mode");
+      container.innerHTML = items.map(item => `
+        <div style="margin-bottom:10px;padding:8px;background:${isLight?'#f3f4f6':'#12121e'};border-radius:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:11px;color:#94a3b8">🔧 ${item.label}</div>
+            <button onclick="removeCustomConsumable('${item.id}')" style="background:none;border:none;color:#4a5568;font-size:14px;cursor:pointer;padding:0">✕</button>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="cc-cur-${item.id}" class="input-field" style="flex:0 0 70px;font-size:11px" onchange="calcCost();saveCostSettings()">
+              <option value="KRW"${item.currency==='KRW'?' selected':''}>₩</option>
+              <option value="USD"${item.currency==='USD'?' selected':''}>$</option>
+              <option value="JPY"${item.currency==='JPY'?' selected':''}>¥</option>
+              <option value="CNY"${item.currency==='CNY'?' selected':''}>¥cn</option>
+              <option value="INR"${item.currency==='INR'?' selected':''}>₹</option>
+            </select>
+            <input id="cc-price-${item.id}" class="input-field" type="number" min="0" step="0.01" value="${item.price||''}" placeholder="가격" style="flex:1;font-size:12px" oninput="calcCost();saveCostSettings()" />
+            <span style="font-size:11px;color:#6b7280;flex-shrink:0">÷</span>
+            <input id="cc-qty-${item.id}" class="input-field" type="number" min="1" step="1" value="${item.qty||1}" placeholder="개" style="flex:0 0 56px;font-size:12px" oninput="calcCost();saveCostSettings()" />
+            <span style="font-size:10px;color:#6b7280;flex-shrink:0">회</span>
+          </div>
+        </div>`).join('');
+    }
+
+    window.addCustomConsumable = function() {
+      const label = prompt('소모품 이름을 입력하세요 (예: 주사기 박물, 냉각팩 등)');
+      if (!label?.trim()) return;
+      appData.costCalc = appData.costCalc || {};
+      appData.costCalc.customConsumables = appData.costCalc.customConsumables || [];
+      appData.costCalc.customConsumables.push({ id: Date.now().toString(), label: label.trim(), price: 0, currency: 'KRW', qty: 1 });
+      scheduleSave();
+      renderCustomConsumables();
+    };
+
+    window.removeCustomConsumable = function(id) {
+      if (!appData.costCalc?.customConsumables) return;
+      appData.costCalc.customConsumables = appData.costCalc.customConsumables.filter(i => i.id !== id);
+      scheduleSave();
+      renderCustomConsumables();
+      calcCost();
+    };
 
     // ══════════════════════════════════════════════
     // 조제 재고 관리 (reconVials)
@@ -4030,17 +4120,49 @@
     // 달력 체크리스트 시스템
     // ══════════════════════════════════════════════
 
+    // 약물이 특정 날짜에 예정 투약일인지 확인 (주기 기반)
+    function isDrugDueOnDate(drug, dateStr) {
+      const sched = (appData.drugSchedules || {})[drug];
+      const cfg = DRUG_CONFIG[drug] || {};
+
+      if (sched?.type === 'daily') return true;
+      if (sched?.type === 'weekdays') {
+        const dow = new Date(dateStr + 'T00:00:00+09:00').getDay();
+        return (sched.weekdays || []).includes(dow);
+      }
+      if (sched?.type === 'cycle') {
+        if (!sched.startDate) return false;
+        const diff = dateDiffDays(sched.startDate, dateStr);
+        if (diff < 0) return false;
+        const period = (sched.onDays || 1) + (sched.offDays || 1);
+        return (diff % period) < (sched.onDays || 1);
+      }
+      if (sched?.type === 'course') {
+        if (!sched.startDate) return false;
+        const diff = dateDiffDays(sched.startDate, dateStr);
+        if (diff < 0) return false;
+        const period = (sched.courseDays || 30) + (sched.restDays || 14);
+        return (diff % period) < (sched.courseDays || 30);
+      }
+      // interval 또는 스케줄 없음: 마지막 투약일 기준 주기 계산
+      const intervalDays = sched?.intervalDays || cfg.defaultDoseDays || 7;
+      const recs = (appData.records || [])
+        .filter(r => r.drug === drug && kstDateStr(r.time) <= dateStr)
+        .sort((a, b) => b.time - a.time);
+      if (!recs.length) return false; // 투약 기록 없으면 미표시
+      const lastDateStr = kstDateStr(recs[0].time);
+      const diff = dateDiffDays(lastDateStr, dateStr);
+      return diff % intervalDays === 0;
+    }
+
     // 특정 날짜에 복용/투약 예정인 항목 목록 반환
     function getScheduledItemsForDate(dateStr) {
       const items = [];
       const today = kstDateStr(Date.now());
-      const isToday = dateStr === today;
-      const isFuture = dateStr > today;
 
       // 활성 약물 체크
       getActiveDrugs().forEach(drug => {
-        const sched = (appData.drugSchedules || {})[drug];
-        if (shouldTakeOnDate(sched, dateStr)) {
+        if (isDrugDueOnDate(drug, dateStr)) {
           // 해당 날 records에 실제 기록이 있는지 확인
           const done = (appData.records || []).some(r => r.drug === drug && kstDateStr(r.time) === dateStr);
           items.push({ type: 'drug', key: drug, label: drug, emoji: DRUG_CONFIG[drug]?.emoji || '💉', color: DRUG_CONFIG[drug]?.color || '#60a5fa', done });
@@ -4215,6 +4337,18 @@
       }
 
       html += `</div></div>`;
+
+      // ── 달력 범례 ──
+      html += `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:8px 12px;background:${isLight?'#f8fafc':'#0d0d1a'};border:1px solid ${isLight?'#e2e8f0':'#1f2937'};border-radius:10px;margin-bottom:10px">
+        <span style="font-size:10px;font-weight:700;color:#6b7280">범례</span>
+        <span style="font-size:11px;color:#6b7280">✅ 모두 완료</span>
+        <span style="font-size:11px;color:#6b7280">⚠️ 일부 누락</span>
+        <span style="font-size:11px;color:#6b7280">🔵 예정 있음</span>
+        <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:50%;background:#60a5fa;display:inline-block"></span>투약</span>
+        <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block"></span>체중</span>
+        <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:50%;background:#a78bfa;display:inline-block"></span>영양제</span>
+        <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:2px;background:#f87171;display:inline-block"></span>부작용</span>
+      </div>`;
 
       // ── 월간 요약 바 ──
       const monthKeys = Object.keys(data).filter(k => k.startsWith(`${calYear}-${String(calMonth+1).padStart(2,'0')}`));
@@ -5207,32 +5341,65 @@
 
         <!-- 배송비 -->
         <div class="card" style="margin-bottom:10px;background:#0d0d1a">
-          <div class="section-title">배송비 (₩)</div>
-          <input id="cost-shipping" class="input-field" type="number" min="0" step="1000"
-            placeholder="원" oninput="calcCost();saveCostSettings()" />
+          <div class="section-title">배송비</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="cost-shipping-currency" class="input-field" style="flex:0 0 auto;width:90px" onchange="calcCost();saveCostSettings()">
+              <option value="KRW">🇰🇷 KRW</option>
+              <option value="USD">🇺🇸 USD</option>
+              <option value="JPY">🇯🇵 JPY</option>
+              <option value="CNY">🇨🇳 CNY</option>
+              <option value="INR">🇮🇳 INR</option>
+            </select>
+            <input id="cost-shipping" class="input-field" type="number" min="0" step="0.01"
+              placeholder="0" style="flex:1" oninput="calcCost();saveCostSettings()" />
+          </div>
         </div>
 
-        <!-- 소모품 비용 (KRW 기준, 회당) -->
+        <!-- 소모품 비용 -->
         <div class="card" style="margin-bottom:12px;background:#0d0d1a">
-          <div class="section-title">소모품 비용 (₩, 회당)</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-            <div>
-              <div style="font-size:10px;color:#4a5568;margin-bottom:4px">💉 주사기</div>
-              <input id="cost-syringe" class="input-field" type="number" min="0" step="10"
-                placeholder="원" style="width:100%;box-sizing:border-box" oninput="calcCost();saveCostSettings()" />
-            </div>
-            <div>
-              <div style="font-size:10px;color:#4a5568;margin-bottom:4px">💧 BAC Water</div>
-              <input id="cost-bac" class="input-field" type="number" min="0" step="100"
-                placeholder="원/바이알" style="width:100%;box-sizing:border-box" oninput="calcCost();saveCostSettings()" />
-            </div>
-            <div>
-              <div style="font-size:10px;color:#4a5568;margin-bottom:4px">🩹 알코올 솜</div>
-              <input id="cost-swab" class="input-field" type="number" min="0" step="10"
-                placeholder="원" style="width:100%;box-sizing:border-box" oninput="calcCost();saveCostSettings()" />
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="section-title" style="margin-bottom:0">소모품 비용 (회당 자동 계산)</div>
+            <button onclick="addCustomConsumable()" style="background:none;border:none;color:#60a5fa;font-size:12px;cursor:pointer;padding:2px 6px">+ 기타 추가</button>
+          </div>
+          <!-- 주사기 -->
+          <div style="margin-bottom:10px;padding:8px;background:#12121e;border-radius:8px">
+            <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">💉 주사기</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <select id="cost-syringe-currency" class="input-field" style="flex:0 0 70px;font-size:11px" onchange="calcCost();saveCostSettings()">
+                <option value="KRW">₩</option><option value="USD">$</option><option value="JPY">¥</option><option value="CNY">¥cn</option><option value="INR">₹</option>
+              </select>
+              <input id="cost-syringe" class="input-field" type="number" min="0" step="0.01" placeholder="가격" style="flex:1;font-size:12px" oninput="calcCost();saveCostSettings()" />
+              <span style="font-size:11px;color:#6b7280;flex-shrink:0">÷</span>
+              <input id="cost-syringe-qty" class="input-field" type="number" min="1" step="1" value="1" placeholder="개" style="flex:0 0 56px;font-size:12px" oninput="calcCost();saveCostSettings()" />
+              <span style="font-size:10px;color:#6b7280;flex-shrink:0">개입</span>
             </div>
           </div>
-          <div style="font-size:10px;color:#4a5568;margin-top:6px">BAC Water는 바이알당 총 비용을 입력하면 회당 자동 배분됩니다</div>
+          <!-- BAC Water -->
+          <div style="margin-bottom:10px;padding:8px;background:#12121e;border-radius:8px">
+            <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">💧 BAC Water <span style="color:#4a5568">(바이알당 총 비용)</span></div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <select id="cost-bac-currency" class="input-field" style="flex:0 0 70px;font-size:11px" onchange="calcCost();saveCostSettings()">
+                <option value="KRW">₩</option><option value="USD">$</option><option value="JPY">¥</option><option value="CNY">¥cn</option><option value="INR">₹</option>
+              </select>
+              <input id="cost-bac" class="input-field" type="number" min="0" step="0.01" placeholder="바이알당" style="flex:1;font-size:12px" oninput="calcCost();saveCostSettings()" />
+            </div>
+            <div style="font-size:10px;color:#4a5568;margin-top:4px">바이알당 비용 ÷ 바이알당 투약 횟수 = 회당 자동 배분</div>
+          </div>
+          <!-- 알코올 솜 -->
+          <div style="margin-bottom:10px;padding:8px;background:#12121e;border-radius:8px">
+            <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">🩹 알코올 솜</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <select id="cost-swab-currency" class="input-field" style="flex:0 0 70px;font-size:11px" onchange="calcCost();saveCostSettings()">
+                <option value="KRW">₩</option><option value="USD">$</option><option value="JPY">¥</option><option value="CNY">¥cn</option><option value="INR">₹</option>
+              </select>
+              <input id="cost-swab" class="input-field" type="number" min="0" step="0.01" placeholder="가격" style="flex:1;font-size:12px" oninput="calcCost();saveCostSettings()" />
+              <span style="font-size:11px;color:#6b7280;flex-shrink:0">÷</span>
+              <input id="cost-swab-qty" class="input-field" type="number" min="1" step="1" value="1" placeholder="개" style="flex:0 0 56px;font-size:12px" oninput="calcCost();saveCostSettings()" />
+              <span style="font-size:10px;color:#6b7280;flex-shrink:0">개입</span>
+            </div>
+          </div>
+          <!-- 기타 소모품 동적 영역 -->
+          <div id="custom-consumables"></div>
         </div>
 
         <div id="cost-result"><div style="font-size:12px;color:#4a5568;text-align:center;padding:10px">구매 가격을 입력하세요</div></div>
