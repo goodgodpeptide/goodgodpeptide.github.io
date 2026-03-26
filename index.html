@@ -1116,6 +1116,105 @@
       renderSupplementPanel();
       renderWaterTracker();
       if (document.getElementById("panel-calendar")?.style.display !== "none") renderCalendar();
+      startLiveUpdate();
+    }
+
+    // ── 활성 약물 설정 ──────────────────────────────
+    function getActiveDrugs() {
+      const a = appData.activeDrugs;
+      return (Array.isArray(a) && a.length) ? a : Object.keys(DRUG_CONFIG);
+    }
+
+    function renderActiveDrugToggles() {
+      const c = document.getElementById("active-drug-toggles");
+      if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
+      const active = getActiveDrugs();
+      c.innerHTML = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
+        const on = active.includes(drug);
+        return `<button onclick="toggleActiveDrug('${drug}')"
+          style="padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;
+                 border:1.5px solid ${on ? cfg.color : (isLight?'#d1d5db':'#374151')};
+                 background:${on ? cfg.color+'22' : 'transparent'};
+                 color:${on ? cfg.color : (isLight?'#6b7280':'#4a5568')};
+                 font-family:inherit;transition:all .2s">
+          ${cfg.emoji} ${cfg.short}
+        </button>`;
+      }).join('');
+    }
+
+    window.toggleActiveDrug = function(drug) {
+      let active = getActiveDrugs().slice();
+      if (active.includes(drug)) {
+        if (active.length === 1) return; // 최소 1개 유지
+        active = active.filter(d => d !== drug);
+      } else {
+        // DRUG_CONFIG 순서 유지
+        active = Object.keys(DRUG_CONFIG).filter(d => [...active, drug].includes(d));
+      }
+      appData.activeDrugs = active;
+      scheduleSave();
+      renderActiveDrugToggles();
+      renderRemainingCards();
+      setTimeout(() => { renderPeptideGraph(); startLiveUpdate(); }, 50);
+    };
+
+    // ── 실시간 농도 업데이트 ────────────────────────
+    let liveConcentrationTimer = null;
+
+    function startLiveUpdate() {
+      if (liveConcentrationTimer) return; // 이미 실행 중
+      const panel = document.getElementById("panel-peptide");
+      if (!panel || panel.style.display === "none") return;
+      liveConcentrationTimer = setInterval(_tickLiveUpdate, 1000);
+    }
+
+    function stopLiveUpdate() {
+      if (liveConcentrationTimer) { clearInterval(liveConcentrationTimer); liveConcentrationTimer = null; }
+    }
+
+    function _tickLiveUpdate() {
+      const panel = document.getElementById("panel-peptide");
+      if (!panel || panel.style.display === "none") { stopLiveUpdate(); return; }
+      const now = Date.now();
+      Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+        const remEl = document.getElementById("live-rem-" + cfg.short);
+        if (!remEl) return;
+        const rem = calcRemaining(drug);
+        const cycDays = getDoseCycle(drug);
+        const in_cycleDay = calcConcentrationAt(drug, now + cycDays * 86400000);
+        const lastRec = (appData.records || []).filter(r => r.drug === drug).sort((a,b) => b.time - a.time)[0];
+        const lastDose = lastRec?.dose || 0;
+        const pct = lastDose > 0 ? Math.min(100, Math.round(rem / lastDose * 100)) : 0;
+        // 농도 숫자
+        remEl.textContent = rem.toFixed(2);
+        // N일 후 텍스트
+        const nextEl = document.getElementById("live-nextconc-" + cfg.short);
+        if (nextEl) nextEl.textContent = `${cycDays}일 후 ~${in_cycleDay.toFixed(2)}mg`;
+        // 프로그레스바
+        const barEl = document.getElementById("live-bar-" + cfg.short);
+        if (barEl) barEl.style.width = pct + '%';
+        // D-day 뱃지
+        const ddayEl = document.getElementById("live-dday-" + cfg.short);
+        if (ddayEl && lastRec) {
+          const nextDue = lastRec.time + cycDays * 86400000;
+          const diffMs = nextDue - now;
+          const diffDays = Math.floor(diffMs / 86400000);
+          const diffHrs = Math.floor((diffMs % 86400000) / 3600000);
+          let ddayText = "", ddayColor = "#facc15";
+          if (diffMs > 0) {
+            if (diffDays > 0) { ddayText = `D-${diffDays}`; ddayColor = "#facc15"; }
+            else { ddayText = `오늘! +${diffHrs}h`; ddayColor = "#f97316"; }
+          } else {
+            const od = Math.abs(diffDays);
+            ddayText = od === 0 ? `+${Math.abs(diffHrs)}h 지남` : `+${od}일 지남`;
+            ddayColor = "#f87171";
+          }
+          ddayEl.textContent = ddayText;
+          ddayEl.style.cssText = `background:${ddayColor}22;border:1px solid ${ddayColor}55;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${ddayColor};display:${ddayText?'':'none'}`;
+        }
+      });
+      renderPeptideGraph();
     }
 
     // 약별 마지막 입력 용량 기억
@@ -1128,9 +1227,11 @@
     function renderRemainingCards() {
       const c = document.getElementById("remaining-cards");
       if (!c) return;
+      renderActiveDrugToggles();
       const now = Date.now();
       const isLight = document.body.classList.contains("light-mode");
-      c.innerHTML = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
+      const activeDrugs = getActiveDrugs();
+      c.innerHTML = Object.entries(DRUG_CONFIG).filter(([drug]) => activeDrugs.includes(drug)).map(([drug, cfg]) => {
         const rem = calcRemaining(drug);
         const cycDays = getDoseCycle(drug);
         const in_cycleDay = calcConcentrationAt(drug, now + cycDays * 86400000);
@@ -1204,22 +1305,22 @@
               <span style="font-size:14px">${cfg.emoji}</span>
               <span style="font-size:13px;font-weight:700;color:${t.name}">${drug}</span>
             </div>
-            ${ddayText ? `<div style="background:${ddayColor}22;border:1px solid ${ddayColor}55;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${ddayColor}">${ddayText}</div>` : ''}
+            <div id="live-dday-${cfg.short}" style="background:${ddayColor}22;border:1px solid ${ddayColor}55;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${ddayColor};display:${ddayText?'':'none'}">${ddayText}</div>
           </div>
 
           <!-- 체내 농도 -->
           <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:6px">
-            <div style="font-size:32px;font-weight:900;color:${cfg.color};font-family:'JetBrains Mono',monospace;line-height:1">${rem.toFixed(2)}</div>
+            <div id="live-rem-${cfg.short}" style="font-size:32px;font-weight:900;color:${cfg.color};font-family:'JetBrains Mono',monospace;line-height:1">${rem.toFixed(2)}</div>
             <div style="padding-bottom:3px">
               <div style="font-size:11px;color:${t.sub}">mg 체내 잔류</div>
-              <div style="font-size:10px;color:${t.sub2}">${cycDays}일 후 ~${in_cycleDay.toFixed(2)}mg</div>
+              <div id="live-nextconc-${cfg.short}" style="font-size:10px;color:${t.sub2}">${cycDays}일 후 ~${in_cycleDay.toFixed(2)}mg</div>
             </div>
           </div>
 
           <!-- 잔류 진행바 -->
-          ${rem > 0 ? `<div style="height:4px;background:${t.barBg};border-radius:2px;overflow:hidden;margin-bottom:10px">
-            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cfg.color}66,${cfg.color});border-radius:2px;transition:width .6s"></div>
-          </div>` : '<div style="height:4px;margin-bottom:10px"></div>'}
+          <div style="height:4px;background:${t.barBg};border-radius:2px;overflow:hidden;margin-bottom:10px">
+            <div id="live-bar-${cfg.short}" style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cfg.color}66,${cfg.color});border-radius:2px;transition:width .6s"></div>
+          </div>
 
           <!-- 원터치 투약 버튼 -->
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
@@ -2227,7 +2328,11 @@
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("panel-"+tab).style.display = "block";
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
-      if (tab === "peptide") setTimeout(() => { renderPeptideGraph(); initGraphTouch(); }, 50);
+      if (tab === "peptide") {
+        setTimeout(() => { renderPeptideGraph(); initGraphTouch(); startLiveUpdate(); }, 50);
+      } else {
+        stopLiveUpdate();
+      }
       if (tab === "weight") setTimeout(() => { renderWeightGraph(); renderWaterTracker(); initWeightTouch(); renderSupplementPanel(); }, 50);
       if (tab === "calendar") setTimeout(renderCalendar, 50);
       if (tab === "analysis") setTimeout(renderAnalysis, 50);
@@ -3309,6 +3414,7 @@
 
     .calc-tab-btn { padding: 7px 12px; background: #1f2937; border: 1px solid #374151; border-radius: 20px; color: #6b7280; font-size: 12px; cursor: pointer; font-family: inherit; transition: all .15s; white-space: nowrap; }
     .calc-tab-btn.active { background: #1d4ed8; border-color: #3b82f6; color: white; }
+    @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.3} }
     body.light-mode .calc-tab-btn { background: #f3f4f6; border-color: #d1d5db; color: #6b7280; }
     body.light-mode .calc-tab-btn.active { background: #2563eb; color: white; }
 
@@ -3518,6 +3624,11 @@
 
     <!-- ── 다이어트약 패널 ── -->
     <div id="panel-peptide" class="tab-panel" style="display:block">
+      <!-- 사용 약물 선택 -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+        <span style="font-size:11px;color:#6b7280;white-space:nowrap">사용 약물</span>
+        <div id="active-drug-toggles" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
       <div id="remaining-cards"></div>
 
       <div class="pk-info">
@@ -3526,7 +3637,10 @@
 
       <div class="chart-wrap">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-size:12px;color:#6b7280">📈 체내 약물 농도 변화</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:12px;color:#6b7280">📈 체내 약물 농도 변화</span>
+            <span style="font-size:10px;color:#f87171;font-weight:700;animation:livePulse 1.5s infinite">● LIVE</span>
+          </div>
           <div style="display:flex;gap:4px;flex-wrap:wrap">
             <button class="graph-range-btn" data-hrs="72"  onclick="setGraphRange(72)">3일</button>
             <button class="graph-range-btn" data-hrs="168" onclick="setGraphRange(168)">7일</button>
