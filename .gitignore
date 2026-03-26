@@ -1,0 +1,12 @@
+# 파이썬 파서 (개발 전용)
+parse_peptides.py
+parse_peptides_v2.py
+
+# 원본 데이터 (너무 큼)
+peptides.txt
+
+# Node modules, IDE 등
+node_modules/
+.DS_Store
+*.log
+.vscode/
