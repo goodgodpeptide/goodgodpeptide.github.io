@@ -89,6 +89,19 @@
           }
         } catch(e) { console.error("승인 확인 실패:", e); }
 
+        // 로그인 로그 기록 (승인 여부와 무관하게 항상 기록)
+        try {
+          await addDoc(collection(db, "login_logs"), {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName || "",
+            photoURL: user.photoURL || "",
+            loginAt: serverTimestamp(),
+            userAgent: navigator.userAgent,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          });
+        } catch(e) { /* 로그 실패는 조용히 */ }
+
         if (!isApproved) {
           // 승인 대기 화면
           document.getElementById("login-screen").style.display = "none";
@@ -122,18 +135,6 @@
         if (isAdmin) {
           document.getElementById("admin-btn").style.display = "inline-block";
         }
-        // 로그인 로그 기록
-        try {
-          await addDoc(collection(db, "login_logs"), {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName || "",
-            photoURL: user.photoURL || "",
-            loginAt: serverTimestamp(),
-            userAgent: navigator.userAgent,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          });
-        } catch(e) { /* 로그 실패는 조용히 */ }
         await loadData();
         renderAll();
       } else {
@@ -146,12 +147,14 @@
     // 인앱 브라우저 감지 (카카오, 네이버, 인스타, 라인 등)
     function isInAppBrowser() {
       const ua = navigator.userAgent || "";
-      // 카카오톡/네이버/인스타 등 명확한 인앱 브라우저만 감지
-      // Chrome, Samsung Browser, Safari 등 정상 브라우저는 절대 포함되지 않도록
-      const isKnownInApp = /KAKAOTALK|NAVER(App|Search)|Instagram|FBAN|FBAV|FB_IAB|Line\/|Snapchat|WeChat|MicroMessenger/i.test(ua);
-      // Chrome, Samsung, Firefox, Safari 정상 브라우저면 무조건 false
+      // 카카오톡은 안드로이드에서 UA에 Chrome/ 포함되므로 먼저 체크
+      const isKakao = /KAKAOTALK/i.test(ua);
+      if (isKakao) return true;
+      // 그 외 인앱 브라우저 감지
+      const isKnownInApp = /NAVER(App|Search)|Instagram|FBAN|FBAV|FB_IAB|Line\/|Snapchat|WeChat|MicroMessenger/i.test(ua);
+      // Chrome, Samsung, Firefox, Safari 정상 브라우저면 false
       const isSafeBrowser = /CriOS|Chrome\/|SamsungBrowser|Firefox\/|EdgA\/|OPR\//.test(ua)
-        || (ua.includes("Safari") && ua.includes("Version/") && !isKnownInApp);
+        || (ua.includes("Safari") && ua.includes("Version/"));
       return isKnownInApp && !isSafeBrowser;
     }
 
@@ -173,26 +176,29 @@
     // ── 관리자 패널 ────────────────────────────────────────
     const APPROVED_DOC = doc(db, "config", "approved_users");
     const ADMINS_DOC = doc(db, "config", "admins");
+    const REJECTED_DOC = doc(db, "config", "rejected_users");
 
     window.openAdminPanel = async function() {
       const modal = document.getElementById("admin-modal");
       modal.style.display = "flex";
       modal.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
 
-      // 관리자 목록 + 승인된 이메일 목록 동시에 가져오기
-      const [adminsSnap, approvedSnap] = await Promise.all([
+      // 관리자/승인/거절 목록 동시에 가져오기
+      const [adminsSnap, approvedSnap, rejectedSnap] = await Promise.all([
         getDoc(ADMINS_DOC),
-        getDoc(APPROVED_DOC)
+        getDoc(APPROVED_DOC),
+        getDoc(REJECTED_DOC)
       ]);
       const adminEmails = adminsSnap.exists() ? (adminsSnap.data().emails || []) : [];
       const approvedEmails = approvedSnap.exists() ? (approvedSnap.data().emails || []) : [];
+      const rejectedEmails = rejectedSnap.exists() ? (rejectedSnap.data().emails || []) : [];
 
-      // 로그인 시도 목록에서 미승인 이메일 추출
+      // 로그인 시도 목록에서 미승인 이메일 추출 (거절된 이메일도 제외)
       const logsSnap = await getDocs(collection(db, "login_logs"));
       const allEmails = new Set();
       logsSnap.forEach(d => { if (d.data().email) allEmails.add(d.data().email); });
 
-      const pendingEmails = [...allEmails].filter(e => !approvedEmails.includes(e));
+      const pendingEmails = [...allEmails].filter(e => !approvedEmails.includes(e) && !rejectedEmails.includes(e));
       const approvedOthers = approvedEmails.filter(e => !adminEmails.includes(e));
 
       // 대기 목록 렌더
@@ -203,12 +209,19 @@
         pendingList.innerHTML = pendingEmails.map(email => `
           <div style="display:flex;justify-content:space-between;align-items:center;
                       padding:10px 12px;background:#1e293b;border-radius:10px;margin-bottom:6px">
-            <span style="font-size:13px;color:#94a3b8">${email}</span>
-            <button onclick="approveUser('${email}')"
-              style="padding:5px 14px;background:#16a34a;border:none;border-radius:8px;
-                     color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
-              승인
-            </button>
+            <span style="font-size:13px;color:#94a3b8;flex:1;margin-right:8px;word-break:break-all">${email}</span>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button onclick="approveUser('${email}')"
+                style="padding:5px 12px;background:#16a34a;border:none;border-radius:8px;
+                       color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+                승인
+              </button>
+              <button onclick="rejectUser('${email}')"
+                style="padding:5px 12px;background:#7f1d1d;border:none;border-radius:8px;
+                       color:#fca5a5;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+                거절
+              </button>
+            </div>
           </div>`).join('');
       }
 
@@ -264,6 +277,19 @@
       if (!confirm(`${email} 의 접근을 취소할까요?`)) return;
       try {
         await updateDoc(APPROVED_DOC, { emails: arrayRemove(email) });
+        await openAdminPanel();
+      } catch(e) { alert("오류: " + e.message); }
+    };
+
+    window.rejectUser = async function(email) {
+      if (!confirm(`${email} 을 거절할까요?\n(이후 대기 목록에서 숨겨집니다)`)) return;
+      try {
+        const snap = await getDoc(REJECTED_DOC);
+        if (snap.exists()) {
+          await updateDoc(REJECTED_DOC, { emails: arrayUnion(email) });
+        } else {
+          await setDoc(REJECTED_DOC, { emails: [email] });
+        }
         await openAdminPanel();
       } catch(e) { alert("오류: " + e.message); }
     };
