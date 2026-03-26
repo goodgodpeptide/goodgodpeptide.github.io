@@ -565,94 +565,106 @@
         halfLifeDays: 5, tmaxHours: 24, defaultDoseDays: 7,
         color: "#60a5fa", emoji: "🔵", short: "마운자로",
         note: "반감기 5일 · 임상 표준 7일 주기",
-        // SURMOUNT 임상 용량 단계 (mg)
-        doseSteps: [2.5, 5, 7.5, 10, 12.5, 15], clinicalMax: 15
+        doseSteps: [2.5, 5, 7.5, 10, 12.5, 15], clinicalMax: 15,
+        encyclopediaId: "tirzepatide"
       },
       "레타 (Retatrutide)": {
         halfLifeDays: 6, tmaxHours: 48, defaultDoseDays: 7,
         color: "#f87171", emoji: "🔴", short: "레타",
         note: "반감기 6일 · 임상 표준 7일 주기",
-        // Phase 2 (NEJM 2023) 임상 용량 단계 (mg)
-        doseSteps: [1, 2, 4, 8, 12], clinicalMax: 12
+        doseSteps: [1, 2, 4, 8, 12], clinicalMax: 12,
+        encyclopediaId: "retatrutide"
       },
       "위고비 (Semaglutide)": {
         halfLifeDays: 7, tmaxHours: 36, defaultDoseDays: 7,
         color: "#4ade80", emoji: "🟢", short: "위고비",
         note: "반감기 7일 · 임상 표준 7일 주기",
-        // STEP 임상 용량 단계 (mg)
-        doseSteps: [0.25, 0.5, 1, 1.7, 2.4], clinicalMax: 2.4
+        doseSteps: [0.25, 0.5, 1, 1.7, 2.4], clinicalMax: 2.4,
+        encyclopediaId: "semaglutide"
       },
       "KLOW (GHK-Cu+TB500+BPC157+KPV)": {
         halfLifeDays: 0.2, tmaxHours: 1.5, defaultDoseDays: 1,
         color: "#a3e635", emoji: "🌱", short: "KLOW",
         note: "반감기 ~5시간 · 4-펩타이드 복합 · 재생/항염",
-        doseSteps: [0.8, 1.6, 2, 2.4, 3.2], clinicalMax: 3.2
+        doseSteps: [0.8, 1.6, 2, 2.4, 3.2], clinicalMax: 3.2,
+        encyclopediaId: "klow"
       },
       "카그릴린타이드 (Cagrilintide)": {
         halfLifeDays: 7.5, tmaxHours: 48, defaultDoseDays: 7,
         color: "#f9a8d4", emoji: "🌸", short: "카그릴",
         note: "반감기 7.5일 · 아밀린 유사체 · 주 1회",
-        doseSteps: [0.16, 0.3, 0.45, 0.6, 0.9, 1.2, 1.7, 2.4], clinicalMax: 2.4
+        doseSteps: [0.16, 0.3, 0.45, 0.6, 0.9, 1.2, 1.7, 2.4], clinicalMax: 2.4,
+        encyclopediaId: "cagrilintide"
       },
       "에피탈론 (Epithalon)": {
         halfLifeDays: 0.125, tmaxHours: 1, defaultDoseDays: 1,
         color: "#c084fc", emoji: "🟣", short: "에피탈론",
         note: "반감기 ~3시간 · 텔로머레이스 · 코스 투여",
-        doseSteps: [5, 10, 15, 20], clinicalMax: 20
+        doseSteps: [5, 10, 15, 20], clinicalMax: 20,
+        encyclopediaId: "epitalon"
       },
       "티모신알파1 (Thymosin α1)": {
         halfLifeDays: 0.125, tmaxHours: 1.5, defaultDoseDays: 3,
         color: "#fb923c", emoji: "🟠", short: "Tα1",
         note: "반감기 ~3시간 · 면역조절 · 주 2회",
-        doseSteps: [0.5, 1, 1.6, 3.2], clinicalMax: 3.2
+        doseSteps: [0.5, 1, 1.6, 3.2], clinicalMax: 3.2,
+        encyclopediaId: "thymosin-alpha-1"
       },
       "GHK-Cu (구리펩타이드)": {
         halfLifeDays: 0.083, tmaxHours: 1, defaultDoseDays: 1,
         color: "#d97706", emoji: "🟤", short: "GHK-Cu",
         note: "반감기 ~2시간 · 조직재생 · 항산화",
-        doseSteps: [1, 2, 3, 5], clinicalMax: 5
+        doseSteps: [1, 2, 3, 5], clinicalMax: 5,
+        encyclopediaId: "ghk-cu"
       },
       "세맥스 (Semax)": {
         halfLifeDays: 0.021, tmaxHours: 0.25, defaultDoseDays: 1,
         color: "#e879f9", emoji: "💜", short: "세맥스",
         note: "반감기 ~30분 · 비강 투여 · 노트로픽",
-        doseSteps: [0.3, 0.6, 1, 1.5, 3], clinicalMax: 3
+        doseSteps: [0.3, 0.6, 1, 1.5, 3], clinicalMax: 3,
+        encyclopediaId: "semax"
       },
       "셀랑크 (Selank)": {
         halfLifeDays: 0.021, tmaxHours: 0.25, defaultDoseDays: 1,
         color: "#86efac", emoji: "🌿", short: "셀랑크",
         note: "반감기 ~30분 · 비강 투여 · 항불안",
-        doseSteps: [0.25, 0.5, 1, 1.5], clinicalMax: 1.5
+        doseSteps: [0.25, 0.5, 1, 1.5], clinicalMax: 1.5,
+        encyclopediaId: "selank"
       },
       "CJC-1295+Ipamorelin": {
         halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 1,
         color: "#facc15", emoji: "🟡", short: "CJC+Ipa",
         note: "반감기 ~2시간 · GHRH+GHRP · 성장호르몬 방출",
-        doseSteps: [0.1, 0.15, 0.2, 0.3], clinicalMax: 0.3
+        doseSteps: [0.1, 0.15, 0.2, 0.3], clinicalMax: 0.3,
+        encyclopediaId: "cjc-ipa-protocol"
       },
       "테사모렐린 (Tesamorelin)": {
         halfLifeDays: 0.1, tmaxHours: 1, defaultDoseDays: 1,
         color: "#2dd4bf", emoji: "💎", short: "테사모렐린",
         note: "반감기 ~2.4시간 · GHRH 유사체 · FDA 승인",
-        doseSteps: [1, 2], clinicalMax: 2
+        doseSteps: [1, 2], clinicalMax: 2,
+        encyclopediaId: "tesamorelin"
       },
       "SS-31 (Elamipretide)": {
         halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 1,
         color: "#38bdf8", emoji: "⚡", short: "SS-31",
         note: "반감기 ~2시간 · 미토콘드리아 보호",
-        doseSteps: [0.1, 0.25, 0.5, 1], clinicalMax: 1
+        doseSteps: [0.1, 0.25, 0.5, 1], clinicalMax: 1,
+        encyclopediaId: "ss-31"
       },
       "MOTS-c": {
         halfLifeDays: 0.125, tmaxHours: 1, defaultDoseDays: 3,
         color: "#818cf8", emoji: "🔋", short: "MOTS-c",
         note: "반감기 ~3시간 · 미토콘드리아 유래 · 대사조절",
-        doseSteps: [5, 10, 15], clinicalMax: 15
+        doseSteps: [5, 10, 15], clinicalMax: 15,
+        encyclopediaId: "mots-c"
       },
       "NAD+": {
         halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 3,
         color: "#fbbf24", emoji: "⭐", short: "NAD+",
         note: "반감기 ~2시간 · 세포 에너지 · SC/IV",
-        doseSteps: [50, 100, 250, 500, 1000], clinicalMax: 1000
+        doseSteps: [50, 100, 250, 500, 1000], clinicalMax: 1000,
+        encyclopediaId: "nad-plus"
       },
     };
 
@@ -1443,6 +1455,9 @@
               <button onclick="openOverrideModal('${drug}')" title="체내 농도 수동 설정"
                 style="background:${t.gearBg};border:1px solid ${t.gearBd};border-radius:6px;color:${t.gearClr};
                        padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">⚙️</button>
+              ${cfg.encyclopediaId ? `<button onclick="openEncyclopediaFromCard('${cfg.encyclopediaId}')" title="백과사전에서 정보 보기"
+                style="background:${isLight?'#eff6ff':'#1e3a5f'};border:1px solid ${isLight?'#bfdbfe':'#3b82f655'};border-radius:6px;color:${isLight?'#2563eb':'#60a5fa'};
+                       padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">📖</button>` : ''}
             </div>
           </div>
         </div>`;
@@ -2618,6 +2633,18 @@
           <div style="color:${arrowClr};font-size:18px;flex-shrink:0">›</div>
         </div>`;
       }).join('');
+    };
+
+    // 투약 카드에서 직접 백과사전 모달 열기 (탭 전환 없이)
+    window.openEncyclopediaFromCard = async function(peptideId) {
+      if (!encyclopediaData) {
+        // 아직 데이터 없으면 로드 후 열기
+        try {
+          const res = await fetch('peptides_v3.json');
+          encyclopediaData = await res.json();
+        } catch(e) { return; }
+      }
+      openEncyclopediaModal(peptideId);
     };
 
     window.openEncyclopediaModal = function(peptideId) {
