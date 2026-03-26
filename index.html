@@ -1664,7 +1664,7 @@
         ctx.beginPath(); ctx.moveTo(nx, PAD.t); ctx.lineTo(nx, PAD.t + gH); ctx.stroke();
         ctx.setLineDash([]);
         // 상단 레이블
-        const daysLeft = Math.round((nextDue - now) / 86400000);
+        const daysLeft = Math.floor((nextDue - now) / 86400000);
         const label = daysLeft === 0 ? `${cfg.short} 오늘!` : `${cfg.short} D-${daysLeft}`;
         ctx.fillStyle = cfg.color;
         ctx.font = "bold 10px 'Noto Sans KR'";
