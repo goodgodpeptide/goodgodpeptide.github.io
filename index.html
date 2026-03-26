@@ -232,6 +232,70 @@
       } catch(e) { alert("오류: " + e.message); }
     };
 
+    // ── 백업 / 복원 ────────────────────────────────────────
+    let pendingRestoreData = null;
+
+    window.openBackupModal = function() {
+      pendingRestoreData = null;
+      document.getElementById("backup-restore-warning").style.display = "none";
+      const modal = document.getElementById("backup-modal");
+      modal.style.display = "flex";
+      modal.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
+    };
+
+    window.exportBackup = function() {
+      const date = new Date();
+      const ymd = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}`;
+      const filename = `backup_${ymd}.json`;
+      const json = JSON.stringify({ exportedAt: date.toISOString(), data: appData }, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    window.loadBackupFile = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          // 백업 파일 구조 검증
+          const data = parsed.data || parsed; // 구버전 호환
+          if (!data.records && !data.weightRecords) {
+            alert("올바른 백업 파일이 아닙니다.");
+            return;
+          }
+          pendingRestoreData = data;
+          document.getElementById("backup-restore-warning").style.display = "block";
+        } catch(err) {
+          alert("파일을 읽을 수 없습니다: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = ""; // 같은 파일 재선택 가능하게
+    };
+
+    window.confirmRestore = async function() {
+      if (!pendingRestoreData) return;
+      appData = { ...appData, ...pendingRestoreData };
+      scheduleSave();
+      renderAll();
+      document.getElementById("backup-modal").style.display = "none";
+      pendingRestoreData = null;
+      // 완료 알림
+      const status = document.getElementById("save-status");
+      status.textContent = "✅ 복원 완료!";
+      setTimeout(() => { status.textContent = "☁️ 저장됨"; }, 3000);
+    };
+
+    window.cancelRestore = function() {
+      pendingRestoreData = null;
+      document.getElementById("backup-restore-warning").style.display = "none";
+    };
+
     // 다크/라이트 모드
     window.toggleTheme = () => {
       const isLight = document.body.classList.toggle("light-mode");
@@ -3208,6 +3272,7 @@
     <div class="top-bar-right">
       <div id="save-status">☁️ 저장됨</div>
       <button id="admin-btn" onclick="openAdminPanel()" style="display:none;background:none;border:none;font-size:18px;cursor:pointer;padding:4px" title="관리자">👑</button>
+      <button onclick="openBackupModal()" style="background:none;border:1px solid #374151;border-radius:8px;padding:4px 8px;font-size:14px;cursor:pointer;color:#6b7280" title="백업/복원">💾</button>
       <button id="theme-toggle" onclick="toggleTheme()" title="다크/라이트 모드">🌙</button>
       <img id="user-avatar" src="" alt="" />
       <span id="user-name" style="display:none"></span>
@@ -3526,6 +3591,53 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- 백업/복원 모달 -->
+<div id="backup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-end">
+  <div style="background:#0f172a;border-top:2px solid #60a5fa;border-radius:20px 20px 0 0;width:100%;padding:24px 20px 36px;color:#f1f5f9;font-family:inherit">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-size:18px;font-weight:700">💾 데이터 백업 / 복원</div>
+      <button onclick="document.getElementById('backup-modal').style.display='none'"
+        style="background:none;border:none;color:#6b7280;font-size:22px;cursor:pointer">✕</button>
+    </div>
+
+    <!-- 백업 -->
+    <div style="background:#1e293b;border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;color:#60a5fa;margin-bottom:6px">📤 백업 (내보내기)</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.6">
+        현재 모든 기록을 JSON 파일로 저장합니다.<br>계정이 바뀌어도 이 파일로 복원할 수 있어요.
+      </div>
+      <button onclick="exportBackup()"
+        style="width:100%;padding:12px;background:linear-gradient(135deg,#1d4ed8,#2563eb);border:none;
+               border-radius:10px;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+        📥 JSON 파일로 다운로드
+      </button>
+    </div>
+
+    <!-- 복원 -->
+    <div style="background:#1e293b;border-radius:14px;padding:16px">
+      <div style="font-size:14px;font-weight:700;color:#4ade80;margin-bottom:6px">📥 복원 (불러오기)</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.6">
+        이전에 백업한 JSON 파일을 선택하면<br>모든 기록이 복원됩니다.
+      </div>
+      <div id="backup-restore-warning" style="display:none;background:#450a0a;border:1px solid #7f1d1d;border-radius:8px;padding:10px;margin-bottom:10px;font-size:12px;color:#fca5a5;line-height:1.6">
+        ⚠️ 현재 데이터가 <strong>백업 파일로 덮어씌워집니다.</strong><br>계속하시겠어요?
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="confirmRestore()"
+            style="flex:1;padding:8px;background:#dc2626;border:none;border-radius:8px;color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">덮어쓰기</button>
+          <button onclick="cancelRestore()"
+            style="flex:1;padding:8px;background:#374151;border:none;border-radius:8px;color:#9ca3af;font-size:13px;cursor:pointer;font-family:inherit">취소</button>
+        </div>
+      </div>
+      <label style="display:block;width:100%;padding:12px;background:#1f2937;border:2px dashed #374151;
+                    border-radius:10px;color:#94a3b8;font-size:14px;text-align:center;cursor:pointer;
+                    box-sizing:border-box;font-family:inherit">
+        📂 파일 선택 (backup_*.json)
+        <input type="file" accept=".json" onchange="loadBackupFile(event)" style="display:none">
+      </label>
+    </div>
   </div>
 </div>
 
