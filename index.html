@@ -98,6 +98,20 @@
           return;
         }
 
+        // 관리자 여부 확인 (Firestore config/admins 기반)
+        let isAdmin = false;
+        try {
+          const adminsRef = doc(db, "config", "admins");
+          const adminsSnap = await getDoc(adminsRef);
+          if (adminsSnap.exists()) {
+            isAdmin = (adminsSnap.data().emails || []).includes(user.email);
+          } else if (user.email === "kingshotgoodgod1@gmail.com") {
+            // 최초 1회 seed — 관리자 문서가 없으면 생성
+            await setDoc(adminsRef, { emails: ["kingshotgoodgod1@gmail.com"] });
+            isAdmin = true;
+          }
+        } catch(e) { console.error("관리자 확인 실패:", e); }
+
         // 승인된 사용자 → 앱 진입
         document.getElementById("login-screen").style.display = "none";
         document.getElementById("pending-screen").style.display = "none";
@@ -105,7 +119,7 @@
         document.getElementById("user-avatar").src = user.photoURL || "";
         document.getElementById("user-name").style.display = "none";
         // 관리자이면 👑 버튼 표시
-        if (user.email === "kingshotgoodgod1@gmail.com") {
+        if (isAdmin) {
           document.getElementById("admin-btn").style.display = "inline-block";
         }
         // 로그인 로그 기록
@@ -157,16 +171,20 @@
     window.doLogout = async () => { await signOut(auth); };
 
     // ── 관리자 패널 ────────────────────────────────────────
-    const ADMIN_EMAIL = "kingshotgoodgod1@gmail.com";
     const APPROVED_DOC = doc(db, "config", "approved_users");
+    const ADMINS_DOC = doc(db, "config", "admins");
 
     window.openAdminPanel = async function() {
       const modal = document.getElementById("admin-modal");
       modal.style.display = "flex";
       modal.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
 
-      // 승인된 이메일 목록 가져오기
-      const approvedSnap = await getDoc(APPROVED_DOC);
+      // 관리자 목록 + 승인된 이메일 목록 동시에 가져오기
+      const [adminsSnap, approvedSnap] = await Promise.all([
+        getDoc(ADMINS_DOC),
+        getDoc(APPROVED_DOC)
+      ]);
+      const adminEmails = adminsSnap.exists() ? (adminsSnap.data().emails || []) : [];
       const approvedEmails = approvedSnap.exists() ? (approvedSnap.data().emails || []) : [];
 
       // 로그인 시도 목록에서 미승인 이메일 추출
@@ -174,8 +192,8 @@
       const allEmails = new Set();
       logsSnap.forEach(d => { if (d.data().email) allEmails.add(d.data().email); });
 
-      const pendingEmails = [...allEmails].filter(e => !approvedEmails.includes(e) && e !== ADMIN_EMAIL);
-      const approvedOthers = approvedEmails.filter(e => e !== ADMIN_EMAIL);
+      const pendingEmails = [...allEmails].filter(e => !approvedEmails.includes(e));
+      const approvedOthers = approvedEmails.filter(e => !adminEmails.includes(e));
 
       // 대기 목록 렌더
       const pendingList = document.getElementById("admin-pending-list");
@@ -194,7 +212,7 @@
           </div>`).join('');
       }
 
-      // 승인된 목록 렌더
+      // 승인된 (일반) 사용자 목록 렌더
       const approvedList = document.getElementById("admin-approved-list");
       if (approvedOthers.length === 0) {
         approvedList.innerHTML = `<div style="color:#4b5563;font-size:13px;padding:10px 0">승인된 사용자 없음</div>`;
@@ -210,6 +228,24 @@
             </button>
           </div>`).join('');
       }
+
+      // 관리자 목록 렌더
+      const adminList = document.getElementById("admin-admin-list");
+      if (adminList) {
+        adminList.innerHTML = adminEmails.map(email => {
+          const isSelf = email === currentUser?.email;
+          return `
+          <div style="display:flex;justify-content:space-between;align-items:center;
+                      padding:10px 12px;background:#1e293b;border-radius:10px;margin-bottom:6px">
+            <span style="font-size:13px;color:#fbbf24">${email}${isSelf ? ' <span style="font-size:11px;color:#6b7280">(본인)</span>' : ''}</span>
+            ${isSelf ? '' : `<button onclick="removeAdmin('${email}')"
+              style="padding:5px 14px;background:#7c3aed;border:none;border-radius:8px;
+                     color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+              제거
+            </button>`}
+          </div>`;
+        }).join('');
+      }
     };
 
     window.approveUser = async function(email) {
@@ -218,9 +254,9 @@
         if (snap.exists()) {
           await updateDoc(APPROVED_DOC, { emails: arrayUnion(email) });
         } else {
-          await setDoc(APPROVED_DOC, { emails: [ADMIN_EMAIL, email] });
+          await setDoc(APPROVED_DOC, { emails: [email] });
         }
-        await openAdminPanel(); // 새로고침
+        await openAdminPanel();
       } catch(e) { alert("오류: " + e.message); }
     };
 
@@ -228,6 +264,37 @@
       if (!confirm(`${email} 의 접근을 취소할까요?`)) return;
       try {
         await updateDoc(APPROVED_DOC, { emails: arrayRemove(email) });
+        await openAdminPanel();
+      } catch(e) { alert("오류: " + e.message); }
+    };
+
+    window.addAdmin = async function() {
+      const input = document.getElementById("new-admin-input");
+      const email = input.value.trim().toLowerCase();
+      if (!email || !email.includes("@")) { alert("유효한 이메일을 입력하세요."); return; }
+      try {
+        const snap = await getDoc(ADMINS_DOC);
+        if (snap.exists()) {
+          await updateDoc(ADMINS_DOC, { emails: arrayUnion(email) });
+        } else {
+          await setDoc(ADMINS_DOC, { emails: [email] });
+        }
+        // 관리자는 자동으로 승인된 사용자에도 추가
+        const approvedSnap = await getDoc(APPROVED_DOC);
+        if (approvedSnap.exists()) {
+          await updateDoc(APPROVED_DOC, { emails: arrayUnion(email) });
+        } else {
+          await setDoc(APPROVED_DOC, { emails: [email] });
+        }
+        input.value = "";
+        await openAdminPanel();
+      } catch(e) { alert("오류: " + e.message); }
+    };
+
+    window.removeAdmin = async function(email) {
+      if (!confirm(`${email} 을 관리자에서 제거할까요?\n(사용자 승인 권한이 사라집니다)`)) return;
+      try {
+        await updateDoc(ADMINS_DOC, { emails: arrayRemove(email) });
         await openAdminPanel();
       } catch(e) { alert("오류: " + e.message); }
     };
@@ -3657,9 +3724,28 @@
     </div>
 
     <!-- 승인된 사용자 목록 -->
-    <div style="font-size:12px;color:#4ade80;font-weight:600;margin-bottom:8px;letter-spacing:0.5px">승인됨</div>
-    <div id="admin-approved-list">
+    <div style="font-size:12px;color:#4ade80;font-weight:600;margin-bottom:8px;letter-spacing:0.5px">승인됨 (일반)</div>
+    <div id="admin-approved-list" style="margin-bottom:24px">
       <div style="color:#4b5563;font-size:13px;padding:12px 0">불러오는 중...</div>
+    </div>
+
+    <!-- 관리자 계정 관리 -->
+    <div style="border-top:1px solid #1e293b;padding-top:20px;margin-top:4px">
+      <div style="font-size:12px;color:#f59e0b;font-weight:600;margin-bottom:8px;letter-spacing:0.5px">👑 관리자 계정</div>
+      <div id="admin-admin-list" style="margin-bottom:12px">
+        <div style="color:#4b5563;font-size:13px;padding:12px 0">불러오는 중...</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input id="new-admin-input" type="email" placeholder="새 관리자 이메일"
+          style="flex:1;padding:10px 12px;background:#1e293b;border:1px solid #374151;border-radius:10px;
+                 color:#f1f5f9;font-size:13px;font-family:inherit;outline:none" />
+        <button onclick="addAdmin()"
+          style="padding:10px 16px;background:#7c3aed;border:none;border-radius:10px;
+                 color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">
+          추가
+        </button>
+      </div>
+      <div style="font-size:11px;color:#4b5563;margin-top:8px">관리자는 자동으로 승인된 사용자로도 등록됩니다</div>
     </div>
   </div>
 </div>
