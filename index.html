@@ -416,12 +416,14 @@
     // 다크/라이트 모드
     window.toggleTheme = () => {
       const isLight = document.body.classList.toggle("light-mode");
+      document.documentElement.style.background = isLight ? "#f0f2f5" : "#0a0a14";
       document.getElementById("theme-toggle").textContent = isLight ? "☀️" : "🌙";
       localStorage.setItem("theme", isLight ? "light" : "dark");
     };
     // 저장된 테마 복원
     if (localStorage.getItem("theme") === "light") {
       document.body.classList.add("light-mode");
+      document.documentElement.style.background = "#f0f2f5";
       document.addEventListener("DOMContentLoaded", () => {
         const btn = document.getElementById("theme-toggle");
         if (btn) btn.textContent = "☀️";
@@ -3411,6 +3413,10 @@
     body.light-mode [style*="color:#f1f5f9"] { color: #1a1a2e !important; }
     body.light-mode [style*="color:#94a3b8"] { color: #475569 !important; }
     body.light-mode [style*="color:#9ca3af"] { color: #64748b !important; }
+    /* stat-val 라이트모드 */
+    body.light-mode .stat-val { color: #1a1a2e !important; }
+    /* 스크롤 과확장 시 html 배경 (라이트모드) */
+    html:has(body.light-mode) { background: #f0f2f5; }
   </style>
 </head>
 <body>
