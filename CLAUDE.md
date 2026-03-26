@@ -314,6 +314,7 @@ openEncyclopediaModal(id)  // 상세 정보 바텀시트 모달
 - ✅ 체중 그래프 X축 = 첫 투약일 시작 / 약물 그래프 X축 끝 = 5×반감기 소실 시점
 - ✅ 약물 그래프: 범위 버튼 제거(줌 초기화만), 임상 용량 기준선, 현재 농도 수평 점선
 - ✅ 체중 그래프 음수 X 좌표 버그 수정 (투약 전 체중 기록이 있을 때 그래프 깨지는 문제)
+- ✅ D-day 표시 불일치 수정 (카드 Math.floor vs 그래프 Math.round → floor로 통일)
 - [ ] 운동 탭 추가 예정
 
 ### 약물 그래프 임상 기준선 (DRUG_CONFIG.doseSteps / clinicalMax)
