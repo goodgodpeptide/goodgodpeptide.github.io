@@ -43,12 +43,18 @@
 ```
 config/approved_users  → { emails: ["user@gmail.com", ...] }
 config/admins          → { emails: ["admin@gmail.com", ...] }  // 관리자 목록
-login_logs/            → 모든 로그인 시도 기록 (관리자 패널 대기자 추출용)
+config/rejected_users  → { "email@gmail.com": rejectedAtMs, ... }  // 거절 타임스탬프
+login_logs/            → 모든 로그인 시도 기록 (승인 여부 무관하게 항상 기록)
 ```
+
+### 거절 동작 방식
+- 거절 시 `config/rejected_users`에 `{ email: Date.now() }` 저장
+- 거절 이후 재로그인하면 대기 목록에 다시 표시 (재신청 가능, 영구 차단 아님)
+- 대기 목록: `lastLoginTime > rejectedAtMs` 이면 재표시
 
 ### 관리자 패널 (`#admin-modal`)
 - 상단 바 👑 버튼 → `openAdminPanel()` 호출 (관리자만 표시)
-- **대기 중**: login_logs에서 미승인 이메일 추출 → 승인 버튼
+- **대기 중**: login_logs에서 미승인 이메일 추출 → 승인/거절 버튼
 - **승인됨 (일반)**: approved_users 목록 (관리자 제외) → 취소 버튼
 - **관리자 계정**: admins 목록 → 추가/제거 가능, 본인 삭제 불가
 - 관리자 추가 시 approved_users에도 자동 등록됨
