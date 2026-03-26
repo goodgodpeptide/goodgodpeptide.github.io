@@ -2625,6 +2625,32 @@
       const pep = encyclopediaData.peptides[peptideId];
       if (!pep) return;
 
+      const isLight = document.body.classList.contains("light-mode");
+      // 테마 색상 변수
+      const C = isLight ? {
+        bg:       '#ffffff', bgCard:   '#f1f5f9', bgCardAlt:'#e8edf2',
+        bgDeep:   '#e2e8f0', bgHdr:    '#ffffff',
+        border:   '#e2e8f0', borderSub:'#dde3ea',
+        txt:      '#0f172a', txtSub:   '#374151',
+        txtMuted: '#6b7280', txtFaint: '#9ca3af',
+        badge:    '#e2e8f0', badgeTxt: '#374151',
+        accent:   '#2563eb', protoRow1:'#f8fafc', protoRow2:'#f1f5f9',
+        protoHdr: '#e2e8f0', protoTxt: '#374151',
+        note:     '#eff6ff', noteBdr:  '#3b82f6', noteTxt: '#374151',
+        closeBtn: '#1e3a5f', closeBtnBdr:'#3b82f6', closeBtnTxt:'#2563eb',
+      } : {
+        bg:       '#0f172a', bgCard:   '#1e293b', bgCardAlt:'#111827',
+        bgDeep:   '#0f172a', bgHdr:    '#0f172a',
+        border:   '#1e293b', borderSub:'#1e293b',
+        txt:      '#f1f5f9', txtSub:   '#cbd5e1',
+        txtMuted: '#94a3b8', txtFaint: '#64748b',
+        badge:    '#1e293b', badgeTxt: '#94a3b8',
+        accent:   '#60a5fa', protoRow1:'#0f172a', protoRow2:'#111827',
+        protoHdr: '#1e293b', protoTxt: '#cbd5e1',
+        note:     '#1a1a2e', noteBdr:  '#3b82f6', noteTxt: '#94a3b8',
+        closeBtn: '#1e3a5f', closeBtnBdr:'#3b82f6', closeBtnTxt:'#60a5fa',
+      };
+
       const st = ENC_STATUS[pep.researchStatus] || ENC_STATUS['Limited Research'];
       const routes = (pep.routes||[]).join(', ') || 'N/A';
 
@@ -2636,10 +2662,10 @@
         { label:'저장',     value: pep.storage || '—', sub: pep.quickStart?.storageNote || '' },
       ];
       const statsHTML = statCards.map(s => `
-        <div style="background:#1e293b;border-radius:12px;padding:14px;flex:1;min-width:120px">
-          <div style="font-size:11px;color:#64748b;margin-bottom:6px">${s.label}</div>
-          <div style="font-size:17px;font-weight:700;color:#f1f5f9;margin-bottom:2px">${s.value}</div>
-          <div style="font-size:10px;color:#475569">${s.sub}</div>
+        <div style="background:${C.bgCard};border-radius:12px;padding:14px;flex:1;min-width:120px">
+          <div style="font-size:11px;color:${C.txtFaint};margin-bottom:6px">${s.label}</div>
+          <div style="font-size:17px;font-weight:700;color:${C.txt};margin-bottom:2px">${s.value}</div>
+          <div style="font-size:10px;color:${C.txtMuted}">${s.sub}</div>
         </div>`).join('');
 
       // PK
@@ -2648,9 +2674,9 @@
         <div class="enc-section">
           <div class="enc-section-title">📈 약동학 (Pharmacokinetics)</div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
-            ${pk.peak ? `<div style="background:#1e293b;border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:#64748b">피크</div><div style="font-weight:700;color:#60a5fa">${pk.peak}</div></div>` : ''}
-            ${pk.halfLife ? `<div style="background:#1e293b;border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:#64748b">반감기</div><div style="font-weight:700;color:#fbbf24">${pk.halfLife}</div></div>` : ''}
-            ${pk.cleared ? `<div style="background:#1e293b;border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:#64748b">소실</div><div style="font-weight:700;color:#94a3b8">${pk.cleared}</div></div>` : ''}
+            ${pk.peak ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:${C.txtFaint}">피크</div><div style="font-weight:700;color:#60a5fa">${pk.peak}</div></div>` : ''}
+            ${pk.halfLife ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:${C.txtFaint}">반감기</div><div style="font-weight:700;color:#fbbf24">${pk.halfLife}</div></div>` : ''}
+            ${pk.cleared ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:${C.txtFaint}">소실</div><div style="font-weight:700;color:${C.txtMuted}">${pk.cleared}</div></div>` : ''}
           </div>
         </div>` : '';
 
@@ -2662,12 +2688,12 @@
         <div class="enc-section">
           <div class="enc-section-title">🎯 연구 인디케이션</div>
           ${pep.researchIndications.map(ind => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e293b">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid ${C.borderSub}">
               <div style="display:flex;align-items:center;gap:8px">
                 <span style="width:8px;height:8px;border-radius:50%;background:${effColors[ind.effectiveness]||'#94a3b8'};display:inline-block;flex-shrink:0"></span>
-                <span style="font-size:13px;color:#e2e8f0">${ind.name}</span>
+                <span style="font-size:13px;color:${C.txtSub}">${ind.name}</span>
               </div>
-              <span style="font-size:11px;color:${effColors[ind.effectiveness]||'#94a3b8'};padding:2px 8px;background:#0f172a;border-radius:20px">${ind.effectiveness}</span>
+              <span style="font-size:11px;color:${effColors[ind.effectiveness]||'#94a3b8'};padding:2px 8px;background:${C.bgDeep};border-radius:20px">${ind.effectiveness}</span>
             </div>`).join('')}
         </div>` : '';
 
@@ -2675,17 +2701,17 @@
       const protoHTML = pep.protocols?.length ? `
         <div class="enc-section">
           <div class="enc-section-title">📋 연구 프로토콜</div>
-          <div style="background:#0f172a;border-radius:8px;overflow:hidden;font-size:12px">
-            <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 2fr;gap:0;background:#1e293b;padding:8px 12px;color:#64748b;font-size:11px">
+          <div style="background:${C.bgDeep};border-radius:8px;overflow:hidden;font-size:12px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 2fr;gap:0;background:${C.protoHdr};padding:8px 12px;color:${C.txtFaint};font-size:11px">
               <span>목표</span><span>용량</span><span>빈도</span><span>경로</span>
             </div>
             ${pep.protocols.map((pr,i) => `
-              <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 2fr;gap:0;padding:8px 12px;color:#cbd5e1;
-                          background:${i%2?'#0f172a':'#111827'}">
-                <span>${pr.goal}</span><span style="color:#60a5fa">${pr.dose}</span><span>${pr.frequency}</span><span style="color:#94a3b8">${pr.route}</span>
+              <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 2fr;gap:0;padding:8px 12px;color:${C.protoTxt};
+                          background:${i%2?C.protoRow1:C.protoRow2}">
+                <span>${pr.goal}</span><span style="color:#60a5fa">${pr.dose}</span><span>${pr.frequency}</span><span style="color:${C.txtMuted}">${pr.route}</span>
               </div>`).join('')}
           </div>
-          ${pep.protocolTiming ? `<div style="background:#1a1a2e;border-left:3px solid #3b82f6;padding:10px 12px;margin-top:8px;font-size:12px;color:#94a3b8;border-radius:0 6px 6px 0">${pep.protocolTiming}</div>` : ''}
+          ${pep.protocolTiming ? `<div style="background:${C.note};border-left:3px solid ${C.noteBdr};padding:10px 12px;margin-top:8px;font-size:12px;color:${C.noteTxt};border-radius:0 6px 6px 0">${pep.protocolTiming}</div>` : ''}
         </div>` : '';
 
       // Interactions
@@ -2694,9 +2720,9 @@
         <div class="enc-section">
           <div class="enc-section-title">🔗 상호작용</div>
           ${pep.interactions.map(inter => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e293b">
-              <span style="font-size:13px;color:#e2e8f0">${inter.name}</span>
-              <span style="font-size:11px;color:${interTypeStyle[inter.type]||'#94a3b8'};padding:2px 8px;background:#0f172a;border-radius:20px">${inter.type}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid ${C.borderSub}">
+              <span style="font-size:13px;color:${C.txtSub}">${inter.name}</span>
+              <span style="font-size:11px;color:${interTypeStyle[inter.type]||'#94a3b8'};padding:2px 8px;background:${C.bgDeep};border-radius:20px">${inter.type}</span>
             </div>`).join('')}
         </div>` : '';
 
@@ -2704,7 +2730,7 @@
       const seHTML = pep.sideEffects?.length ? `
         <div class="enc-section">
           <div class="enc-section-title">⚠️ 부작용 & 안전</div>
-          <ul style="margin:0;padding-left:16px;color:#94a3b8;font-size:13px;line-height:1.8">
+          <ul style="margin:0;padding-left:16px;color:${C.txtMuted};font-size:13px;line-height:1.8">
             ${pep.sideEffects.map(s => `<li>${s}</li>`).join('')}
           </ul>
         </div>` : '';
@@ -2713,7 +2739,7 @@
       const tlHTML = pep.effectsTimeline?.length ? `
         <div class="enc-section">
           <div class="enc-section-title">⏱️ 효과 타임라인</div>
-          <ul style="margin:0;padding-left:16px;color:#94a3b8;font-size:13px;line-height:1.8">
+          <ul style="margin:0;padding-left:16px;color:${C.txtMuted};font-size:13px;line-height:1.8">
             ${pep.effectsTimeline.map(t => `<li>${t}</li>`).join('')}
           </ul>
         </div>` : '';
@@ -2727,26 +2753,26 @@
         </div>` : '';
 
       const modal = document.createElement('div');
-      modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:flex-end;z-index:1000;';
+      modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;align-items:flex-end;z-index:1000;';
 
       const box = document.createElement('div');
-      box.style.cssText = 'background:#0f172a;border-top:2px solid #3b82f6;border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom);color:#f1f5f9;font-family:inherit;';
+      box.style.cssText = `background:${C.bg};border-top:2px solid #3b82f6;border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom);color:${C.txt};font-family:inherit;`;
 
       box.innerHTML = `
-        <div style="position:sticky;top:0;background:#0f172a;padding:16px 20px 12px;border-bottom:1px solid #1e293b;z-index:1;display:flex;justify-content:space-between;align-items:start">
+        <div style="position:sticky;top:0;background:${C.bgHdr};padding:16px 20px 12px;border-bottom:1px solid ${C.border};z-index:1;display:flex;justify-content:space-between;align-items:start">
           <div>
-            <div style="font-size:24px;font-weight:800;color:#f1f5f9;margin-bottom:4px">${pep.nameEn}</div>
-            <div style="font-size:12px;color:#64748b">${pep.subtitle || ''}</div>
+            <div style="font-size:24px;font-weight:800;color:${C.txt};margin-bottom:4px">${pep.nameEn}</div>
+            <div style="font-size:12px;color:${C.txtFaint}">${pep.subtitle || ''}</div>
           </div>
           <button onclick="document.getElementById('enc-modal').remove()"
-            style="background:none;border:none;color:#6b7280;font-size:24px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-left:10px">✕</button>
+            style="background:none;border:none;color:${C.txtMuted};font-size:24px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-left:10px">✕</button>
         </div>
 
         <div style="padding:16px 20px 0">
           <!-- 상태 & 경로 배지 -->
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
             <span style="padding:5px 12px;background:${st.bg};border-radius:20px;font-size:12px;color:${st.color};font-weight:600">${st.label}</span>
-            ${(pep.routes||[]).map(r => `<span style="padding:5px 12px;background:#1e293b;border-radius:20px;font-size:12px;color:#94a3b8">${r}</span>`).join('')}
+            ${(pep.routes||[]).map(r => `<span style="padding:5px 12px;background:${C.badge};border-radius:20px;font-size:12px;color:${C.badgeTxt}">${r}</span>`).join('')}
           </div>
 
           <!-- 4개 stat 카드 -->
@@ -2756,8 +2782,8 @@
           ${pep.descriptionEn ? `
           <div class="enc-section">
             <div class="enc-section-title">📖 개요</div>
-            <p style="margin:0;color:#94a3b8;font-size:13px;line-height:1.7">${pep.descriptionEn}</p>
-            ${pep.keyBenefits ? `<div style="margin-top:10px;padding:10px;background:#1e293b;border-radius:8px;font-size:12px;color:#cbd5e1"><strong style="color:#60a5fa">주요 이점:</strong> ${pep.keyBenefits}</div>` : ''}
+            <p style="margin:0;color:${C.txtMuted};font-size:13px;line-height:1.7">${pep.descriptionEn}</p>
+            ${pep.keyBenefits ? `<div style="margin-top:10px;padding:10px;background:${C.bgCard};border-radius:8px;font-size:12px;color:${C.txtSub}"><strong style="color:${C.accent}">주요 이점:</strong> ${pep.keyBenefits}</div>` : ''}
           </div>` : ''}
 
           ${pkHTML}
@@ -2771,8 +2797,8 @@
 
         <div style="padding:16px 20px 24px">
           <button onclick="document.getElementById('enc-modal').remove()"
-            style="width:100%;padding:14px;background:#1e3a5f;border:1px solid #3b82f6;border-radius:12px;
-                   color:#60a5fa;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+            style="width:100%;padding:14px;background:${C.closeBtn};border:1px solid ${C.closeBtnBdr};border-radius:12px;
+                   color:${C.closeBtnTxt};font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
             닫기
           </button>
         </div>`;
@@ -3716,9 +3742,13 @@
     /* 백과사전 전용 */
     .enc-filter-btn { padding:5px 12px;background:#1f2937;border:1px solid #374151;border-radius:20px;color:#6b7280;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s; }
     .enc-filter-btn.active { background:#1d4ed8;border-color:#3b82f6;color:#fff; }
+    body.light-mode .enc-filter-btn { background:#f1f5f9;border-color:#d1d5db;color:#6b7280; }
+    body.light-mode .enc-filter-btn.active { background:#1d4ed8;border-color:#3b82f6;color:#fff; }
     .enc-section { margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #1e293b; }
     .enc-section:last-child { border-bottom:none; }
     .enc-section-title { font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:10px;display:flex;align-items:center;gap:6px; }
+    body.light-mode .enc-section { border-bottom-color:#e2e8f0; }
+    body.light-mode .enc-section-title { color:#1f2937; }
 
     .quick-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
     .qbtn { padding: 5px 12px; background: #1f2937; border: none; border-radius: 8px; color: #9ca3af; font-size: 13px; cursor: pointer; font-family: inherit; }
