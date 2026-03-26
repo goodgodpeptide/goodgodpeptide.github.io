@@ -2298,26 +2298,35 @@
         return;
       }
 
+      const isLightEnc = document.body.classList.contains("light-mode");
       grid.innerHTML = list.map(p => {
         const st = ENC_STATUS[p.researchStatus] || ENC_STATUS['Limited Research'];
         const routes = (p.routes||[]).join(' / ') || 'N/A';
+        const cardBg = isLightEnc ? '#ffffff' : '#111827';
+        const cardBd = isLightEnc ? '#e2e8f0' : '#1f2937';
+        const iconBg = isLightEnc ? '#f1f5f9' : '#1e293b';
+        const nameClr = isLightEnc ? '#1a1a2e' : '#f1f5f9';
+        const tagBg = isLightEnc ? '#f1f5f9' : '#1e293b';
+        const tagClr = isLightEnc ? '#475569' : '#94a3b8';
+        const routeClr = isLightEnc ? '#2563eb' : '#60a5fa';
+        const arrowClr = isLightEnc ? '#9ca3af' : '#374151';
         const tags = (p.tags||[]).slice(0,3).map(t =>
-          `<span style="padding:2px 7px;background:#1e293b;border-radius:4px;font-size:10px;color:#94a3b8">${t}</span>`
+          `<span style="padding:2px 7px;background:${tagBg};border-radius:4px;font-size:10px;color:${tagClr}">${t}</span>`
         ).join('');
         const abbr = p.nameEn.replace(/[^A-Z0-9]/g,'').slice(0,3) || p.nameEn.slice(0,3).toUpperCase();
         const doseStr = p.typicalDose ? `<span style="font-size:11px;color:#6b7280">${p.typicalDose}</span>` : '';
 
         return `<div onclick="openEncyclopediaModal('${p.id}')"
-          style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px 16px;
+          style="background:${cardBg};border:1px solid ${cardBd};border-radius:12px;padding:14px 16px;
                  cursor:pointer;transition:border-color 0.15s;display:flex;align-items:center;gap:14px"
-          onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#1f2937'">
-          <div style="width:44px;height:44px;border-radius:10px;background:#1e293b;display:flex;align-items:center;
-                      justify-content:center;font-weight:800;font-size:11px;color:#94a3b8;flex-shrink:0;letter-spacing:0.5px">
+          onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='${cardBd}'">
+          <div style="width:44px;height:44px;border-radius:10px;background:${iconBg};display:flex;align-items:center;
+                      justify-content:center;font-weight:800;font-size:11px;color:${tagClr};flex-shrink:0;letter-spacing:0.5px">
             ${abbr}
           </div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap">
-              <span style="font-weight:700;font-size:15px;color:#f1f5f9">${p.nameEn}</span>
+              <span style="font-weight:700;font-size:15px;color:${nameClr}">${p.nameEn}</span>
               <span style="padding:2px 8px;background:${st.bg};border-radius:20px;font-size:10px;color:${st.color};white-space:nowrap">
                 ${st.label}
               </span>
@@ -2326,12 +2335,12 @@
               ${p.subtitle || ''}
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <span style="padding:2px 7px;background:#1e293b;border-radius:4px;font-size:10px;color:#60a5fa">${routes}</span>
+              <span style="padding:2px 7px;background:${tagBg};border-radius:4px;font-size:10px;color:${routeClr}">${routes}</span>
               ${tags}
               ${doseStr}
             </div>
           </div>
-          <div style="color:#374151;font-size:18px;flex-shrink:0">›</div>
+          <div style="color:${arrowClr};font-size:18px;flex-shrink:0">›</div>
         </div>`;
       }).join('');
     };
@@ -2842,7 +2851,7 @@
         html += `<div onclick="calSelectDate('${dateKey}')" style="min-height:56px;padding:4px;cursor:pointer;
           border-right:1px solid ${isLight?'#f3f4f6':'#1a1a2e'};
           border-bottom:1px solid ${isLight?'#f3f4f6':'#1a1a2e'};
-          background:${isSelected?'#1d4ed822':isToday?'#0f2a1a':isLight&&isToday?'#f0fdf4':'transparent'};
+          background:${isSelected?'#1d4ed822':isToday?(isLight?'#dbeafe':'#0f2a1a'):'transparent'};
           ${isSelected?'outline:2px solid #3b82f6;outline-offset:-2px;':''};
           transition:background .1s">
           <!-- 날짜 숫자 -->
@@ -3373,6 +3382,35 @@
     body.light-mode #new-admin-input { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #1a1a2e !important; }
     body.light-mode #manual-approve-input { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #1a1a2e !important; }
     body.light-mode #url-display { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #2563eb !important; }
+
+    /* ── 라이트모드 다크 인라인 배경 전역 오버라이드 ── */
+    body.light-mode [style*="background:#0d0d1a"],
+    body.light-mode [style*="background:#111827"],
+    body.light-mode [style*="background:#12121e"],
+    body.light-mode [style*="background:#0f172a"],
+    body.light-mode [style*="background:#1a1a2e"],
+    body.light-mode [style*="background:#0c1a2a"],
+    body.light-mode [style*="background:#0d1a0f"],
+    body.light-mode [style*="background:#0d1b2a"],
+    body.light-mode [style*="background:#0d0d1a"] { background: #f8fafc !important; }
+    body.light-mode [style*="background:#1e293b"] { background: #f1f5f9 !important; }
+    body.light-mode [style*="background:#1f2937"] { background: #f3f4f6 !important; }
+    body.light-mode [style*="background:#2d3748"] { background: #e5e7eb !important; }
+    body.light-mode [style*="background:#0c1a2a"] { background: #eff6ff !important; }
+    body.light-mode [style*="background:#0f2a1a"] { background: #f0fdf4 !important; }
+    /* 테두리 오버라이드 */
+    body.light-mode [style*="border:1px solid #1f2937"] { border-color: #e2e8f0 !important; }
+    body.light-mode [style*="border:1px solid #374151"] { border-color: #d1d5db !important; }
+    body.light-mode [style*="border:1px solid #2d3748"] { border-color: #e2e8f0 !important; }
+    body.light-mode [style*="border:1px solid #1e3a5f"] { border-color: #bfdbfe !important; }
+    body.light-mode [style*="border-bottom:1px solid #1f2937"] { border-bottom-color: #e2e8f0 !important; }
+    body.light-mode [style*="border-bottom:1px solid #12121e"] { border-bottom-color: #f3f4f6 !important; }
+    body.light-mode [style*="border-left:2px solid #1f2937"] { border-left-color: #e2e8f0 !important; }
+    /* 텍스트 오버라이드 */
+    body.light-mode [style*="color:#e2e8f0"] { color: #1a1a2e !important; }
+    body.light-mode [style*="color:#f1f5f9"] { color: #1a1a2e !important; }
+    body.light-mode [style*="color:#94a3b8"] { color: #475569 !important; }
+    body.light-mode [style*="color:#9ca3af"] { color: #64748b !important; }
   </style>
 </head>
 <body>
