@@ -160,12 +160,22 @@ appData = {
   age: string,
   activity: string,  // "1.2" ~ "1.9"
   costCalc: {        // 비용 계산기 설정 (저장됨)
-    currency: "USD"|"KRW"|"JPY"|"CNY"|"INR",
-    price: string,   // 구매 가격
-    freq: string,    // 주당 투여 횟수
-    syringe: string, // 주사기 ₩/회
-    bac: string,     // BAC Water ₩/바이알
-    swab: string,    // 알코올솜 ₩/회
+    currency: string,          // 구매 가격 통화
+    price: string,             // 구매 가격
+    intervalDays: string,      // 투여 간격 (일)
+    purchaseUnit: string,      // 'vial'|'kit'
+    vialsPerKit: string,
+    shipping: string,          // 배송비 금액
+    shippingCurrency: string,  // 배송비 통화
+    syringe: string,           // 주사기 가격
+    syringeCurrency: string,
+    syringeQty: string,        // 박스당 개수
+    bac: string,               // BAC Water 바이알당 가격
+    bacCurrency: string,
+    swab: string,              // 알코올솜 가격
+    swabCurrency: string,
+    swabQty: string,           // 박스당 개수
+    customConsumables: [{ id, label, price, currency, qty }]  // 기타 소모품
   }
 }
 ```
@@ -337,6 +347,7 @@ const ADMIN_ROUTES = [
 - DRUG_CONFIG에 `defaultRoute` 필드: 세맥스/셀랑크 → IN, 나머지 → SC
 - records에 `route` 필드 저장
 - 투약 추가 모달에 경로 선택 버튼 행 (`renderRouteSelector()`, `selectRoute()`)
+- 투약 목록 경로 뱃지: `routeInfo.id`(SC) 대신 `routeInfo.label`(피하주사) 표시
 
 ---
 
@@ -357,7 +368,8 @@ appData.suppSchedules = { "suppId": { ...same } }
 
 핵심 함수:
 ```js
-shouldTakeOnDate(schedule, dateStr)  // 해당 날 복용 여부
+isDrugDueOnDate(drug, dateStr)       // 약물 투약 예정일 판단 (주기 기반, records 참조)
+shouldTakeOnDate(schedule, dateStr)  // 영양제 스케줄 복용 여부 (schedule 객체 직접)
 getScheduledItemsForDate(dateStr)    // 날짜별 예정 항목 목록
 openDrugScheduleModal(drug)          // 약물 스케줄 설정 모달
 openSuppScheduleModal(suppId)        // 영양제 스케줄 설정 모달
@@ -402,9 +414,21 @@ appData.calendarChecks = {
 ```
 
 - `getDateIndicator(dateStr)` → ✅(전체완료) / ⚠️(일부누락) / 🔵(예정있음)
-- 달력 날짜 셀에 인디케이터 표시
+- 달력 날짜 셀에 인디케이터 표시 + 하단 범례 (색상 도트 설명 포함)
 - 날짜 모달에 "📋 오늘 할 일" 체크리스트 (실제 records 있으면 자동 체크)
 - `toggleCalendarCheck(dateStr, key)` → appData.calendarChecks 저장
+
+### 약물 예정일 계산 (`isDrugDueOnDate`)
+```js
+isDrugDueOnDate(drug, dateStr)  // 해당 날짜가 약물 투약 예정일인지 판단
+```
+- `daily` 스케줄: 항상 true
+- `weekdays` 스케줄: 요일 매칭
+- `cycle/course` 스케줄: startDate 기준 주기 계산
+- **`interval` 또는 스케줄 없음**: 마지막 투약 기록 + `intervalDays`(또는 `defaultDoseDays`) 기준으로 계산
+  - 투약 기록 없으면 `false` (달력에 미표시)
+  - `diff % intervalDays === 0` 인 날만 예정일로 표시
+- `shouldTakeOnDate`는 영양제 스케줄 판단용으로 계속 사용
 
 ---
 
@@ -412,8 +436,23 @@ appData.calendarChecks = {
 
 - 투여 빈도: "X일에 한번" (`cost-interval`, 기본 7일)
 - 구매 단위: 바이알/키트 (`setCostUnit()`, `cost-vials-per-kit`)
-- 배송비 (`cost-shipping`, ₩)
-- 계산: 총비용 = 구매가(환산KRW) + 배송비, 바이알당 = 총비용/(키트면 바이알수), 회당 = 바이알당/injPerVial
+- 배송비: 금액 + **통화 선택** (`cost-shipping` + `cost-shipping-currency`)
+- 소모품별 **통화 선택** + **박스당 개수** 입력 → `가격 ÷ 개수 = 회당 자동 계산`
+  - 주사기: `cost-syringe` + `cost-syringe-currency` + `cost-syringe-qty`
+  - BAC Water: `cost-bac` + `cost-bac-currency` (바이알당 총비용, 회당 자동배분)
+  - 알코올 솜: `cost-swab` + `cost-swab-currency` + `cost-swab-qty`
+  - 기타 소모품: `appData.costCalc.customConsumables[]` 동적 추가/삭제
+- 계산: 총비용 = 구매가(환산KRW) + 배송비(환산KRW), 바이알당 = 총비용/(키트면 바이알수), 회당 = 바이알당/injPerVial + 소모품합계
+
+### 기타 소모품 (`customConsumables`)
+```js
+appData.costCalc.customConsumables = [
+  { id: string, label: string, price: number, currency: string, qty: number }
+]
+```
+- `addCustomConsumable()`: `prompt()`로 이름 입력 → 배열에 추가
+- `removeCustomConsumable(id)`: 배열에서 제거
+- `renderCustomConsumables()`: `#custom-consumables` div 재렌더
 
 ---
 
@@ -421,6 +460,11 @@ appData.calendarChecks = {
 - [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
 - [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
 - [ ] 운동 탭 추가 예정
+- ✅ 달력 체크리스트 약물 주기 버그 수정 (isDrugDueOnDate — 마지막 투약일 기준 계산)
+- ✅ 투약 목록 경로 뱃지 한국어 표시 (SC→피하주사, IM→근육주사, IN→비강)
+- ✅ 달력 하단 범례 추가 (✅⚠️🔵 인디케이터 + 도트 색상 설명)
+- ✅ 영양제 추가 모달 (이름+시간대 한번에 설정, 시간대 헤더 time input 제거)
+- ✅ 비용 계산기: 배송비/소모품 통화 선택 + 박스당 개수 입력 + 기타 소모품 동적 추가
 - ✅ 투여 경로 시스템 (ADMIN_ROUTES, defaultRoute, 모달 선택, 뱃지 표시)
 - ✅ 사이클 스케줄 (5종: daily/interval/weekdays/cycle/course)
 - ✅ 달력 체크리스트 연동 (인디케이터 + 오늘 할 일 + calendarChecks)
@@ -463,7 +507,19 @@ fetchFxRates(force?)         // Frankfurter API 환율 fetch (1시간 캐시)
 calcCost()                   // 비용 계산기 렌더 (구매가 + 소모품 → 회/일/주/월 비용)
 saveCostSettings()           // appData.costCalc 저장
 loadCostSettings()           // 저장된 설정 복원
+renderCustomConsumables()    // 기타 소모품 동적 렌더 (#custom-consumables)
+addCustomConsumable()        // 기타 소모품 추가 (prompt 입력)
+removeCustomConsumable(id)   // 기타 소모품 제거
 ```
+
+### 영양제 탭 핵심 함수 추가분
+```js
+openAddSuppModal()           // 영양제 추가 모달 열기 (이름 + 시간대 한번에)
+toggleModalTiming(t)         // 모달 내 시간대 버튼 토글
+submitAddSupp()              // 모달 확인 → appData.supplements에 추가
+```
+- 영양제 추가 UX: `+ 영양제 추가` 버튼 → 모달 (이름, 시간대 선택) → 저장
+- 시간대 그룹 헤더에서 `<input type="time">` 제거 (불필요한 UX 복잡도)
 
 ### 날짜 표시 규칙 (중요)
 - **날짜만 표시**: `msToKstInput(ts).slice(0,10)` → `"YYYY-MM-DD"` ✅
@@ -473,9 +529,10 @@ loadCostSettings()           // 저장된 설정 복원
 ### 비용 계산기 (조제계산 섹션 하단)
 - **환율 API**: `https://api.frankfurter.app/latest?from=USD&to=KRW,JPY,CNY,INR` (무료, 키 불필요)
 - `fxRates` 객체에 캐시, 1시간마다 자동갱신, 🔄 버튼으로 강제갱신
-- 입력: 구매가격(통화선택) + 주당투여횟수 + 주사기/BAC/솜 소모품(₩)
+- 입력: 구매가격(통화선택) + 배송비(통화선택) + 소모품별(통화+박스개수) + 기타 항목
 - 출력: 5개 통화 회당 비용 + 일/주/월 원화 합산
 - `appData.costCalc`에 설정 저장 (scheduleSave)
+- `renderCustomConsumables()`: `#custom-consumables` div 동적 렌더
 
 ### 백과사전 모달 라이트모드
 - `openEncyclopediaModal()`에서 `isLight` 감지 후 `C` 색상 객체로 모든 인라인 스타일 분기
