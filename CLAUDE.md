@@ -32,6 +32,56 @@
 
 ---
 
+## 접근 제어 / 관리자 시스템
+
+### 인증 흐름
+1. Google OAuth 로그인 (`signInWithPopup` → `signInWithRedirect` fallback)
+2. `config/approved_users` Firestore 문서에 이메일이 있어야 앱 진입 가능
+3. 없으면 `#pending-screen` (승인 대기 화면) 표시
+
+### Firestore 구조
+```
+config/approved_users  → { emails: ["user@gmail.com", ...] }
+config/admins          → { emails: ["admin@gmail.com", ...] }  // 관리자 목록
+login_logs/            → 모든 로그인 시도 기록 (관리자 패널 대기자 추출용)
+```
+
+### 관리자 패널 (`#admin-modal`)
+- 상단 바 👑 버튼 → `openAdminPanel()` 호출 (관리자만 표시)
+- **대기 중**: login_logs에서 미승인 이메일 추출 → 승인 버튼
+- **승인됨 (일반)**: approved_users 목록 (관리자 제외) → 취소 버튼
+- **관리자 계정**: admins 목록 → 추가/제거 가능, 본인 삭제 불가
+- 관리자 추가 시 approved_users에도 자동 등록됨
+
+### 관련 함수
+```js
+openAdminPanel()       // 패널 열기 + 목록 렌더
+approveUser(email)     // approved_users에 arrayUnion
+revokeUser(email)      // approved_users에 arrayRemove
+addAdmin(email)        // admins + approved_users에 arrayUnion
+removeAdmin(email)     // admins에서 arrayRemove (본인 불가)
+```
+
+### 최초 seed
+- `config/admins` 문서가 없을 때 `kingshotgoodgod1@gmail.com` 첫 로그인 시 자동 생성
+- `config/approved_users` 문서도 같은 방식으로 자동 생성
+
+### 인증 방식 결정
+- 구글 OAuth + 관리자 승인으로 확정
+- 이메일/비밀번호 방식 추가 불필요 (복잡도 대비 이점 없음)
+
+---
+
+## 백업 / 복원
+
+- 상단 바 💾 버튼 → `openBackupModal()`
+- **내보내기**: `exportBackup()` → `backup_YYYYMMDD.json` 다운로드
+- **불러오기**: `loadBackupFile(event)` → JSON 파싱 → 경고 확인 후 `confirmRestore()`
+- 복원 시 `appData` 전체 덮어쓰기 → `scheduleSave()` → `renderAll()`
+- 계정 변경 시 데이터 이전 용도로 활용
+
+---
+
 ## 약물 설정 (DRUG_CONFIG)
 
 ```js
@@ -207,6 +257,9 @@ openEncyclopediaModal(id)  // 상세 정보 바텀시트 모달
 - [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
 - [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
 - ✅ 한국어 번역: 크롬 번역 기능으로 해결 (별도 구현 불필요)
+- ✅ 관리자 승인 기반 접근 제어 구현 완료
+- ✅ 다중 관리자 계정 관리 (config/admins) 구현 완료
+- ✅ 백업/복원 기능 구현 완료
 
 ---
 
@@ -214,4 +267,14 @@ openEncyclopediaModal(id)  // 상세 정보 바텀시트 모달
 - **전체 파일 교체**: 구조적 변경, 대규모 기능 추가
 - **스니펫 + 라인 번호**: 소규모 버그픽스, 스타일 수정
 - 변경 이유 한 줄 설명 포함
-- 한국어로 소통
+- **한국어로 소통** (필수)
+- rate limit으로 작업이 끊길 수 있으므로 작업 단위를 나누어 커밋
+- 세션 종료 전 CLAUDE.md 업데이트 필수
+
+---
+
+## 유저 프로필
+- GitHub Pages 단일 파일 앱 직접 운영
+- Claude Code (Sonnet 4.6) 사용
+- 화면 캡처를 공유하며 목표 UI를 명확히 설명하는 스타일
+- pep-pedia.org 같은 레퍼런스 UI를 목표로 함
