@@ -97,9 +97,29 @@ removeAdmin(email)     // admins에서 arrayRemove (본인 불가)
 
 ```js
 "마운자로 (Tirzepatide)": { halfLifeDays: 5, tmaxHours: 24, defaultDoseDays: 7 }
-"레타 (Retatrutide)":     { halfLifeDays: 6, tmaxHours: 48, defaultDoseDays: 7 }
-"위고비 (Semaglutide)":   { halfLifeDays: 7, tmaxHours: 36, defaultDoseDays: 7 }
+// GLP-1 / 아밀린
+"마운자로 (Tirzepatide)":         { halfLifeDays: 5,     tmaxHours: 24,  defaultDoseDays: 7,  encyclopediaId: "tirzepatide" }
+"레타 (Retatrutide)":             { halfLifeDays: 6,     tmaxHours: 48,  defaultDoseDays: 7,  encyclopediaId: "retatrutide" }
+"위고비 (Semaglutide)":           { halfLifeDays: 7,     tmaxHours: 36,  defaultDoseDays: 7,  encyclopediaId: "semaglutide" }
+"카그릴린타이드 (Cagrilintide)":   { halfLifeDays: 7.5,  tmaxHours: 48,  defaultDoseDays: 7,  encyclopediaId: "cagrilintide" }
+// 복합/재생
+"KLOW (GHK-Cu+TB500+BPC157+KPV)": { halfLifeDays: 0.2,  tmaxHours: 1.5, defaultDoseDays: 1,  encyclopediaId: "klow" }
+"에피탈론 (Epithalon)":            { halfLifeDays: 0.125,tmaxHours: 1,   defaultDoseDays: 1,  encyclopediaId: "epitalon" }
+"티모신알파1 (Thymosin α1)":       { halfLifeDays: 0.125,tmaxHours: 1.5, defaultDoseDays: 3,  encyclopediaId: "thymosin-alpha-1" }
+"GHK-Cu (구리펩타이드)":           { halfLifeDays: 0.083,tmaxHours: 1,   defaultDoseDays: 1,  encyclopediaId: "ghk-cu" }
+// 뇌/인지
+"세맥스 (Semax)":                  { halfLifeDays: 0.021,tmaxHours: 0.25,defaultDoseDays: 1,  encyclopediaId: "semax" }
+"셀랑크 (Selank)":                 { halfLifeDays: 0.021,tmaxHours: 0.25,defaultDoseDays: 1,  encyclopediaId: "selank" }
+// GH 축
+"CJC-1295+Ipamorelin":            { halfLifeDays: 0.083,tmaxHours: 0.5, defaultDoseDays: 1,  encyclopediaId: "cjc-ipa-protocol" }
+"테사모렐린 (Tesamorelin)":        { halfLifeDays: 0.1,  tmaxHours: 1,   defaultDoseDays: 1,  encyclopediaId: "tesamorelin" }
+// 미토콘드리아
+"SS-31 (Elamipretide)":           { halfLifeDays: 0.083,tmaxHours: 0.5, defaultDoseDays: 1,  encyclopediaId: "ss-31" }
+"MOTS-c":                         { halfLifeDays: 0.125,tmaxHours: 1,   defaultDoseDays: 3,  encyclopediaId: "mots-c" }
+"NAD+":                           { halfLifeDays: 0.083,tmaxHours: 0.5, defaultDoseDays: 3,  encyclopediaId: "nad-plus" }
 ```
+- **단기 반감기**: fractional halfLifeDays 사용 (세맥스 0.021일 = ~30분). PK 계산은 시간 단위라 수학적으로 정상 동작
+- **encyclopediaId**: peptides_v3.json의 slug ID. 투약 카드 📖 버튼으로 직접 모달 연동
 
 - **PK 모델**: 1-compartment oral absorption
   - `ka = ln2 / tmaxHours`, `ke = ln2 / (halfLifeDays × 24)`
@@ -138,7 +158,15 @@ appData = {
   height: string,
   targetWeight: string,
   age: string,
-  activity: string  // "1.2" ~ "1.9"
+  activity: string,  // "1.2" ~ "1.9"
+  costCalc: {        // 비용 계산기 설정 (저장됨)
+    currency: "USD"|"KRW"|"JPY"|"CNY"|"INR",
+    price: string,   // 구매 가격
+    freq: string,    // 주당 투여 횟수
+    syringe: string, // 주사기 ₩/회
+    bac: string,     // BAC Water ₩/바이알
+    swab: string,    // 알코올솜 ₩/회
+  }
 }
 ```
 
@@ -194,7 +222,7 @@ stopLiveUpdate()    // interval 정지 (다른 탭 전환 시 자동)
 _tickLiveUpdate()   // 매초: 농도 수치/D-day/진행바 DOM 직접 업데이트 + renderPeptideGraph()
 ```
 - 라이브 업데이트 요소: `#live-rem-{short}`, `#live-dday-{short}`, `#live-bar-{short}`, `#live-nextconc-{short}`
-- `cfg.short` 키 사용 (마운자로, 레타, 위고비) — 입력창 포커스/값은 건드리지 않음
+- `cfg.short` 키 사용 (모든 DRUG_CONFIG 약물) — 입력창 포커스/값은 건드리지 않음
 
 ### 약물명 마이그레이션
 ```js
@@ -298,31 +326,59 @@ openEncyclopediaModal(id)  // 상세 정보 바텀시트 모달
 ## 현재 알려진 이슈 / TODO
 - [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
 - [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
+- [ ] 운동 탭 추가 예정
+- ✅ 펩타이드 15종 DRUG_CONFIG 추가 (GLP-1 3+카그릴 / KLOW / 에피탈론 / Tα1 / GHK-Cu / 세맥스 / 셀랑크 / CJC+Ipa / 테사모렐린 / SS-31 / MOTS-c / NAD+)
+- ✅ 다약제 동시 그래프 정규화 (0-100%) — NAD+ 1000mg vs Tirzepatide 15mg 혼합 표시 해결
+- ✅ 투약 카드 📖 버튼 → 백과사전 직접 연동 (encyclopediaId 필드)
+- ✅ 백과사전 모달 라이트모드 색상 대응 (C 색상 객체 분기)
+- ✅ 날짜 표기 버그 수정 (toKSTString.slice → msToKstInput.slice)
+- ✅ 비용 계산기 추가 (Frankfurter 환율 API, 5개 통화, 소모품 포함)
+- ✅ 투약 추가 모달 약물 드롭다운 DRUG_CONFIG 동적 생성
+- ✅ 투약 목록 필터 바 동적 렌더링 (기록 있는 약물만)
 - ✅ 한국어 번역: 크롬 번역 기능으로 해결 (별도 구현 불필요)
 - ✅ 관리자 승인 기반 접근 제어 구현 완료
 - ✅ 다중 관리자 계정 관리 (config/admins) 구현 완료
 - ✅ 백업/복원 기능 구현 완료
 - ✅ 라이트모드 색상 전면 수정 (모달/화면/동적 목록 모두 대응)
-- ✅ 라이트모드 텍스트 가독성 개선 (투약 카드 테마 토큰 분리, 연한 회색 텍스트 진하게)
-- ✅ 관리자 패널 이메일 직접 입력 승인 기능 추가 (manualApprove)
-- ✅ 거절 기능 추가 (재신청 허용, 거절 타임스탬프 기반)
-- ✅ 관리자 패널 대기 목록 버그 수정 (로그인 로그를 승인 체크 전에 기록)
-- ✅ 카카오톡 인앱 브라우저 UA 감지 수정 (Android 카카오톡 Chrome/ 포함 문제)
-- ✅ 라이트모드 stat-val 색상 수정 + html 스크롤 배경 흰색 처리
 - ✅ 투약 탭 사용 약물 토글 (activeDrugs) + 1초 실시간 농도/그래프 업데이트
 - ✅ 탭 7개→5개 통합 (분석+계산 제거, 체중 서브탭 3개, 인바디 신규)
 - ✅ 체중 그래프 X축 = 첫 투약일 시작 / 약물 그래프 X축 끝 = 5×반감기 소실 시점
-- ✅ 약물 그래프: 범위 버튼 제거(줌 초기화만), 임상 용량 기준선, 현재 농도 수평 점선
-- ✅ 체중 그래프 음수 X 좌표 버그 수정 (투약 전 체중 기록이 있을 때 그래프 깨지는 문제)
-- ✅ D-day 표시 불일치 수정 (카드 Math.floor vs 그래프 Math.round → floor로 통일)
-- [ ] 운동 탭 추가 예정
+- ✅ 체중 그래프 음수 X 좌표 버그 수정
+- ✅ D-day 표시 불일치 수정 (Math.floor 통일)
 
-### 약물 그래프 임상 기준선 (DRUG_CONFIG.doseSteps / clinicalMax)
-- 마운자로: doseSteps [2.5,5,7.5,10,12.5,15], clinicalMax 15 (SURMOUNT)
-- 레타: doseSteps [1,2,4,8,12], clinicalMax 12 (NEJM 2023 Phase 2)
-- 위고비: doseSteps [0.25,0.5,1,1.7,2.4], clinicalMax 2.4 (STEP)
-- Y축 최솟값 = max(실제 데이터 피크, clinicalMax) 로 스케일 고정
-- 현재 체내 농도 수평 점선: `calcConcentrationAt(drug, now)` 기준
+### 약물 그래프 Y축 스케일
+- **단독 약물 뷰**: Y축 = max(실제 데이터 피크, clinicalMax) 절대값(mg)
+- **다약제 동시 뷰** (`curves.length > 1`): **정규화 모드** — 각 약물을 `val/clinicalMax` (0~100%) 로 표시
+  - 이유: NAD+(1000mg)와 Tirzepatide(15mg)를 함께 표시 시 스케일 차이 문제 해결
+  - Y축 레이블: 0%/25%/50%/75%/100%
+  - 현재 농도 점선 레이블: `${short} XX.X%`
+- `plotRatio(val, clinicalMax)` 함수로 분기 처리
+
+### 투약 탭 핵심 함수 추가분
+```js
+renderPeptideFilterBar()     // 기록 있는 약물만 필터 버튼 동적 생성
+openEncyclopediaFromCard(id) // 투약 카드 📖 버튼 → 백과사전 모달 (탭 전환 없이)
+fetchFxRates(force?)         // Frankfurter API 환율 fetch (1시간 캐시)
+calcCost()                   // 비용 계산기 렌더 (구매가 + 소모품 → 회/일/주/월 비용)
+saveCostSettings()           // appData.costCalc 저장
+loadCostSettings()           // 저장된 설정 복원
+```
+
+### 날짜 표시 규칙 (중요)
+- **날짜만 표시**: `msToKstInput(ts).slice(0,10)` → `"YYYY-MM-DD"` ✅
+- **시간만 표시**: `msToKstInput(ts).slice(11,16)` → `"HH:mm"` ✅
+- **`toKSTString(ts).slice(X,Y)` 패턴 금지** — Korean locale string 길이가 날짜/월에 따라 변동해서 잘림 버그 발생
+
+### 비용 계산기 (조제계산 섹션 하단)
+- **환율 API**: `https://api.frankfurter.app/latest?from=USD&to=KRW,JPY,CNY,INR` (무료, 키 불필요)
+- `fxRates` 객체에 캐시, 1시간마다 자동갱신, 🔄 버튼으로 강제갱신
+- 입력: 구매가격(통화선택) + 주당투여횟수 + 주사기/BAC/솜 소모품(₩)
+- 출력: 5개 통화 회당 비용 + 일/주/월 원화 합산
+- `appData.costCalc`에 설정 저장 (scheduleSave)
+
+### 백과사전 모달 라이트모드
+- `openEncyclopediaModal()`에서 `isLight` 감지 후 `C` 색상 객체로 모든 인라인 스타일 분기
+- `.enc-section`, `.enc-section-title`, `.enc-filter-btn`에 `body.light-mode` CSS 오버라이드
 
 ---
 
