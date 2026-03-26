@@ -1966,9 +1966,17 @@
       // 전체 뷰: X 시작 = 최초 투약일 (없으면 최초 체중 기록일)
       const firstDrugTime = (appData.records && appData.records.length)
         ? Math.min(...appData.records.map(r => r.time)) : null;
-      const defaultMinT = (firstDrugTime !== null) ? firstDrugTime : allRecs[0].time;
+      const defaultMinT = (firstDrugTime !== null)
+        ? Math.min(firstDrugTime, allRecs[0].time)  // 투약 전 체중 기록도 클리핑 방지
+        : allRecs[0].time;
       const minT = weightRangeDays > 0 ? Date.now() - weightRangeDays * 86400000 : defaultMinT;
       const maxT = Date.now();
+      // minT 이전 기록은 그래프 영역 밖 → 필터링 (음수 X 방지)
+      allRecs = allRecs.filter(r => r.time >= minT);
+      if (allRecs.length < 2) {
+        ctx.fillStyle = "#4a5568"; ctx.font = "13px 'Noto Sans KR'"; ctx.textAlign = "center";
+        ctx.fillText("해당 기간 기록 없음", cW/2, cH/2); return;
+      }
       const weights = allRecs.map(r => r.weight);
       const target = parseFloat(appData.targetWeight) || null;
       const allWeights = target ? [...weights, target] : weights;
