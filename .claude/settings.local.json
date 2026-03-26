@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import json; d=json.load\\(open\\(''peptides_clean_slim.json''\\)\\); print\\(''JSON 구조:'', type\\(d\\), ''키:'', list\\(d.keys\\(\\)\\) if isinstance\\(d, dict\\) else f''배열 길이: {len\\(d\\)}''\\)\")",
+      "Bash(python -c \"import json; d=json.load\\(open\\(''peptides_clean_slim.json'', encoding=''utf-8''\\)\\); print\\(''타입:'', type\\(d\\)\\); print\\(''키:'', list\\(d.keys\\(\\)\\) if isinstance\\(d, dict\\) else f''배열 길이: {len\\(d\\)}''\\); first = list\\(d.values\\(\\)\\)[0] if isinstance\\(d, dict\\) else d[0]; print\\(''첫번째 항목 키:'', list\\(first.keys\\(\\)\\)\\)\")",
+      "Bash(python -c \":*)"
+    ]
+  }
+}
