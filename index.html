@@ -1483,11 +1483,18 @@
         fullMinTime = now - graphRangeHours * 3600000;
         fullMaxTime = now;
       } else {
-        // 전체 범위: 최초 기록 35일 이전 ~ 마지막 기록 35일 이후
+        // 전체 범위: 최초 기록 ~ 약물이 거의 소실되는 시점 (5×반감기)
         const firstRec = Math.min(...records.map(r => r.time));
-        const lastRec = Math.max(...records.map(r => r.time));
-        fullMinTime = firstRec - 35 * 86400000;
-        fullMaxTime = lastRec + 35 * 86400000;
+        fullMinTime = firstRec - 2 * 86400000; // 첫 투약 2일 전부터
+        // 약물별 마지막 투약 + 5×반감기 중 최대값
+        let clearanceTime = 0;
+        Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+          const drugRecs = records.filter(r => r.drug === drug);
+          if (!drugRecs.length) return;
+          const lastDrugTime = Math.max(...drugRecs.map(r => r.time));
+          clearanceTime = Math.max(clearanceTime, lastDrugTime + cfg.halfLifeDays * 5 * 86400000);
+        });
+        fullMaxTime = Math.max(now, clearanceTime || now + 35 * 86400000);
       }
       const fullRange = fullMaxTime - fullMinTime;
 
@@ -1918,7 +1925,12 @@
 
       const PAD = { l: 48, r: 16, t: 24, b: 34 };
       const gW = cW - PAD.l - PAD.r, gH = cH - PAD.t - PAD.b;
-      const minT = weightRangeDays > 0 ? Date.now() - weightRangeDays * 86400000 : allRecs[0].time, maxT = Date.now();
+      // 전체 뷰: X 시작 = 최초 투약일 (없으면 최초 체중 기록일)
+      const firstDrugTime = (appData.records && appData.records.length)
+        ? Math.min(...appData.records.map(r => r.time)) : null;
+      const defaultMinT = (firstDrugTime !== null) ? firstDrugTime : allRecs[0].time;
+      const minT = weightRangeDays > 0 ? Date.now() - weightRangeDays * 86400000 : defaultMinT;
+      const maxT = Date.now();
       const weights = allRecs.map(r => r.weight);
       const target = parseFloat(appData.targetWeight) || null;
       const allWeights = target ? [...weights, target] : weights;
