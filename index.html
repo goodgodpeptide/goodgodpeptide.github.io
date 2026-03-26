@@ -564,111 +564,122 @@
     // appData.drugCycle[drug] 에 저장, 없으면 DRUG_CONFIG.defaultDoseDays 사용
     const DRUG_CONFIG = {
       "마운자로 (Tirzepatide)":   {
-        halfLifeDays: 5, tmaxHours: 24, defaultDoseDays: 7,
+        halfLifeDays: 5, tmaxHours: 24, defaultDoseDays: 7, defaultRoute: 'SC',
         color: "#60a5fa", emoji: "🔵", short: "마운자로",
         note: "반감기 5일 · 임상 표준 7일 주기",
         doseSteps: [2.5, 5, 7.5, 10, 12.5, 15], clinicalMax: 15,
         encyclopediaId: "tirzepatide"
       },
       "레타 (Retatrutide)": {
-        halfLifeDays: 6, tmaxHours: 48, defaultDoseDays: 7,
+        halfLifeDays: 6, tmaxHours: 48, defaultDoseDays: 7, defaultRoute: 'SC',
         color: "#f87171", emoji: "🔴", short: "레타",
         note: "반감기 6일 · 임상 표준 7일 주기",
         doseSteps: [1, 2, 4, 8, 12], clinicalMax: 12,
         encyclopediaId: "retatrutide"
       },
       "위고비 (Semaglutide)": {
-        halfLifeDays: 7, tmaxHours: 36, defaultDoseDays: 7,
+        halfLifeDays: 7, tmaxHours: 36, defaultDoseDays: 7, defaultRoute: 'SC',
         color: "#4ade80", emoji: "🟢", short: "위고비",
         note: "반감기 7일 · 임상 표준 7일 주기",
         doseSteps: [0.25, 0.5, 1, 1.7, 2.4], clinicalMax: 2.4,
         encyclopediaId: "semaglutide"
       },
       "KLOW (GHK-Cu+TB500+BPC157+KPV)": {
-        halfLifeDays: 0.2, tmaxHours: 1.5, defaultDoseDays: 1,
+        halfLifeDays: 0.2, tmaxHours: 1.5, defaultDoseDays: 1, defaultRoute: 'SC',
         color: "#a3e635", emoji: "🌱", short: "KLOW",
         note: "반감기 ~5시간 · 4-펩타이드 복합 · 재생/항염",
         doseSteps: [0.8, 1.6, 2, 2.4, 3.2], clinicalMax: 3.2,
         encyclopediaId: "klow"
       },
       "카그릴린타이드 (Cagrilintide)": {
-        halfLifeDays: 7.5, tmaxHours: 48, defaultDoseDays: 7,
+        halfLifeDays: 7.5, tmaxHours: 48, defaultDoseDays: 7, defaultRoute: 'SC',
         color: "#f9a8d4", emoji: "🌸", short: "카그릴",
         note: "반감기 7.5일 · 아밀린 유사체 · 주 1회",
         doseSteps: [0.16, 0.3, 0.45, 0.6, 0.9, 1.2, 1.7, 2.4], clinicalMax: 2.4,
         encyclopediaId: "cagrilintide"
       },
       "에피탈론 (Epithalon)": {
-        halfLifeDays: 0.125, tmaxHours: 1, defaultDoseDays: 1,
+        halfLifeDays: 0.125, tmaxHours: 1, defaultDoseDays: 1, defaultRoute: 'SC',
         color: "#c084fc", emoji: "🟣", short: "에피탈론",
         note: "반감기 ~3시간 · 텔로머레이스 · 코스 투여",
         doseSteps: [5, 10, 15, 20], clinicalMax: 20,
         encyclopediaId: "epitalon"
       },
       "티모신알파1 (Thymosin α1)": {
-        halfLifeDays: 0.125, tmaxHours: 1.5, defaultDoseDays: 3,
+        halfLifeDays: 0.125, tmaxHours: 1.5, defaultDoseDays: 3, defaultRoute: 'SC',
         color: "#fb923c", emoji: "🟠", short: "Tα1",
         note: "반감기 ~3시간 · 면역조절 · 주 2회",
         doseSteps: [0.5, 1, 1.6, 3.2], clinicalMax: 3.2,
         encyclopediaId: "thymosin-alpha-1"
       },
       "GHK-Cu (구리펩타이드)": {
-        halfLifeDays: 0.083, tmaxHours: 1, defaultDoseDays: 1,
+        halfLifeDays: 0.083, tmaxHours: 1, defaultDoseDays: 1, defaultRoute: 'SC',
         color: "#d97706", emoji: "🟤", short: "GHK-Cu",
         note: "반감기 ~2시간 · 조직재생 · 항산화",
         doseSteps: [1, 2, 3, 5], clinicalMax: 5,
         encyclopediaId: "ghk-cu"
       },
       "세맥스 (Semax)": {
-        halfLifeDays: 0.021, tmaxHours: 0.25, defaultDoseDays: 1,
+        halfLifeDays: 0.021, tmaxHours: 0.25, defaultDoseDays: 1, defaultRoute: 'IN',
         color: "#e879f9", emoji: "💜", short: "세맥스",
         note: "반감기 ~30분 · 비강 투여 · 노트로픽",
         doseSteps: [0.3, 0.6, 1, 1.5, 3], clinicalMax: 3,
         encyclopediaId: "semax"
       },
       "셀랑크 (Selank)": {
-        halfLifeDays: 0.021, tmaxHours: 0.25, defaultDoseDays: 1,
+        halfLifeDays: 0.021, tmaxHours: 0.25, defaultDoseDays: 1, defaultRoute: 'IN',
         color: "#86efac", emoji: "🌿", short: "셀랑크",
         note: "반감기 ~30분 · 비강 투여 · 항불안",
         doseSteps: [0.25, 0.5, 1, 1.5], clinicalMax: 1.5,
         encyclopediaId: "selank"
       },
       "CJC-1295+Ipamorelin": {
-        halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 1,
+        halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 1, defaultRoute: 'SC',
         color: "#facc15", emoji: "🟡", short: "CJC+Ipa",
         note: "반감기 ~2시간 · GHRH+GHRP · 성장호르몬 방출",
         doseSteps: [0.1, 0.15, 0.2, 0.3], clinicalMax: 0.3,
         encyclopediaId: "cjc-ipa-protocol"
       },
       "테사모렐린 (Tesamorelin)": {
-        halfLifeDays: 0.1, tmaxHours: 1, defaultDoseDays: 1,
+        halfLifeDays: 0.1, tmaxHours: 1, defaultDoseDays: 1, defaultRoute: 'SC',
         color: "#2dd4bf", emoji: "💎", short: "테사모렐린",
         note: "반감기 ~2.4시간 · GHRH 유사체 · FDA 승인",
         doseSteps: [1, 2], clinicalMax: 2,
         encyclopediaId: "tesamorelin"
       },
       "SS-31 (Elamipretide)": {
-        halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 1,
+        halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 1, defaultRoute: 'SC',
         color: "#38bdf8", emoji: "⚡", short: "SS-31",
         note: "반감기 ~2시간 · 미토콘드리아 보호",
         doseSteps: [0.1, 0.25, 0.5, 1], clinicalMax: 1,
         encyclopediaId: "ss-31"
       },
       "MOTS-c": {
-        halfLifeDays: 0.125, tmaxHours: 1, defaultDoseDays: 3,
+        halfLifeDays: 0.125, tmaxHours: 1, defaultDoseDays: 3, defaultRoute: 'SC',
         color: "#818cf8", emoji: "🔋", short: "MOTS-c",
         note: "반감기 ~3시간 · 미토콘드리아 유래 · 대사조절",
         doseSteps: [5, 10, 15], clinicalMax: 15,
         encyclopediaId: "mots-c"
       },
       "NAD+": {
-        halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 3,
+        halfLifeDays: 0.083, tmaxHours: 0.5, defaultDoseDays: 3, defaultRoute: 'SC',
         color: "#fbbf24", emoji: "⭐", short: "NAD+",
         note: "반감기 ~2시간 · 세포 에너지 · SC/IV",
         doseSteps: [50, 100, 250, 500, 1000], clinicalMax: 1000,
         encyclopediaId: "nad-plus"
       },
     };
+
+    // ══════════════════════════════════════════════
+    // 투여 경로 (Route of Administration)
+    // ══════════════════════════════════════════════
+    const ADMIN_ROUTES = [
+      { id: 'SC', label: '피하주사', emoji: '💉', color: '#60a5fa' },
+      { id: 'IM', label: '근육주사', emoji: '💪', color: '#f87171' },
+      { id: 'IN', label: '비강',     emoji: '👃', color: '#a78bfa' },
+      { id: 'PO', label: '경구',     emoji: '💊', color: '#4ade80' },
+      { id: 'IV', label: '정맥',     emoji: '🩸', color: '#fbbf24' },
+    ];
 
     // 약물별 투약 주기 반환 (사용자 커스텀 or 기본값)
     function getDoseCycle(drug) {
@@ -683,6 +694,351 @@
       scheduleSave();
       renderRemainingCards();
     };
+
+    // ══════════════════════════════════════════════
+    // 사이클 스케줄 시스템
+    // ══════════════════════════════════════════════
+    // schedule type: 'interval' | 'weekdays' | 'cycle' | 'course' | 'daily'
+    // dateStr: 'YYYY-MM-DD' (KST)
+
+    function dateDiffDays(dateStr1, dateStr2) {
+      // dateStr1 ~ dateStr2 사이의 일수 차이 (dateStr2 - dateStr1)
+      const d1 = new Date(dateStr1 + 'T00:00:00+09:00');
+      const d2 = new Date(dateStr2 + 'T00:00:00+09:00');
+      return Math.round((d2 - d1) / 86400000);
+    }
+
+    function shouldTakeOnDate(schedule, dateStr) {
+      if (!schedule) return true; // 스케줄 없으면 매일 활성
+      const type = schedule.type || 'daily';
+      if (type === 'daily') return true;
+
+      if (type === 'interval') {
+        // 마지막 복용일 기준 interval 경과 여부
+        // (달력에서는 항상 true로 처리하고, 실제 체크는 records에서 자동 처리)
+        return true;
+      }
+
+      if (type === 'weekdays') {
+        const dow = new Date(dateStr + 'T00:00:00+09:00').getDay(); // 0=일
+        return (schedule.weekdays || []).includes(dow);
+      }
+
+      if (type === 'cycle') {
+        // N일ON + M일OFF 반복
+        if (!schedule.startDate) return true;
+        const diff = dateDiffDays(schedule.startDate, dateStr);
+        if (diff < 0) return false;
+        const period = (schedule.onDays || 1) + (schedule.offDays || 1);
+        return (diff % period) < (schedule.onDays || 1);
+      }
+
+      if (type === 'course') {
+        // N일 코스 후 M일 휴지기
+        if (!schedule.startDate) return true;
+        const diff = dateDiffDays(schedule.startDate, dateStr);
+        if (diff < 0) return false;
+        const period = (schedule.courseDays || 30) + (schedule.restDays || 14);
+        return (diff % period) < (schedule.courseDays || 30);
+      }
+
+      return true;
+    }
+
+    function getScheduleLabel(schedule) {
+      if (!schedule) return '매일';
+      const type = schedule.type || 'daily';
+      if (type === 'daily') return '매일';
+      if (type === 'interval') return `${schedule.intervalDays || 7}일마다`;
+      if (type === 'weekdays') {
+        const dow = ['일','월','화','수','목','금','토'];
+        return (schedule.weekdays || []).map(d => dow[d]).join('/') + '요일';
+      }
+      if (type === 'cycle') return `${schedule.onDays || 1}일ON/${schedule.offDays || 1}일OFF`;
+      if (type === 'course') return `코스 ${schedule.courseDays || 30}일+휴 ${schedule.restDays || 14}일`;
+      return '매일';
+    }
+
+    function getCourseDayInfo(schedule, dateStr) {
+      // 현재 코스에서 몇 일째인지 반환
+      if (!schedule || schedule.type !== 'course' || !schedule.startDate) return null;
+      const diff = dateDiffDays(schedule.startDate, dateStr);
+      if (diff < 0) return null;
+      const period = (schedule.courseDays || 30) + (schedule.restDays || 14);
+      const dayInPeriod = diff % period;
+      if (dayInPeriod < (schedule.courseDays || 30)) {
+        return `코스 ${dayInPeriod + 1}/${schedule.courseDays || 30}일`;
+      } else {
+        const restDay = dayInPeriod - (schedule.courseDays || 30) + 1;
+        return `휴지기 ${restDay}/${schedule.restDays || 14}일`;
+      }
+    }
+
+    // 스케줄 편집 모달
+    window.openDrugScheduleModal = function(drug) {
+      const sched = (appData.drugSchedules || {})[drug] || { type: 'interval', intervalDays: getDoseCycle(drug) };
+      const isLight = document.body.classList.contains("light-mode");
+      const bg = isLight ? '#fff' : '#0f172a';
+      const fg = isLight ? '#1a1a2e' : '#f1f5f9';
+      const inputBg = isLight ? '#f8fafc' : '#1e293b';
+      const inputBd = isLight ? '#e2e8f0' : '#374151';
+
+      const modalHtml = `
+        <div id="sched-modal" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-end">
+          <div style="background:${bg};border-top:2px solid #60a5fa;border-radius:20px 20px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 32px;color:${fg};font-family:inherit">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <div style="font-size:16px;font-weight:700">⏱️ ${drug.split(' ')[0]} 사이클 설정</div>
+              <button onclick="document.getElementById('sched-modal').remove()" style="background:none;border:none;color:#6b7280;font-size:22px;cursor:pointer">✕</button>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:8px">스케줄 타입</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                ${[
+                  {val:'daily', label:'매일'},
+                  {val:'interval', label:'N일마다'},
+                  {val:'weekdays', label:'특정 요일'},
+                  {val:'cycle', label:'ON/OFF 반복'},
+                  {val:'course', label:'코스+휴지기'},
+                ].map(t => `<button onclick="selectSchedType('${t.val}')"
+                  id="sched-type-${t.val}"
+                  style="padding:10px;border-radius:10px;border:2px solid ${sched.type===t.val?'#60a5fa':'#374151'};
+                         background:${sched.type===t.val?'#1d4ed822':'#1f2937'};
+                         color:${sched.type===t.val?'#60a5fa':'#9ca3af'};
+                         font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+                  ${t.label}
+                </button>`).join('')}
+              </div>
+            </div>
+            <div id="sched-params" style="margin-bottom:16px"></div>
+            <input type="hidden" id="sched-drug" value="${drug.replace(/'/g,'&#39;')}" />
+            <div style="display:flex;gap:8px">
+              <button onclick="document.getElementById('sched-modal').remove()"
+                style="flex:1;padding:12px;background:#374151;border:none;border-radius:10px;color:#9ca3af;font-size:13px;cursor:pointer;font-family:inherit">취소</button>
+              <button onclick="saveDrugSchedule()"
+                style="flex:2;padding:12px;background:#1d4ed8;border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">저장</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      window._schedData = JSON.parse(JSON.stringify(sched));
+      renderSchedParams(sched.type, sched);
+    };
+
+    window.selectSchedType = function(type) {
+      document.querySelectorAll('[id^="sched-type-"]').forEach(b => {
+        const isActive = b.id === 'sched-type-' + type;
+        b.style.borderColor = isActive ? '#60a5fa' : '#374151';
+        b.style.background = isActive ? '#1d4ed822' : '#1f2937';
+        b.style.color = isActive ? '#60a5fa' : '#9ca3af';
+      });
+      window._schedData = window._schedData || {};
+      window._schedData.type = type;
+      renderSchedParams(type, window._schedData);
+    };
+
+    window.toggleSchedDow = function(i) {
+      window._schedData = window._schedData || {};
+      window._schedData.weekdays = window._schedData.weekdays || [];
+      const idx = window._schedData.weekdays.indexOf(i);
+      if (idx >= 0) window._schedData.weekdays.splice(idx, 1);
+      else window._schedData.weekdays.push(i);
+      const btn = document.getElementById('sp-dow-' + i);
+      if (btn) {
+        const on = window._schedData.weekdays.includes(i);
+        btn.style.borderColor = on ? '#60a5fa' : '#374151';
+        btn.style.background = on ? '#1d4ed822' : '#1f2937';
+        btn.style.color = on ? '#60a5fa' : '#9ca3af';
+      }
+    };
+
+    window.saveDrugSchedule = function() {
+      const drug = document.getElementById("sched-drug")?.value;
+      if (!drug) return;
+      const data = window._schedData || {};
+      const type = data.type || 'daily';
+      let sched = { type };
+      if (type === 'interval') sched.intervalDays = parseInt(document.getElementById("sp-interval")?.value) || 7;
+      if (type === 'weekdays') sched.weekdays = data.weekdays || [];
+      if (type === 'cycle') {
+        sched.onDays = parseInt(document.getElementById("sp-ondays")?.value) || 5;
+        sched.offDays = parseInt(document.getElementById("sp-offdays")?.value) || 2;
+        sched.startDate = document.getElementById("sp-startdate")?.value || kstDateStr(Date.now());
+      }
+      if (type === 'course') {
+        sched.courseDays = parseInt(document.getElementById("sp-coursedays")?.value) || 30;
+        sched.restDays = parseInt(document.getElementById("sp-restdays")?.value) || 14;
+        sched.startDate = document.getElementById("sp-startdate")?.value || kstDateStr(Date.now());
+      }
+      appData.drugSchedules = appData.drugSchedules || {};
+      appData.drugSchedules[drug] = sched;
+      scheduleSave();
+      document.getElementById("sched-modal")?.remove();
+      renderRemainingCards();
+      showToast(`✅ ${drug.split(' ')[0]} 스케줄 저장`);
+    };
+
+    window.openSuppScheduleModal = function(suppId) {
+      const supp = (appData.supplements || []).find(s => s.id === suppId);
+      if (!supp) return;
+      const sched = (appData.suppSchedules || {})[suppId] || { type: 'daily' };
+      window._suppSchedId = suppId;
+      window._schedData = JSON.parse(JSON.stringify(sched));
+
+      const modalHtml = `
+        <div id="supp-sched-modal" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-end">
+          <div style="background:#0f172a;border-top:2px solid #a78bfa;border-radius:20px 20px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 32px;color:#f1f5f9;font-family:inherit">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <div style="font-size:16px;font-weight:700">⏱️ ${supp.name} 스케줄</div>
+              <button onclick="document.getElementById('supp-sched-modal').remove()" style="background:none;border:none;color:#6b7280;font-size:22px;cursor:pointer">✕</button>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:8px">스케줄 타입</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                ${[
+                  {val:'daily', label:'매일'},
+                  {val:'interval', label:'N일마다'},
+                  {val:'weekdays', label:'특정 요일'},
+                  {val:'cycle', label:'ON/OFF 반복'},
+                  {val:'course', label:'코스+휴지기'},
+                ].map(t => `<button onclick="selectSuppSchedType('${t.val}')"
+                  id="supp-sched-type-${t.val}"
+                  style="padding:10px;border-radius:10px;border:2px solid ${sched.type===t.val?'#a78bfa':'#374151'};
+                         background:${sched.type===t.val?'#7c3aed22':'#1f2937'};
+                         color:${sched.type===t.val?'#a78bfa':'#9ca3af'};
+                         font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+                  ${t.label}
+                </button>`).join('')}
+              </div>
+            </div>
+            <div id="supp-sched-params" style="margin-bottom:16px"></div>
+            <div style="display:flex;gap:8px">
+              <button onclick="document.getElementById('supp-sched-modal').remove()"
+                style="flex:1;padding:12px;background:#374151;border:none;border-radius:10px;color:#9ca3af;font-size:13px;cursor:pointer;font-family:inherit">취소</button>
+              <button onclick="saveSuppSchedule()"
+                style="flex:2;padding:12px;background:#7c3aed;border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">저장</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      // supp-sched-params에 렌더 (sched-params 함수 재사용, id만 다름)
+      const pEl = document.getElementById("supp-sched-params");
+      if (pEl) {
+        const inputStyle = `width:100%;padding:10px;background:#1e293b;border:1px solid #374151;border-radius:8px;color:#f1f5f9;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;`;
+        renderSchedParamsTo(pEl, sched.type, sched, inputStyle);
+      }
+    };
+
+    window.selectSuppSchedType = function(type) {
+      document.querySelectorAll('[id^="supp-sched-type-"]').forEach(b => {
+        const isActive = b.id === 'supp-sched-type-' + type;
+        b.style.borderColor = isActive ? '#a78bfa' : '#374151';
+        b.style.background = isActive ? '#7c3aed22' : '#1f2937';
+        b.style.color = isActive ? '#a78bfa' : '#9ca3af';
+      });
+      window._schedData = window._schedData || {};
+      window._schedData.type = type;
+      const pEl = document.getElementById("supp-sched-params");
+      if (pEl) {
+        const inputStyle = `width:100%;padding:10px;background:#1e293b;border:1px solid #374151;border-radius:8px;color:#f1f5f9;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;`;
+        renderSchedParamsTo(pEl, type, window._schedData, inputStyle);
+      }
+    };
+
+    function renderSchedParamsTo(container, type, data, inputStyle) {
+      if (!container) return;
+      if (type === 'daily') { container.innerHTML = '<div style="font-size:12px;color:#4a5568;text-align:center;padding:10px">매일 복용</div>'; return; }
+      if (type === 'interval') {
+        container.innerHTML = `<div>
+          <div style="font-size:11px;color:#6b7280;margin-bottom:4px">N일마다</div>
+          <input id="sp-interval" type="number" min="1" step="1" value="${data.intervalDays||7}" style="${inputStyle}" />
+        </div>`;
+        return;
+      }
+      if (type === 'weekdays') {
+        const dow = ['일','월','화','수','목','금','토'];
+        const sel = data.weekdays || [];
+        container.innerHTML = `<div>
+          <div style="font-size:11px;color:#6b7280;margin-bottom:6px">복용 요일</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            ${dow.map((d,i) => `<button id="sp-dow-${i}" onclick="toggleSchedDow(${i})"
+              style="width:40px;height:40px;border-radius:50%;border:2px solid ${sel.includes(i)?'#60a5fa':'#374151'};
+                     background:${sel.includes(i)?'#1d4ed822':'#1f2937'};
+                     color:${sel.includes(i)?'#60a5fa':'#9ca3af'};font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+              ${d}
+            </button>`).join('')}
+          </div>
+        </div>`;
+        return;
+      }
+      if (type === 'cycle') {
+        container.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">ON 일수</div>
+            <input id="sp-ondays" type="number" min="1" step="1" value="${data.onDays||5}" style="${inputStyle}" />
+          </div>
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">OFF 일수</div>
+            <input id="sp-offdays" type="number" min="1" step="1" value="${data.offDays||2}" style="${inputStyle}" />
+          </div>
+          <div style="grid-column:1/-1">
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">시작일</div>
+            <input id="sp-startdate" type="date" value="${data.startDate||kstDateStr(Date.now())}" style="${inputStyle}" />
+          </div>
+        </div>`;
+        return;
+      }
+      if (type === 'course') {
+        container.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">코스 일수</div>
+            <input id="sp-coursedays" type="number" min="1" step="1" value="${data.courseDays||30}" style="${inputStyle}" />
+          </div>
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">휴지기 일수</div>
+            <input id="sp-restdays" type="number" min="1" step="1" value="${data.restDays||14}" style="${inputStyle}" />
+          </div>
+          <div style="grid-column:1/-1">
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">코스 시작일</div>
+            <input id="sp-startdate" type="date" value="${data.startDate||kstDateStr(Date.now())}" style="${inputStyle}" />
+          </div>
+        </div>`;
+        return;
+      }
+    }
+
+    window.saveSuppSchedule = function() {
+      const suppId = window._suppSchedId;
+      if (!suppId) return;
+      const data = window._schedData || {};
+      const type = data.type || 'daily';
+      let sched = { type };
+      if (type === 'interval') sched.intervalDays = parseInt(document.getElementById("sp-interval")?.value) || 7;
+      if (type === 'weekdays') sched.weekdays = data.weekdays || [];
+      if (type === 'cycle') {
+        sched.onDays = parseInt(document.getElementById("sp-ondays")?.value) || 5;
+        sched.offDays = parseInt(document.getElementById("sp-offdays")?.value) || 2;
+        sched.startDate = document.getElementById("sp-startdate")?.value || kstDateStr(Date.now());
+      }
+      if (type === 'course') {
+        sched.courseDays = parseInt(document.getElementById("sp-coursedays")?.value) || 30;
+        sched.restDays = parseInt(document.getElementById("sp-restdays")?.value) || 14;
+        sched.startDate = document.getElementById("sp-startdate")?.value || kstDateStr(Date.now());
+      }
+      appData.suppSchedules = appData.suppSchedules || {};
+      appData.suppSchedules[suppId] = sched;
+      scheduleSave();
+      document.getElementById("supp-sched-modal")?.remove();
+      renderSupplementPanel();
+      showToast('✅ 영양제 스케줄 저장');
+    };
+
+    // ── renderSchedParams (drug 스케줄 모달용, sched-params에 렌더) ──
+    function renderSchedParams(type, data) {
+      const c = document.getElementById("sched-params");
+      if (!c) return;
+      const inputStyle = `width:100%;padding:10px;background:#1e293b;border:1px solid #374151;border-radius:8px;color:#f1f5f9;font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;`;
+      renderSchedParamsTo(c, type, data, inputStyle);
+    }
 
     // 1-compartment oral PK: 흡수 + 소실 모델
     // 반환값: 상대농도 (dose 단위 기준 mg 환산)
@@ -734,8 +1090,10 @@
       appData.records = appData.records || [];
       const rec = { id: Date.now(), drug, dose, time: kstInputToMs(timeVal) };
       if (selectedSite) rec.site = selectedSite;
+      rec.route = selectedRoute || DRUG_CONFIG[drug]?.defaultRoute || 'SC';
       appData.records.push(rec);
       selectedSite = null;
+      selectedRoute = null;
       scheduleSave();
       document.getElementById("add-modal").style.display = "none";
       renderAll();
@@ -894,6 +1252,43 @@
     };
 
     let selectedSite = null;
+    let selectedRoute = null;
+
+    // 투여 경로 선택 버튼 렌더
+    function renderRouteSelector(drug) {
+      const c = document.getElementById("route-selector");
+      if (!c) return;
+      const defaultRoute = DRUG_CONFIG[drug]?.defaultRoute || 'SC';
+      if (!selectedRoute) selectedRoute = defaultRoute;
+      const isLight = document.body.classList.contains("light-mode");
+      c.innerHTML = ADMIN_ROUTES.map(r => {
+        const isSel = r.id === selectedRoute;
+        return `<button id="route-btn-${r.id}" onclick="selectRoute('${r.id}')"
+          style="padding:8px 10px;border-radius:10px;border:2px solid ${isSel ? r.color : (isLight?'#d1d5db':'#374151')};
+                 background:${isSel ? r.color+'22' : (isLight?'#f8fafc':'#1f2937')};
+                 color:${isSel ? r.color : (isLight?'#6b7280':'#9ca3af')};
+                 font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;
+                 display:flex;flex-direction:column;align-items:center;gap:2px;flex:1">
+          <span style="font-size:16px">${r.emoji}</span>
+          <span>${r.id}</span>
+          <span style="font-size:9px;white-space:nowrap">${r.label}</span>
+        </button>`;
+      }).join('');
+    }
+
+    window.selectRoute = (routeId) => {
+      selectedRoute = routeId;
+      const isLight = document.body.classList.contains("light-mode");
+      ADMIN_ROUTES.forEach(r => {
+        const btn = document.getElementById("route-btn-" + r.id);
+        if (!btn) return;
+        const isSel = r.id === routeId;
+        btn.style.borderColor = isSel ? r.color : (isLight?'#d1d5db':'#374151');
+        btn.style.background = isSel ? r.color + '22' : (isLight?'#f8fafc':'#1f2937');
+        btn.style.color = isSel ? r.color : (isLight?'#6b7280':'#9ca3af');
+      });
+    };
+
     window.selectSite = (siteId) => {
       selectedSite = siteId;
       document.querySelectorAll('[id^="site-btn-"]').forEach(b => {
@@ -1066,10 +1461,16 @@
       if (!c) return;
       const supps = getSupplements();
       const today = getTodayKey();
+      const todayStr = kstDateStr(Date.now());
       let html = "";
 
       ALL_TIMINGS.forEach(timing => {
-        const relevant = supps.filter(s => s.timing?.includes(timing));
+        // 스케줄이 있는 경우 오늘 복용해야 하는지 체크
+        const relevant = supps.filter(s => {
+          if (!s.timing?.includes(timing)) return false;
+          const sched = (appData.suppSchedules || {})[s.id];
+          return shouldTakeOnDate(sched, todayStr);
+        });
         if (!relevant.length) return;
         const allDone = relevant.every(s => s.taken?.[today+"_"+timing]);
         const doneCount = relevant.filter(s => s.taken?.[today+"_"+timing]).length;
@@ -1109,6 +1510,17 @@
                               ${done?"text-decoration:line-through;opacity:.65":""}">
                     ${s.name}
                   </div>
+                  ${(() => {
+                    const sched = (appData.suppSchedules || {})[s.id];
+                    if (!sched || sched.type === 'daily') return '';
+                    const todayStr = kstDateStr(Date.now());
+                    const label = getScheduleLabel(sched);
+                    const courseInfo = getCourseDayInfo(sched, todayStr);
+                    return `<div style="display:flex;gap:4px;margin-top:2px;flex-wrap:wrap;align-items:center">
+                      <span style="font-size:9px;background:#a78bfa22;border:1px solid #a78bfa55;border-radius:6px;padding:1px 6px;color:#a78bfa">${label}</span>
+                      ${courseInfo ? `<span style="font-size:9px;background:#fbbf2422;border:1px solid #fbbf2455;border-radius:6px;padding:1px 6px;color:#fbbf24">${courseInfo}</span>` : ''}
+                    </div>`;
+                  })()}
                   <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap">
                     ${ALL_TIMINGS.map(t =>
                       `<button onclick="toggleSupplTiming('${s.id}','${t}')"
@@ -1120,6 +1532,9 @@
                       </button>`).join("")}
                   </div>
                 </div>
+                <button onclick="openSuppScheduleModal('${s.id}')" title="스케줄 설정"
+                  style="background:none;border:none;color:#a78bfa;font-size:14px;
+                         cursor:pointer;padding:4px;flex-shrink:0">⏱️</button>
                 <button onclick="removeSupplement('${s.id}')"
                   style="background:none;border:none;color:#2d3748;font-size:16px;
                          cursor:pointer;padding:4px;flex-shrink:0">✕</button>
@@ -1210,6 +1625,8 @@
       renderWaterTracker();
       if (document.getElementById("panel-calendar")?.style.display !== "none") renderCalendar();
       if (document.getElementById("wtab-inbody")?.style.display !== "none") renderInbodyPanel();
+      if (document.getElementById("recon-section")) renderReconSection();
+      if (document.getElementById("inventory-section")) renderInventorySection();
       startLiveUpdate();
     }
 
@@ -1442,7 +1859,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="display:flex;gap:10px;align-items:center">
               <span style="font-size:10px;color:${t.info}">반감기 ${cfg.halfLifeDays}일</span>
-              ${lastRec ? `<span style="font-size:10px;color:${t.info}">최근: ${msToKstInput(lastRec.time).slice(0,10)}</span>` : `<span style="font-size:10px;color:${t.info}">기록 없음</span>`}
+              ${lastRec ? `<span style="font-size:10px;color:${t.info}">최근: ${msToKstInput(lastRec.time).slice(0,10)}</span>${(() => { const ri = ADMIN_ROUTES.find(r => r.id === (lastRec.route || DRUG_CONFIG[drug]?.defaultRoute || 'SC')); return ri ? `<span style="font-size:10px;background:${ri.color}22;border:1px solid ${ri.color}55;border-radius:8px;padding:1px 6px;color:${ri.color}">${ri.emoji} ${ri.id}</span>` : ''; })()}` : `<span style="font-size:10px;color:${t.info}">기록 없음</span>`}
             </div>
             <div style="display:flex;gap:6px;align-items:center">
               <!-- 주기 설정 -->
@@ -1457,6 +1874,9 @@
               <button onclick="openOverrideModal('${drug}')" title="체내 농도 수동 설정"
                 style="background:${t.gearBg};border:1px solid ${t.gearBd};border-radius:6px;color:${t.gearClr};
                        padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">⚙️</button>
+              <button onclick="openDrugScheduleModal('${drug}')" title="사이클 스케줄 설정"
+                style="background:${t.gearBg};border:1px solid ${t.gearBd};border-radius:6px;color:${t.gearClr};
+                       padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">⏱️</button>
               ${cfg.encyclopediaId ? `<button onclick="openEncyclopediaFromCard('${cfg.encyclopediaId}')" title="백과사전에서 정보 보기"
                 style="background:${isLight?'#eff6ff':'#1e3a5f'};border:1px solid ${isLight?'#bfdbfe':'#3b82f655'};border-radius:6px;color:${isLight?'#2563eb':'#60a5fa'};
                        padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">📖</button>` : ''}
@@ -1503,7 +1923,7 @@
       const inputId = m.dataset.inputId;
       const siteInfo = INJECTION_SITES.find(s => s.id === siteId);
       appData.records = appData.records || [];
-      appData.records.push({ id: Date.now(), drug, dose, time: Date.now(), site: siteId });
+      appData.records.push({ id: Date.now(), drug, dose, time: Date.now(), site: siteId, route: DRUG_CONFIG[drug]?.defaultRoute || 'SC' });
       const input = document.getElementById(inputId);
       if (input) input.value = "";
       m.style.display = "none";
@@ -1537,9 +1957,10 @@
       c.innerHTML = recs.map(r => {
         const cfg = DRUG_CONFIG[r.drug] || {};
         const siteInfo = r.site ? INJECTION_SITES.find(s => s.id === r.site) : null;
+        const routeInfo = ADMIN_ROUTES.find(rt => rt.id === (r.route || cfg.defaultRoute || 'SC'));
         return `<div class="record-row" style="border-color:${cfg.color}22">
           <div>
-            <div style="font-size:12px;color:${cfg.color};margin-bottom:3px">${cfg.emoji||""} ${r.drug}${r.isOverride?' <span style="font-size:10px;color:#facc15">[수동]</span>':''}</div>
+            <div style="font-size:12px;color:${cfg.color};margin-bottom:3px">${cfg.emoji||""} ${r.drug}${r.isOverride?' <span style="font-size:10px;color:#facc15">[수동]</span>':''}${routeInfo ? ` <span style="font-size:9px;background:${routeInfo.color}22;border:1px solid ${routeInfo.color}55;border-radius:6px;padding:1px 5px;color:${routeInfo.color}">${routeInfo.emoji} ${routeInfo.id}</span>` : ''}</div>
             <div style="font-size:17px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace">${r.dose} mg</div>
             <div style="font-size:11px;color:#4a5568;margin-top:2px">${toKSTString(r.time)}${siteInfo ? ` · <span style="color:#6b7280">${siteInfo.emoji}${siteInfo.label}</span>` : ''}</div>
           </div>
@@ -2367,20 +2788,23 @@
       document.getElementById("add-time").value = kstNow();
       document.getElementById("add-dose").value = "";
       selectedSite = null;
+      selectedRoute = null;
       // 드롭다운 동적 생성 (DRUG_CONFIG 기반)
       const sel = document.getElementById("add-drug");
       sel.innerHTML = Object.keys(DRUG_CONFIG).map(d =>
         `<option value="${d}">${DRUG_CONFIG[d].emoji} ${d}</option>`
       ).join('');
       if (prefillDrug && DRUG_CONFIG[prefillDrug]) sel.value = prefillDrug;
-      // 용량 자동 채우기
+      // 용량 자동 채우기 + 경로 업데이트
       sel.onchange = () => {
         const lastDose = getLastDose(sel.value);
         if (lastDose) document.getElementById("add-dose").value = lastDose;
+        selectedRoute = DRUG_CONFIG[sel.value]?.defaultRoute || 'SC';
+        renderRouteSelector(sel.value);
       };
       sel.dispatchEvent(new Event("change"));
       document.getElementById("add-modal").style.display = "flex";
-      setTimeout(renderSiteSelector, 50);
+      setTimeout(() => { renderSiteSelector(); renderRouteSelector(sel.value); }, 50);
     };
     window.closeAddModal = () => document.getElementById("add-modal").style.display = "none";
     window.openWeightModal = () => {
@@ -2473,10 +2897,26 @@
       return `${sym}${val.toFixed(2)}`;
     }
 
+    // 키트/바이알 단위 토글
+    window.setCostUnit = function(unit) {
+      const kitWrap = document.getElementById("cost-kit-wrap");
+      if (kitWrap) kitWrap.style.display = unit === 'kit' ? 'block' : 'none';
+      document.querySelectorAll('.cost-unit-btn').forEach(b => {
+        const isActive = b.dataset.unit === unit;
+        b.style.background = isActive ? '#1d4ed8' : (document.body.classList.contains("light-mode") ? '#f3f4f6' : '#1f2937');
+        b.style.color = isActive ? 'white' : (document.body.classList.contains("light-mode") ? '#374151' : '#9ca3af');
+        b.style.borderColor = isActive ? '#3b82f6' : (document.body.classList.contains("light-mode") ? '#d1d5db' : '#374151');
+      });
+      calcCost(); saveCostSettings();
+    };
+
     window.calcCost = function() {
       const purchasePrice = parseFloat(document.getElementById("cost-price")?.value) || 0;
       const purchaseCurrency = document.getElementById("cost-currency")?.value || "USD";
-      const injFreqPerWeek = parseFloat(document.getElementById("cost-freq")?.value) || 1;
+      const intervalDays = parseFloat(document.getElementById("cost-interval")?.value) || 7;
+      const shipping = parseFloat(document.getElementById("cost-shipping")?.value) || 0;
+      const purchaseUnit = document.querySelector('.cost-unit-btn[style*="background:#1d4ed8"]')?.dataset?.unit || 'vial';
+      const vialsPerKit = parseFloat(document.getElementById("cost-vials-per-kit")?.value) || 1;
       // 소모품
       const syringeCost = parseFloat(document.getElementById("cost-syringe")?.value) || 0;
       const bacWaterCost = parseFloat(document.getElementById("cost-bac")?.value) || 0;
@@ -2494,14 +2934,18 @@
       }
 
       const purchaseKRW = toKRW(purchasePrice, purchaseCurrency);
+      // 총 구매 비용 = 구매가(KRW) + 배송비
+      const totalPurchaseKRW = purchaseKRW + shipping;
+      // 바이알당 KRW (키트 단위면 키트당 바이알 수로 나눔)
+      const vialKRW = purchaseUnit === 'kit' ? totalPurchaseKRW / vialsPerKit : totalPurchaseKRW;
       // 소모품 총 비용 (KRW, 회당)
       const consumablePerInj = syringeCost + swabCost + (injPerVial > 0 ? bacWaterCost / injPerVial : 0);
       // 약물 회당 비용
-      const drugPerInj = injPerVial > 0 ? purchaseKRW / injPerVial : 0;
+      const drugPerInj = injPerVial > 0 ? vialKRW / injPerVial : 0;
       const totalPerInj = drugPerInj + consumablePerInj;
-      const totalPerWeek = totalPerInj * injFreqPerWeek;
-      const totalPerDay = totalPerWeek / 7;
-      const totalPerMonth = totalPerWeek * 4.33;
+      const totalPerDay = totalPerInj / intervalDays;
+      const totalPerWeek = totalPerDay * 7;
+      const totalPerMonth = totalPerDay * 30;
 
       const isLight = document.body.classList.contains("light-mode");
       const rowBg = isLight ? '#f8fafc' : '#0d0d1a';
@@ -2539,7 +2983,7 @@
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-            ${[['일당', totalPerDay],['주당 ('+injFreqPerWeek+'회)', totalPerWeek],['월당', totalPerMonth]].map(([label, val]) => `
+            ${[['일당', totalPerDay],['주당', totalPerWeek],['월당 (30일)', totalPerMonth]].map(([label, val]) => `
             <div style="background:${rowBg};border-radius:8px;padding:8px;text-align:center">
               <div style="font-size:10px;color:${lblClr};margin-bottom:3px">${label}</div>
               <div style="font-size:13px;font-weight:700;color:${valClr};font-family:'JetBrains Mono'">₩${Math.round(val).toLocaleString()}</div>
@@ -2549,10 +2993,14 @@
     };
 
     window.saveCostSettings = function() {
+      const purchaseUnit = document.querySelector('.cost-unit-btn[style*="background:#1d4ed8"]')?.dataset?.unit || 'vial';
       appData.costCalc = {
         currency: document.getElementById("cost-currency")?.value || "USD",
         price: document.getElementById("cost-price")?.value || "",
-        freq: document.getElementById("cost-freq")?.value || "1",
+        intervalDays: document.getElementById("cost-interval")?.value || "7",
+        shipping: document.getElementById("cost-shipping")?.value || "0",
+        purchaseUnit,
+        vialsPerKit: document.getElementById("cost-vials-per-kit")?.value || "1",
         syringe: document.getElementById("cost-syringe")?.value || "0",
         bac: document.getElementById("cost-bac")?.value || "0",
         swab: document.getElementById("cost-swab")?.value || "0",
@@ -2565,11 +3013,348 @@
       const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
       set("cost-currency", c.currency);
       set("cost-price", c.price);
-      set("cost-freq", c.freq);
+      set("cost-interval", c.intervalDays);
+      set("cost-shipping", c.shipping);
+      set("cost-vials-per-kit", c.vialsPerKit);
       set("cost-syringe", c.syringe);
       set("cost-bac", c.bac);
       set("cost-swab", c.swab);
+      // 단위 버튼 복원
+      if (c.purchaseUnit) {
+        setTimeout(() => setCostUnit(c.purchaseUnit), 100);
+      }
     }
+
+    // ══════════════════════════════════════════════
+    // 조제 재고 관리 (reconVials)
+    // ══════════════════════════════════════════════
+    // ══════════════════════════════════════════════
+    // 약 재고 관리 (inventory)
+    // ══════════════════════════════════════════════
+    const INVENTORY_UNITS = ['vial', 'kit', '정', 'ml', '기타'];
+
+    window.renderInventorySection = function() {
+      const c = document.getElementById("inventory-section");
+      if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
+      const inv = appData.inventory || [];
+
+      if (!inv.length) {
+        c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:16px;font-size:13px">재고 항목이 없습니다</div>`;
+        return;
+      }
+
+      const rowBg = isLight ? '#f8fafc' : '#0d0d1a';
+      const borderClr = isLight ? '#e2e8f0' : '#1f2937';
+      const lblClr = isLight ? '#374151' : '#9ca3af';
+      const valClr = isLight ? '#111827' : '#e2e8f0';
+      const today = Date.now();
+
+      c.innerHTML = inv.map(item => {
+        const cfg = DRUG_CONFIG[item.drug] || {};
+        const vialCount = item.unit === 'kit' ? (item.quantity || 0) * (item.vialsPerUnit || 1) : (item.quantity || 0);
+        const totalMg = vialCount * (item.mgPerVial || 0);
+
+        // 소진 예상일 계산
+        let exhaustLabel = '';
+        let urgentColor = '';
+        const latestVial = (appData.reconVials || [])
+          .filter(v => v.drug === item.drug)
+          .sort((a, b) => b.reconDate - a.reconDate)[0];
+        const doseMg = latestVial?.doseMg || 0;
+        const intervalDays = getDoseCycle(item.drug);
+        if (totalMg > 0 && doseMg > 0 && intervalDays > 0) {
+          const injectionsLeft = Math.floor(totalMg / doseMg);
+          const daysLeft = injectionsLeft * intervalDays;
+          const exhaustMs = today + daysLeft * 86400000;
+          const daysUntil = Math.round(daysLeft);
+          exhaustLabel = kstDateStr(exhaustMs) + ' (~' + daysUntil + '일)';
+          if (daysUntil <= 14) urgentColor = '#f87171';
+        } else if (totalMg === 0) {
+          exhaustLabel = '재고 없음';
+          urgentColor = '#f87171';
+        }
+
+        return `<div style="background:${rowBg};border:1px solid ${urgentColor || borderClr};border-radius:12px;padding:12px;margin-bottom:8px${urgentColor ? ';box-shadow:0 0 0 1px ' + urgentColor + '33' : ''}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:${cfg.color||valClr}">${cfg.emoji||'📦'} ${item.drug}</div>
+              <div style="font-size:10px;color:#6b7280">${item.purchaseDate ? kstDateStr(item.purchaseDate) + ' 구매' : ''}</div>
+            </div>
+            ${urgentColor ? `<span style="font-size:10px;background:#f8717122;border:1px solid #f8717155;border-radius:8px;padding:2px 8px;color:#f87171;font-weight:700">재구매 임박</span>` : ''}
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:6px">
+            <div style="text-align:center">
+              <div style="font-size:18px;font-weight:900;color:${urgentColor||valClr};font-family:'JetBrains Mono'">${item.quantity}</div>
+              <div style="font-size:10px;color:#6b7280">${item.unit}</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:16px;font-weight:700;color:${valClr};font-family:'JetBrains Mono'">${totalMg.toLocaleString()}</div>
+              <div style="font-size:10px;color:#6b7280">총 mg</div>
+            </div>
+            <div style="flex:1">
+              <div style="font-size:11px;color:${urgentColor||'#6b7280'}">📅 ${exhaustLabel}</div>
+              ${item.notes ? `<div style="font-size:11px;color:#6b7280;margin-top:2px">📝 ${item.notes}</div>` : ''}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;justify-content:flex-end">
+            <button onclick="adjustInventory(${item.id},-1)" style="width:26px;height:26px;border-radius:6px;border:1px solid ${isLight?'#d1d5db':'#374151'};background:${isLight?'#f3f4f6':'#1f2937'};color:${lblClr};font-size:14px;cursor:pointer;line-height:1">−</button>
+            <button onclick="adjustInventory(${item.id},1)" style="width:26px;height:26px;border-radius:6px;border:1px solid ${isLight?'#d1d5db':'#374151'};background:${isLight?'#f3f4f6':'#1f2937'};color:${lblClr};font-size:14px;cursor:pointer;line-height:1">+</button>
+            <button onclick="deleteInventory(${item.id})" style="width:26px;height:26px;border-radius:6px;border:1px solid #37414166;background:#1f2937;color:#6b7280;font-size:12px;cursor:pointer;line-height:1">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+    };
+
+    window.adjustInventory = function(itemId, delta) {
+      const item = (appData.inventory || []).find(i => i.id === itemId);
+      if (!item) return;
+      item.quantity = Math.max(0, (item.quantity || 0) + delta);
+      scheduleSave();
+      renderInventorySection();
+    };
+
+    window.deleteInventory = function(itemId) {
+      appData.inventory = (appData.inventory || []).filter(i => i.id !== itemId);
+      scheduleSave();
+      renderInventorySection();
+    };
+
+    window.openInventoryModal = function() {
+      const isLight = document.body.classList.contains("light-mode");
+      const inputStyle = `width:100%;padding:10px;background:${isLight?'#f8fafc':'#1e293b'};border:1px solid ${isLight?'#e2e8f0':'#374151'};border-radius:8px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;`;
+
+      const modalHtml = `
+        <div id="inventory-modal" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-end">
+          <div style="background:${isLight?'#fff':'#0f172a'};border-top:2px solid #fbbf24;border-radius:20px 20px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 32px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-family:inherit">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <div style="font-size:16px;font-weight:700">📦 재고 추가</div>
+              <button onclick="document.getElementById('inventory-modal').remove()" style="background:none;border:none;color:#6b7280;font-size:22px;cursor:pointer">✕</button>
+            </div>
+            <div style="margin-bottom:10px">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:4px">약물 선택</div>
+              <select id="inv-drug" style="${inputStyle}">
+                ${Object.keys(DRUG_CONFIG).map(d => `<option value="${d}">${DRUG_CONFIG[d].emoji} ${d}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">수량</div>
+                <input id="inv-qty" type="number" step="1" min="1" value="1" style="${inputStyle}" />
+              </div>
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">단위</div>
+                <select id="inv-unit" style="${inputStyle}">
+                  ${INVENTORY_UNITS.map(u => `<option value="${u}">${u}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">키트당 바이알 수</div>
+                <input id="inv-vials-per-unit" type="number" step="1" min="1" value="1" style="${inputStyle}" />
+              </div>
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">바이알당 mg</div>
+                <input id="inv-mg-per-vial" type="number" step="0.1" placeholder="예: 5" style="${inputStyle}" />
+              </div>
+            </div>
+            <div style="margin-bottom:10px">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:4px">구매일</div>
+              <input id="inv-date" type="date" value="${kstDateStr(Date.now())}" style="${inputStyle}" />
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:4px">메모 (선택)</div>
+              <input id="inv-notes" type="text" placeholder="예: 배치번호 ABC123" style="${inputStyle}" />
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onclick="document.getElementById('inventory-modal').remove()" style="flex:1;padding:12px;background:#374151;border:none;border-radius:10px;color:#9ca3af;font-size:13px;cursor:pointer;font-family:inherit">취소</button>
+              <button onclick="submitInventory()" style="flex:2;padding:12px;background:#fbbf24;border:none;border-radius:10px;color:#0a0a14;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">저장</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+    };
+
+    window.submitInventory = function() {
+      const drug = document.getElementById("inv-drug")?.value;
+      const qty = parseFloat(document.getElementById("inv-qty")?.value) || 0;
+      const unit = document.getElementById("inv-unit")?.value || 'vial';
+      const vialsPerUnit = parseInt(document.getElementById("inv-vials-per-unit")?.value) || 1;
+      const mgPerVial = parseFloat(document.getElementById("inv-mg-per-vial")?.value) || 0;
+      const dateStr = document.getElementById("inv-date")?.value;
+      const notes = document.getElementById("inv-notes")?.value || '';
+      if (!drug || qty <= 0) { showToast('⚠️ 약물과 수량을 입력하세요'); return; }
+      appData.inventory = appData.inventory || [];
+      appData.inventory.push({
+        id: Date.now(), drug, unit, vialsPerUnit, mgPerVial, quantity: qty,
+        purchaseDate: dateStr ? new Date(dateStr + 'T00:00:00+09:00').getTime() : Date.now(),
+        notes,
+      });
+      scheduleSave();
+      document.getElementById("inventory-modal")?.remove();
+      renderInventorySection();
+      showToast('✅ 재고 저장 완료');
+    };
+
+    window.renderReconSection = function() {
+      const c = document.getElementById("recon-section");
+      if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
+      const vials = appData.reconVials || [];
+      const activeDrugs = getActiveDrugs();
+
+      if (!vials.length) {
+        c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:16px;font-size:13px">조제된 바이알이 없습니다</div>`;
+        return;
+      }
+
+      // 활성 약물의 최신 바이알만 표시
+      const latestByDrug = {};
+      vials.forEach(v => {
+        if (!latestByDrug[v.drug] || v.reconDate > latestByDrug[v.drug].reconDate) {
+          latestByDrug[v.drug] = v;
+        }
+      });
+
+      c.innerHTML = Object.entries(latestByDrug)
+        .filter(([drug]) => activeDrugs.includes(drug) || true)
+        .map(([drug, v]) => {
+          const cfg = DRUG_CONFIG[drug] || {};
+          const totalInj = v.vialMg > 0 && v.doseMg > 0 ? Math.floor(v.vialMg * 1000 / v.doseMg) : 0;
+          const remaining = Math.max(0, totalInj - (v.injDone || 0));
+          const pct = totalInj > 0 ? Math.round(remaining / totalInj * 100) : 0;
+          const intervalDays = getDoseCycle(drug);
+          const reconDateStr = kstDateStr(v.reconDate);
+          const isShortHalf = cfg.halfLifeDays < 0.1;
+          let exhaustLabel = '';
+          if (isShortHalf) {
+            exhaustLabel = '당일 소진';
+          } else if (remaining > 0 && intervalDays > 0) {
+            const daysLeft = remaining * intervalDays;
+            const exhaustMs = Date.now() + daysLeft * 86400000;
+            exhaustLabel = kstDateStr(exhaustMs) + ' 예상 소진';
+          } else {
+            exhaustLabel = remaining === 0 ? '소진 완료' : '';
+          }
+          const rowBg = isLight ? '#f8fafc' : '#0d0d1a';
+          const borderClr = isLight ? '#e2e8f0' : '#1f2937';
+          const lblClr = isLight ? '#374151' : '#9ca3af';
+          const valClr = isLight ? '#111827' : '#e2e8f0';
+
+          return `<div style="background:${rowBg};border:1px solid ${borderClr};border-radius:12px;padding:12px;margin-bottom:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div style="font-size:13px;font-weight:700;color:${cfg.color||'#60a5fa'}">${cfg.emoji||''} ${drug.split(' ')[0]}</div>
+              <div style="font-size:11px;color:#6b7280">${reconDateStr} 조제 · ${v.vialMg}mg/${v.waterMl}ml</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <div style="flex:1">
+                <div style="height:6px;background:${isLight?'#e2e8f0':'#1f2937'};border-radius:3px;overflow:hidden">
+                  <div style="height:100%;width:${pct}%;background:${cfg.color||'#60a5fa'};border-radius:3px;transition:width .4s"></div>
+                </div>
+              </div>
+              <div style="font-size:12px;font-weight:700;color:${valClr};min-width:60px;text-align:right">${remaining}/${totalInj}회</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="font-size:11px;color:#6b7280">${exhaustLabel}</div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <button onclick="adjustInjDone(${v.id},-1)" style="width:26px;height:26px;border-radius:6px;border:1px solid ${isLight?'#d1d5db':'#374151'};background:${isLight?'#f3f4f6':'#1f2937'};color:${lblClr};font-size:14px;cursor:pointer;line-height:1">−</button>
+                <button onclick="adjustInjDone(${v.id},1)" style="width:26px;height:26px;border-radius:6px;border:1px solid ${isLight?'#d1d5db':'#374151'};background:${isLight?'#f3f4f6':'#1f2937'};color:${lblClr};font-size:14px;cursor:pointer;line-height:1">+</button>
+                <button onclick="openReconModal('${drug}')" style="padding:4px 10px;border-radius:8px;border:1px solid ${cfg.color||'#60a5fa'}55;background:${(cfg.color||'#60a5fa')}11;color:${cfg.color||'#60a5fa'};font-size:11px;cursor:pointer;font-family:inherit">새 조제</button>
+              </div>
+            </div>
+            ${v.notes ? `<div style="font-size:11px;color:#6b7280;margin-top:4px">📝 ${v.notes}</div>` : ''}
+          </div>`;
+        }).join('');
+
+      // 기록 없는 활성 약물에 대해 새 조제 버튼 표시
+      activeDrugs.filter(drug => !latestByDrug[drug]).forEach(drug => {
+        const cfg = DRUG_CONFIG[drug] || {};
+        c.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border:1px dashed ${isLight?'#d1d5db':'#374151'};border-radius:10px;margin-bottom:6px">
+          <span style="font-size:12px;color:#6b7280">${cfg.emoji||''} ${drug.split(' ')[0]}</span>
+          <button onclick="openReconModal('${drug}')" style="padding:5px 12px;border-radius:8px;border:1px solid ${cfg.color||'#60a5fa'}55;background:${(cfg.color||'#60a5fa')}11;color:${cfg.color||'#60a5fa'};font-size:11px;cursor:pointer;font-family:inherit">+ 조제 기록</button>
+        </div>`;
+      });
+    };
+
+    window.adjustInjDone = function(vialId, delta) {
+      const v = (appData.reconVials || []).find(v => v.id === vialId);
+      if (!v) return;
+      const totalInj = v.vialMg > 0 && v.doseMg > 0 ? Math.floor(v.vialMg * 1000 / v.doseMg) : 0;
+      v.injDone = Math.max(0, Math.min(totalInj, (v.injDone || 0) + delta));
+      scheduleSave();
+      renderReconSection();
+    };
+
+    window.openReconModal = function(drug) {
+      const cfg = DRUG_CONFIG[drug] || {};
+      const isLight = document.body.classList.contains("light-mode");
+      const inputStyle = `width:100%;padding:10px;background:${isLight?'#f8fafc':'#1e293b'};border:1px solid ${isLight?'#e2e8f0':'#374151'};border-radius:8px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;`;
+
+      const modalHtml = `
+        <div id="recon-modal" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-end">
+          <div style="background:${isLight?'#fff':'#0f172a'};border-top:2px solid ${cfg.color||'#60a5fa'};border-radius:20px 20px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:20px 20px 32px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-family:inherit">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <div style="font-size:16px;font-weight:700">${cfg.emoji||'🧪'} ${drug.split(' ')[0]} 조제 기록</div>
+              <button onclick="document.getElementById('recon-modal').remove()" style="background:none;border:none;color:#6b7280;font-size:22px;cursor:pointer">✕</button>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">바이알 용량 (mg)</div>
+                <input id="recon-vial-mg" type="number" step="0.1" placeholder="예: 5" style="${inputStyle}" />
+              </div>
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">BAC Water (ml)</div>
+                <input id="recon-water-ml" type="number" step="0.1" placeholder="예: 2" style="${inputStyle}" />
+              </div>
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">1회 용량 (mg)</div>
+                <input id="recon-dose-mg" type="number" step="0.01" placeholder="예: 0.5" style="${inputStyle}" />
+              </div>
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">조제일</div>
+                <input id="recon-date" type="date" value="${kstDateStr(Date.now())}" style="${inputStyle}" />
+              </div>
+            </div>
+            <div style="margin-bottom:12px">
+              <div style="font-size:11px;color:#6b7280;margin-bottom:4px">메모 (선택)</div>
+              <input id="recon-notes" type="text" placeholder="예: 냉장 보관 중" style="${inputStyle}" />
+            </div>
+            <input type="hidden" id="recon-drug" value="${drug.replace(/'/g,'&#39;')}" />
+            <div style="display:flex;gap:8px">
+              <button onclick="document.getElementById('recon-modal').remove()" style="flex:1;padding:12px;background:#374151;border:none;border-radius:10px;color:#9ca3af;font-size:13px;cursor:pointer;font-family:inherit">취소</button>
+              <button onclick="submitRecon()" style="flex:2;padding:12px;background:${cfg.color||'#60a5fa'};border:none;border-radius:10px;color:#0a0a14;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">저장</button>
+            </div>
+          </div>
+        </div>`;
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+    };
+
+    window.submitRecon = function() {
+      const drug = document.getElementById("recon-drug")?.value;
+      const vialMg = parseFloat(document.getElementById("recon-vial-mg")?.value);
+      const waterMl = parseFloat(document.getElementById("recon-water-ml")?.value);
+      const doseMg = parseFloat(document.getElementById("recon-dose-mg")?.value);
+      const dateStr = document.getElementById("recon-date")?.value;
+      const notes = document.getElementById("recon-notes")?.value || '';
+      if (!drug || !vialMg || !doseMg || !dateStr) {
+        showToast('⚠️ 필수 항목을 입력하세요');
+        return;
+      }
+      appData.reconVials = appData.reconVials || [];
+      appData.reconVials.push({
+        id: Date.now(),
+        drug,
+        vialMg,
+        waterMl: waterMl || 0,
+        doseMg,
+        reconDate: new Date(dateStr + 'T00:00:00+09:00').getTime(),
+        injDone: 0,
+        notes,
+      });
+      scheduleSave();
+      document.getElementById("recon-modal")?.remove();
+      renderReconSection();
+      showToast('✅ 조제 기록 저장');
+    };
 
     // ── 역산 계산기 ────────────────────────────────────────
     window.calcBodyComp = () => {
@@ -3241,6 +4026,66 @@
       return d.toISOString().slice(0,10);
     }
 
+    // ══════════════════════════════════════════════
+    // 달력 체크리스트 시스템
+    // ══════════════════════════════════════════════
+
+    // 특정 날짜에 복용/투약 예정인 항목 목록 반환
+    function getScheduledItemsForDate(dateStr) {
+      const items = [];
+      const today = kstDateStr(Date.now());
+      const isToday = dateStr === today;
+      const isFuture = dateStr > today;
+
+      // 활성 약물 체크
+      getActiveDrugs().forEach(drug => {
+        const sched = (appData.drugSchedules || {})[drug];
+        if (shouldTakeOnDate(sched, dateStr)) {
+          // 해당 날 records에 실제 기록이 있는지 확인
+          const done = (appData.records || []).some(r => r.drug === drug && kstDateStr(r.time) === dateStr);
+          items.push({ type: 'drug', key: drug, label: drug, emoji: DRUG_CONFIG[drug]?.emoji || '💉', color: DRUG_CONFIG[drug]?.color || '#60a5fa', done });
+        }
+      });
+
+      // 영양제 체크
+      const supps = getSupplements();
+      supps.forEach(s => {
+        const sched = (appData.suppSchedules || {})[s.id];
+        if (shouldTakeOnDate(sched, dateStr)) {
+          (s.timing || []).forEach(timing => {
+            const done = !!(appData.calendarChecks?.[dateStr]?.[s.id + '_' + timing]) ||
+                         !!(s.taken?.[dateStr + '_' + timing]);
+            items.push({ type: 'supp', key: s.id + '_' + timing, label: s.name + ' (' + timing + ')', emoji: '💊', color: '#a78bfa', done });
+          });
+        }
+      });
+
+      return items;
+    }
+
+    // 달력 날짜 인디케이터 계산
+    function getDateIndicator(dateStr) {
+      const today = kstDateStr(Date.now());
+      const isFuture = dateStr > today;
+      const items = getScheduledItemsForDate(dateStr);
+      if (!items.length) return null;
+      if (isFuture) return { emoji: '🔵', label: '예정' };
+      const allDone = items.every(i => i.done);
+      const anyDone = items.some(i => i.done);
+      if (allDone) return { emoji: '✅', label: '완료' };
+      if (anyDone) return { emoji: '⚠️', label: '일부' };
+      return { emoji: '⚠️', label: '미완' };
+    }
+
+    // 달력 체크 토글
+    window.toggleCalendarCheck = function(dateStr, key) {
+      appData.calendarChecks = appData.calendarChecks || {};
+      appData.calendarChecks[dateStr] = appData.calendarChecks[dateStr] || {};
+      appData.calendarChecks[dateStr][key] = !appData.calendarChecks[dateStr][key];
+      scheduleSave();
+      renderCalendar();
+    };
+
     function getCalendarData() {
       // 날짜별 이벤트 집계
       const data = {}; // "YYYY-MM-DD" → { drugs:[], weights:[], supps:[], sideEffects:[] }
@@ -3364,6 +4209,8 @@
               dayData.sideEffects.length ? `<div style="width:6px;height:6px;border-radius:2px;background:#f87171" title="부작용"></div>` : '',
             ].filter(Boolean).join('') : ''}
           </div>
+          <!-- 스케줄 인디케이터 -->
+          ${(() => { const ind = getDateIndicator(dateKey); return ind ? `<div style="font-size:9px;line-height:1;margin-top:1px" title="${ind.label}">${ind.emoji}</div>` : ''; })()}
         </div>`;
       }
 
@@ -3409,6 +4256,29 @@
               + 기록 추가
             </button>
           </div>`;
+
+        // 📋 오늘 할 일 체크리스트
+        const checkItems = getScheduledItemsForDate(calSelectedDate);
+        if (checkItems.length) {
+          html += `<div style="background:${isLight?'#f8fafc':'#0d0d1a'};border:1px solid ${isLight?'#e2e8f0':'#1f2937'};border-radius:10px;padding:10px;margin-bottom:12px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;margin-bottom:8px">📋 오늘 할 일</div>`;
+          checkItems.forEach(item => {
+            const isChecked = item.done || !!(appData.calendarChecks?.[calSelectedDate]?.[item.key]);
+            html += `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid ${isLight?'#f3f4f6':'#12121e'}">
+              <button onclick="toggleCalendarCheck('${calSelectedDate}','${item.key}')"
+                style="width:22px;height:22px;border-radius:50%;flex-shrink:0;cursor:pointer;
+                       border:2px solid ${isChecked?item.color:'#374151'};
+                       background:${isChecked?item.color:'transparent'};
+                       font-size:11px;font-weight:700;color:#0a0a14;line-height:1">
+                ${isChecked?'✓':''}
+              </button>
+              <span style="font-size:13px;color:${isChecked?item.color:(isLight?'#374151':'#e2e8f0')};${isChecked?'text-decoration:line-through;opacity:.65':''}">
+                ${item.emoji} ${item.label}
+              </span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
 
         // 투약
         if (dayData.drugs.length) {
@@ -3537,8 +4407,13 @@
       document.getElementById("add-time").value = m.dataset.date + "T08:00";
       document.getElementById("add-dose").value = "";
       selectedSite = null;
+      selectedRoute = null;
+      const sel = document.getElementById("add-drug");
+      if (sel) {
+        selectedRoute = DRUG_CONFIG[sel.value]?.defaultRoute || 'SC';
+      }
       document.getElementById("add-modal").style.display = "flex";
-      setTimeout(renderSiteSelector, 50);
+      setTimeout(() => { renderSiteSelector(); if (sel) renderRouteSelector(sel.value); }, 50);
     };
 
     window.calAddWeight = () => {
@@ -4220,6 +5095,24 @@
       </div>
       <div id="peptide-list"></div>
 
+      <!-- 🧪 조제 재고 -->
+      <div class="card" style="margin-top:4px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="section-title" style="margin-bottom:0">🧪 조제 재고</div>
+          <button onclick="openReconModal(getActiveDrugs()[0])" style="background:none;border:none;color:#60a5fa;font-size:12px;cursor:pointer;padding:2px 6px">+ 새 조제</button>
+        </div>
+        <div id="recon-section"></div>
+      </div>
+
+      <!-- 📦 약 재고 -->
+      <div class="card" style="margin-top:4px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="section-title" style="margin-bottom:0">📦 약 재고</div>
+          <button onclick="openInventoryModal()" style="background:none;border:none;color:#fbbf24;font-size:12px;cursor:pointer;padding:2px 6px">+ 재고 추가</button>
+        </div>
+        <div id="inventory-section"></div>
+      </div>
+
       <!-- 조제 계산 -->
       <div class="card" style="margin-top:4px;margin-bottom:12px">
         <div class="section-title" style="margin-bottom:4px">🧪 조제 계산</div>
@@ -4283,17 +5176,40 @@
           <div style="font-size:10px;color:#4a5568;margin-top:6px">조제계산의 바이알 정보와 자동 연동됩니다</div>
         </div>
 
-        <!-- 주사 빈도 -->
+        <!-- 구매 단위 -->
         <div class="card" style="margin-bottom:10px;background:#0d0d1a">
-          <div class="section-title">주당 투여 횟수</div>
-          <div class="quick-btns">
-            <button class="qbtn" onclick="setQuickVal('cost-freq','1');calcCost();saveCostSettings()">주 1회</button>
-            <button class="qbtn" onclick="setQuickVal('cost-freq','2');calcCost();saveCostSettings()">주 2회</button>
-            <button class="qbtn" onclick="setQuickVal('cost-freq','3');calcCost();saveCostSettings()">주 3회</button>
-            <button class="qbtn" onclick="setQuickVal('cost-freq','7');calcCost();saveCostSettings()">매일</button>
+          <div class="section-title">구매 단위</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <button class="cost-unit-btn" data-unit="vial" onclick="setCostUnit('vial')"
+              style="flex:1;padding:8px;border-radius:8px;border:1px solid #374151;background:#1d4ed8;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">바이알 단위</button>
+            <button class="cost-unit-btn" data-unit="kit" onclick="setCostUnit('kit')"
+              style="flex:1;padding:8px;border-radius:8px;border:1px solid #374151;background:#1f2937;color:#9ca3af;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">키트 단위</button>
           </div>
-          <input id="cost-freq" class="input-field" type="number" min="1" step="1" value="1"
-            placeholder="횟수/주" oninput="calcCost();saveCostSettings()" />
+          <div id="cost-kit-wrap" style="display:none">
+            <div style="font-size:10px;color:#4a5568;margin-bottom:4px">키트당 바이알 수</div>
+            <input id="cost-vials-per-kit" class="input-field" type="number" min="1" step="1" value="1"
+              placeholder="예: 10" oninput="calcCost();saveCostSettings()" />
+          </div>
+        </div>
+
+        <!-- X일에 한번 -->
+        <div class="card" style="margin-bottom:10px;background:#0d0d1a">
+          <div class="section-title">투여 간격 (X일에 한번)</div>
+          <div class="quick-btns">
+            <button class="qbtn" onclick="setQuickVal('cost-interval','1');calcCost();saveCostSettings()">매일</button>
+            <button class="qbtn" onclick="setQuickVal('cost-interval','3');calcCost();saveCostSettings()">3일</button>
+            <button class="qbtn" onclick="setQuickVal('cost-interval','7');calcCost();saveCostSettings()">주 1회</button>
+            <button class="qbtn" onclick="setQuickVal('cost-interval','14');calcCost();saveCostSettings()">격주</button>
+          </div>
+          <input id="cost-interval" class="input-field" type="number" min="1" step="1" value="7"
+            placeholder="일" oninput="calcCost();saveCostSettings()" />
+        </div>
+
+        <!-- 배송비 -->
+        <div class="card" style="margin-bottom:10px;background:#0d0d1a">
+          <div class="section-title">배송비 (₩)</div>
+          <input id="cost-shipping" class="input-field" type="number" min="0" step="1000"
+            placeholder="원" oninput="calcCost();saveCostSettings()" />
         </div>
 
         <!-- 소모품 비용 (KRW 기준, 회당) -->
@@ -4749,6 +5665,10 @@
     </div>
     <div style="margin-bottom:10px"><label>날짜 / 시간 (한국시간)</label>
       <input id="add-time" class="input-field" type="datetime-local" />
+    </div>
+    <div style="margin-bottom:12px" id="route-selector-wrap">
+      <label style="display:block;font-size:11px;color:#6b7280;margin-bottom:6px">투여 경로</label>
+      <div id="route-selector" style="display:flex;gap:6px"></div>
     </div>
     <div style="margin-bottom:12px" id="site-selector-wrap">
       <div id="site-selector"></div>
