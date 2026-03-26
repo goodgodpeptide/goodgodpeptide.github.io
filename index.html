@@ -1909,90 +1909,103 @@
     // 백과사전
     // ══════════════════════════════════════════════
     let encyclopediaData = null;
-    let encLang = 'ko';  // 'ko' 또는 'en'
-    let encFilterCategory = '';
+    let encFilterStatus = '';
 
     window.loadEncyclopedia = async function() {
       try {
         if (!encyclopediaData) {
-          const response = await fetch('peptides_clean_slim.json');
+          const response = await fetch('peptides_v3.json');
+          if (!response.ok) throw new Error('파일 없음');
           encyclopediaData = await response.json();
         }
         renderEncyclopedia();
       } catch (e) {
         console.error('백과사전 로드 실패:', e);
-        document.getElementById("encyclopedia-grid").innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#ef4444">❌ 데이터  로드 실패</div>`;
+        document.getElementById('encyclopedia-loading').innerHTML =
+          `<div style="color:#ef4444;padding:20px">❌ 데이터 로드 실패: ${e.message}</div>`;
       }
+    };
+
+    // 연구 상태 표시 헬퍼
+    const ENC_STATUS = {
+      'Extensively Studied': { label:'광범위 연구', color:'#4ade80', bg:'#052e16' },
+      'Well Researched':     { label:'충분한 연구', color:'#60a5fa', bg:'#172554' },
+      'Clinical Research':   { label:'임상 연구',   color:'#a78bfa', bg:'#2e1065' },
+      'Emerging Research':   { label:'신흥 연구',   color:'#fbbf24', bg:'#451a03' },
+      'Limited Research':    { label:'제한적 연구', color:'#94a3b8', bg:'#1e293b' },
+    };
+
+    window.setEncFilter = function(btn, status) {
+      encFilterStatus = status;
+      document.querySelectorAll('.enc-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderEncyclopedia();
     };
 
     window.renderEncyclopedia = function() {
       if (!encyclopediaData) return;
-      const searchVal = document.getElementById('enc-search')?.value?.toLowerCase() || '';
+      const q = (document.getElementById('enc-search')?.value || '').toLowerCase();
+      const sort = document.getElementById('enc-sort')?.value || 'name';
       const grid = document.getElementById('encyclopedia-grid');
-      grid.innerHTML = '';
 
-      const filtered = encyclopediaData.index.filter(p => {
-        const name = encLang === 'ko' ? p.name : p.name;
-        const matches = !searchVal || name.toLowerCase().includes(searchVal);
-        const catMatch = !encFilterCategory || p.category === encFilterCategory;
-        return matches && catMatch;
+      const statusOrder = ['Extensively Studied','Well Researched','Clinical Research','Emerging Research','Limited Research'];
+
+      let list = encyclopediaData.index.filter(p => {
+        const nameMatch = !q || p.nameEn.toLowerCase().includes(q) || (p.subtitle||'').toLowerCase().includes(q) || (p.tags||[]).some(t=>t.toLowerCase().includes(q));
+        const statusMatch = !encFilterStatus || p.researchStatus === encFilterStatus;
+        return nameMatch && statusMatch;
       });
 
-      if (filtered.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280">검색 결과가 없습니다</div>';
+      if (sort === 'status') {
+        list.sort((a,b) => statusOrder.indexOf(a.researchStatus) - statusOrder.indexOf(b.researchStatus));
+      } else {
+        list.sort((a,b) => a.nameEn.localeCompare(b.nameEn));
+      }
+
+      document.getElementById('enc-count').textContent = `${list.length}개 펩타이드 표시 중`;
+      document.getElementById('encyclopedia-loading').style.display = 'none';
+
+      if (list.length === 0) {
+        grid.innerHTML = `<div style="text-align:center;padding:40px;color:#6b7280">검색 결과가 없습니다</div>`;
         return;
       }
 
-      filtered.forEach(pep => {
-        const card = document.createElement('div');
-        card.style.cssText = `
-          background:linear-gradient(135deg,#1a1a2e,#16213e);
-          border:1px solid #374151;
-          border-radius:12px;
-          padding:16px;
-          cursor:pointer;
-          transition:all 0.2s;
-        `;
-        card.onmouseover = () => card.style.background = 'linear-gradient(135deg,#1f2937,#1a1a3e)';
-        card.onmouseout = () => card.style.background = 'linear-gradient(135deg,#1a1a2e,#16213e)';
-        
-        const fullData = encyclopediaData.peptides[pep.id];
-        const routes = (pep.routes || []).join(', ') || 'N/A';
-        
-        card.innerHTML = `
-          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
-            <div style="font-weight:700;font-size:16px;color:#f1f5f9">${encLang === 'ko' ? pep.name : pep.name}</div>
-            <span style="font-size:10px;padding:4px 8px;background:#60a5fa33;border-radius:6px;color:#60a5fa">${pep.category || 'Other'}</span>
+      grid.innerHTML = list.map(p => {
+        const st = ENC_STATUS[p.researchStatus] || ENC_STATUS['Limited Research'];
+        const routes = (p.routes||[]).join(' / ') || 'N/A';
+        const tags = (p.tags||[]).slice(0,3).map(t =>
+          `<span style="padding:2px 7px;background:#1e293b;border-radius:4px;font-size:10px;color:#94a3b8">${t}</span>`
+        ).join('');
+        const abbr = p.nameEn.replace(/[^A-Z0-9]/g,'').slice(0,3) || p.nameEn.slice(0,3).toUpperCase();
+        const doseStr = p.typicalDose ? `<span style="font-size:11px;color:#6b7280">${p.typicalDose}</span>` : '';
+
+        return `<div onclick="openEncyclopediaModal('${p.id}')"
+          style="background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px 16px;
+                 cursor:pointer;transition:border-color 0.15s;display:flex;align-items:center;gap:14px"
+          onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='#1f2937'">
+          <div style="width:44px;height:44px;border-radius:10px;background:#1e293b;display:flex;align-items:center;
+                      justify-content:center;font-weight:800;font-size:11px;color:#94a3b8;flex-shrink:0;letter-spacing:0.5px">
+            ${abbr}
           </div>
-          <div style="font-size:12px;color:#9ca3af;margin-bottom:8px">${pep.description || fullData?.description || ''}</div>
-          <div style="font-size:11px;color:#6b7280;margin-bottom:8px">
-            <span style="display:inline-block;padding:2px 6px;background:#374151;border-radius:4px;margin-right:4px">투여: ${routes}</span>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap">
+              <span style="font-weight:700;font-size:15px;color:#f1f5f9">${p.nameEn}</span>
+              <span style="padding:2px 8px;background:${st.bg};border-radius:20px;font-size:10px;color:${st.color};white-space:nowrap">
+                ${st.label}
+              </span>
+            </div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              ${p.subtitle || ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <span style="padding:2px 7px;background:#1e293b;border-radius:4px;font-size:10px;color:#60a5fa">${routes}</span>
+              ${tags}
+              ${doseStr}
+            </div>
           </div>
-          ${fullData?.stats?.typicalDose ? `<div style="font-size:11px;color:#4a5568;font-family:'JetBrains Mono'">기본 용량: ${fullData.stats.typicalDose}</div>` : ''}
-        `;
-        
-        card.onclick = () => openEncyclopediaModal(pep.id);
-        grid.appendChild(card);
-      });
-
-      document.getElementById('encyclopedia-loading').style.display = 'none';
-    };
-
-    window.filterEncyclopedia = function() {
-      renderEncyclopedia();
-    };
-
-    window.filterByCategory = function(cat) {
-      encFilterCategory = cat;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      event.target.classList.add('active');
-      renderEncyclopedia();
-    };
-
-    window.toggleEncLanguage = function() {
-      encLang = encLang === 'ko' ? 'en' : 'ko';
-      document.getElementById('lang-toggle').textContent = encLang === 'ko' ? '🌐 한국어' : '🌐 English';
-      renderEncyclopedia();
+          <div style="color:#374151;font-size:18px;flex-shrink:0">›</div>
+        </div>`;
+      }).join('');
     };
 
     window.openEncyclopediaModal = function(peptideId) {
@@ -2000,61 +2013,161 @@
       const pep = encyclopediaData.peptides[peptideId];
       if (!pep) return;
 
-      const modal = document.createElement('div');
-      modal.style.cssText = `
-        position:fixed;top:0;left:0;width:100%;height:100%;
-        background:rgba(0,0,0,0.8);display:flex;align-items:flex-end;
-        z-index:1000;
-      `;
-      
-      const content = document.createElement('div');
-      content.style.cssText = `
-        background:linear-gradient(180deg,#0d0d1a,#1a1a2e);
-        border-top:1px solid #374151;
-        border-radius:20px 20px 0 0;
-        width:100%;max-height:90vh;overflow-y:auto;
-        padding:20px;color:#f1f5f9;
-      `;
+      const st = ENC_STATUS[pep.researchStatus] || ENC_STATUS['Limited Research'];
+      const routes = (pep.routes||[]).join(', ') || 'N/A';
 
-      const routes = (pep.routes || []).join(', ') || 'N/A';
-      const category = pep.researchCategory || 'Other';
-      
-      content.innerHTML = `
-        <div style="margin-bottom:16px">
-          <div style="font-size:28px;font-weight:700;margin-bottom:4px">${pep.name}</div>
-          <div style="font-size:13px;color:#9ca3af;margin-bottom:8px">${pep.subtitle || ''}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-            <span style="padding:6px 12px;background:#60a5fa33;border-radius:8px;font-size:12px;color:#60a5fa">${category}</span>
-            <span style="padding:6px 12px;background:#4ade8033;border-radius:8px;font-size:12px;color:#4ade80">투여: ${routes}</span>
+      // 4개 stat 카드
+      const statCards = [
+        { label:'일반 용량', value: pep.typicalDose || pep.quickStart?.dose || '—', sub: pep.frequency || pep.quickStart?.frequency || '' },
+        { label:'투여 경로', value: routes, sub: pep.routeDetail || '' },
+        { label:'주기',     value: pep.cycle || pep.quickStart?.cycleLength || '—', sub: '일반적 기간' },
+        { label:'저장',     value: pep.storage || '—', sub: pep.quickStart?.storageNote || '' },
+      ];
+      const statsHTML = statCards.map(s => `
+        <div style="background:#1e293b;border-radius:12px;padding:14px;flex:1;min-width:120px">
+          <div style="font-size:11px;color:#64748b;margin-bottom:6px">${s.label}</div>
+          <div style="font-size:17px;font-weight:700;color:#f1f5f9;margin-bottom:2px">${s.value}</div>
+          <div style="font-size:10px;color:#475569">${s.sub}</div>
+        </div>`).join('');
+
+      // PK
+      const pk = pep.pharmacokinetics || {};
+      const pkHTML = (pk.peak || pk.halfLife || pk.cleared) ? `
+        <div class="enc-section">
+          <div class="enc-section-title">📈 약동학 (Pharmacokinetics)</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            ${pk.peak ? `<div style="background:#1e293b;border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:#64748b">피크</div><div style="font-weight:700;color:#60a5fa">${pk.peak}</div></div>` : ''}
+            ${pk.halfLife ? `<div style="background:#1e293b;border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:#64748b">반감기</div><div style="font-weight:700;color:#fbbf24">${pk.halfLife}</div></div>` : ''}
+            ${pk.cleared ? `<div style="background:#1e293b;border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:#64748b">소실</div><div style="font-weight:700;color:#94a3b8">${pk.cleared}</div></div>` : ''}
           </div>
-        </div>
+        </div>` : '';
 
-        <div style="background:#0d0d1a;border:1px solid #374151;border-radius:12px;padding:14px;margin-bottom:12px">
-          <div style="font-size:13px;color:#f1f5f9;line-height:1.7">${pep.description || ''}</div>
-        </div>
-
-        ${pep.stats?.typicalDose ? `
-        <div style="background:#0d0d1a;border:1px solid #374151;border-radius:12px;padding:14px;margin-bottom:12px">
-          <div style="font-weight:700;font-size:13px;margin-bottom:8px">📋 기본 정보</div>
-          <div style="font-size:12px;color:#9ca3af;line-height:1.8;font-family:'JetBrains Mono'">
-            <div>기본 용량: <span style="color:#60a5fa">${pep.stats.typicalDose}</span></div>
-            ${pep.stats.frequency ? `<div>빈도: <span style="color:#4ade80">${pep.stats.frequency}</span></div>` : ''}
-            ${pep.stats.cycleLength ? `<div>주기: <span style="color:#f97316">${pep.stats.cycleLength}</span></div>` : ''}
-          </div>
-        </div>
-        ` : ''}
-
-        <button onclick="this.closest('div').parentElement.style.display='none'" 
-                style="width:100%;padding:14px;background:#374151;border:1px solid #4b5563;border-radius:10px;
-                       color:#f1f5f9;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
-          닫기
-        </button>
-      `;
-
-      modal.appendChild(content);
-      modal.onclick = (e) => {
-        if (e.target === modal) modal.style.display = 'none';
+      // Research Indications
+      const effColors = {
+        'Most Effective':'#4ade80','Effective':'#60a5fa','Moderate':'#fbbf24','Limited':'#94a3b8','Emerging':'#f87171'
       };
+      const indHTML = pep.researchIndications?.length ? `
+        <div class="enc-section">
+          <div class="enc-section-title">🎯 연구 인디케이션</div>
+          ${pep.researchIndications.map(ind => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e293b">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="width:8px;height:8px;border-radius:50%;background:${effColors[ind.effectiveness]||'#94a3b8'};display:inline-block;flex-shrink:0"></span>
+                <span style="font-size:13px;color:#e2e8f0">${ind.name}</span>
+              </div>
+              <span style="font-size:11px;color:${effColors[ind.effectiveness]||'#94a3b8'};padding:2px 8px;background:#0f172a;border-radius:20px">${ind.effectiveness}</span>
+            </div>`).join('')}
+        </div>` : '';
+
+      // Protocols
+      const protoHTML = pep.protocols?.length ? `
+        <div class="enc-section">
+          <div class="enc-section-title">📋 연구 프로토콜</div>
+          <div style="background:#0f172a;border-radius:8px;overflow:hidden;font-size:12px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 2fr;gap:0;background:#1e293b;padding:8px 12px;color:#64748b;font-size:11px">
+              <span>목표</span><span>용량</span><span>빈도</span><span>경로</span>
+            </div>
+            ${pep.protocols.map((pr,i) => `
+              <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 2fr;gap:0;padding:8px 12px;color:#cbd5e1;
+                          background:${i%2?'#0f172a':'#111827'}">
+                <span>${pr.goal}</span><span style="color:#60a5fa">${pr.dose}</span><span>${pr.frequency}</span><span style="color:#94a3b8">${pr.route}</span>
+              </div>`).join('')}
+          </div>
+          ${pep.protocolTiming ? `<div style="background:#1a1a2e;border-left:3px solid #3b82f6;padding:10px 12px;margin-top:8px;font-size:12px;color:#94a3b8;border-radius:0 6px 6px 0">${pep.protocolTiming}</div>` : ''}
+        </div>` : '';
+
+      // Interactions
+      const interTypeStyle = { 'Synergistic':'#4ade80', 'Compatible':'#60a5fa', 'Monitor Combination':'#fbbf24', 'Avoid Combination':'#ef4444', 'Unknown':'#94a3b8' };
+      const interHTML = pep.interactions?.length ? `
+        <div class="enc-section">
+          <div class="enc-section-title">🔗 상호작용</div>
+          ${pep.interactions.map(inter => `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e293b">
+              <span style="font-size:13px;color:#e2e8f0">${inter.name}</span>
+              <span style="font-size:11px;color:${interTypeStyle[inter.type]||'#94a3b8'};padding:2px 8px;background:#0f172a;border-radius:20px">${inter.type}</span>
+            </div>`).join('')}
+        </div>` : '';
+
+      // Side Effects
+      const seHTML = pep.sideEffects?.length ? `
+        <div class="enc-section">
+          <div class="enc-section-title">⚠️ 부작용 & 안전</div>
+          <ul style="margin:0;padding-left:16px;color:#94a3b8;font-size:13px;line-height:1.8">
+            ${pep.sideEffects.map(s => `<li>${s}</li>`).join('')}
+          </ul>
+        </div>` : '';
+
+      // Timeline
+      const tlHTML = pep.effectsTimeline?.length ? `
+        <div class="enc-section">
+          <div class="enc-section-title">⏱️ 효과 타임라인</div>
+          <ul style="margin:0;padding-left:16px;color:#94a3b8;font-size:13px;line-height:1.8">
+            ${pep.effectsTimeline.map(t => `<li>${t}</li>`).join('')}
+          </ul>
+        </div>` : '';
+
+      // Quality Indicators
+      const qiHTML = (pep.qualityGood?.length || pep.qualityBad?.length) ? `
+        <div class="enc-section">
+          <div class="enc-section-title">✅ 품질 지표</div>
+          ${pep.qualityGood?.map(g => `<div style="display:flex;gap:8px;padding:6px 0;color:#4ade80;font-size:12px"><span>✓</span><span>${g}</span></div>`).join('')||''}
+          ${pep.qualityBad?.map(b => `<div style="display:flex;gap:8px;padding:6px 0;color:#ef4444;font-size:12px"><span>✗</span><span>${b}</span></div>`).join('')||''}
+        </div>` : '';
+
+      const modal = document.createElement('div');
+      modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:flex-end;z-index:1000;';
+
+      const box = document.createElement('div');
+      box.style.cssText = 'background:#0f172a;border-top:2px solid #3b82f6;border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom);color:#f1f5f9;font-family:inherit;';
+
+      box.innerHTML = `
+        <div style="position:sticky;top:0;background:#0f172a;padding:16px 20px 12px;border-bottom:1px solid #1e293b;z-index:1;display:flex;justify-content:space-between;align-items:start">
+          <div>
+            <div style="font-size:24px;font-weight:800;color:#f1f5f9;margin-bottom:4px">${pep.nameEn}</div>
+            <div style="font-size:12px;color:#64748b">${pep.subtitle || ''}</div>
+          </div>
+          <button onclick="document.getElementById('enc-modal').remove()"
+            style="background:none;border:none;color:#6b7280;font-size:24px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-left:10px">✕</button>
+        </div>
+
+        <div style="padding:16px 20px 0">
+          <!-- 상태 & 경로 배지 -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <span style="padding:5px 12px;background:${st.bg};border-radius:20px;font-size:12px;color:${st.color};font-weight:600">${st.label}</span>
+            ${(pep.routes||[]).map(r => `<span style="padding:5px 12px;background:#1e293b;border-radius:20px;font-size:12px;color:#94a3b8">${r}</span>`).join('')}
+          </div>
+
+          <!-- 4개 stat 카드 -->
+          <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">${statsHTML}</div>
+
+          <!-- 개요 -->
+          ${pep.descriptionEn ? `
+          <div class="enc-section">
+            <div class="enc-section-title">📖 개요</div>
+            <p style="margin:0;color:#94a3b8;font-size:13px;line-height:1.7">${pep.descriptionEn}</p>
+            ${pep.keyBenefits ? `<div style="margin-top:10px;padding:10px;background:#1e293b;border-radius:8px;font-size:12px;color:#cbd5e1"><strong style="color:#60a5fa">주요 이점:</strong> ${pep.keyBenefits}</div>` : ''}
+          </div>` : ''}
+
+          ${pkHTML}
+          ${indHTML}
+          ${protoHTML}
+          ${interHTML}
+          ${seHTML}
+          ${tlHTML}
+          ${qiHTML}
+        </div>
+
+        <div style="padding:16px 20px 24px">
+          <button onclick="document.getElementById('enc-modal').remove()"
+            style="width:100%;padding:14px;background:#1e3a5f;border:1px solid #3b82f6;border-radius:12px;
+                   color:#60a5fa;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+            닫기
+          </button>
+        </div>`;
+
+      modal.id = 'enc-modal';
+      modal.appendChild(box);
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
       document.body.appendChild(modal);
     };
 
@@ -2811,6 +2924,13 @@
     .filter-btn { padding: 5px 14px; background: #1f2937; border: none; border-radius: 20px; color: #6b7280; font-size: 12px; cursor: pointer; font-family: inherit; transition: all .15s; }
     .filter-btn.active { background: #1d4ed8; color: white; }
 
+    /* 백과사전 전용 */
+    .enc-filter-btn { padding:5px 12px;background:#1f2937;border:1px solid #374151;border-radius:20px;color:#6b7280;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s; }
+    .enc-filter-btn.active { background:#1d4ed8;border-color:#3b82f6;color:#fff; }
+    .enc-section { margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #1e293b; }
+    .enc-section:last-child { border-bottom:none; }
+    .enc-section-title { font-size:14px;font-weight:700;color:#e2e8f0;margin-bottom:10px;display:flex;align-items:center;gap:6px; }
+
     .quick-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
     .qbtn { padding: 5px 12px; background: #1f2937; border: none; border-radius: 8px; color: #9ca3af; font-size: 13px; cursor: pointer; font-family: inherit; }
     .qbtn:active { background: #1d4ed8; color: white; }
@@ -2891,6 +3011,8 @@
     body.light-mode .del-btn { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
     body.light-mode .filter-btn { background: #f3f4f6; color: #6b7280; }
     body.light-mode .filter-btn.active { background: #2563eb; color: white; }
+    body.light-mode .enc-filter-btn { background: #f3f4f6; border-color: #e5e7eb; color: #6b7280; }
+    body.light-mode .enc-filter-btn.active { background: #2563eb; border-color: #2563eb; color: white; }
     body.light-mode .graph-range-btn, body.light-mode .wrange-btn { background: #f3f4f6; color: #6b7280; }
     body.light-mode .graph-range-btn.active, body.light-mode .wrange-btn.active { background: #2563eb; color: white; }
     body.light-mode .gender-btn { background: #f3f4f6; color: #6b7280; }
@@ -3225,24 +3347,35 @@
 
     <!-- 백과사전 패널 -->
     <div id="panel-encyclopedia" class="tab-panel">
-      <div class="card" style="margin-bottom:12px">
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-          <input id="enc-search" class="input-field" type="text" placeholder="펩타이드명 검색..." 
-                 style="flex:1;min-width:200px;margin:0" oninput="filterEncyclopedia()" />
-          <button class="filter-btn active" onclick="filterByCategory('')" style="padding:8px 12px">전체</button>
-          <button class="filter-btn" onclick="filterByCategory('Approved')" style="padding:8px 12px">승인됨</button>
-          <button class="filter-btn" onclick="filterByCategory('Emerging Research')" style="padding:8px 12px">연구 중</button>
+      <!-- 검색 & 필터 바 -->
+      <div style="background:#111827;border:1px solid #1f2937;border-radius:14px;padding:14px;margin-bottom:12px">
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <div style="position:relative;flex:1">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#6b7280;font-size:14px">🔍</span>
+            <input id="enc-search" type="text" placeholder="펩타이드 검색 (BPC-157, Selank...)"
+              style="width:100%;box-sizing:border-box;padding:9px 10px 9px 32px;background:#1f2937;border:1px solid #374151;border-radius:10px;color:#f1f5f9;font-size:14px;font-family:inherit;outline:none"
+              oninput="renderEncyclopedia()" />
+          </div>
+          <select id="enc-sort" onchange="renderEncyclopedia()"
+            style="padding:9px 10px;background:#1f2937;border:1px solid #374151;border-radius:10px;color:#94a3b8;font-size:13px;font-family:inherit;outline:none">
+            <option value="name">이름순</option>
+            <option value="status">연구등급순</option>
+          </select>
         </div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <button id="lang-toggle" onclick="toggleEncLanguage()" 
-                  style="padding:8px 12px;background:#374151;border:1px solid #4b5563;border-radius:8px;color:#e2e8f0;cursor:pointer;font-family:inherit;font-size:13px">
-            🌐 한국어
-          </button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="enc-filter-btn active" data-filter="" onclick="setEncFilter(this,'')">전체</button>
+          <button class="enc-filter-btn" data-filter="Extensively Studied" onclick="setEncFilter(this,'Extensively Studied')">광범위 연구</button>
+          <button class="enc-filter-btn" data-filter="Well Researched" onclick="setEncFilter(this,'Well Researched')">충분한 연구</button>
+          <button class="enc-filter-btn" data-filter="Emerging Research" onclick="setEncFilter(this,'Emerging Research')">신흥 연구</button>
+          <button class="enc-filter-btn" data-filter="Limited Research" onclick="setEncFilter(this,'Limited Research')">제한적 연구</button>
         </div>
       </div>
-      <div id="encyclopedia-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:12px"></div>
+      <!-- 개수 표시 -->
+      <div id="enc-count" style="font-size:12px;color:#6b7280;margin-bottom:10px;padding:0 2px"></div>
+      <!-- 카드 그리드 -->
+      <div id="encyclopedia-grid" style="display:flex;flex-direction:column;gap:10px"></div>
       <div id="encyclopedia-loading" style="text-align:center;padding:40px;color:#6b7280">
-        📚 펩타이드 백과사전을 로딩 중...
+        📚 펩타이드 백과사전 로딩 중...
       </div>
     </div>
 

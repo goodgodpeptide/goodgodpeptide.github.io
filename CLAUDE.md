@@ -28,6 +28,7 @@
 | 📅 달력 | `panel-calendar` | 월간 뷰, 날짜별 투약·체중·영양제 기록 확인 및 추가 |
 | 📊 분석 | `panel-analysis` | BMR/TDEE/체지방률/이상체중 계산, 목표 달성 예측 |
 | 🧮 계산 | `panel-calc` | 조제계산, 체성분 역산, 미래 예측, 영양소 배분 |
+| 🔬 백과사전 | `panel-encyclopedia` | 72개 펩타이드 DB, 검색/필터, 상세 모달 (pep-pedia 스타일) |
 
 ---
 
@@ -134,8 +135,78 @@ const DRUG_NAME_MIGRATION = {
 
 ---
 
+## 백과사전 탭 (panel-encyclopedia)
+
+### 데이터 파일
+- **`peptides_v3.json`** — 72개 펩타이드, v3.0 포맷
+  - 소스: `parse_peptides_v3.py` (pep-pedia.org 스크래핑 텍스트 파싱)
+  - 원본: `C:/Users/JuneK/Downloads/peptides.txt` (4.3MB)
+
+### JSON v3.0 구조
+```js
+{
+  version: "3.0",
+  totalCount: 72,
+  index: [{ id, nameEn, nameKo, subtitle, routes, researchStatus, isApproved, tags, typicalDose, cycle }],
+  peptides: {
+    "slug-id": {
+      id, nameEn, nameKo, subtitle,
+      routes: string[],           // ["Oral","Injectable"]
+      researchStatus: string,     // "Extensively Studied"|"Well Researched"|"Emerging Research"|"Limited Research"
+      isApproved: boolean,
+      typicalDose: string,
+      frequency: string,
+      cycle: string,
+      storage: string,            // "실온"|"냉장 (2-8°C)"|"냉동 (-20°C)"
+      routeDetail: string,
+      descriptionEn: string,      // "What is X?" 설명
+      keyBenefits: string,
+      mechanism: string,
+      pharmacokinetics: { peak, halfLife, cleared },
+      researchIndications: [{ name, effectiveness, level }],
+      protocols: [{ goal, dose, frequency, route }],
+      protocolTiming: string,
+      interactions: [{ name, type }],  // type: "Synergistic"|"Compatible"|"Monitor Combination"|...
+      reconstitute: string[],
+      qualityGood: string[],
+      qualityBad: string[],
+      effectsTimeline: string[],
+      sideEffects: string[],
+      quickStart: { dose, frequency, howToTake, bestTiming, effectsTimeline, breakBetween, cycleLength, storageNote },
+      tags: string[],
+      sourceUrl: string
+    }
+  }
+}
+```
+
+### 백과사전 핵심 함수
+```js
+loadEncyclopedia()         // 탭 전환 시 peptides_v3.json fetch
+renderEncyclopedia()       // 검색/정렬/필터 후 카드 목록 렌더
+setEncFilter(btn, status)  // 연구 상태별 필터
+openEncyclopediaModal(id)  // 상세 정보 바텀시트 모달
+```
+
+### CSS 클래스
+- `.enc-filter-btn` / `.enc-filter-btn.active` — 필터 버튼
+- `.enc-section` / `.enc-section-title` — 모달 내 섹션 구분
+
+### ENC_STATUS 매핑
+```js
+'Extensively Studied' → 광범위 연구 (#4ade80)
+'Well Researched'     → 충분한 연구 (#60a5fa)
+'Clinical Research'   → 임상 연구   (#a78bfa)
+'Emerging Research'   → 신흥 연구   (#fbbf24)
+'Limited Research'    → 제한적 연구 (#94a3b8)
+```
+
+---
+
 ## 현재 알려진 이슈 / TODO
-- [ ] (다음 작업 내용을 여기에 기록)
+- [ ] 백과사전 모달 - 한국어 번역 추가 (현재 영어 원문만 표시)
+- [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
+- [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
 
 ---
 
