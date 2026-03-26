@@ -1902,6 +1902,160 @@
       if (tab === "calendar") setTimeout(renderCalendar, 50);
       if (tab === "analysis") setTimeout(renderAnalysis, 50);
       if (tab === "supple") setTimeout(() => { renderSupplementPanel(); renderWaterTracker(); }, 50);
+      if (tab === "encyclopedia") setTimeout(loadEncyclopedia, 50);
+    };
+
+    // ══════════════════════════════════════════════
+    // 백과사전
+    // ══════════════════════════════════════════════
+    let encyclopediaData = null;
+    let encLang = 'ko';  // 'ko' 또는 'en'
+    let encFilterCategory = '';
+
+    window.loadEncyclopedia = async function() {
+      try {
+        if (!encyclopediaData) {
+          const response = await fetch('peptides_clean_slim.json');
+          encyclopediaData = await response.json();
+        }
+        renderEncyclopedia();
+      } catch (e) {
+        console.error('백과사전 로드 실패:', e);
+        document.getElementById("encyclopedia-grid").innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:20px;color:#ef4444">❌ 데이터  로드 실패</div>`;
+      }
+    };
+
+    window.renderEncyclopedia = function() {
+      if (!encyclopediaData) return;
+      const searchVal = document.getElementById('enc-search')?.value?.toLowerCase() || '';
+      const grid = document.getElementById('encyclopedia-grid');
+      grid.innerHTML = '';
+
+      const filtered = encyclopediaData.index.filter(p => {
+        const name = encLang === 'ko' ? p.name : p.name;
+        const matches = !searchVal || name.toLowerCase().includes(searchVal);
+        const catMatch = !encFilterCategory || p.category === encFilterCategory;
+        return matches && catMatch;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#6b7280">검색 결과가 없습니다</div>';
+        return;
+      }
+
+      filtered.forEach(pep => {
+        const card = document.createElement('div');
+        card.style.cssText = `
+          background:linear-gradient(135deg,#1a1a2e,#16213e);
+          border:1px solid #374151;
+          border-radius:12px;
+          padding:16px;
+          cursor:pointer;
+          transition:all 0.2s;
+        `;
+        card.onmouseover = () => card.style.background = 'linear-gradient(135deg,#1f2937,#1a1a3e)';
+        card.onmouseout = () => card.style.background = 'linear-gradient(135deg,#1a1a2e,#16213e)';
+        
+        const fullData = encyclopediaData.peptides[pep.id];
+        const routes = (pep.routes || []).join(', ') || 'N/A';
+        
+        card.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+            <div style="font-weight:700;font-size:16px;color:#f1f5f9">${encLang === 'ko' ? pep.name : pep.name}</div>
+            <span style="font-size:10px;padding:4px 8px;background:#60a5fa33;border-radius:6px;color:#60a5fa">${pep.category || 'Other'}</span>
+          </div>
+          <div style="font-size:12px;color:#9ca3af;margin-bottom:8px">${pep.description || fullData?.description || ''}</div>
+          <div style="font-size:11px;color:#6b7280;margin-bottom:8px">
+            <span style="display:inline-block;padding:2px 6px;background:#374151;border-radius:4px;margin-right:4px">투여: ${routes}</span>
+          </div>
+          ${fullData?.stats?.typicalDose ? `<div style="font-size:11px;color:#4a5568;font-family:'JetBrains Mono'">기본 용량: ${fullData.stats.typicalDose}</div>` : ''}
+        `;
+        
+        card.onclick = () => openEncyclopediaModal(pep.id);
+        grid.appendChild(card);
+      });
+
+      document.getElementById('encyclopedia-loading').style.display = 'none';
+    };
+
+    window.filterEncyclopedia = function() {
+      renderEncyclopedia();
+    };
+
+    window.filterByCategory = function(cat) {
+      encFilterCategory = cat;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      renderEncyclopedia();
+    };
+
+    window.toggleEncLanguage = function() {
+      encLang = encLang === 'ko' ? 'en' : 'ko';
+      document.getElementById('lang-toggle').textContent = encLang === 'ko' ? '🌐 한국어' : '🌐 English';
+      renderEncyclopedia();
+    };
+
+    window.openEncyclopediaModal = function(peptideId) {
+      if (!encyclopediaData) return;
+      const pep = encyclopediaData.peptides[peptideId];
+      if (!pep) return;
+
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        position:fixed;top:0;left:0;width:100%;height:100%;
+        background:rgba(0,0,0,0.8);display:flex;align-items:flex-end;
+        z-index:1000;
+      `;
+      
+      const content = document.createElement('div');
+      content.style.cssText = `
+        background:linear-gradient(180deg,#0d0d1a,#1a1a2e);
+        border-top:1px solid #374151;
+        border-radius:20px 20px 0 0;
+        width:100%;max-height:90vh;overflow-y:auto;
+        padding:20px;color:#f1f5f9;
+      `;
+
+      const routes = (pep.routes || []).join(', ') || 'N/A';
+      const category = pep.researchCategory || 'Other';
+      
+      content.innerHTML = `
+        <div style="margin-bottom:16px">
+          <div style="font-size:28px;font-weight:700;margin-bottom:4px">${pep.name}</div>
+          <div style="font-size:13px;color:#9ca3af;margin-bottom:8px">${pep.subtitle || ''}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+            <span style="padding:6px 12px;background:#60a5fa33;border-radius:8px;font-size:12px;color:#60a5fa">${category}</span>
+            <span style="padding:6px 12px;background:#4ade8033;border-radius:8px;font-size:12px;color:#4ade80">투여: ${routes}</span>
+          </div>
+        </div>
+
+        <div style="background:#0d0d1a;border:1px solid #374151;border-radius:12px;padding:14px;margin-bottom:12px">
+          <div style="font-size:13px;color:#f1f5f9;line-height:1.7">${pep.description || ''}</div>
+        </div>
+
+        ${pep.stats?.typicalDose ? `
+        <div style="background:#0d0d1a;border:1px solid #374151;border-radius:12px;padding:14px;margin-bottom:12px">
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px">📋 기본 정보</div>
+          <div style="font-size:12px;color:#9ca3af;line-height:1.8;font-family:'JetBrains Mono'">
+            <div>기본 용량: <span style="color:#60a5fa">${pep.stats.typicalDose}</span></div>
+            ${pep.stats.frequency ? `<div>빈도: <span style="color:#4ade80">${pep.stats.frequency}</span></div>` : ''}
+            ${pep.stats.cycleLength ? `<div>주기: <span style="color:#f97316">${pep.stats.cycleLength}</span></div>` : ''}
+          </div>
+        </div>
+        ` : ''}
+
+        <button onclick="this.closest('div').parentElement.style.display='none'" 
+                style="width:100%;padding:14px;background:#374151;border:1px solid #4b5563;border-radius:10px;
+                       color:#f1f5f9;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+          닫기
+        </button>
+      `;
+
+      modal.appendChild(content);
+      modal.onclick = (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+      };
+      document.body.appendChild(modal);
     };
 
     // ══════════════════════════════════════════════
@@ -2816,6 +2970,7 @@
     <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar')">📅 달력</button>
     <button class="tab-btn" data-tab="analysis" onclick="switchTab('analysis')">📊 분석</button>
     <button class="tab-btn" data-tab="calc"    onclick="switchTab('calc')">🧮 계산</button>
+    <button class="tab-btn" data-tab="encyclopedia" onclick="switchTab('encyclopedia')">🔬 백과사전</button>
   </div>
 
   <div class="content">
@@ -3066,6 +3221,29 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- 백과사전 패널 -->
+    <div id="panel-encyclopedia" class="tab-panel">
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+          <input id="enc-search" class="input-field" type="text" placeholder="펩타이드명 검색..." 
+                 style="flex:1;min-width:200px;margin:0" oninput="filterEncyclopedia()" />
+          <button class="filter-btn active" onclick="filterByCategory('')" style="padding:8px 12px">전체</button>
+          <button class="filter-btn" onclick="filterByCategory('Approved')" style="padding:8px 12px">승인됨</button>
+          <button class="filter-btn" onclick="filterByCategory('Emerging Research')" style="padding:8px 12px">연구 중</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button id="lang-toggle" onclick="toggleEncLanguage()" 
+                  style="padding:8px 12px;background:#374151;border:1px solid #4b5563;border-radius:8px;color:#e2e8f0;cursor:pointer;font-family:inherit;font-size:13px">
+            🌐 한국어
+          </button>
+        </div>
+      </div>
+      <div id="encyclopedia-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:12px"></div>
+      <div id="encyclopedia-loading" style="text-align:center;padding:40px;color:#6b7280">
+        📚 펩타이드 백과사전을 로딩 중...
+      </div>
     </div>
 
     <!-- 영양제 패널 -->
