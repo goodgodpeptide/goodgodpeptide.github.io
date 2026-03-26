@@ -323,10 +323,111 @@ openEncyclopediaModal(id)  // 상세 정보 바텀시트 모달
 
 ---
 
+## 투여 경로 (Route of Administration)
+
+```js
+const ADMIN_ROUTES = [
+  { id: 'SC', label: '피하주사', emoji: '💉', color: '#60a5fa' },
+  { id: 'IM', label: '근육주사', emoji: '💪', color: '#f87171' },
+  { id: 'IN', label: '비강',    emoji: '👃', color: '#a78bfa' },
+  { id: 'PO', label: '경구',    emoji: '💊', color: '#4ade80' },
+  { id: 'IV', label: '정맥',    emoji: '🩸', color: '#fbbf24' },
+];
+```
+- DRUG_CONFIG에 `defaultRoute` 필드: 세맥스/셀랑크 → IN, 나머지 → SC
+- records에 `route` 필드 저장
+- 투약 추가 모달에 경로 선택 버튼 행 (`renderRouteSelector()`, `selectRoute()`)
+
+---
+
+## 사이클 스케줄 시스템
+
+```js
+appData.drugSchedules = {
+  "약물명": {
+    type: 'daily'|'interval'|'weekdays'|'cycle'|'course',
+    intervalDays: 7,          // interval
+    weekdays: [0,2,4],        // weekdays (0=일요일)
+    onDays: 5, offDays: 2,    // cycle
+    courseDays: 30, restDays: 30, startDate: timestamp  // course
+  }
+}
+appData.suppSchedules = { "suppId": { ...same } }
+```
+
+핵심 함수:
+```js
+shouldTakeOnDate(schedule, dateStr)  // 해당 날 복용 여부
+getScheduledItemsForDate(dateStr)    // 날짜별 예정 항목 목록
+openDrugScheduleModal(drug)          // 약물 스케줄 설정 모달
+openSuppScheduleModal(suppId)        // 영양제 스케줄 설정 모달
+```
+
+---
+
+## 조제 재고 / 약 재고
+
+```js
+appData.reconVials = [{
+  id, drug, vialMg, waterMl, doseMg, reconDate, injDone, notes
+}]
+// totalInj = floor(vialMg*1000/doseMg), remaining = totalInj - injDone
+// 소진예상일 = reconDate + remaining * intervalDays * 86400000
+
+appData.inventory = [{
+  id, drug, unit('vial'|'kit'|'정'|'ml'|'기타'),
+  vialsPerUnit, mgPerVial, quantity, purchaseDate, notes
+}]
+// 남은mg = quantity × (kit?vialsPerUnit:1) × mgPerVial
+```
+
+핵심 함수:
+```js
+renderReconSection()     // 조제 재고 섹션 렌더
+openReconModal(drug)     // 새 조제 기록 모달
+adjustInjDone(id, delta) // +1/-1 수동 조정
+renderInventorySection() // 약 재고 섹션 렌더
+openInventoryModal()     // 새 재고 추가 모달
+adjustInventory(id,delta)
+```
+
+---
+
+## 달력 체크리스트
+
+```js
+appData.calendarChecks = {
+  "YYYY-MM-DD": { "약물명": true, "suppId_타이밍": true }
+}
+```
+
+- `getDateIndicator(dateStr)` → ✅(전체완료) / ⚠️(일부누락) / 🔵(예정있음)
+- 달력 날짜 셀에 인디케이터 표시
+- 날짜 모달에 "📋 오늘 할 일" 체크리스트 (실제 records 있으면 자동 체크)
+- `toggleCalendarCheck(dateStr, key)` → appData.calendarChecks 저장
+
+---
+
+## 비용 계산기 (개선됨)
+
+- 투여 빈도: "X일에 한번" (`cost-interval`, 기본 7일)
+- 구매 단위: 바이알/키트 (`setCostUnit()`, `cost-vials-per-kit`)
+- 배송비 (`cost-shipping`, ₩)
+- 계산: 총비용 = 구매가(환산KRW) + 배송비, 바이알당 = 총비용/(키트면 바이알수), 회당 = 바이알당/injPerVial
+
+---
+
 ## 현재 알려진 이슈 / TODO
 - [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
 - [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
 - [ ] 운동 탭 추가 예정
+- ✅ 투여 경로 시스템 (ADMIN_ROUTES, defaultRoute, 모달 선택, 뱃지 표시)
+- ✅ 사이클 스케줄 (5종: daily/interval/weekdays/cycle/course)
+- ✅ 달력 체크리스트 연동 (인디케이터 + 오늘 할 일 + calendarChecks)
+- ✅ 조제 재고 관리 (reconVials, +/-조정, 소진 예상일)
+- ✅ 약 재고 관리 (inventory, 키트 단위, 14일 경고)
+- ✅ 영양제 상세 스케줄 + 코스 진행 상태
+- ✅ 비용 계산기 개선 (X일에 한번, 키트, 배송비)
 - ✅ 펩타이드 15종 DRUG_CONFIG 추가 (GLP-1 3+카그릴 / KLOW / 에피탈론 / Tα1 / GHK-Cu / 세맥스 / 셀랑크 / CJC+Ipa / 테사모렐린 / SS-31 / MOTS-c / NAD+)
 - ✅ 다약제 동시 그래프 정규화 (0-100%) — NAD+ 1000mg vs Tirzepatide 15mg 혼합 표시 해결
 - ✅ 투약 카드 📖 버튼 → 백과사전 직접 연동 (encyclopediaId 필드)
