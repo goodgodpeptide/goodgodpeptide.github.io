@@ -182,6 +182,9 @@
       const modal = document.getElementById("admin-modal");
       modal.style.display = "flex";
       modal.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
+      const isLight = document.body.classList.contains("light-mode");
+      const itemBg = isLight ? "#f8fafc" : "#1e293b";
+      const itemBorder = isLight ? "1px solid #e2e8f0" : "none";
 
       // 관리자/승인/거절 목록 동시에 가져오기
       const [adminsSnap, approvedSnap, rejectedSnap] = await Promise.all([
@@ -220,8 +223,8 @@
       } else {
         pendingList.innerHTML = pendingEmails.map(email => `
           <div style="display:flex;justify-content:space-between;align-items:center;
-                      padding:10px 12px;background:#1e293b;border-radius:10px;margin-bottom:6px">
-            <span style="font-size:13px;color:#94a3b8;flex:1;margin-right:8px;word-break:break-all">${email}</span>
+                      padding:10px 12px;background:${itemBg};border:${itemBorder};border-radius:10px;margin-bottom:6px">
+            <span style="font-size:13px;color:${isLight?'#475569':'#94a3b8'};flex:1;margin-right:8px;word-break:break-all">${email}</span>
             <div style="display:flex;gap:6px;flex-shrink:0">
               <button onclick="approveUser('${email}')"
                 style="padding:5px 12px;background:#16a34a;border:none;border-radius:8px;
@@ -244,8 +247,8 @@
       } else {
         approvedList.innerHTML = approvedOthers.map(email => `
           <div style="display:flex;justify-content:space-between;align-items:center;
-                      padding:10px 12px;background:#1e293b;border-radius:10px;margin-bottom:6px">
-            <span style="font-size:13px;color:#4ade80">${email}</span>
+                      padding:10px 12px;background:${itemBg};border:${itemBorder};border-radius:10px;margin-bottom:6px">
+            <span style="font-size:13px;color:${isLight?'#16a34a':'#4ade80'}">${email}</span>
             <button onclick="revokeUser('${email}')"
               style="padding:5px 14px;background:#991b1b;border:none;border-radius:8px;
                      color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
@@ -261,8 +264,8 @@
           const isSelf = email === currentUser?.email;
           return `
           <div style="display:flex;justify-content:space-between;align-items:center;
-                      padding:10px 12px;background:#1e293b;border-radius:10px;margin-bottom:6px">
-            <span style="font-size:13px;color:#fbbf24">${email}${isSelf ? ' <span style="font-size:11px;color:#6b7280">(본인)</span>' : ''}</span>
+                      padding:10px 12px;background:${itemBg};border:${itemBorder};border-radius:10px;margin-bottom:6px">
+            <span style="font-size:13px;color:${isLight?'#b45309':'#fbbf24'}">${email}${isSelf ? ' <span style="font-size:11px;color:#9ca3af">(본인)</span>' : ''}</span>
             ${isSelf ? '' : `<button onclick="removeAdmin('${email}')"
               style="padding:5px 14px;background:#7c3aed;border:none;border-radius:8px;
                      color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
@@ -3280,7 +3283,7 @@
     body.light-mode .pk-info { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
     body.light-mode .zoom-hint { color: #9ca3af; }
     body.light-mode .section-title { color: #9ca3af; }
-    body.light-mode #save-status { }
+    body.light-mode #save-status { color: #6b7280; }
     body.light-mode .logout-btn { border-color: #d1d5db; color: #6b7280; }
     body.light-mode .big-btn.blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
     body.light-mode .big-btn.green { background: linear-gradient(135deg, #059669, #10b981); }
@@ -3295,10 +3298,28 @@
     body.light-mode .gender-btn.active { background: #2563eb; color: white; }
     body.light-mode .result-card { background: #eff6ff; border-color: #bfdbfe; }
     body.light-mode .result-row span:last-child { color: #1a1a2e; }
-    body.light-mode #toast { background: #1f2937; color: #e2e8f0; }
+    body.light-mode #toast { background: #374151 !important; color: #f9fafb !important; }
     body.light-mode .quick-btns .qbtn { background: #f3f4f6; color: #6b7280; }
     #theme-toggle { background: none; border: 1px solid #374151; border-radius: 8px; padding: 4px 10px; font-size: 16px; cursor: pointer; transition: all .2s; }
     body.light-mode #theme-toggle { border-color: #d1d5db; }
+    /* ── 라이트모드 인라인 스타일 오버라이드 ── */
+    body.light-mode button[title="백업/복원"] { border-color: #d1d5db !important; color: #6b7280 !important; }
+    body.light-mode #enc-search { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #1a1a2e !important; }
+    body.light-mode #enc-sort { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #475569 !important; }
+    body.light-mode #pending-screen { background: #f0f2f5 !important; color: #1a1a2e !important; }
+    body.light-mode #pending-screen div { color: #1a1a2e; }
+    body.light-mode #pending-screen > div:nth-child(3) { background: #ffffff !important; border-color: #e2e8f0 !important; color: #475569 !important; }
+    body.light-mode #pending-email { color: #2563eb !important; }
+    body.light-mode #pending-screen button { background: #ffffff !important; border-color: #e2e8f0 !important; color: #475569 !important; }
+    body.light-mode #backup-modal > div { background: #ffffff !important; color: #1a1a2e !important; }
+    body.light-mode #backup-modal > div > div:nth-child(2),
+    body.light-mode #backup-modal > div > div:nth-child(3) { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+    body.light-mode #backup-restore-warning { background: #fef2f2 !important; border-color: #fecaca !important; color: #dc2626 !important; }
+    body.light-mode #backup-modal label { background: #f3f4f6 !important; border-color: #d1d5db !important; color: #6b7280 !important; }
+    body.light-mode #admin-modal > div { background: #ffffff !important; color: #1a1a2e !important; }
+    body.light-mode #admin-modal > div > div[style*="border-top"] { border-top-color: #e2e8f0 !important; }
+    body.light-mode #new-admin-input { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #1a1a2e !important; }
+    body.light-mode #url-display { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #2563eb !important; }
   </style>
 </head>
 <body>
