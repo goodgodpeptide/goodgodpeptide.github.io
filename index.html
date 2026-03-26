@@ -136,7 +136,9 @@
           document.getElementById("admin-btn").style.display = "inline-block";
         }
         await loadData();
+        loadCostSettings();
         renderAll();
+        fetchFxRates(); // 초기 환율 로드 (비동기, UI 블로킹 없음)
       } else {
         document.getElementById("login-screen").style.display = "flex";
         document.getElementById("pending-screen").style.display = "none";
@@ -2404,7 +2406,170 @@
           <div class="result-row"><span>인슐린 단위</span><span>${units.toFixed(1)} U</span></div>
           <div class="result-row" style="border:none"><span>바이알당 횟수</span><span>${injPerVial.toFixed(0)}회</span></div>
         </div>`;
+      // 비용 계산기 연동: 바이알당 횟수 업데이트
+      calcCost();
     };
+
+    // ══════════════════════════════════════════════
+    // 비용 계산기 (실시간 환율)
+    // ══════════════════════════════════════════════
+    let fxRates = null; // { KRW, JPY, CNY, INR } (기준: 1 USD)
+    let fxLastFetched = 0;
+    const FX_CURRENCIES = [
+      { code:'KRW', symbol:'₩', name:'원화', flag:'🇰🇷' },
+      { code:'USD', symbol:'$', name:'달러', flag:'🇺🇸' },
+      { code:'JPY', symbol:'¥', name:'엔화', flag:'🇯🇵' },
+      { code:'CNY', symbol:'¥', name:'위안화', flag:'🇨🇳' },
+      { code:'INR', symbol:'₹', name:'루피', flag:'🇮🇳' },
+    ];
+
+    async function fetchFxRates(force = false) {
+      const now = Date.now();
+      if (!force && fxRates && now - fxLastFetched < 3600000) return; // 1시간 캐시
+      const statusEl = document.getElementById("fx-status");
+      if (statusEl) statusEl.textContent = "환율 불러오는 중...";
+      try {
+        const res = await fetch("https://api.frankfurter.app/latest?from=USD&to=KRW,JPY,CNY,INR");
+        const data = await res.json();
+        fxRates = { USD: 1, ...data.rates };
+        fxLastFetched = now;
+        const d = new Date(data.date);
+        if (statusEl) statusEl.textContent = `ECB 기준 ${d.toLocaleDateString('ko-KR')} · 자동갱신 1h`;
+        renderFxBar();
+        calcCost();
+      } catch(e) {
+        if (statusEl) statusEl.textContent = "환율 로드 실패 (오프라인?)";
+      }
+    }
+
+    function renderFxBar() {
+      const el = document.getElementById("fx-rates-bar");
+      if (!el || !fxRates) return;
+      const krw = fxRates.KRW;
+      el.innerHTML = FX_CURRENCIES.filter(c => c.code !== 'KRW').map(c => {
+        const rate = krw / fxRates[c.code];
+        return `<span style="font-size:11px;color:#94a3b8">${c.flag} ${c.symbol}1 = ₩${rate.toLocaleString('ko-KR', {maximumFractionDigits:0})}</span>`;
+      }).join('<span style="color:#374151;margin:0 6px">·</span>');
+    }
+
+    // 금액을 KRW로 변환
+    function toKRW(amount, fromCode) {
+      if (!fxRates || !amount) return 0;
+      const amountUSD = amount / fxRates[fromCode];
+      return amountUSD * fxRates.KRW;
+    }
+
+    // KRW를 다른 통화로 변환
+    function fromKRW(krw, toCode) {
+      if (!fxRates) return 0;
+      return krw / fxRates.KRW * fxRates[toCode];
+    }
+
+    function formatCurrency(krw, code) {
+      const val = fromKRW(krw, code);
+      const sym = FX_CURRENCIES.find(c => c.code === code)?.symbol || '';
+      if (code === 'KRW') return `₩${Math.round(krw).toLocaleString('ko-KR')}`;
+      if (code === 'JPY' || code === 'INR') return `${sym}${Math.round(val).toLocaleString()}`;
+      return `${sym}${val.toFixed(2)}`;
+    }
+
+    window.calcCost = function() {
+      const purchasePrice = parseFloat(document.getElementById("cost-price")?.value) || 0;
+      const purchaseCurrency = document.getElementById("cost-currency")?.value || "USD";
+      const injFreqPerWeek = parseFloat(document.getElementById("cost-freq")?.value) || 1;
+      // 소모품
+      const syringeCost = parseFloat(document.getElementById("cost-syringe")?.value) || 0;
+      const bacWaterCost = parseFloat(document.getElementById("cost-bac")?.value) || 0;
+      const swabCost = parseFloat(document.getElementById("cost-swab")?.value) || 0;
+      // 바이알 정보 (조제계산에서 가져오기)
+      const vial = parseFloat(document.getElementById("c-vial")?.value) || 0;
+      const dose = parseFloat(document.getElementById("c-dose")?.value) || 0;
+      const injPerVial = (vial > 0 && dose > 0) ? Math.floor((vial * 1000) / dose) : 0;
+
+      const resultEl = document.getElementById("cost-result");
+      if (!resultEl) return;
+      if (!purchasePrice || !fxRates) {
+        resultEl.innerHTML = `<div style="font-size:12px;color:#4a5568;text-align:center;padding:10px">${!fxRates ? '환율을 불러오는 중...' : '구매 가격을 입력하세요'}</div>`;
+        return;
+      }
+
+      const purchaseKRW = toKRW(purchasePrice, purchaseCurrency);
+      // 소모품 총 비용 (KRW, 회당)
+      const consumablePerInj = syringeCost + swabCost + (injPerVial > 0 ? bacWaterCost / injPerVial : 0);
+      // 약물 회당 비용
+      const drugPerInj = injPerVial > 0 ? purchaseKRW / injPerVial : 0;
+      const totalPerInj = drugPerInj + consumablePerInj;
+      const totalPerWeek = totalPerInj * injFreqPerWeek;
+      const totalPerDay = totalPerWeek / 7;
+      const totalPerMonth = totalPerWeek * 4.33;
+
+      const isLight = document.body.classList.contains("light-mode");
+      const rowBg = isLight ? '#f8fafc' : '#0d0d1a';
+      const rowBorder = isLight ? '#e2e8f0' : '#1f2937';
+      const lblClr = isLight ? '#374151' : '#94a3b8';
+      const valClr = isLight ? '#111827' : '#e2e8f0';
+
+      const currencyRows = FX_CURRENCIES.map(c => `
+        <div style="display:flex;justify-content:space-between;padding:5px 10px;border-radius:6px;margin-bottom:3px;background:${c.code==='KRW'?'#60a5fa11':rowBg}">
+          <span style="font-size:11px;color:${lblClr}">${c.flag} ${c.name}</span>
+          <span style="font-size:12px;font-weight:700;color:${c.code==='KRW'?'#60a5fa':valClr};font-family:'JetBrains Mono'">${formatCurrency(totalPerInj, c.code)}</span>
+        </div>`).join('');
+
+      resultEl.innerHTML = `
+        <div style="background:${isLight?'#f1f5f9':'#0a0a14'};border-radius:10px;padding:12px;margin-top:8px">
+          ${injPerVial > 0 ? `
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid ${rowBorder}">
+            <div style="text-align:center;flex:1">
+              <div style="font-size:10px;color:${lblClr};margin-bottom:2px">바이알당 횟수</div>
+              <div style="font-size:18px;font-weight:900;color:#60a5fa">${injPerVial}회</div>
+            </div>
+            <div style="text-align:center;flex:1">
+              <div style="font-size:10px;color:${lblClr};margin-bottom:2px">약물 회당</div>
+              <div style="font-size:16px;font-weight:700;color:${valClr}">₩${Math.round(drugPerInj).toLocaleString()}</div>
+            </div>
+            <div style="text-align:center;flex:1">
+              <div style="font-size:10px;color:${lblClr};margin-bottom:2px">소모품 회당</div>
+              <div style="font-size:16px;font-weight:700;color:${valClr}">₩${Math.round(consumablePerInj).toLocaleString()}</div>
+            </div>
+          </div>` : ''}
+
+          <div style="margin-bottom:10px">
+            <div style="font-size:11px;color:${lblClr};margin-bottom:6px;font-weight:700">💉 회당 총 비용</div>
+            ${currencyRows}
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+            ${[['일당', totalPerDay],['주당 ('+injFreqPerWeek+'회)', totalPerWeek],['월당', totalPerMonth]].map(([label, val]) => `
+            <div style="background:${rowBg};border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:10px;color:${lblClr};margin-bottom:3px">${label}</div>
+              <div style="font-size:13px;font-weight:700;color:${valClr};font-family:'JetBrains Mono'">₩${Math.round(val).toLocaleString()}</div>
+            </div>`).join('')}
+          </div>
+        </div>`;
+    };
+
+    window.saveCostSettings = function() {
+      appData.costCalc = {
+        currency: document.getElementById("cost-currency")?.value || "USD",
+        price: document.getElementById("cost-price")?.value || "",
+        freq: document.getElementById("cost-freq")?.value || "1",
+        syringe: document.getElementById("cost-syringe")?.value || "0",
+        bac: document.getElementById("cost-bac")?.value || "0",
+        swab: document.getElementById("cost-swab")?.value || "0",
+      };
+      scheduleSave();
+    };
+
+    function loadCostSettings() {
+      const c = appData.costCalc || {};
+      const set = (id, val) => { const el = document.getElementById(id); if (el && val !== undefined) el.value = val; };
+      set("cost-currency", c.currency);
+      set("cost-price", c.price);
+      set("cost-freq", c.freq);
+      set("cost-syringe", c.syringe);
+      set("cost-bac", c.bac);
+      set("cost-swab", c.swab);
+    }
 
     // ── 역산 계산기 ────────────────────────────────────────
     window.calcBodyComp = () => {
@@ -2513,7 +2678,7 @@
       document.getElementById("panel-"+tab).style.display = "block";
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
       if (tab === "peptide") {
-        setTimeout(() => { renderPeptideGraph(); initGraphTouch(); startLiveUpdate(); }, 50);
+        setTimeout(() => { renderPeptideGraph(); initGraphTouch(); startLiveUpdate(); fetchFxRates(); loadCostSettings(); }, 50);
       } else {
         stopLiveUpdate();
       }
@@ -4090,6 +4255,71 @@
         </div>
         <button class="big-btn blue" onclick="calcPeptide()" style="margin-bottom:14px">계산하기</button>
         <div id="calc-result"></div>
+      </div>
+
+      <!-- 💰 비용 계산기 -->
+      <div class="card" style="margin-top:4px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div class="section-title" style="margin-bottom:0">💰 비용 계산기</div>
+          <button onclick="fetchFxRates(true)" style="background:none;border:none;font-size:12px;color:#60a5fa;cursor:pointer;padding:2px 6px">🔄 환율갱신</button>
+        </div>
+        <div id="fx-status" style="font-size:10px;color:#4a5568;margin-bottom:6px">환율 로딩 전</div>
+        <div id="fx-rates-bar" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:8px;background:#0d0d1a;border-radius:8px;min-height:28px"></div>
+
+        <!-- 구매 가격 입력 -->
+        <div class="card" style="margin-bottom:10px;background:#0d0d1a">
+          <div class="section-title">구매 가격</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="cost-currency" class="input-field" style="flex:0 0 auto;width:90px" onchange="calcCost();saveCostSettings()">
+              <option value="KRW">🇰🇷 KRW</option>
+              <option value="USD" selected>🇺🇸 USD</option>
+              <option value="JPY">🇯🇵 JPY</option>
+              <option value="CNY">🇨🇳 CNY</option>
+              <option value="INR">🇮🇳 INR</option>
+            </select>
+            <input id="cost-price" class="input-field" type="number" min="0" step="0.01"
+              placeholder="0" style="flex:1" oninput="calcCost();saveCostSettings()" />
+          </div>
+          <div style="font-size:10px;color:#4a5568;margin-top:6px">조제계산의 바이알 정보와 자동 연동됩니다</div>
+        </div>
+
+        <!-- 주사 빈도 -->
+        <div class="card" style="margin-bottom:10px;background:#0d0d1a">
+          <div class="section-title">주당 투여 횟수</div>
+          <div class="quick-btns">
+            <button class="qbtn" onclick="setQuickVal('cost-freq','1');calcCost();saveCostSettings()">주 1회</button>
+            <button class="qbtn" onclick="setQuickVal('cost-freq','2');calcCost();saveCostSettings()">주 2회</button>
+            <button class="qbtn" onclick="setQuickVal('cost-freq','3');calcCost();saveCostSettings()">주 3회</button>
+            <button class="qbtn" onclick="setQuickVal('cost-freq','7');calcCost();saveCostSettings()">매일</button>
+          </div>
+          <input id="cost-freq" class="input-field" type="number" min="1" step="1" value="1"
+            placeholder="횟수/주" oninput="calcCost();saveCostSettings()" />
+        </div>
+
+        <!-- 소모품 비용 (KRW 기준, 회당) -->
+        <div class="card" style="margin-bottom:12px;background:#0d0d1a">
+          <div class="section-title">소모품 비용 (₩, 회당)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div>
+              <div style="font-size:10px;color:#4a5568;margin-bottom:4px">💉 주사기</div>
+              <input id="cost-syringe" class="input-field" type="number" min="0" step="10"
+                placeholder="원" style="width:100%;box-sizing:border-box" oninput="calcCost();saveCostSettings()" />
+            </div>
+            <div>
+              <div style="font-size:10px;color:#4a5568;margin-bottom:4px">💧 BAC Water</div>
+              <input id="cost-bac" class="input-field" type="number" min="0" step="100"
+                placeholder="원/바이알" style="width:100%;box-sizing:border-box" oninput="calcCost();saveCostSettings()" />
+            </div>
+            <div>
+              <div style="font-size:10px;color:#4a5568;margin-bottom:4px">🩹 알코올 솜</div>
+              <input id="cost-swab" class="input-field" type="number" min="0" step="10"
+                placeholder="원" style="width:100%;box-sizing:border-box" oninput="calcCost();saveCostSettings()" />
+            </div>
+          </div>
+          <div style="font-size:10px;color:#4a5568;margin-top:6px">BAC Water는 바이알당 총 비용을 입력하면 회당 자동 배분됩니다</div>
+        </div>
+
+        <div id="cost-result"><div style="font-size:12px;color:#4a5568;text-align:center;padding:10px">구매 가격을 입력하세요</div></div>
       </div>
     </div>
 
