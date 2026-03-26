@@ -564,17 +564,23 @@
       "마운자로 (Tirzepatide)":   {
         halfLifeDays: 5, tmaxHours: 24, defaultDoseDays: 7,
         color: "#60a5fa", emoji: "🔵", short: "마운자로",
-        note: "반감기 5일 · 임상 표준 7일 주기"
+        note: "반감기 5일 · 임상 표준 7일 주기",
+        // SURMOUNT 임상 용량 단계 (mg)
+        doseSteps: [2.5, 5, 7.5, 10, 12.5, 15], clinicalMax: 15
       },
       "레타 (Retatrutide)": {
         halfLifeDays: 6, tmaxHours: 48, defaultDoseDays: 7,
         color: "#f87171", emoji: "🔴", short: "레타",
-        note: "반감기 6일 · 임상 표준 7일 주기"
+        note: "반감기 6일 · 임상 표준 7일 주기",
+        // Phase 2 (NEJM 2023) 임상 용량 단계 (mg)
+        doseSteps: [1, 2, 4, 8, 12], clinicalMax: 12
       },
       "위고비 (Semaglutide)": {
         halfLifeDays: 7, tmaxHours: 36, defaultDoseDays: 7,
         color: "#4ade80", emoji: "🟢", short: "위고비",
-        note: "반감기 7일 · 임상 표준 7일 주기"
+        note: "반감기 7일 · 임상 표준 7일 주기",
+        // STEP 임상 용량 단계 (mg)
+        doseSteps: [0.25, 0.5, 1, 1.7, 2.4], clinicalMax: 2.4
       },
     };
 
@@ -1524,6 +1530,11 @@
       }).filter(Boolean);
 
       if (globalMax === 0) globalMax = 1;
+      // Y축 최소 높이: 표시된 약물 중 임상 최대값으로 플로어 설정
+      curves.forEach(({ drug }) => {
+        const cm = DRUG_CONFIG[drug]?.clinicalMax || 0;
+        if (cm > globalMax) globalMax = cm;
+      });
 
       // 배경
       const isLight = document.body.classList.contains("light-mode");
@@ -1573,6 +1584,19 @@
         ctx.beginPath(); ctx.moveTo(x, PAD.t + 3); ctx.lineTo(x - 4, PAD.t - 4); ctx.lineTo(x + 4, PAD.t - 4); ctx.closePath(); ctx.fill();
       });
 
+      // ── 임상 용량 기준 수평선 (매우 연하게, 곡선 뒤) ──────
+      curves.forEach(({ drug, cfg }) => {
+        (cfg.doseSteps || []).forEach(dose => {
+          if (dose > globalMax * 1.05) return;
+          const y = PAD.t + gH - (dose / globalMax) * gH;
+          ctx.strokeStyle = cfg.color + "20"; ctx.lineWidth = 1; ctx.setLineDash([2, 6]);
+          ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = cfg.color + "55"; ctx.font = "8px 'JetBrains Mono'"; ctx.textAlign = "left";
+          ctx.fillText(dose + 'mg', PAD.l + 3, y - 2);
+        });
+      });
+
       // 곡선
       curves.forEach(({ cfg, points }) => {
         // fill
@@ -1599,6 +1623,20 @@
           i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         });
         ctx.stroke(); ctx.shadowBlur = 0;
+      });
+
+      // ── 현재 체내 농도 수평 점선 (곡선 위) ─────────────────
+      curves.forEach(({ drug, cfg }) => {
+        const rem = calcConcentrationAt(drug, now);
+        if (rem < 0.005) return;
+        const y = PAD.t + gH - (rem / globalMax) * gH;
+        if (y < PAD.t - 4 || y > PAD.t + gH + 4) return;
+        ctx.strokeStyle = cfg.color + "bb"; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
+        ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
+        ctx.setLineDash([]);
+        // 오른쪽 레이블
+        ctx.fillStyle = cfg.color; ctx.font = "bold 9px 'JetBrains Mono'"; ctx.textAlign = "right";
+        ctx.fillText(rem.toFixed(3) + 'mg', PAD.l + gW - 2, y - 3);
       });
 
       // 현재 시각 선
@@ -3808,13 +3846,7 @@
             <span style="font-size:12px;color:#6b7280">📈 체내 약물 농도 변화</span>
             <span style="font-size:10px;color:#f87171;font-weight:700;animation:livePulse 1.5s infinite">● LIVE</span>
           </div>
-          <div style="display:flex;gap:4px;flex-wrap:wrap">
-            <button class="graph-range-btn" data-hrs="72"  onclick="setGraphRange(72)">3일</button>
-            <button class="graph-range-btn" data-hrs="168" onclick="setGraphRange(168)">7일</button>
-            <button class="graph-range-btn" data-hrs="336" onclick="setGraphRange(336)">2주</button>
-            <button class="graph-range-btn" data-hrs="720" onclick="setGraphRange(720)">1달</button>
-            <button class="graph-range-btn active" data-hrs="0" onclick="setGraphRange(0)">전체</button>
-          </div>
+          <button class="graph-range-btn active" data-hrs="0" onclick="setGraphRange(0)" style="font-size:10px">🔄 줌 초기화</button>
         </div>
         <canvas id="peptide-chart"></canvas>
         <div class="zoom-hint">👆 드래그 이동 · 핀치 확대/축소 · 탭/클릭 수치확인</div>
