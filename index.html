@@ -1127,6 +1127,7 @@
       const c = document.getElementById("remaining-cards");
       if (!c) return;
       const now = Date.now();
+      const isLight = document.body.classList.contains("light-mode");
       c.innerHTML = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
         const rem = calcRemaining(drug);
         const cycDays = getDoseCycle(drug);
@@ -1154,12 +1155,52 @@
         const pct = lastDose > 0 ? Math.min(100, Math.round(rem / lastDose * 100)) : 0;
         const siteNext = getNextSuggested();
 
+        const t = isLight ? {
+          name:    "#1a1a2e",
+          sub:     "#64748b",
+          sub2:    "#475569",
+          barBg:   "#e2e8f0",
+          inBg:    "#f8fafc",
+          inBd:    "#d1d5db",
+          inClr:   "#1a1a2e",
+          mgClr:   "#475569",
+          info:    "#475569",
+          btnBg:   "#f3f4f6",
+          btnBd:   "#e2e8f0",
+          btnClr:  "#4b5563",
+          warnBg:  "#fef2f2",
+          warnBd:  "#fecaca44",
+          warnClr: "#dc2626",
+          gearBg:  "#f3f4f6",
+          gearBd:  "#e2e8f0",
+          gearClr: "#6b7280",
+        } : {
+          name:    "#e2e8f0",
+          sub:     "#9ca3af",
+          sub2:    "#4a5568",
+          barBg:   "#1f2937",
+          inBg:    "#0d0d1a",
+          inBd:    "#374151",
+          inClr:   "#e2e8f0",
+          mgClr:   "#4a5568",
+          info:    "#374151",
+          btnBg:   "#1f2937",
+          btnBd:   "#2d3748",
+          btnClr:  "#6b7280",
+          warnBg:  "#1a0f0f",
+          warnBd:  "#7f1d1d44",
+          warnClr: "#f87171",
+          gearBg:  "#1f2937",
+          gearBd:  "#2d3748",
+          gearClr: "#6b7280",
+        };
+
         return `<div class="drug-card" style="--drug-color:${cfg.color}">
           <!-- 헤더 -->
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <div style="display:flex;align-items:center;gap:6px">
               <span style="font-size:14px">${cfg.emoji}</span>
-              <span style="font-size:13px;font-weight:700;color:#e2e8f0">${drug}</span>
+              <span style="font-size:13px;font-weight:700;color:${t.name}">${drug}</span>
             </div>
             ${ddayText ? `<div style="background:${ddayColor}22;border:1px solid ${ddayColor}55;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${ddayColor}">${ddayText}</div>` : ''}
           </div>
@@ -1168,13 +1209,13 @@
           <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:6px">
             <div style="font-size:32px;font-weight:900;color:${cfg.color};font-family:'JetBrains Mono',monospace;line-height:1">${rem.toFixed(2)}</div>
             <div style="padding-bottom:3px">
-              <div style="font-size:11px;color:#9ca3af">mg 체내 잔류</div>
-              <div style="font-size:10px;color:#4a5568">${cycDays}일 후 ~${in_cycleDay.toFixed(2)}mg</div>
+              <div style="font-size:11px;color:${t.sub}">mg 체내 잔류</div>
+              <div style="font-size:10px;color:${t.sub2}">${cycDays}일 후 ~${in_cycleDay.toFixed(2)}mg</div>
             </div>
           </div>
 
           <!-- 잔류 진행바 -->
-          ${rem > 0 ? `<div style="height:4px;background:#1f2937;border-radius:2px;overflow:hidden;margin-bottom:10px">
+          ${rem > 0 ? `<div style="height:4px;background:${t.barBg};border-radius:2px;overflow:hidden;margin-bottom:10px">
             <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cfg.color}66,${cfg.color});border-radius:2px;transition:width .6s"></div>
           </div>` : '<div style="height:4px;margin-bottom:10px"></div>'}
 
@@ -1182,11 +1223,11 @@
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
             <div style="flex:1;display:flex;gap:6px;align-items:center">
               <input id="quick-dose-${drug.replace(/\s|\(|\)/g,'_')}" type="number" step="0.1" placeholder="${lastDose || '용량 mg'}"
-                style="flex:1;padding:9px 10px;background:#0d0d1a;border:1px solid #374151;border-radius:10px;
-                       color:#e2e8f0;font-size:14px;font-family:'JetBrains Mono',monospace;outline:none;min-width:0"
-                onfocus="this.style.borderColor='${cfg.color}'" onblur="this.style.borderColor='#374151'"
+                style="flex:1;padding:9px 10px;background:${t.inBg};border:1px solid ${t.inBd};border-radius:10px;
+                       color:${t.inClr};font-size:14px;font-family:'JetBrains Mono',monospace;outline:none;min-width:0"
+                onfocus="this.style.borderColor='${cfg.color}'" onblur="this.style.borderColor='${t.inBd}'"
               />
-              <span style="font-size:12px;color:#4a5568;white-space:nowrap">mg</span>
+              <span style="font-size:12px;color:${t.mgClr};white-space:nowrap">mg</span>
             </div>
             <button onclick="quickInject('${drug}')"
               style="padding:9px 16px;background:${cfg.color};border:none;border-radius:10px;
@@ -1199,21 +1240,21 @@
           <!-- 부가 정보 행 -->
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div style="display:flex;gap:10px;align-items:center">
-              <span style="font-size:10px;color:#374151">반감기 ${cfg.halfLifeDays}일</span>
-              ${lastRec ? `<span style="font-size:10px;color:#374151">최근: ${toKSTString(lastRec.time).slice(0,10)}</span>` : '<span style="font-size:10px;color:#374151">기록 없음</span>'}
+              <span style="font-size:10px;color:${t.info}">반감기 ${cfg.halfLifeDays}일</span>
+              ${lastRec ? `<span style="font-size:10px;color:${t.info}">최근: ${toKSTString(lastRec.time).slice(0,10)}</span>` : `<span style="font-size:10px;color:${t.info}">기록 없음</span>`}
             </div>
             <div style="display:flex;gap:6px;align-items:center">
               <!-- 주기 설정 -->
               <div style="display:flex;align-items:center;gap:4px">
-                <button onclick="setDrugCycle('${drug}', ${cycDays-1})" style="background:#1f2937;border:1px solid #2d3748;border-radius:4px;color:#6b7280;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0">−</button>
-                <span style="font-size:10px;color:#6b7280;min-width:24px;text-align:center">${cycDays}일</span>
-                <button onclick="setDrugCycle('${drug}', ${cycDays+1})" style="background:#1f2937;border:1px solid #2d3748;border-radius:4px;color:#6b7280;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0">+</button>
+                <button onclick="setDrugCycle('${drug}', ${cycDays-1})" style="background:${t.btnBg};border:1px solid ${t.btnBd};border-radius:4px;color:${t.btnClr};width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0">−</button>
+                <span style="font-size:10px;color:${t.btnClr};min-width:24px;text-align:center">${cycDays}일</span>
+                <button onclick="setDrugCycle('${drug}', ${cycDays+1})" style="background:${t.btnBg};border:1px solid ${t.btnBd};border-radius:4px;color:${t.btnClr};width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;padding:0">+</button>
               </div>
               <button onclick="openSideEffectModal('${drug}')" title="부작용 기록"
-                style="background:#1a0f0f;border:1px solid #7f1d1d44;border-radius:6px;color:#f87171;
+                style="background:${t.warnBg};border:1px solid ${t.warnBd};border-radius:6px;color:${t.warnClr};
                        padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">⚠️</button>
               <button onclick="openOverrideModal('${drug}')" title="체내 농도 수동 설정"
-                style="background:#1f2937;border:1px solid #2d3748;border-radius:6px;color:#6b7280;
+                style="background:${t.gearBg};border:1px solid ${t.gearBd};border-radius:6px;color:${t.gearClr};
                        padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">⚙️</button>
             </div>
           </div>
@@ -3289,8 +3330,11 @@
     body.light-mode .modal-box { background: #ffffff; border-color: #e2e8f0; }
     body.light-mode .modal-overlay { background: #00000055; }
     body.light-mode .pk-info { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
-    body.light-mode .zoom-hint { color: #9ca3af; }
-    body.light-mode .section-title { color: #9ca3af; }
+    body.light-mode .zoom-hint { color: #6b7280; }
+    body.light-mode .section-title { color: #64748b; }
+    body.light-mode .stat-label { color: #64748b; }
+    body.light-mode .result-row span:first-child { color: #64748b; }
+    body.light-mode .zoom-hint { color: #6b7280; }
     body.light-mode #save-status { color: #6b7280; }
     body.light-mode .logout-btn { border-color: #d1d5db; color: #6b7280; }
     body.light-mode .big-btn.blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
