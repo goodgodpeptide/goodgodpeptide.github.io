@@ -191,14 +191,26 @@
       ]);
       const adminEmails = adminsSnap.exists() ? (adminsSnap.data().emails || []) : [];
       const approvedEmails = approvedSnap.exists() ? (approvedSnap.data().emails || []) : [];
-      const rejectedEmails = rejectedSnap.exists() ? (rejectedSnap.data().emails || []) : [];
+      // rejected: { "email@gmail.com": rejectedAtMs, ... }
+      const rejectedMap = rejectedSnap.exists() ? (rejectedSnap.data() || {}) : {};
 
-      // 로그인 시도 목록에서 미승인 이메일 추출 (거절된 이메일도 제외)
+      // 로그인 시도 목록에서 이메일별 최근 로그인 시각 추출
       const logsSnap = await getDocs(collection(db, "login_logs"));
-      const allEmails = new Set();
-      logsSnap.forEach(d => { if (d.data().email) allEmails.add(d.data().email); });
+      const lastLoginMap = {}; // email → 최근 loginAt ms
+      logsSnap.forEach(d => {
+        const { email, loginAt } = d.data();
+        if (!email) return;
+        const ms = loginAt?.toMillis ? loginAt.toMillis() : 0;
+        if (!lastLoginMap[email] || ms > lastLoginMap[email]) lastLoginMap[email] = ms;
+      });
 
-      const pendingEmails = [...allEmails].filter(e => !approvedEmails.includes(e) && !rejectedEmails.includes(e));
+      // 미승인 + (거절 기록 없거나 거절 이후 재로그인한) 이메일만 대기 목록에 표시
+      const pendingEmails = Object.keys(lastLoginMap).filter(e => {
+        if (approvedEmails.includes(e)) return false;
+        const rejectedAt = rejectedMap[e];
+        if (!rejectedAt) return true; // 거절 기록 없음 → 표시
+        return lastLoginMap[e] > rejectedAt; // 거절 이후 재로그인 → 다시 표시
+      });
       const approvedOthers = approvedEmails.filter(e => !adminEmails.includes(e));
 
       // 대기 목록 렌더
@@ -282,13 +294,14 @@
     };
 
     window.rejectUser = async function(email) {
-      if (!confirm(`${email} 을 거절할까요?\n(이후 대기 목록에서 숨겨집니다)`)) return;
+      if (!confirm(`${email} 을 거절할까요?\n(재로그인하면 다시 대기 목록에 표시됩니다)`)) return;
       try {
         const snap = await getDoc(REJECTED_DOC);
+        const update = { [email]: Date.now() };
         if (snap.exists()) {
-          await updateDoc(REJECTED_DOC, { emails: arrayUnion(email) });
+          await updateDoc(REJECTED_DOC, update);
         } else {
-          await setDoc(REJECTED_DOC, { emails: [email] });
+          await setDoc(REJECTED_DOC, update);
         }
         await openAdminPanel();
       } catch(e) { alert("오류: " + e.message); }
