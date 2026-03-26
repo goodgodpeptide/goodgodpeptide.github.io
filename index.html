@@ -276,6 +276,14 @@
       }
     };
 
+    window.manualApprove = async function() {
+      const input = document.getElementById("manual-approve-input");
+      const email = input.value.trim().toLowerCase();
+      if (!email || !email.includes("@")) { alert("유효한 이메일을 입력하세요."); return; }
+      await approveUser(email);
+      input.value = "";
+    };
+
     window.approveUser = async function(email) {
       try {
         const snap = await getDoc(APPROVED_DOC);
@@ -3319,6 +3327,7 @@
     body.light-mode #admin-modal > div { background: #ffffff !important; color: #1a1a2e !important; }
     body.light-mode #admin-modal > div > div[style*="border-top"] { border-top-color: #e2e8f0 !important; }
     body.light-mode #new-admin-input { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #1a1a2e !important; }
+    body.light-mode #manual-approve-input { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #1a1a2e !important; }
     body.light-mode #url-display { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #2563eb !important; }
   </style>
 </head>
@@ -3775,6 +3784,18 @@
       <div style="font-size:18px;font-weight:700">👑 관리자 — 사용자 승인</div>
       <button onclick="document.getElementById('admin-modal').style.display='none'"
         style="background:none;border:none;color:#6b7280;font-size:22px;cursor:pointer">✕</button>
+    </div>
+
+    <!-- 직접 승인 입력 -->
+    <div style="display:flex;gap:8px;margin-bottom:20px">
+      <input id="manual-approve-input" type="email" placeholder="이메일 직접 입력 후 승인"
+        style="flex:1;padding:10px 12px;background:#1e293b;border:1px solid #374151;border-radius:10px;
+               color:#f1f5f9;font-size:13px;font-family:inherit;outline:none" />
+      <button onclick="manualApprove()"
+        style="padding:10px 16px;background:#16a34a;border:none;border-radius:10px;
+               color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">
+        승인
+      </button>
     </div>
 
     <!-- 승인 대기 목록 -->
