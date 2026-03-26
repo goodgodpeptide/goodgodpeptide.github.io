@@ -1188,6 +1188,8 @@
         const pct = lastDose > 0 ? Math.min(100, Math.round(rem / lastDose * 100)) : 0;
         // 농도 숫자
         remEl.textContent = rem.toFixed(2);
+        const microEl = document.getElementById("live-rem-micro-" + cfg.short);
+        if (microEl) microEl.textContent = rem.toFixed(5).slice(-3);
         // N일 후 텍스트
         const nextEl = document.getElementById("live-nextconc-" + cfg.short);
         if (nextEl) nextEl.textContent = `${cycDays}일 후 ~${in_cycleDay.toFixed(2)}mg`;
@@ -1310,7 +1312,9 @@
 
           <!-- 체내 농도 -->
           <div style="display:flex;align-items:flex-end;gap:6px;margin-bottom:6px">
-            <div id="live-rem-${cfg.short}" style="font-size:32px;font-weight:900;color:${cfg.color};font-family:'JetBrains Mono',monospace;line-height:1">${rem.toFixed(2)}</div>
+            <div style="display:flex;align-items:baseline;gap:1px;line-height:1">
+              <span id="live-rem-${cfg.short}" style="font-size:32px;font-weight:900;color:${cfg.color};font-family:'JetBrains Mono',monospace">${rem.toFixed(2)}</span><span id="live-rem-micro-${cfg.short}" style="font-size:13px;font-weight:700;color:${cfg.color}66;font-family:'JetBrains Mono',monospace;letter-spacing:-0.5px">${rem.toFixed(5).slice(-3)}</span>
+            </div>
             <div style="padding-bottom:3px">
               <div style="font-size:11px;color:${t.sub}">mg 체내 잔류</div>
               <div id="live-nextconc-${cfg.short}" style="font-size:10px;color:${t.sub2}">${cycDays}일 후 ~${in_cycleDay.toFixed(2)}mg</div>
