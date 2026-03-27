@@ -2422,6 +2422,35 @@
         ctx.fillText("현재", nowX, PAD.t - 4);
       }
 
+      // ── 현재 농도 도트 (현재 시각 × 각 약물 농도 교차점) ──────
+      if (nowX >= PAD.l && nowX <= PAD.l + gW) {
+        curves.forEach(({ drug, cfg }) => {
+          const cm = cfg.clinicalMax || 1;
+          const rem = calcConcentrationAt(drug, now);
+          if (rem < 0.0001) return;
+          const remRatio = plotRatio(rem, cm);
+          const dotY = PAD.t + gH - remRatio * gH;
+          if (dotY < PAD.t - 4 || dotY > PAD.t + gH + 4) return;
+          // 외부 글로우 링
+          ctx.beginPath();
+          ctx.arc(nowX, dotY, 8, 0, Math.PI * 2);
+          ctx.fillStyle = cfg.color + "22";
+          ctx.fill();
+          // 중간 링
+          ctx.beginPath();
+          ctx.arc(nowX, dotY, 5, 0, Math.PI * 2);
+          ctx.fillStyle = cfg.color + "55";
+          ctx.fill();
+          // 중심 도트
+          ctx.beginPath();
+          ctx.arc(nowX, dotY, 3, 0, Math.PI * 2);
+          ctx.fillStyle = cfg.color;
+          ctx.shadowColor = cfg.color; ctx.shadowBlur = 10;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        });
+      }
+
       // ── 다음 주사 D-day 수직선 (약물별) ────────────────
       Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
         const drugRecs = (appData.records || []).filter(r => r.drug === drug && !r.isOverride);
@@ -2436,9 +2465,10 @@
         ctx.strokeStyle = cfg.color + "99"; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
         ctx.beginPath(); ctx.moveTo(nx, PAD.t); ctx.lineTo(nx, PAD.t + gH); ctx.stroke();
         ctx.setLineDash([]);
-        // 상단 레이블
-        const daysLeft = Math.floor((nextDue - now) / 86400000);
-        const label = daysLeft === 0 ? `${cfg.short} 오늘!` : `${cfg.short} D-${daysLeft}`;
+        // 상단 레이블 (KST 날짜 기준 calDiff)
+        const KST = 9 * 3600000;
+        const calDiff = Math.floor((nextDue + KST) / 86400000) - Math.floor((now + KST) / 86400000);
+        const label = calDiff === 0 ? `${cfg.short} 오늘!` : `${cfg.short} D-${calDiff}`;
         ctx.fillStyle = cfg.color;
         ctx.font = "bold 10px 'Noto Sans KR'";
         ctx.textAlign = nx > cW - 50 ? "right" : "center";
