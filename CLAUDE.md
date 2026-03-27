@@ -139,7 +139,8 @@ appData = {
     { id: number, weight: number, time: number(UTC ms) }
   ],
   supplements: [
-    { id: string, name: string, timing: string[], times: {아침:"08:00",...}, taken: {"YYYY-MM-DD_아침": true} }
+    { id: string, name: string, timing: string[], times: {아침:"08:00",...}, taken: {"YYYY-MM-DD_아침": true},
+      stock?: { remaining: number, perDose: number } }  // 재고: 남은 정수, 회당 소모량
   ],
   sideEffects: [
     { id: number, drug: string, symptoms: string[], note: string, time: number(UTC ms) }
@@ -396,12 +397,20 @@ appData.inventory = [{
 
 핵심 함수:
 ```js
-renderReconSection()     // 조제 재고 섹션 렌더
+renderReconSection()     // 조제 재고 섹션 렌더 (injDone은 records에서 자동 계산)
 openReconModal(drug)     // 새 조제 기록 모달
-adjustInjDone(id, delta) // +1/-1 수동 조정
+openEditReconModal(id)   // 조제 기록 수정 모달
+deleteRecon(id)          // 조제 기록 삭제
 renderInventorySection() // 약 재고 섹션 렌더
 openInventoryModal()     // 새 재고 추가 모달
 adjustInventory(id,delta)
+// 영양제 재고
+updateSuppStock(sup, nowChecked)  // 체크/해제 시 stock.remaining 차감/복원
+openSuppStockModal(id)            // 영양제 입고(재고 추가) 모달
+submitSuppStock(id)               // 입고 저장
+// 기록 수정
+openEditRecordModal(id)   // 투약 기록 수정 모달 (add-modal 재활용, pre-fill)
+openEditWeightModal(id)   // 체중 기록 수정 모달 (weight-modal 재활용, pre-fill)
 ```
 
 ---
@@ -477,7 +486,13 @@ appData.costCalc.customConsumables = [
 - ✅ 달력 월간 요약 카드 클릭 → 상세 목록 모달 (투약/체중/영양제)
 - ✅ 약물 구매 비용 박스/키트 UI 통합 (바이알1개 ↔ 박스/키트 토글, 바이알당 hint)
 - ✅ BAC Water 소모품 비용 박스/묶음 단위 추가 (bacQty, 바이알당·회당 hint)
-- ✅ 조제 재고 관리 (reconVials, +/-조정, 소진 예상일)
+- ✅ 조제 재고 관리 (reconVials, 투약기록 자동연동, 소진 예상일)
+- ✅ 투약 기록 수정 기능 (openEditRecordModal — 약물/용량/시간/투여경로 pre-fill)
+- ✅ 체중 기록 수정 기능 (openEditWeightModal — 체중/시간 pre-fill)
+- ✅ 달력 양방향 편집 — 날짜 상세에서 투약/체중 기록 삭제 버튼 (record id 연동)
+- ✅ 영양제 재고 관리 (s.stock.remaining/perDose, 입고 모달, 체크 시 자동 차감)
+- ✅ 달력 영양제 소진 예상일 (청록 마름모 도트 #22d3ee + 날짜 상세 섹션)
+- ✅ 조제 재고 injDone 자동 계산 — records에서 reconDate 이후 비-override 기록 수 계산
 - ✅ 약 재고 관리 (inventory, 키트 단위, 14일 경고)
 - ✅ 영양제 상세 스케줄 + 코스 진행 상태
 - ✅ 비용 계산기 개선 (X일에 한번, 키트, 배송비)
