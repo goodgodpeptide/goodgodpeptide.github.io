@@ -5785,9 +5785,12 @@
     #save-status { font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid; transition: all .3s; }
     .logout-btn { background: none; border: 1px solid #374151; border-radius: 8px; color: #6b7280; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
 
-    .tabs { display: flex; background: #0d0d1a; border-bottom: 1px solid #1f2937; }
-    .tab-btn { flex: 1; padding: 11px 2px; font-size: 11px; font-weight: 500; background: none; border: none; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; transition: all .2s; font-family: inherit; white-space: nowrap; }
-    .tab-btn.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+    .tabs { display: flex; background: #080812; border-bottom: 1px solid #1f2937; overflow-x: auto; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { flex: 1; min-width: 0; padding: 10px 4px; font-size: 11px; font-weight: 500; background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; color: #4b5563; transition: color .2s, border-color .2s; font-family: inherit; white-space: nowrap; letter-spacing: 0.2px; position: relative; }
+    .tab-btn + .tab-btn::before { content: ''; position: absolute; left: 0; top: 22%; height: 56%; width: 1px; background: #1f2937; }
+    .tab-btn.active { color: #60a5fa; border-bottom-color: #60a5fa; font-weight: 700; }
+    .tab-btn:not(.active):hover { color: #9ca3af; }
 
     .content { flex: 1; padding: 12px; max-width: 520px; margin: 0 auto; width: 100%; }
     .tab-panel { display: none; }
@@ -5879,9 +5882,11 @@
     body.light-mode { background: #f0f2f5; color: #1a1a2e; }
     body.light-mode .top-bar { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 1px 4px #0001; }
     body.light-mode .top-bar-title { color: #1a1a2e; }
-    body.light-mode .tabs { background: #ffffff; border-color: #e2e8f0; }
-    body.light-mode .tab-btn { color: #6b7280; }
+    body.light-mode .tabs { background: #f8fafc; border-color: #e2e8f0; }
+    body.light-mode .tab-btn { color: #94a3b8; }
+    body.light-mode .tab-btn + .tab-btn::before { background: #e2e8f0; }
     body.light-mode .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+    body.light-mode .tab-btn:not(.active):hover { color: #64748b; }
     body.light-mode .card { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 1px 4px #0001; }
     body.light-mode .drug-card { background: #ffffff; }
     body.light-mode .record-row { background: #f8fafc; border-color: #e2e8f0; }
@@ -6056,12 +6061,12 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="peptide" onclick="switchTab('peptide')">💉 투약</button>
-    <button class="tab-btn" data-tab="weight"  onclick="switchTab('weight')">⚖️ 체중</button>
-    <button class="tab-btn" data-tab="supple"  onclick="switchTab('supple')">💊 영양제</button>
-    <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar')">📅 달력</button>
-    <button class="tab-btn" data-tab="encyclopedia" onclick="switchTab('encyclopedia')">🔬 백과사전</button>
-    <button class="tab-btn" data-tab="community" onclick="switchTab('community')">💬 커뮤니티</button>
+    <button class="tab-btn active" data-tab="peptide" onclick="switchTab('peptide')">투약</button>
+    <button class="tab-btn" data-tab="weight"  onclick="switchTab('weight')">체중</button>
+    <button class="tab-btn" data-tab="supple"  onclick="switchTab('supple')">영양제</button>
+    <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar')">달력</button>
+    <button class="tab-btn" data-tab="encyclopedia" onclick="switchTab('encyclopedia')">백과사전</button>
+    <button class="tab-btn" data-tab="community" onclick="switchTab('community')">커뮤니티</button>
   </div>
 
   <div class="content">
