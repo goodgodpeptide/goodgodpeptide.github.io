@@ -180,6 +180,25 @@
     const ADMINS_DOC = doc(db, "config", "admins");
     const REJECTED_DOC = doc(db, "config", "rejected_users");
 
+    // confirm() 대체 — 관리자 패널 위에 뜨는 네이티브 다이얼로그 충돌 방지
+    function customConfirm(msg) {
+      return new Promise(resolve => {
+        const modal = document.getElementById("custom-confirm-modal");
+        document.getElementById("custom-confirm-msg").textContent = msg;
+        modal.style.display = "flex";
+        const ok = document.getElementById("custom-confirm-ok");
+        const cancel = document.getElementById("custom-confirm-cancel");
+        const cleanup = (result) => {
+          modal.style.display = "none";
+          ok.onclick = null;
+          cancel.onclick = null;
+          resolve(result);
+        };
+        ok.onclick = () => cleanup(true);
+        cancel.onclick = () => cleanup(false);
+      });
+    }
+
     window.openAdminPanel = async function() {
       const modal = document.getElementById("admin-modal");
       modal.style.display = "flex";
@@ -299,7 +318,7 @@
     };
 
     window.revokeUser = async function(email) {
-      if (!confirm(`${email} 의 접근을 취소할까요?`)) return;
+      if (!await customConfirm(`${email} 의 접근을 취소할까요?`)) return;
       try {
         await updateDoc(APPROVED_DOC, { emails: arrayRemove(email) });
         await openAdminPanel();
@@ -307,7 +326,7 @@
     };
 
     window.rejectUser = async function(email) {
-      if (!confirm(`${email} 을 거절할까요?\n(재로그인하면 다시 대기 목록에 표시됩니다)`)) return;
+      if (!await customConfirm(`${email} 을 거절할까요?\n(재로그인하면 다시 대기 목록에 표시됩니다)`)) return;
       try {
         const snap = await getDoc(REJECTED_DOC);
         const update = { [email]: Date.now() };
@@ -6162,6 +6181,19 @@
         📂 파일 선택 (backup_*.json)
         <input type="file" accept=".json" onchange="loadBackupFile(event)" style="display:none">
       </label>
+    </div>
+  </div>
+</div>
+
+<!-- 커스텀 확인 다이얼로그 (confirm() 대체) -->
+<div id="custom-confirm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center">
+  <div style="background:#1e293b;border:1px solid #374151;border-radius:16px;padding:24px 24px 20px;max-width:340px;width:90%;font-family:inherit">
+    <div id="custom-confirm-msg" style="font-size:14px;color:#e2e8f0;margin-bottom:20px;line-height:1.6;white-space:pre-line"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end">
+      <button id="custom-confirm-cancel"
+        style="padding:8px 18px;background:#374151;border:none;border-radius:8px;color:#9ca3af;font-size:13px;font-family:inherit;cursor:pointer">취소</button>
+      <button id="custom-confirm-ok"
+        style="padding:8px 18px;background:#7f1d1d;border:none;border-radius:8px;color:#fca5a5;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">확인</button>
     </div>
   </div>
 </div>
