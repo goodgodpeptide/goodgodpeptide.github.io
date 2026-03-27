@@ -6294,6 +6294,11 @@
                color:#a78bfa;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left">
         💊 영양제 복용 체크
       </button>
+      <button onclick="document.getElementById('cal-add-modal').style.display='none';openAddSuppModal()"
+        style="padding:14px;background:#0a1a10;border:1px solid #4ade8066;border-radius:12px;
+               color:#86efac;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-align:left">
+        ➕ 영양제 새로 추가
+      </button>
     </div>
     <button class="big-btn" style="background:#374151;margin-top:14px"
       onclick="document.getElementById('cal-add-modal').style.display='none'">취소</button>
@@ -6314,8 +6319,12 @@
   <div class="modal-box" style="max-width:380px;max-height:80vh;overflow-y:auto">
     <div class="modal-title" id="cal-supp-date-label">💊 영양제 복용 체크</div>
     <div id="cal-supp-list" style="margin-bottom:14px"></div>
-    <button class="big-btn" style="background:#374151"
-      onclick="document.getElementById('cal-supp-modal').style.display='none'">닫기</button>
+    <div style="display:flex;gap:8px">
+      <button class="big-btn" style="background:#5b21b6;flex:1"
+        onclick="document.getElementById('cal-supp-modal').style.display='none';openAddSuppModal()">+ 영양제 추가</button>
+      <button class="big-btn" style="background:#374151;flex:1"
+        onclick="document.getElementById('cal-supp-modal').style.display='none'">닫기</button>
+    </div>
   </div>
 </div>
 
