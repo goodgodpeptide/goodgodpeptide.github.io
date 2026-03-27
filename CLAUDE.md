@@ -267,6 +267,48 @@ const DRUG_NAME_MIGRATION = {
 
 ---
 
+## 커뮤니티 탭 (panel-community)
+
+### Firestore 구조
+```
+user_profiles/{uid}  → { nickname, email, updatedAt }   // 닉네임 공개 프로필
+posts/{postId}       → { uid, nickname, content, time, likes: [uid...] }
+posts/{postId}/comments/{commentId} → { uid, nickname, content, time }
+```
+
+### 핵심 함수
+```js
+loadCommunity()          // 탭 전환 시 호출 → renderCommunityTab() + onSnapshot 리스닝
+renderCommunityTab()     // 패널 전체 재렌더 (글쓰기폼 + post-list)
+renderPostList(posts)    // 글 목록 렌더
+loadComments(postId)     // 댓글 로드 (getDocs, 댓글창 펼칠 때 호출)
+toggleComments(postId)   // 댓글창 토글
+submitPost()             // 글 작성 → Firestore addDoc
+submitComment(postId)    // 댓글 작성
+toggleLike(postId)       // 좋아요 arrayUnion/arrayRemove
+deletePost(postId, uid)  // 글 삭제 (본인 or 관리자)
+deleteComment(...)       // 댓글 삭제
+openNicknameModal()      // 닉네임 설정 모달 열기
+saveNickname()           // user_profiles + appData.nickname 저장
+```
+
+### 닉네임 시스템
+- `appData.nickname` — 자기 Firestore doc에 저장 (loadData/scheduleSave 연동)
+- `user_profiles/{uid}` — 공개용 (이메일 + 닉네임, 관리자 패널에서 참조)
+- 관리자 패널 승인/관리자 목록에 닉네임 표시 (미설정 시 "닉네임 미설정")
+- 관리자는 글/댓글에 uid 앞 6자 표시
+
+### 상태 변수
+```js
+let communityUnsubscribe = null;  // onSnapshot cleanup 함수
+let currentUserIsAdmin = false;   // auth listener에서 설정
+```
+
+### Firebase 임포트 추가분
+`deleteDoc, onSnapshot, query, orderBy, limit`
+
+---
+
 ## 백과사전 탭 (panel-encyclopedia)
 
 ### 데이터 파일
@@ -470,6 +512,11 @@ appData.costCalc.customConsumables = [
 - [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
 - [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
 - [ ] 운동 탭 추가 예정
+- [ ] Firestore 보안 규칙 업데이트 (posts, user_profiles 컬렉션 추가됨)
+- ✅ 커뮤니티 탭 추가 (글/댓글/좋아요 + 닉네임 시스템, Firestore posts/user_profiles)
+- ✅ 탭 바 클린 리디자인 (이모지 제거, 텍스트만, 세로 구분선, overflow-x 스크롤)
+- ✅ 그래프 현재 농도 실시간 도트 추가 (현재 시각선 × 약물 곡선 교차점, 3겹 글로우)
+- ✅ 그래프 D-day 레이블 KST 날짜 기준 수정 (renderPeptideGraph 내 calDiff)
 - ✅ 체중 목표 달성률 시각화 개선 (두꺼운 진행바 + 25/50/75% 마커 + 현재 위치 도트, 분석탭 여정 진행바 + 달성% 대형 표시)
 - ✅ 달력 과거 날짜 ⚠️ 과다 표시 수정 (getScheduledItemsForDate — 첫 기록 이전 날짜 예정 표시 제외)
 - ✅ D-day 달력 기준 계산 수정 (24시간 단위 → KST 날짜 기준 calDiff, renderRemainingCards + _tickLiveUpdate 두 곳)
