@@ -4339,10 +4339,10 @@
 
     function getCalendarData() {
       // 날짜별 이벤트 집계
-      const data = {}; // "YYYY-MM-DD" → { drugs:[], weights:[], supps:[], sideEffects:[] }
+      const data = {}; // "YYYY-MM-DD" → { drugs:[], weights:[], supps:[], sideEffects:[], exhausts:[] }
 
       function ensure(key) {
-        if (!data[key]) data[key] = { drugs:[], weights:[], supps:[], sideEffects:[] };
+        if (!data[key]) data[key] = { drugs:[], weights:[], supps:[], sideEffects:[], exhausts:[] };
         return data[key];
       }
 
@@ -4375,6 +4375,25 @@
         const key = kstDateStr(r.time);
         const cfg = DRUG_CONFIG[r.drug] || {};
         ensure(key).sideEffects.push({ drug: r.drug, symptoms: r.symptoms, emoji: cfg.emoji||'⚠️' });
+      });
+
+      // 조제 재고 예상 소진일
+      const latestByDrug = {};
+      (appData.reconVials || []).forEach(v => {
+        if (!latestByDrug[v.drug] || v.reconDate > latestByDrug[v.drug].reconDate) latestByDrug[v.drug] = v;
+      });
+      Object.entries(latestByDrug).forEach(([drug, v]) => {
+        const cfg = DRUG_CONFIG[drug] || {};
+        if (cfg.halfLifeDays < 0.1) return; // 단기 약물 제외
+        const totalInj = v.vialMg > 0 && v.doseMg > 0 ? Math.floor(v.vialMg / v.doseMg) : 0;
+        const remaining = Math.max(0, totalInj - (v.injDone || 0));
+        const intervalDays = getDoseCycle(drug);
+        if (remaining > 0 && intervalDays > 0) {
+          const daysLeft = remaining * intervalDays;
+          const exhaustMs = Date.now() + daysLeft * 86400000;
+          const exhaustKey = kstDateStr(exhaustMs);
+          ensure(exhaustKey).exhausts.push({ drug, emoji: cfg.emoji||'🧪', color: cfg.color||'#60a5fa', remaining, totalInj });
+        }
       });
 
       return data;
@@ -4458,6 +4477,7 @@
               dayData.weights.length ? `<div style="width:6px;height:6px;border-radius:50%;background:#4ade80" title="체중"></div>` : '',
               dayData.supps.length ? `<div style="width:6px;height:6px;border-radius:50%;background:#a78bfa" title="영양제"></div>` : '',
               dayData.sideEffects.length ? `<div style="width:6px;height:6px;border-radius:2px;background:#f87171" title="부작용"></div>` : '',
+              dayData.exhausts?.length ? `<div style="width:6px;height:6px;transform:rotate(45deg);background:#fb923c" title="예상 소진"></div>` : '',
             ].filter(Boolean).join('') : ''}
           </div>
           <!-- 스케줄 인디케이터 -->
@@ -4477,6 +4497,7 @@
         <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block"></span>체중</span>
         <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:50%;background:#a78bfa;display:inline-block"></span>영양제</span>
         <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:2px;background:#f87171;display:inline-block"></span>부작용</span>
+        <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;transform:rotate(45deg);background:#fb923c;display:inline-block"></span>예상 소진</span>
       </div>`;
 
       // ── 월간 요약 바 ──
@@ -4621,7 +4642,25 @@
           html += `</div>`;
         }
 
-        if (!dayData.drugs.length && !dayData.weights.length && !dayData.supps.length && !dayData.sideEffects.length) {
+        // 조제 재고 예상 소진
+        if (dayData.exhausts?.length) {
+          html += `<div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">🧪 예상 소진일</div>`;
+          dayData.exhausts.forEach(ex => {
+            const cfg = DRUG_CONFIG[ex.drug] || {};
+            html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#fb923c11;border:1px solid #fb923c44;border-radius:8px;margin-bottom:5px">
+              <span style="font-size:16px">${ex.emoji}</span>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:700;color:#fb923c">${ex.drug.split(' ')[0]}</div>
+                <div style="font-size:11px;color:#6b7280">잔여 ${ex.remaining}/${ex.totalInj}회 · 오늘 기준 소진 예상</div>
+              </div>
+              <span style="font-size:11px;background:#fb923c22;color:#fb923c;padding:3px 7px;border-radius:12px;white-space:nowrap">소진 예정</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+
+        if (!dayData.drugs.length && !dayData.weights.length && !dayData.supps.length && !dayData.sideEffects.length && !dayData.exhausts?.length) {
           html += `<div style="text-align:center;color:#4a5568;padding:20px;font-size:13px">이 날의 기록이 없습니다</div>`;
         }
 
