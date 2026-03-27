@@ -1082,16 +1082,30 @@
     // ══════════════════════════════════════════════
     // 투약 기록
     // ══════════════════════════════════════════════
+    let _editRecordId = null;
+
     window.submitAddRecord = () => {
       const drug = document.getElementById("add-drug").value;
       const dose = parseFloat(document.getElementById("add-dose").value);
       const timeVal = document.getElementById("add-time").value;
       if (!dose || !timeVal) return;
       appData.records = appData.records || [];
-      const rec = { id: Date.now(), drug, dose, time: kstInputToMs(timeVal) };
-      if (selectedSite) rec.site = selectedSite;
-      rec.route = selectedRoute || DRUG_CONFIG[drug]?.defaultRoute || 'SC';
-      appData.records.push(rec);
+      if (_editRecordId) {
+        const idx = appData.records.findIndex(r => r.id === _editRecordId);
+        if (idx !== -1) {
+          const orig = appData.records[idx];
+          appData.records[idx] = { ...orig, drug, dose, time: kstInputToMs(timeVal),
+            route: selectedRoute || DRUG_CONFIG[drug]?.defaultRoute || 'SC',
+            site: selectedSite || orig.site };
+        }
+        _editRecordId = null;
+        document.querySelector("#add-modal .modal-title").textContent = "💊 약물 기록 추가";
+      } else {
+        const rec = { id: Date.now(), drug, dose, time: kstInputToMs(timeVal) };
+        if (selectedSite) rec.site = selectedSite;
+        rec.route = selectedRoute || DRUG_CONFIG[drug]?.defaultRoute || 'SC';
+        appData.records.push(rec);
+      }
       selectedSite = null;
       selectedRoute = null;
       scheduleSave();
@@ -1102,6 +1116,28 @@
     window.deleteRecord = (id) => {
       appData.records = (appData.records || []).filter(r => r.id !== id);
       scheduleSave(); renderAll();
+    };
+
+    window.openEditRecordModal = (id) => {
+      const r = (appData.records || []).find(r => r.id === id);
+      if (!r) return;
+      _editRecordId = id;
+      const sel = document.getElementById("add-drug");
+      sel.innerHTML = Object.keys(DRUG_CONFIG).map(d =>
+        `<option value="${d}">${DRUG_CONFIG[d].emoji} ${d}</option>`
+      ).join('');
+      sel.value = r.drug;
+      document.getElementById("add-dose").value = r.dose;
+      document.getElementById("add-time").value = msToKstInput(r.time);
+      selectedRoute = r.route || DRUG_CONFIG[r.drug]?.defaultRoute || 'SC';
+      selectedSite = r.site || null;
+      sel.onchange = () => {
+        selectedRoute = DRUG_CONFIG[sel.value]?.defaultRoute || 'SC';
+        renderRouteSelector(sel.value);
+      };
+      document.querySelector("#add-modal .modal-title").textContent = "✏️ 투약 기록 수정";
+      document.getElementById("add-modal").style.display = "flex";
+      setTimeout(() => { renderSiteSelector(); renderRouteSelector(r.drug); }, 50);
     };
 
     window.openOverrideModal = (drug) => {
@@ -1130,15 +1166,34 @@
     // ══════════════════════════════════════════════
     // 체중 기록
     // ══════════════════════════════════════════════
+    let _editWeightId = null;
+
     window.submitAddWeight = () => {
       const weight = parseFloat(document.getElementById("add-weight").value);
       const timeVal = document.getElementById("add-weight-time").value;
       if (!weight || !timeVal) return;
       appData.weightRecords = appData.weightRecords || [];
-      appData.weightRecords.push({ id: Date.now(), weight, time: kstInputToMs(timeVal) });
+      if (_editWeightId) {
+        const idx = appData.weightRecords.findIndex(r => r.id === _editWeightId);
+        if (idx !== -1) appData.weightRecords[idx] = { ...appData.weightRecords[idx], weight, time: kstInputToMs(timeVal) };
+        _editWeightId = null;
+        document.querySelector("#weight-modal .modal-title").textContent = "⚖️ 체중 기록 추가";
+      } else {
+        appData.weightRecords.push({ id: Date.now(), weight, time: kstInputToMs(timeVal) });
+      }
       scheduleSave();
       document.getElementById("weight-modal").style.display = "none";
       renderAll();
+    };
+
+    window.openEditWeightModal = (id) => {
+      const r = (appData.weightRecords || []).find(r => r.id === id);
+      if (!r) return;
+      _editWeightId = id;
+      document.getElementById("add-weight").value = r.weight;
+      document.getElementById("add-weight-time").value = msToKstInput(r.time);
+      document.querySelector("#weight-modal .modal-title").textContent = "✏️ 체중 기록 수정";
+      document.getElementById("weight-modal").style.display = "flex";
     };
 
     window.deleteWeightRecord = (id) => {
@@ -1384,13 +1439,26 @@
       return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     }
 
+    // 영양제 복용 stock 자동 차감/복원 헬퍼
+    function updateSuppStock(sup, nowChecked) {
+      if (!sup.stock) return;
+      const perDose = sup.stock.perDose || 1;
+      if (nowChecked) {
+        sup.stock.remaining = Math.max(0, (sup.stock.remaining || 0) - perDose);
+      } else {
+        sup.stock.remaining = (sup.stock.remaining || 0) + perDose;
+      }
+    }
+
     window.toggleSupplement = (id, timing) => {
       appData.supplements = getSupplements();
       const sup = appData.supplements.find(s => s.id === id);
       if (!sup) return;
       sup.taken = sup.taken || {};
       const key = getTodayKey() + "_" + timing;
-      sup.taken[key] = !sup.taken[key];
+      const wasDone = !!sup.taken[key];
+      sup.taken[key] = !wasDone;
+      updateSuppStock(sup, !wasDone);
       scheduleSave();
       renderSupplementPanel();
     };
@@ -1487,6 +1555,62 @@
       // 시간 입력은 즉시 저장만, 리렌더 안 함 (포커스 유지)
     };
 
+    // 영양제 재고 모달
+    window.openSuppStockModal = function(id) {
+      const supps = getSupplements();
+      const sup = supps.find(s => s.id === id);
+      if (!sup) return;
+      const isLight = document.body.classList.contains("light-mode");
+      const bg = isLight ? '#fff' : '#0f172a';
+      const inputStyle = `width:100%;padding:10px;background:${isLight?'#f8fafc':'#1e293b'};border:1px solid ${isLight?'#e2e8f0':'#374151'};border-radius:8px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-size:14px;font-family:inherit;box-sizing:border-box;`;
+      const cur = sup.stock || { remaining: 0, perDose: 1 };
+      const timesPerDay = (sup.timing || []).length || 1;
+      const daysLeft = cur.perDose > 0 ? Math.floor(cur.remaining / (timesPerDay * cur.perDose)) : 0;
+
+      document.body.insertAdjacentHTML('beforeend', `
+        <div id="supp-stock-modal" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-end">
+          <div style="background:${bg};border-top:2px solid #a78bfa;border-radius:20px 20px 0 0;width:100%;padding:20px 20px 32px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-family:inherit">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <div style="font-size:16px;font-weight:700">💊 ${sup.name} 재고</div>
+              <button onclick="document.getElementById('supp-stock-modal').remove()" style="background:none;border:none;color:#6b7280;font-size:22px;cursor:pointer">✕</button>
+            </div>
+            <div style="background:${isLight?'#f0fdf4':'#0d1a0f'};border:1px solid #4ade8033;border-radius:10px;padding:12px;margin-bottom:14px;text-align:center">
+              <div style="font-size:28px;font-weight:900;color:#4ade80">${cur.remaining}<span style="font-size:14px;color:#6b7280;margin-left:4px">정</span></div>
+              <div style="font-size:11px;color:#6b7280;margin-top:4px">${daysLeft > 0 ? `약 ${daysLeft}일치 남음` : '재고 없음'}</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">입고 수량 (정)</div>
+                <input id="ss-add" type="number" min="1" step="1" placeholder="예: 90" style="${inputStyle}" />
+              </div>
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">1회 복용량 (정)</div>
+                <input id="ss-per" type="number" min="1" step="1" value="${cur.perDose||1}" style="${inputStyle}" />
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onclick="document.getElementById('supp-stock-modal').remove()" style="flex:1;padding:12px;background:${isLight?'#f3f4f6':'#374151'};border:none;border-radius:10px;color:#9ca3af;font-size:13px;cursor:pointer;font-family:inherit">취소</button>
+              <button onclick="submitSuppStock('${id}')" style="flex:2;padding:12px;background:#a78bfa;border:none;border-radius:10px;color:#0a0a14;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 입고 저장</button>
+            </div>
+          </div>
+        </div>`);
+    };
+
+    window.submitSuppStock = function(id) {
+      const supps = getSupplements();
+      const sup = supps.find(s => s.id === id);
+      if (!sup) return;
+      const add = parseFloat(document.getElementById('ss-add')?.value) || 0;
+      const perDose = parseFloat(document.getElementById('ss-per')?.value) || 1;
+      sup.stock = sup.stock || { remaining: 0 };
+      sup.stock.remaining = (sup.stock.remaining || 0) + add;
+      sup.stock.perDose = perDose;
+      scheduleSave();
+      document.getElementById('supp-stock-modal')?.remove();
+      renderSupplementPanel();
+      showToast(`✅ ${sup.name} +${add}정 입고`);
+    };
+
     window.removeSupplement = (id) => {
       appData.supplements = getSupplements().filter(s => s.id !== id);
       scheduleSave();
@@ -1581,6 +1705,19 @@
                       </button>`).join("")}
                   </div>
                 </div>
+                ${(() => {
+                  if (!s.stock) return `<button onclick="openSuppStockModal('${s.id}')" title="재고 입력" style="background:none;border:1px solid #a78bfa44;border-radius:6px;color:#a78bfa;font-size:10px;cursor:pointer;padding:3px 6px;flex-shrink:0">재고</button>`;
+                  const timesPerDay = (s.timing||[]).length || 1;
+                  const perDose = s.stock.perDose || 1;
+                  const remaining = s.stock.remaining || 0;
+                  const daysLeft = perDose > 0 ? Math.floor(remaining / (timesPerDay * perDose)) : 0;
+                  const warn = daysLeft < 7;
+                  return `<button onclick="openSuppStockModal('${s.id}')" title="재고 관리"
+                    style="background:${warn?'#f8717122':'#a78bfa11'};border:1px solid ${warn?'#f87171':'#a78bfa'}44;border-radius:6px;
+                           color:${warn?'#f87171':'#a78bfa'};font-size:10px;cursor:pointer;padding:3px 6px;flex-shrink:0;white-space:nowrap">
+                    ${warn?'⚠️':'💊'} ${remaining}정${daysLeft>0?' ('+daysLeft+'일)':''}
+                  </button>`;
+                })()}
                 <button onclick="openSuppScheduleModal('${s.id}')" title="스케줄 설정"
                   style="background:none;border:none;color:#a78bfa;font-size:14px;
                          cursor:pointer;padding:4px;flex-shrink:0">⏱️</button>
@@ -2020,7 +2157,10 @@
             <div style="font-size:17px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace">${r.dose} mg</div>
             <div style="font-size:11px;color:#4a5568;margin-top:2px">${toKSTString(r.time)}${siteInfo ? ` · <span style="color:#6b7280">${siteInfo.emoji}${siteInfo.label}</span>` : ''}</div>
           </div>
-          <button class="del-btn" onclick="deleteRecord(${r.id})">삭제</button>
+          <div style="display:flex;gap:6px">
+            <button class="edit-btn" onclick="openEditRecordModal(${r.id})">수정</button>
+            <button class="del-btn" onclick="deleteRecord(${r.id})">삭제</button>
+          </div>
         </div>`;
       }).join("");
     }
@@ -2833,7 +2973,10 @@
             <div style="font-size:20px;font-weight:700;color:#4ade80;font-family:'JetBrains Mono',monospace">${r.weight} kg</div>
             <div style="font-size:11px;color:#4a5568;margin-top:2px">${toKSTString(r.time)}</div>
           </div>
-          <button class="del-btn" onclick="deleteWeightRecord(${r.id})">삭제</button>
+          <div style="display:flex;gap:6px">
+            <button class="edit-btn" onclick="openEditWeightModal(${r.id})">수정</button>
+            <button class="del-btn" onclick="deleteWeightRecord(${r.id})">삭제</button>
+          </div>
         </div>`).join("");
     }
 
@@ -2862,13 +3005,21 @@
       document.getElementById("add-modal").style.display = "flex";
       setTimeout(() => { renderSiteSelector(); renderRouteSelector(sel.value); }, 50);
     };
-    window.closeAddModal = () => document.getElementById("add-modal").style.display = "none";
+    window.closeAddModal = () => {
+      _editRecordId = null;
+      document.querySelector("#add-modal .modal-title").textContent = "💊 약물 기록 추가";
+      document.getElementById("add-modal").style.display = "none";
+    };
     window.openWeightModal = () => {
       document.getElementById("add-weight-time").value = kstNow();
       document.getElementById("add-weight").value = "";
       document.getElementById("weight-modal").style.display = "flex";
     };
-    window.closeWeightModal = () => document.getElementById("weight-modal").style.display = "none";
+    window.closeWeightModal = () => {
+      _editWeightId = null;
+      document.querySelector("#weight-modal .modal-title").textContent = "⚖️ 체중 기록 추가";
+      document.getElementById("weight-modal").style.display = "none";
+    };
 
     window.calcPeptide = () => {
       const vial = parseFloat(document.getElementById("c-vial").value);
@@ -3377,9 +3528,12 @@
         .filter(([drug]) => activeDrugs.includes(drug) || true)
         .map(([drug, v]) => {
           const cfg = DRUG_CONFIG[drug] || {};
-          // 버그수정: vialMg/doseMg (단위 mg 통일, ×1000 제거)
+          // 투약 기록에서 자동 계산 (reconDate 이후 실제 기록 수)
           const totalInj = v.vialMg > 0 && v.doseMg > 0 ? Math.floor(v.vialMg / v.doseMg) : 0;
-          const remaining = Math.max(0, totalInj - (v.injDone || 0));
+          const injDone = (appData.records || []).filter(r =>
+            r.drug === drug && r.time >= v.reconDate && !r.isOverride
+          ).length + (v.injOffset || 0);
+          const remaining = Math.max(0, totalInj - injDone);
           const pct = totalInj > 0 ? Math.round(remaining / totalInj * 100) : 0;
           const intervalDays = getDoseCycle(drug);
           const reconDateStr = kstDateStr(v.reconDate);
@@ -3419,8 +3573,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center">
               <div style="font-size:11px;color:#6b7280">${exhaustLabel}</div>
               <div style="display:flex;gap:6px;align-items:center">
-                <button onclick="adjustInjDone(${v.id},-1)" style="width:26px;height:26px;border-radius:6px;border:1px solid ${isLight?'#d1d5db':'#374151'};background:${isLight?'#f3f4f6':'#1f2937'};color:${lblClr};font-size:14px;cursor:pointer;line-height:1">−</button>
-                <button onclick="adjustInjDone(${v.id},1)" style="width:26px;height:26px;border-radius:6px;border:1px solid ${isLight?'#d1d5db':'#374151'};background:${isLight?'#f3f4f6':'#1f2937'};color:${lblClr};font-size:14px;cursor:pointer;line-height:1">+</button>
+                <span style="font-size:10px;color:#6b7280;padding:4px 8px;border-radius:6px;border:1px solid ${isLight?'#e5e7eb':'#374151'};background:${isLight?'#f9fafb':'#111827'}">🔗 투약기록 자동연동</span>
                 <button onclick="openReconModal('${drug}')" style="padding:4px 10px;border-radius:8px;border:1px solid ${cfg.color||'#60a5fa'}55;background:${(cfg.color||'#60a5fa')}11;color:${cfg.color||'#60a5fa'};font-size:11px;cursor:pointer;font-family:inherit">새 조제</button>
               </div>
             </div>
@@ -4323,7 +4476,9 @@
           const timing = key.slice(supp.id.length + 1);
           supp.taken = supp.taken || {};
           const takenKey = dateStr + '_' + timing;
-          supp.taken[takenKey] = !supp.taken[takenKey];
+          const wasDone = !!supp.taken[takenKey];
+          supp.taken[takenKey] = !wasDone;
+          updateSuppStock(supp, !wasDone);
           scheduleSave();
           renderCalendar();
           return;
@@ -4350,13 +4505,13 @@
       (appData.records || []).forEach(r => {
         const key = kstDateStr(r.time);
         const cfg = DRUG_CONFIG[r.drug] || {};
-        ensure(key).drugs.push({ drug: r.drug, dose: r.dose, emoji: cfg.emoji||'💉', color: cfg.color||'#60a5fa', time: r.time, site: r.site });
+        ensure(key).drugs.push({ id: r.id, drug: r.drug, dose: r.dose, emoji: cfg.emoji||'💉', color: cfg.color||'#60a5fa', time: r.time, site: r.site });
       });
 
       // 체중 기록
       (appData.weightRecords || []).forEach(r => {
         const key = kstDateStr(r.time);
-        ensure(key).weights.push({ weight: r.weight, time: r.time });
+        ensure(key).weights.push({ id: r.id, weight: r.weight, time: r.time });
       });
 
       // 영양제 복용 기록 (taken 키에서 날짜 추출)
@@ -4375,6 +4530,18 @@
         const key = kstDateStr(r.time);
         const cfg = DRUG_CONFIG[r.drug] || {};
         ensure(key).sideEffects.push({ drug: r.drug, symptoms: r.symptoms, emoji: cfg.emoji||'⚠️' });
+      });
+
+      // 영양제 소진 예상일
+      getSupplements().forEach(s => {
+        if (!s.stock || !s.stock.remaining) return;
+        const timesPerDay = (s.timing || []).length || 1;
+        const perDose = s.stock.perDose || 1;
+        const daysLeft = s.stock.remaining / (timesPerDay * perDose);
+        if (daysLeft <= 0) return;
+        const depKey = kstDateStr(Date.now() + daysLeft * 86400000);
+        ensure(depKey).suppExhausts = ensure(depKey).suppExhausts || [];
+        ensure(depKey).suppExhausts.push({ name: s.name, remaining: s.stock.remaining, daysLeft: Math.floor(daysLeft) });
       });
 
       // 조제 재고 예상 소진일
@@ -4477,7 +4644,8 @@
               dayData.weights.length ? `<div style="width:6px;height:6px;border-radius:50%;background:#4ade80" title="체중"></div>` : '',
               dayData.supps.length ? `<div style="width:6px;height:6px;border-radius:50%;background:#a78bfa" title="영양제"></div>` : '',
               dayData.sideEffects.length ? `<div style="width:6px;height:6px;border-radius:2px;background:#f87171" title="부작용"></div>` : '',
-              dayData.exhausts?.length ? `<div style="width:6px;height:6px;transform:rotate(45deg);background:#fb923c" title="예상 소진"></div>` : '',
+              dayData.exhausts?.length ? `<div style="width:6px;height:6px;transform:rotate(45deg);background:#fb923c" title="약물 소진"></div>` : '',
+              dayData.suppExhausts?.length ? `<div style="width:6px;height:6px;transform:rotate(45deg);background:#22d3ee" title="영양제 소진"></div>` : '',
             ].filter(Boolean).join('') : ''}
           </div>
           <!-- 스케줄 인디케이터 -->
@@ -4497,7 +4665,8 @@
         <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:50%;background:#4ade80;display:inline-block"></span>체중</span>
         <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:50%;background:#a78bfa;display:inline-block"></span>영양제</span>
         <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;border-radius:2px;background:#f87171;display:inline-block"></span>부작용</span>
-        <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;transform:rotate(45deg);background:#fb923c;display:inline-block"></span>예상 소진</span>
+        <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;transform:rotate(45deg);background:#fb923c;display:inline-block"></span>약물 소진</span>
+        <span style="font-size:11px;color:#6b7280;display:flex;align-items:center;gap:3px"><span style="width:7px;height:7px;transform:rotate(45deg);background:#22d3ee;display:inline-block"></span>영양제 소진</span>
       </div>`;
 
       // ── 월간 요약 바 ──
@@ -4570,7 +4739,7 @@
             <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">💉 투약</div>`;
           dayData.drugs.forEach(dr => {
             const site = dr.site ? (INJECTION_SITES.find(s=>s.id===dr.site)?.label||'') : '';
-            const timeStr = msToKstInput(dr.time).slice(11,16); // "HH:mm"
+            const timeStr = msToKstInput(dr.time).slice(11,16);
             html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:${dr.color}11;border:1px solid ${dr.color}33;border-radius:8px;margin-bottom:5px">
               <span style="font-size:14px">${dr.emoji}</span>
               <div style="flex:1">
@@ -4578,6 +4747,8 @@
                 <div style="font-size:11px;color:#6b7280">${timeStr}${site?' · '+site:''}</div>
               </div>
               <span style="font-size:14px;font-weight:700;color:${dr.color};font-family:'JetBrains Mono'">${dr.dose}mg</span>
+              <button onclick="if(confirm('이 투약 기록을 삭제할까요?'))deleteRecord(${dr.id})" title="삭제"
+                style="background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;padding:2px;flex-shrink:0">🗑</button>
             </div>`;
           });
           html += `</div>`;
@@ -4589,9 +4760,11 @@
             <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">⚖️ 체중</div>`;
           dayData.weights.forEach(w => {
             const timeStr = msToKstInput(w.time).slice(11,16);
-            html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#4ade8011;border:1px solid #4ade8033;border-radius:8px;margin-bottom:5px">
+            html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#4ade8011;border:1px solid #4ade8033;border-radius:8px;margin-bottom:5px">
               <span style="font-size:11px;color:#6b7280">${timeStr}</span>
-              <span style="font-size:16px;font-weight:700;color:#4ade80;font-family:'JetBrains Mono'">${w.weight} kg</span>
+              <span style="font-size:16px;font-weight:700;color:#4ade80;font-family:'JetBrains Mono';flex:1;text-align:right">${w.weight} kg</span>
+              <button onclick="if(confirm('이 체중 기록을 삭제할까요?'))deleteWeightRecord(${w.id})" title="삭제"
+                style="background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;padding:2px;flex-shrink:0">🗑</button>
             </div>`;
           });
           html += `</div>`;
@@ -4660,7 +4833,24 @@
           html += `</div>`;
         }
 
-        if (!dayData.drugs.length && !dayData.weights.length && !dayData.supps.length && !dayData.sideEffects.length && !dayData.exhausts?.length) {
+        // 영양제 소진 예상
+        if (dayData.suppExhausts?.length) {
+          html += `<div style="margin-bottom:10px">
+            <div style="font-size:11px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">💊 영양제 소진 예상</div>`;
+          dayData.suppExhausts.forEach(se => {
+            html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#22d3ee11;border:1px solid #22d3ee44;border-radius:8px;margin-bottom:5px">
+              <span style="font-size:16px">💊</span>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:700;color:#22d3ee">${se.name}</div>
+                <div style="font-size:11px;color:#6b7280">잔여 ${se.remaining}정 · 오늘 기준 소진 예상</div>
+              </div>
+              <span style="font-size:11px;background:#22d3ee22;color:#22d3ee;padding:3px 7px;border-radius:12px;white-space:nowrap">소진 예정</span>
+            </div>`;
+          });
+          html += `</div>`;
+        }
+
+        if (!dayData.drugs.length && !dayData.weights.length && !dayData.supps.length && !dayData.sideEffects.length && !dayData.exhausts?.length && !dayData.suppExhausts?.length) {
           html += `<div style="text-align:center;color:#4a5568;padding:20px;font-size:13px">이 날의 기록이 없습니다</div>`;
         }
 
@@ -4786,7 +4976,9 @@
       if (!sup) return;
       sup.taken = sup.taken || {};
       const key = dateKey + "_" + timing;
-      sup.taken[key] = !sup.taken[key];
+      const wasDone = !!sup.taken[key];
+      sup.taken[key] = !wasDone;
+      updateSuppStock(sup, !wasDone);
       scheduleSave();
       renderCalSuppModal(dateKey);
       renderCalendar(); // 달력 도트 업데이트
@@ -5202,6 +5394,7 @@
 
     .record-row { background: #0d0d1a; border: 1px solid #1f2937; border-radius: 12px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .del-btn { background: #7f1d1d; border: none; border-radius: 8px; color: #fca5a5; padding: 6px 12px; cursor: pointer; font-size: 12px; font-family: inherit; white-space: nowrap; }
+    .edit-btn { background: #1e3a5f; border: none; border-radius: 8px; color: #93c5fd; padding: 6px 12px; cursor: pointer; font-size: 12px; font-family: inherit; white-space: nowrap; }
 
     .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
     .filter-btn { padding: 5px 14px; background: #1f2937; border: none; border-radius: 20px; color: #6b7280; font-size: 12px; cursor: pointer; font-family: inherit; transition: all .15s; }
@@ -5300,6 +5493,7 @@
     body.light-mode .big-btn.blue { background: linear-gradient(135deg, #2563eb, #3b82f6); }
     body.light-mode .big-btn.green { background: linear-gradient(135deg, #059669, #10b981); }
     body.light-mode .del-btn { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+    body.light-mode .edit-btn { background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; }
     body.light-mode .filter-btn { background: #f3f4f6; color: #6b7280; }
     body.light-mode .filter-btn.active { background: #2563eb; color: white; }
     body.light-mode .enc-filter-btn { background: #f3f4f6; border-color: #e5e7eb; color: #6b7280; }
