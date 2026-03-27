@@ -470,6 +470,8 @@ appData.costCalc.customConsumables = [
 - [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
 - [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
 - [ ] 운동 탭 추가 예정
+- ✅ 체중 목표 달성률 시각화 개선 (두꺼운 진행바 + 25/50/75% 마커 + 현재 위치 도트, 분석탭 여정 진행바 + 달성% 대형 표시)
+- ✅ 달력 과거 날짜 ⚠️ 과다 표시 수정 (getScheduledItemsForDate — 첫 기록 이전 날짜 예정 표시 제외)
 - ✅ D-day 달력 기준 계산 수정 (24시간 단위 → KST 날짜 기준 calDiff, renderRemainingCards + _tickLiveUpdate 두 곳)
 - ✅ 관리자 패널 거절/취소 후 목록 안 사라지는 버그 (Firestore 캐시 불일치 → DOM 직접 제거, _removeAdminListRow)
 - ✅ 달력 체크리스트 약물 주기 버그 수정 (isDrugDueOnDate — 마지막 투약일 기준 계산)
