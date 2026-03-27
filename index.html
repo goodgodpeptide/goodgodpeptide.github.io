@@ -2982,6 +2982,7 @@
       const syringeQty = parseFloat(document.getElementById("cost-syringe-qty")?.value) || 1;
       const bacAmt = parseFloat(document.getElementById("cost-bac")?.value) || 0;
       const bacCurrency = document.getElementById("cost-bac-currency")?.value || "KRW";
+      const bacQty = parseFloat(document.getElementById("cost-bac-qty")?.value) || 1;
       const swabAmt = parseFloat(document.getElementById("cost-swab")?.value) || 0;
       const swabCurrency = document.getElementById("cost-swab-currency")?.value || "KRW";
       const swabQty = parseFloat(document.getElementById("cost-swab-qty")?.value) || 1;
@@ -3006,7 +3007,8 @@
       // 소모품 총 비용 (KRW, 회당)
       const syringePerInj = syringeAmt ? toKRW(syringeAmt, syringeCurrency) / syringeQty : 0;
       const swabPerInj = swabAmt ? toKRW(swabAmt, swabCurrency) / swabQty : 0;
-      const bacPerInj = bacAmt && injPerVial > 0 ? toKRW(bacAmt, bacCurrency) / injPerVial : 0;
+      const bacPerVial = bacAmt ? toKRW(bacAmt, bacCurrency) / bacQty : 0;
+      const bacPerInj = bacPerVial && injPerVial > 0 ? bacPerVial / injPerVial : 0;
       // 바이알당 hint (박스/키트 모드)
       const vialHint = document.getElementById('cost-vial-hint');
       if (vialHint) {
@@ -3022,6 +3024,8 @@
       if (sh) sh.textContent = syringeAmt && syringeQty > 0 ? `→ 회당 ₩${Math.round(syringePerInj).toLocaleString()}` : '';
       const swh = document.getElementById('cost-swab-hint');
       if (swh) swh.textContent = swabAmt && swabQty > 0 ? `→ 회당 ₩${Math.round(swabPerInj).toLocaleString()}` : '';
+      const bh = document.getElementById('cost-bac-hint');
+      if (bh) bh.textContent = bacAmt && bacQty > 0 ? `→ 바이알당 ₩${Math.round(bacPerVial).toLocaleString()}${injPerVial > 0 ? ` · 회당 ₩${Math.round(bacPerInj).toLocaleString()}` : ''}` : '';
       // 기타 소모품 합산
       let customPerInj = 0;
       (appData.costCalc?.customConsumables || []).forEach(item => {
@@ -3099,6 +3103,7 @@
         syringeQty: document.getElementById("cost-syringe-qty")?.value || "1",
         bac: document.getElementById("cost-bac")?.value || "0",
         bacCurrency: document.getElementById("cost-bac-currency")?.value || "KRW",
+        bacQty: document.getElementById("cost-bac-qty")?.value || "1",
         swab: document.getElementById("cost-swab")?.value || "0",
         swabCurrency: document.getElementById("cost-swab-currency")?.value || "KRW",
         swabQty: document.getElementById("cost-swab-qty")?.value || "1",
@@ -3120,6 +3125,7 @@
       set("cost-syringe-qty", c.syringeQty);
       set("cost-bac", c.bac);
       set("cost-bac-currency", c.bacCurrency);
+      set("cost-bac-qty", c.bacQty);
       set("cost-swab", c.swab);
       set("cost-swab-currency", c.swabCurrency);
       set("cost-swab-qty", c.swabQty);
@@ -5614,16 +5620,21 @@
           <!-- BAC Water -->
           <div style="margin-bottom:10px;padding:10px;background:#12121e;border-radius:8px">
             <div style="font-size:11px;color:#94a3b8;margin-bottom:6px">💧 BAC Water</div>
-            <div style="display:grid;grid-template-columns:80px 1fr;gap:6px;align-items:end">
+            <div style="display:grid;grid-template-columns:80px 1fr 60px;gap:6px;align-items:center">
               <select id="cost-bac-currency" class="input-field" style="font-size:11px;padding:6px" onchange="calcCost();saveCostSettings()">
                 <option value="KRW">₩ 원</option><option value="USD">$ USD</option><option value="JPY">¥ JPY</option><option value="CNY">¥ CNY</option><option value="INR">₹ INR</option>
               </select>
               <div>
-                <div style="font-size:9px;color:#4a5568;margin-bottom:2px">바이알 1개 가격</div>
-                <input id="cost-bac" class="input-field" type="number" min="0" step="0.01" placeholder="예: 5000" style="width:100%;box-sizing:border-box;font-size:12px" oninput="calcCost();saveCostSettings()" />
+                <div style="font-size:9px;color:#4a5568;margin-bottom:2px">박스/묶음 가격</div>
+                <input id="cost-bac" class="input-field" type="number" min="0" step="0.01" placeholder="예: 15000" style="width:100%;box-sizing:border-box;font-size:12px" oninput="calcCost();saveCostSettings()" />
+              </div>
+              <div>
+                <div style="font-size:9px;color:#4a5568;margin-bottom:2px">박스당 개수</div>
+                <input id="cost-bac-qty" class="input-field" type="number" min="1" step="1" value="1" style="width:100%;box-sizing:border-box;font-size:12px" oninput="calcCost();saveCostSettings()" />
               </div>
             </div>
-            <div style="font-size:10px;color:#4a5568;margin-top:4px">바이알 1개 비용 ÷ 바이알당 투약 횟수 = 회당 자동 배분</div>
+            <div id="cost-bac-hint" style="font-size:10px;color:#4ade80;margin-top:4px"></div>
+            <div style="font-size:10px;color:#4a5568;margin-top:2px">바이알당 가격 ÷ 바이알당 투약 횟수 = 회당 자동 배분</div>
           </div>
 
           <!-- 알코올 솜 -->
