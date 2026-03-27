@@ -5440,8 +5440,13 @@
     }
     .login-logo { font-size: 60px; margin-bottom: 16px; animation: pulse 2.5s infinite; }
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.07)} }
-    .login-title { font-size: 26px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
-    .login-sub { font-size: 14px; color: #6b7280; margin-bottom: 48px; }
+    .login-title { font-size: 26px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; color: #f1f5f9; }
+    .login-sub { font-size: 14px; color: #94a3b8; margin-bottom: 48px; }
+    body.light-mode #login-screen {
+      background: radial-gradient(ellipse at 50% 20%, #dbeafe 0%, #f0f4ff 70%);
+    }
+    body.light-mode .login-title { color: #1e293b; }
+    body.light-mode .login-sub { color: #64748b; }
     .login-btn {
       display: flex; align-items: center; gap: 12px; padding: 14px 28px;
       background: #fff; border: none; border-radius: 14px; cursor: pointer;
