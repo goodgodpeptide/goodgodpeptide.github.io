@@ -1450,9 +1450,7 @@
     ];
 
     function getSupplements() {
-      const s = appData.supplements;
-      if (!s || s.length === 0) return DEFAULT_SUPPLEMENTS.map(s => ({ ...s, taken: {} }));
-      return s;
+      return appData.supplements || DEFAULT_SUPPLEMENTS.map(s => ({ ...s, taken: {} }));
     }
 
     function getTodayKey() {
@@ -4768,8 +4766,12 @@
                 <div style="font-size:11px;color:#6b7280">${timeStr}${site?' · '+site:''}</div>
               </div>
               <span style="font-size:14px;font-weight:700;color:${dr.color};font-family:'JetBrains Mono'">${dr.dose}mg</span>
-              <button onclick="if(confirm('이 투약 기록을 삭제할까요?'))deleteRecord(${dr.id})" title="삭제"
-                style="background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;padding:2px;flex-shrink:0">🗑</button>
+              <div style="display:flex;gap:4px;flex-shrink:0">
+                <button onclick="openEditRecordModal(${dr.id})" title="수정"
+                  style="background:none;border:none;color:#60a5fa;font-size:14px;cursor:pointer;padding:2px">✏️</button>
+                <button onclick="customConfirm('이 투약 기록을 삭제할까요?').then(ok=>{if(ok)deleteRecord(${dr.id})})" title="삭제"
+                  style="background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;padding:2px">🗑</button>
+              </div>
             </div>`;
           });
           html += `</div>`;
@@ -4784,8 +4786,12 @@
             html += `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#4ade8011;border:1px solid #4ade8033;border-radius:8px;margin-bottom:5px">
               <span style="font-size:11px;color:#6b7280">${timeStr}</span>
               <span style="font-size:16px;font-weight:700;color:#4ade80;font-family:'JetBrains Mono';flex:1;text-align:right">${w.weight} kg</span>
-              <button onclick="if(confirm('이 체중 기록을 삭제할까요?'))deleteWeightRecord(${w.id})" title="삭제"
-                style="background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;padding:2px;flex-shrink:0">🗑</button>
+              <div style="display:flex;gap:4px;flex-shrink:0">
+                <button onclick="openEditWeightModal(${w.id})" title="수정"
+                  style="background:none;border:none;color:#4ade80;font-size:14px;cursor:pointer;padding:2px">✏️</button>
+                <button onclick="customConfirm('이 체중 기록을 삭제할까요?').then(ok=>{if(ok)deleteWeightRecord(${w.id})})" title="삭제"
+                  style="background:none;border:none;color:#6b7280;font-size:14px;cursor:pointer;padding:2px">🗑</button>
+              </div>
             </div>`;
           });
           html += `</div>`;
