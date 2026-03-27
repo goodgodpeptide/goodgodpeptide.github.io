@@ -181,7 +181,7 @@
     const REJECTED_DOC = doc(db, "config", "rejected_users");
 
     // confirm() 대체 — 관리자 패널 위에 뜨는 네이티브 다이얼로그 충돌 방지
-    function customConfirm(msg) {
+    window.customConfirm = function customConfirm(msg) {
       return new Promise(resolve => {
         const modal = document.getElementById("custom-confirm-modal");
         document.getElementById("custom-confirm-msg").textContent = msg;
