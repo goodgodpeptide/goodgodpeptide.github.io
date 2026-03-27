@@ -170,8 +170,9 @@ appData = {
     syringe: string,           // 주사기 가격
     syringeCurrency: string,
     syringeQty: string,        // 박스당 개수
-    bac: string,               // BAC Water 바이알당 가격
+    bac: string,               // BAC Water 박스/묶음 가격
     bacCurrency: string,
+    bacQty: string,            // 박스당 BAC 바이알 수
     swab: string,              // 알코올솜 가격
     swabCurrency: string,
     swabQty: string,           // 박스당 개수
@@ -469,6 +470,13 @@ appData.costCalc.customConsumables = [
 - ✅ 사이클 스케줄 (5종: daily/interval/weekdays/cycle/course)
 - ✅ 달력 영양제 체크리스트 ↔ 영양제탭 통일 (toggleCalendarCheck → supplements[].taken 직접 저장)
 - ✅ 달력 체크리스트 연동 (인디케이터 + 오늘 할 일 + calendarChecks)
+- ✅ 조제 재고 계산 버그 수정 (totalInj: vialMg*1000/doseMg → vialMg/doseMg, 단위 mg 통일)
+- ✅ 조제 재고 수정/삭제 버튼 추가 (openEditReconModal, deleteRecon)
+- ✅ 조제 모달 1회 용량 단위 mg 명시 + 실시간 횟수 미리보기
+- ✅ 달력 조제 재고 예상 소진일 연동 (주황 마름모 도트 + 날짜 상세 섹션 + 범례)
+- ✅ 달력 월간 요약 카드 클릭 → 상세 목록 모달 (투약/체중/영양제)
+- ✅ 약물 구매 비용 박스/키트 UI 통합 (바이알1개 ↔ 박스/키트 토글, 바이알당 hint)
+- ✅ BAC Water 소모품 비용 박스/묶음 단위 추가 (bacQty, 바이알당·회당 hint)
 - ✅ 조제 재고 관리 (reconVials, +/-조정, 소진 예상일)
 - ✅ 약 재고 관리 (inventory, 키트 단위, 14일 경고)
 - ✅ 영양제 상세 스케줄 + 코스 진행 상태
