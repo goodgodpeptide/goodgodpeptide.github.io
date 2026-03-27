@@ -487,6 +487,14 @@ appData.costCalc.customConsumables = [
 - ✅ 약물 구매 비용 박스/키트 UI 통합 (바이알1개 ↔ 박스/키트 토글, 바이알당 hint)
 - ✅ BAC Water 소모품 비용 박스/묶음 단위 추가 (bacQty, 바이알당·회당 hint)
 - ✅ 조제 재고 관리 (reconVials, 투약기록 자동연동, 소진 예상일)
+- ✅ 달력 투약/체중 기록 수정(✏️) 버튼 추가 — openEditRecordModal/openEditWeightModal 연동
+- ✅ 달력 삭제 confirm → customConfirm 전역 등록으로 교체 (window.customConfirm)
+- ✅ 달력 기록추가 메뉴에 "➕ 영양제 새로 추가" 버튼 추가 (openAddSuppModal 연동)
+- ✅ 달력 cal-supp-modal에 "+ 영양제 추가" 버튼 추가
+- ✅ 달력 calAddDrug(): 약물 드롭다운 innerHTML 누락 버그 수정 + 최근용량 자동채우기
+- ✅ 관리자 패널 거절/취소 confirm → customConfirm 커스텀 모달로 교체 (클릭 충돌 방지)
+- ✅ 투약 카드 📊 버튼 추가 → jumpToGraph(drug): 필터 적용 + 그래프 스크롤 + 하이라이트
+- ✅ 영양제 추가 모달 ✕/시간변경 버튼 버그 수정 (window.removeSuppTime, window.updateSuppTime 전역 등록)
 - ✅ 투약 기록 수정 기능 (openEditRecordModal — 약물/용량/시간/투여경로 pre-fill)
 - ✅ 체중 기록 수정 기능 (openEditWeightModal — 체중/시간 pre-fill)
 - ✅ 달력 양방향 편집 — 날짜 상세에서 투약/체중 기록 삭제 버튼 (record id 연동)
@@ -543,10 +551,14 @@ removeCustomConsumable(id)   // 기타 소모품 제거
 ```js
 openAddSuppModal()           // 영양제 추가 모달 (이름 + 시간 직접 입력)
 addSuppTime()                // 시간 추가 버튼 → _suppModalTimes[] 배열에 push
+removeSuppTime(i)            // 시간 항목 삭제 (window 전역 — 인라인 onclick용)
+updateSuppTime(i, val)       // 시간 값 변경 (window 전역 — 인라인 oninput용)
 renderSuppTimeList()         // 시간 목록 렌더 (각 시간 옆에 자동 분류 뱃지)
 submitAddSupp()              // 모달 확인 → timeToTiming() 변환 → appData.supplements에 추가
 timeToTiming(timeStr)        // HH:MM → 아침(5-10시)/점심(11-13시)/저녁(14-19시)/자기전
 timingToEmoji(timing)        // 타이밍 → 이모지
+jumpToGraph(drug)            // 투약 카드 📊 버튼 — 필터 적용 + 그래프 스크롤 + 하이라이트
+customConfirm(msg)           // window.customConfirm — confirm() 대체 커스텀 모달 (Promise 반환)
 ```
 - 영양제 추가 UX: `+ 영양제 추가` 버튼 → 모달 (이름 + 복수 시간 입력) → 저장
 - 시간 자동 분류: `timeToTiming()` 로 아침/점심/저녁/자기전 결정, 중복 제거
