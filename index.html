@@ -2942,6 +2942,10 @@
         // 목표 달성률 + 진행바
         const targetRow = el("stat-target-row");
         if (targetRow && target) {
+          const isLightW = document.body.classList.contains('light-mode');
+          const trackBg = isLightW ? '#e2e8f0' : '#1f2937';
+          const dotBg = isLightW ? '#f8fafc' : '#0f172a';
+          const markerBg = isLightW ? '#f1f5f9' : '#0a0a14';
           const allRecs = (appData.weightRecords || []).sort((a,b) => a.time - b.time);
           const startWeight = allRecs[0]?.weight || latest.weight;
           const diff = latest.weight - target;
@@ -2962,16 +2966,23 @@
           }
 
           targetRow.innerHTML = `
-            <div style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:12px;color:#9ca3af">목표 ${target}kg까지</span>
-              <span style="font-size:13px;font-weight:700;color:${diff<=0?'#4ade80':'#facc15'}">${diff<=0?'🎉 달성!':diff.toFixed(1)+'kg 남음'}</span>
-            </div>
-            <div style="height:8px;background:#1f2937;border-radius:4px;overflow:hidden;margin-bottom:4px">
-              <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#3b82f6,#4ade80);border-radius:4px;transition:width .6s"></div>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a5568">
-              <span>달성률 ${pct}%</span>
-              ${estDateStr ? `<span>예상: ${estDateStr}</span>` : ''}
+            <div style="margin:10px 0 4px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <span style="font-size:12px;color:#9ca3af">🎯 목표 ${target}kg</span>
+                <span style="font-size:15px;font-weight:800;color:${diff<=0?'#4ade80':'#facc15'}">${diff<=0?'🎉 달성!':diff.toFixed(1)+'kg 남음'}</span>
+              </div>
+              <div style="position:relative;height:28px;margin-bottom:6px">
+                <div style="position:absolute;top:50%;transform:translateY(-50%);width:100%;height:12px;background:${trackBg};border-radius:6px"></div>
+                <div style="position:absolute;top:50%;transform:translateY(-50%);width:${pct}%;height:12px;background:linear-gradient(90deg,#3b82f6,#4ade80);border-radius:6px;transition:width .8s ease"></div>
+                ${[25,50,75].map(m => `<div style="position:absolute;top:50%;left:${m}%;transform:translate(-50%,-50%);width:4px;height:18px;background:${markerBg};border-radius:2px;z-index:1"></div>`).join('')}
+                <div style="position:absolute;top:50%;left:${Math.min(pct,98)}%;transform:translate(-50%,-50%);width:20px;height:20px;background:${dotBg};border:3px solid ${diff<=0?'#4ade80':'#facc15'};border-radius:50%;z-index:2;box-shadow:0 0 6px ${diff<=0?'#4ade8066':'#facc1566'}"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a5568;margin-bottom:4px">
+                <span>${startWeight}kg 시작</span>
+                <span style="color:${diff<=0?'#4ade80':'#facc15'};font-weight:700;font-size:11px">${pct}%</span>
+                <span>${target}kg 목표</span>
+              </div>
+              ${estDateStr ? `<div style="text-align:center;font-size:11px;color:#6b7280">예상 달성: <span style="color:#60a5fa">${estDateStr}</span></div>` : ''}
             </div>`;
         } else if (targetRow) { targetRow.innerHTML = ""; }
 
@@ -4313,23 +4324,67 @@
         const remainKg = weight - target;
         const goalDate = daysToGoal ? new Date(Date.now() + daysToGoal * 86400000) : null;
         const goalStr = goalDate ? goalDate.toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul", month:"long", day:"numeric" }) : "-";
+        const isLightA = document.body.classList.contains('light-mode');
+        const aTrack = isLightA ? '#e2e8f0' : '#1a1a2e';
+        const aBox = isLightA ? '#f8fafc' : '#0d0d1a';
+        const aMark = isLightA ? '#f1f5f9' : '#0a0a14';
+        const aDot = isLightA ? '#f8fafc' : '#12121e';
+        const startWeight2 = wrecs[0]?.weight || weight;
+        const totalLoss2 = startWeight2 - target;
+        const achieved2 = startWeight2 - weight;
+        const pct2 = totalLoss2 > 0 ? Math.min(100, Math.max(0, Math.round(achieved2 / totalLoss2 * 100))) : (weight <= target ? 100 : 0);
+        const achieved = weight <= target;
         predEl.innerHTML = `
-          <div style="font-size:12px;color:#6b7280;margin-bottom:10px">🎯 목표 달성 예측</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-            <div style="text-align:center;padding:10px;background:#0d0d1a;border-radius:8px">
-              <div style="font-size:10px;color:#6b7280">남은 kg</div>
-              <div style="font-size:18px;font-weight:700;color:#facc15;font-family:'JetBrains Mono'">${remainKg.toFixed(1)}</div>
+          <div style="font-size:12px;color:#6b7280;margin-bottom:12px">🎯 목표 달성 예측</div>
+          <div style="background:${aBox};border-radius:12px;padding:16px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px">
+              <div style="text-align:center">
+                <div style="font-size:10px;color:#4a5568;margin-bottom:2px">시작</div>
+                <div style="font-size:15px;font-weight:700;color:#6b7280;font-family:'JetBrains Mono'">${startWeight2.toFixed(1)}<span style="font-size:10px">kg</span></div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-size:10px;color:#facc15;margin-bottom:2px">현재</div>
+                <div style="font-size:20px;font-weight:800;color:#facc15;font-family:'JetBrains Mono'">${weight.toFixed(1)}<span style="font-size:11px">kg</span></div>
+              </div>
+              <div style="text-align:center">
+                <div style="font-size:10px;color:#4ade80;margin-bottom:2px">목표</div>
+                <div style="font-size:15px;font-weight:700;color:#4ade80;font-family:'JetBrains Mono'">${target.toFixed(1)}<span style="font-size:10px">kg</span></div>
+              </div>
             </div>
-            <div style="text-align:center;padding:10px;background:#0d0d1a;border-radius:8px">
-              <div style="font-size:10px;color:#6b7280">주간 감량</div>
-              <div style="font-size:18px;font-weight:700;color:${weeklyLoss>0?'#4ade80':'#f87171'};font-family:'JetBrains Mono'">${weeklyLoss>0?'-':''}${Math.abs(weeklyLoss).toFixed(2)}</div>
+            <div style="position:relative;height:32px;margin-bottom:8px">
+              <div style="position:absolute;top:50%;transform:translateY(-50%);width:100%;height:14px;background:${aTrack};border-radius:7px"></div>
+              <div style="position:absolute;top:50%;transform:translateY(-50%);width:${pct2}%;height:14px;background:linear-gradient(90deg,#2563eb,#16a34a);border-radius:7px;transition:width 1s ease"></div>
+              ${[25,50,75].map(m => `<div style="position:absolute;top:50%;left:${m}%;transform:translate(-50%,-50%);width:3px;height:22px;background:${aMark};z-index:1;border-radius:2px"></div>`).join('')}
+              <div style="position:absolute;top:50%;left:${Math.min(pct2,97)}%;transform:translate(-50%,-50%);width:24px;height:24px;background:${aDot};border:3px solid ${achieved?'#4ade80':'#facc15'};border-radius:50%;z-index:2;box-shadow:0 0 8px ${achieved?'#4ade8088':'#facc1588'};display:flex;align-items:center;justify-content:center">
+                <div style="width:8px;height:8px;background:${achieved?'#4ade80':'#facc15'};border-radius:50%"></div>
+              </div>
             </div>
-            <div style="text-align:center;padding:10px;background:#0d0d1a;border-radius:8px">
-              <div style="font-size:10px;color:#6b7280">예상 달성일</div>
-              <div style="font-size:13px;font-weight:700;color:${daysToGoal?'#4ade80':'#6b7280'}">${daysToGoal ? goalStr : (weeklyLoss<=0?'증가중':'-')}</div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#4a5568">
+              ${[0,25,50,75,100].map(m => `<span>${m}%</span>`).join('')}
+            </div>
+            <div style="text-align:center;margin-top:10px">
+              <span style="font-size:22px;font-weight:900;color:${achieved?'#4ade80':'#facc15'}">${pct2}%</span>
+              <span style="font-size:12px;color:#6b7280;margin-left:6px">달성</span>
+              ${achieved ? '' : `<span style="font-size:12px;color:#4a5568;margin-left:8px">· ${Math.abs(remainKg).toFixed(1)}kg 남음</span>`}
             </div>
           </div>
-          ${daysToGoal ? `<div style="margin-top:8px;font-size:11px;color:#4a5568;text-align:center">현재 속도 유지 시 약 ${daysToGoal}일 후 (${Math.ceil(daysToGoal/7)}주)</div>` : ''}
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="text-align:center;padding:10px;background:${aBox};border-radius:8px">
+              <div style="font-size:10px;color:#6b7280;margin-bottom:4px">총 감량</div>
+              <div style="font-size:18px;font-weight:700;color:${achieved2>0?'#4ade80':'#f87171'};font-family:'JetBrains Mono'">${achieved2>0?'-':''}${Math.abs(achieved2).toFixed(1)}</div>
+              <div style="font-size:9px;color:#4a5568">kg</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:${aBox};border-radius:8px">
+              <div style="font-size:10px;color:#6b7280;margin-bottom:4px">주간 감량</div>
+              <div style="font-size:18px;font-weight:700;color:${weeklyLoss>0?'#4ade80':'#f87171'};font-family:'JetBrains Mono'">${weeklyLoss>0?'-':''}${Math.abs(weeklyLoss).toFixed(2)}</div>
+              <div style="font-size:9px;color:#4a5568">kg/주</div>
+            </div>
+            <div style="text-align:center;padding:10px;background:${aBox};border-radius:8px">
+              <div style="font-size:10px;color:#6b7280;margin-bottom:4px">예상 달성일</div>
+              <div style="font-size:12px;font-weight:700;color:${daysToGoal?'#4ade80':'#6b7280'};line-height:1.3">${daysToGoal ? goalStr : (weeklyLoss<=0?'증가중':achieved?'달성!':'-')}</div>
+              ${daysToGoal ? `<div style="font-size:9px;color:#4a5568">${Math.ceil(daysToGoal/7)}주 후</div>` : ''}
+            </div>
+          </div>
         `;
       } else {
         predEl.style.display = "none";
@@ -4472,26 +4527,34 @@
     function getScheduledItemsForDate(dateStr) {
       const items = [];
       const today = kstDateStr(Date.now());
+      const isPast = dateStr < today;
 
       // 활성 약물 체크
       getActiveDrugs().forEach(drug => {
-        if (isDrugDueOnDate(drug, dateStr)) {
-          // 해당 날 records에 실제 기록이 있는지 확인
-          const done = (appData.records || []).some(r => r.drug === drug && kstDateStr(r.time) === dateStr);
-          items.push({ type: 'drug', key: drug, label: drug, emoji: DRUG_CONFIG[drug]?.emoji || '💉', color: DRUG_CONFIG[drug]?.color || '#60a5fa', done });
+        if (!isDrugDueOnDate(drug, dateStr)) return;
+        const done = (appData.records || []).some(r => r.drug === drug && kstDateStr(r.time) === dateStr);
+        // 과거 날짜: 해당 약물의 첫 기록일 이전이면 예정 표시 안 함
+        if (isPast && !done) {
+          const drugRecs = (appData.records || []).filter(r => r.drug === drug).sort((a,b) => a.time - b.time);
+          if (!drugRecs.length || kstDateStr(drugRecs[0].time) > dateStr) return;
         }
+        items.push({ type: 'drug', key: drug, label: drug, emoji: DRUG_CONFIG[drug]?.emoji || '💉', color: DRUG_CONFIG[drug]?.color || '#60a5fa', done });
       });
 
       // 영양제 체크
       const supps = getSupplements();
       supps.forEach(s => {
         const sched = (appData.suppSchedules || {})[s.id];
-        if (shouldTakeOnDate(sched, dateStr)) {
-          (s.timing || []).forEach(timing => {
-            const done = !!(s.taken?.[dateStr + '_' + timing]);
-            items.push({ type: 'supp', key: s.id + '_' + timing, label: s.name + ' (' + timing + ')', emoji: '💊', color: '#a78bfa', done });
-          });
-        }
+        if (!shouldTakeOnDate(sched, dateStr)) return;
+        (s.timing || []).forEach(timing => {
+          const done = !!(s.taken?.[dateStr + '_' + timing]);
+          // 과거 날짜: 해당 영양제를 이 날짜 이전에 한 번도 복용한 적 없으면 표시 안 함
+          if (isPast && !done) {
+            const firstTaken = Object.keys(s.taken || {}).map(k => k.slice(0, 10)).filter(d => d <= dateStr).sort()[0];
+            if (!firstTaken) return;
+          }
+          items.push({ type: 'supp', key: s.id + '_' + timing, label: s.name + ' (' + timing + ')', emoji: '💊', color: '#a78bfa', done });
+        });
       });
 
       return items;
