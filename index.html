@@ -2089,6 +2089,9 @@
               <button onclick="openDrugScheduleModal('${drug}')" title="사이클 스케줄 설정"
                 style="background:${t.gearBg};border:1px solid ${t.gearBd};border-radius:6px;color:${t.gearClr};
                        padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">⏱️</button>
+              <button onclick="jumpToGraph('${drug}')" title="이 약물 그래프 보기"
+                style="background:${cfg.color}22;border:1px solid ${cfg.color}55;border-radius:6px;color:${cfg.color};
+                       padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">📊</button>
               ${cfg.encyclopediaId ? `<button onclick="openEncyclopediaFromCard('${cfg.encyclopediaId}')" title="백과사전에서 정보 보기"
                 style="background:${isLight?'#eff6ff':'#1e3a5f'};border:1px solid ${isLight?'#bfdbfe':'#3b82f655'};border-radius:6px;color:${isLight?'#2563eb':'#60a5fa'};
                        padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">📖</button>` : ''}
@@ -5287,6 +5290,26 @@
       graphDrugFilter = document.getElementById("peptide-filter")?.value || "전체";
       renderPeptideList();
       renderPeptideGraph();
+    };
+
+    window.jumpToGraph = (drug) => {
+      const cfg = DRUG_CONFIG[drug];
+      if (!cfg) return;
+      // 필터 적용
+      const sel = document.getElementById("peptide-filter");
+      if (sel) sel.value = cfg.short;
+      graphDrugFilter = cfg.short;
+      renderPeptideFilterBar();
+      renderPeptideList();
+      renderPeptideGraph();
+      // 그래프 캔버스로 스크롤
+      const canvas = document.getElementById("peptide-chart");
+      if (canvas) {
+        canvas.scrollIntoView({ behavior: "smooth", block: "center" });
+        // 잠깐 테두리 하이라이트
+        canvas.style.outline = `2px solid ${cfg.color}`;
+        setTimeout(() => { canvas.style.outline = "none"; }, 1200);
+      }
     };
 
     function renderPeptideFilterBar() {
