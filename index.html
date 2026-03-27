@@ -1535,16 +1535,24 @@
       c.innerHTML = _suppModalTimes.map((t, i) => {
         const timing = timeToTiming(t);
         return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <input type="time" value="${t}" oninput="_suppModalTimes[${i}]=this.value;renderSuppTimeList()"
+          <input type="time" value="${t}" oninput="updateSuppTime(${i},this.value)"
             style="flex:1;padding:8px;background:${isLight?'#f8fafc':'#1e293b'};border:1px solid ${isLight?'#e2e8f0':'#374151'};border-radius:8px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-size:13px;font-family:inherit;outline:none" />
           <span style="font-size:12px;background:#a78bfa22;border:1px solid #a78bfa55;border-radius:8px;padding:3px 8px;color:#a78bfa;white-space:nowrap">${timingToEmoji(timing)} ${timing}</span>
-          ${_suppModalTimes.length > 1 ? `<button onclick="_suppModalTimes.splice(${i},1);renderSuppTimeList()" style="background:none;border:none;color:#6b7280;font-size:16px;cursor:pointer;padding:0">✕</button>` : ''}
+          ${_suppModalTimes.length > 1 ? `<button onclick="removeSuppTime(${i})" style="background:none;border:none;color:#6b7280;font-size:16px;cursor:pointer;padding:0">✕</button>` : ''}
         </div>`;
       }).join('');
     }
 
     window.addSuppTime = function() {
       _suppModalTimes.push('20:00');
+      renderSuppTimeList();
+    };
+    window.removeSuppTime = function(i) {
+      _suppModalTimes.splice(i, 1);
+      renderSuppTimeList();
+    };
+    window.updateSuppTime = function(i, val) {
+      _suppModalTimes[i] = val;
       renderSuppTimeList();
     };
 
