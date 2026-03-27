@@ -12,7 +12,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, collection, serverTimestamp, getDocs, arrayUnion, arrayRemove }
+    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, serverTimestamp, getDocs, arrayUnion, arrayRemove, onSnapshot, query, orderBy, limit }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -132,6 +132,7 @@
         document.getElementById("user-avatar").src = user.photoURL || "";
         document.getElementById("user-name").style.display = "none";
         // 관리자이면 👑 버튼 표시
+        currentUserIsAdmin = isAdmin;
         if (isAdmin) {
           document.getElementById("admin-btn").style.display = "inline-block";
         }
@@ -261,21 +262,34 @@
           </div>`).join('');
       }
 
+      // 닉네임 맵 fetch (user_profiles 컬렉션)
+      let nicknameMap = {}; // email → nickname
+      try {
+        const profilesSnap = await getDocs(collection(db, "user_profiles"));
+        profilesSnap.forEach(d => { const data=d.data(); if(data.email) nicknameMap[data.email]=data.nickname||''; });
+      } catch(e) {}
+
       // 승인된 (일반) 사용자 목록 렌더
       const approvedList = document.getElementById("admin-approved-list");
       if (approvedOthers.length === 0) {
         approvedList.innerHTML = `<div style="color:#4b5563;font-size:13px;padding:10px 0">승인된 사용자 없음</div>`;
       } else {
-        approvedList.innerHTML = approvedOthers.map(email => `
+        approvedList.innerHTML = approvedOthers.map(email => {
+          const nick = nicknameMap[email];
+          return `
           <div style="display:flex;justify-content:space-between;align-items:center;
                       padding:10px 12px;background:${itemBg};border:${itemBorder};border-radius:10px;margin-bottom:6px">
-            <span style="font-size:13px;color:${isLight?'#16a34a':'#4ade80'}">${email}</span>
+            <div>
+              <div style="font-size:13px;color:${isLight?'#16a34a':'#4ade80'}">${email}</div>
+              ${nick ? `<div style="font-size:11px;color:#60a5fa;margin-top:2px">🧑 ${nick}</div>` : `<div style="font-size:11px;color:#4a5568;margin-top:2px">닉네임 미설정</div>`}
+            </div>
             <button onclick="revokeUser('${email}')"
               style="padding:5px 14px;background:#991b1b;border:none;border-radius:8px;
-                     color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+                     color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;margin-left:8px">
               취소
             </button>
-          </div>`).join('');
+          </div>`;
+        }).join('');
       }
 
       // 관리자 목록 렌더
@@ -283,10 +297,14 @@
       if (adminList) {
         adminList.innerHTML = adminEmails.map(email => {
           const isSelf = email === currentUser?.email;
+          const nick = nicknameMap[email];
           return `
           <div style="display:flex;justify-content:space-between;align-items:center;
                       padding:10px 12px;background:${itemBg};border:${itemBorder};border-radius:10px;margin-bottom:6px">
-            <span style="font-size:13px;color:${isLight?'#b45309':'#fbbf24'}">${email}${isSelf ? ' <span style="font-size:11px;color:#9ca3af">(본인)</span>' : ''}</span>
+            <div>
+              <div style="font-size:13px;color:${isLight?'#b45309':'#fbbf24'}">${email}${isSelf ? ' <span style="font-size:11px;color:#9ca3af">(본인)</span>' : ''}</div>
+              ${nick ? `<div style="font-size:11px;color:#60a5fa;margin-top:2px">🧑 ${nick}</div>` : `<div style="font-size:11px;color:#4a5568;margin-top:2px">닉네임 미설정</div>`}
+            </div>
             ${isSelf ? '' : `<button onclick="removeAdmin('${email}')"
               style="padding:5px 14px;background:#7c3aed;border:none;border-radius:8px;
                      color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
@@ -3901,6 +3919,210 @@
       </div>`;
     };
 
+    // ══════════════════════════════════════════════
+    // 커뮤니티
+    // ══════════════════════════════════════════════
+    let communityUnsubscribe = null;
+    let currentUserIsAdmin = false;
+
+    function escapeHtml(s) {
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function timeAgo(ms) {
+      const d = Date.now() - ms;
+      if (d < 60000) return '방금';
+      if (d < 3600000) return Math.floor(d/60000)+'분 전';
+      if (d < 86400000) return Math.floor(d/3600000)+'시간 전';
+      if (d < 86400000*7) return Math.floor(d/86400000)+'일 전';
+      const dt = new Date(ms+9*3600000);
+      return `${dt.getUTCMonth()+1}/${dt.getUTCDate()}`;
+    }
+
+    window.openNicknameModal = function() {
+      document.getElementById("nickname-input").value = appData.nickname || "";
+      document.getElementById("nickname-modal").style.display = "flex";
+    };
+    window.saveNickname = async function() {
+      const val = document.getElementById("nickname-input").value.trim();
+      if (!val || val.length < 2 || val.length > 16) { alert("닉네임은 2~16자로 입력하세요."); return; }
+      appData.nickname = val;
+      scheduleSave();
+      try {
+        await setDoc(doc(db, "user_profiles", currentUser.uid), {
+          nickname: val, email: currentUser.email, updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch(e) { console.error("닉네임 저장 실패:", e); }
+      document.getElementById("nickname-modal").style.display = "none";
+      renderCommunityTab();
+    };
+
+    function renderPostList(posts) {
+      const el = document.getElementById("post-list");
+      if (!el) return;
+      const isL = document.body.classList.contains("light-mode");
+      const cardBg = isL?'#fff':'#12121e', border = isL?'#e2e8f0':'#1f2937';
+      const txt = isL?'#374151':'#d1d5db', sub = isL?'#64748b':'#4a5568';
+      if (!posts.length) {
+        el.innerHTML = `<div style="text-align:center;padding:40px 0;color:${sub};font-size:14px">아직 글이 없습니다.<br>첫 번째 글을 작성해보세요! 💊</div>`;
+        return;
+      }
+      el.innerHTML = posts.map(p => {
+        const mine = p.uid === currentUser?.uid;
+        const canDel = mine || currentUserIsAdmin;
+        const liked = (p.likes||[]).includes(currentUser?.uid);
+        const uidTag = currentUserIsAdmin && !mine ? `<span style="font-size:9px;color:#f87171;opacity:.6;margin-left:3px">(${(p.uid||'').slice(0,6)})</span>` : '';
+        const avBg = mine?(isL?'#2563eb':'#1d4ed8'):(isL?'#e2e8f0':'#1f2937');
+        const avC = mine?'white':(isL?'#64748b':'#9ca3af');
+        return `
+        <div style="background:${cardBg};border:1px solid ${border};border-radius:14px;padding:14px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:36px;height:36px;background:${avBg};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:${avC};flex-shrink:0">${(p.nickname||'?')[0].toUpperCase()}</div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:${mine?'#60a5fa':(isL?'#374151':'#e2e8f0')}">${escapeHtml(p.nickname||'익명')}${mine?'<span style="font-size:10px;margin-left:4px;color:#60a5fa">(나)</span>':''}${uidTag}</div>
+                <div style="font-size:10px;color:${sub}">${timeAgo(p.time)}</div>
+              </div>
+            </div>
+            ${canDel?`<button onclick="deletePost('${p.id}','${p.uid}')" style="background:none;border:none;color:${sub};cursor:pointer;font-size:14px;padding:2px 4px">🗑</button>`:''}
+          </div>
+          <div style="font-size:14px;color:${txt};line-height:1.65;margin-bottom:10px;white-space:pre-wrap;word-break:break-word">${escapeHtml(p.content)}</div>
+          <div style="display:flex;gap:8px">
+            <button onclick="toggleLike('${p.id}')" style="background:${liked?(isL?'#eff6ff':'#1e3a5f'):'none'};border:1px solid ${liked?'#3b82f6':(isL?'#d1d5db':'#374151')};border-radius:20px;color:${liked?'#60a5fa':sub};padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s">❤️ ${(p.likes||[]).length}</button>
+            <button onclick="toggleComments('${p.id}')" style="background:none;border:1px solid ${isL?'#d1d5db':'#374151'};border-radius:20px;color:${sub};padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">💬 댓글</button>
+          </div>
+          <div id="comments-${p.id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid ${border}"></div>
+        </div>`;
+      }).join('');
+    }
+
+    window.toggleComments = async function(postId) {
+      const box = document.getElementById('comments-'+postId);
+      if (!box) return;
+      if (box.style.display === 'none') { box.style.display='block'; await loadComments(postId); }
+      else box.style.display = 'none';
+    };
+
+    async function loadComments(postId) {
+      const box = document.getElementById('comments-'+postId);
+      if (!box || box.style.display==='none') return;
+      const isL = document.body.classList.contains("light-mode");
+      const txt=isL?'#374151':'#d1d5db', sub=isL?'#64748b':'#4a5568', border=isL?'#f1f5f9':'#1f2937';
+      const iBg=isL?'#f8fafc':'#0d0d1a', iB=isL?'#e2e8f0':'#374151';
+      box.innerHTML=`<div style="color:${sub};font-size:12px;padding:8px 0">로딩 중...</div>`;
+      try {
+        const snap = await getDocs(query(collection(db,"posts",postId,"comments"), orderBy("time","asc")));
+        const cs=[]; snap.forEach(d=>cs.push({id:d.id,...d.data()}));
+        const html = cs.map(c=>{
+          const mine=c.uid===currentUser?.uid, canDel=mine||currentUserIsAdmin;
+          const uidTag=currentUserIsAdmin&&!mine?`<span style="font-size:9px;color:#f87171;opacity:.6;margin-left:3px">(${(c.uid||'').slice(0,6)})</span>`:'';
+          return `<div style="padding:7px 0;border-bottom:1px solid ${border}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+              <div><span style="font-size:12px;font-weight:700;color:${mine?'#60a5fa':(isL?'#374151':'#9ca3af')}">${escapeHtml(c.nickname||'익명')}${mine?' <span style="font-size:10px">(나)</span>':''}${uidTag}</span><span style="font-size:10px;color:${sub};margin-left:6px">${timeAgo(c.time)}</span></div>
+              ${canDel?`<button onclick="deleteComment('${postId}','${c.id}','${c.uid}')" style="background:none;border:none;color:${sub};cursor:pointer;font-size:11px">🗑</button>`:''}
+            </div>
+            <div style="font-size:13px;color:${txt};line-height:1.5;word-break:break-word">${escapeHtml(c.content)}</div>
+          </div>`;
+        }).join('') || `<div style="font-size:12px;color:${sub};padding:6px 0">댓글이 없습니다</div>`;
+        box.innerHTML=`<div>${html}</div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <input id="comment-input-${postId}" class="input-field" placeholder="댓글 입력... (Enter 전송)"
+              style="flex:1;padding:8px 10px;font-size:13px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-family:inherit;outline:none"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitComment('${postId}')}"/>
+            <button onclick="submitComment('${postId}')" style="background:#1d4ed8;border:none;border-radius:8px;color:white;padding:0 14px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap">등록</button>
+          </div>`;
+      } catch(e) { box.innerHTML=`<div style="color:#ef4444;font-size:12px;padding:8px">댓글 로드 실패</div>`; }
+    }
+
+    function renderCommunityTab() {
+      const panel = document.getElementById("panel-community");
+      if (!panel) return;
+      const isL = document.body.classList.contains("light-mode");
+      const nick = appData.nickname;
+      const cardBg=isL?'#fff':'#12121e', border=isL?'#e2e8f0':'#1f2937';
+      const txt=isL?'#1e293b':'#e2e8f0', iBg=isL?'#f8fafc':'#0d0d1a', iB=isL?'#e2e8f0':'#374151';
+      panel.innerHTML=`
+        <div style="padding:16px;max-width:640px;margin:0 auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div style="font-size:16px;font-weight:800;color:${txt}">💬 커뮤니티</div>
+            <button onclick="openNicknameModal()" style="background:${isL?'#f1f5f9':'#1f2937'};border:1px solid ${border};border-radius:20px;color:${nick?'#60a5fa':'#f97316'};padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">
+              🧑 ${nick ? escapeHtml(nick) : '닉네임 설정'}
+            </button>
+          </div>
+          <div style="background:${cardBg};border:1px solid ${border};border-radius:14px;padding:12px;margin-bottom:16px">
+            ${nick ? `
+            <textarea id="post-input" placeholder="자유롭게 글을 남겨보세요 💊" style="width:100%;background:${iBg};border:1px solid ${iB};border-radius:10px;color:${txt};padding:10px 12px;font-size:14px;font-family:inherit;resize:vertical;min-height:80px;box-sizing:border-box;outline:none;line-height:1.6" rows="3"></textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+              <span style="font-size:11px;color:#4a5568">${escapeHtml(nick)} 으로 게시됩니다</span>
+              <button id="post-submit-btn" onclick="submitPost()" style="background:#1d4ed8;border:none;border-radius:10px;color:white;padding:8px 20px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700">글 올리기</button>
+            </div>` : `
+            <div style="text-align:center;padding:12px">
+              <div style="font-size:13px;color:#f97316;margin-bottom:10px">💬 글을 쓰려면 먼저 닉네임을 설정하세요</div>
+              <button onclick="openNicknameModal()" style="background:#f97316;border:none;border-radius:10px;color:white;padding:8px 20px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700">닉네임 설정하기</button>
+            </div>`}
+          </div>
+          <div id="post-list"><div style="text-align:center;padding:32px;color:#4a5568">로딩 중...</div></div>
+        </div>`;
+    }
+
+    window.loadCommunity = function() {
+      renderCommunityTab();
+      if (communityUnsubscribe) communityUnsubscribe();
+      try {
+        const q = query(collection(db,"posts"), orderBy("time","desc"), limit(50));
+        communityUnsubscribe = onSnapshot(q, snap => {
+          const posts=[]; snap.forEach(d=>posts.push({id:d.id,...d.data()}));
+          renderPostList(posts);
+        });
+      } catch(e) { console.error("커뮤니티 로드 실패:", e); }
+    };
+
+    window.submitPost = async function() {
+      const content=(document.getElementById("post-input")?.value||'').trim();
+      if (!content) return;
+      if (!appData.nickname) { openNicknameModal(); return; }
+      const btn=document.getElementById("post-submit-btn");
+      if (btn) btn.disabled=true;
+      try {
+        await addDoc(collection(db,"posts"),{uid:currentUser.uid,nickname:appData.nickname,content,time:Date.now(),likes:[]});
+        const inp=document.getElementById("post-input"); if(inp) inp.value="";
+      } catch(e) { alert("글 작성에 실패했습니다."); }
+      if (btn) btn.disabled=false;
+    };
+
+    window.submitComment = async function(postId) {
+      const inp=document.getElementById('comment-input-'+postId); if(!inp) return;
+      const content=inp.value.trim(); if(!content) return;
+      if (!appData.nickname) { openNicknameModal(); return; }
+      inp.disabled=true;
+      try {
+        await addDoc(collection(db,"posts",postId,"comments"),{uid:currentUser.uid,nickname:appData.nickname,content,time:Date.now()});
+        inp.value=""; await loadComments(postId);
+      } catch(e) { alert("댓글 작성에 실패했습니다."); }
+      inp.disabled=false;
+    };
+
+    window.toggleLike = async function(postId) {
+      if (!currentUser) return;
+      const uid=currentUser.uid, ref=doc(db,"posts",postId);
+      try {
+        const snap=await getDoc(ref); if(!snap.exists()) return;
+        const likes=snap.data().likes||[];
+        await updateDoc(ref, likes.includes(uid)?{likes:arrayRemove(uid)}:{likes:arrayUnion(uid)});
+      } catch(e) { console.error("좋아요 실패:",e); }
+    };
+
+    window.deletePost = async function(postId, postUid) {
+      if (postUid!==currentUser?.uid && !currentUserIsAdmin) return;
+      if (!await window.customConfirm("이 글을 삭제할까요?")) return;
+      try { await deleteDoc(doc(db,"posts",postId)); } catch(e) { alert("삭제에 실패했습니다."); }
+    };
+
+    window.deleteComment = async function(postId, commentId, commentUid) {
+      if (commentUid!==currentUser?.uid && !currentUserIsAdmin) return;
+      try { await deleteDoc(doc(db,"posts",postId,"comments",commentId)); await loadComments(postId); }
+      catch(e) { alert("댓글 삭제에 실패했습니다."); }
+    };
+
     window.switchTab = (tab) => {
       document.querySelectorAll(".tab-panel").forEach(p => p.style.display = "none");
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -3915,6 +4137,8 @@
       if (tab === "calendar") setTimeout(renderCalendar, 50);
       if (tab === "supple") setTimeout(() => { renderSupplementPanel(); renderWaterTracker(); }, 50);
       if (tab === "encyclopedia") setTimeout(loadEncyclopedia, 50);
+      if (tab === "community") setTimeout(loadCommunity, 50);
+      else if (communityUnsubscribe && tab !== "community") { communityUnsubscribe(); communityUnsubscribe = null; }
     };
 
     // ══════════════════════════════════════════════
@@ -5562,7 +5786,7 @@
     .logout-btn { background: none; border: 1px solid #374151; border-radius: 8px; color: #6b7280; padding: 4px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
 
     .tabs { display: flex; background: #0d0d1a; border-bottom: 1px solid #1f2937; }
-    .tab-btn { flex: 1; padding: 11px 4px; font-size: 13px; font-weight: 500; background: none; border: none; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; transition: all .2s; font-family: inherit; }
+    .tab-btn { flex: 1; padding: 11px 2px; font-size: 11px; font-weight: 500; background: none; border: none; cursor: pointer; color: #6b7280; border-bottom: 2px solid transparent; transition: all .2s; font-family: inherit; white-space: nowrap; }
     .tab-btn.active { color: #60a5fa; border-bottom-color: #60a5fa; }
 
     .content { flex: 1; padding: 12px; max-width: 520px; margin: 0 auto; width: 100%; }
@@ -5837,6 +6061,7 @@
     <button class="tab-btn" data-tab="supple"  onclick="switchTab('supple')">💊 영양제</button>
     <button class="tab-btn" data-tab="calendar" onclick="switchTab('calendar')">📅 달력</button>
     <button class="tab-btn" data-tab="encyclopedia" onclick="switchTab('encyclopedia')">🔬 백과사전</button>
+    <button class="tab-btn" data-tab="community" onclick="switchTab('community')">💬 커뮤니티</button>
   </div>
 
   <div class="content">
@@ -6226,6 +6451,9 @@
     </div>
 
     <!-- 백과사전 패널 -->
+    <!-- ── 커뮤니티 패널 ── -->
+    <div id="panel-community" class="tab-panel"></div>
+
     <div id="panel-encyclopedia" class="tab-panel">
       <!-- 검색 & 필터 바 -->
       <div style="background:#111827;border:1px solid #1f2937;border-radius:14px;padding:14px;margin-bottom:12px">
@@ -6359,6 +6587,25 @@
         style="padding:8px 18px;background:#374151;border:none;border-radius:8px;color:#9ca3af;font-size:13px;font-family:inherit;cursor:pointer">취소</button>
       <button id="custom-confirm-ok"
         style="padding:8px 18px;background:#7f1d1d;border:none;border-radius:8px;color:#fca5a5;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 닉네임 설정 모달 -->
+<div id="nickname-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1500;align-items:center;justify-content:center">
+  <div style="background:#1e293b;border:1px solid #374151;border-radius:18px;padding:24px;max-width:360px;width:90%;font-family:inherit">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:16px;font-weight:800;color:#e2e8f0">🧑 닉네임 설정</div>
+      <button onclick="document.getElementById('nickname-modal').style.display='none'" style="background:none;border:none;color:#6b7280;font-size:20px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-size:12px;color:#6b7280;margin-bottom:10px">커뮤니티에서 사용할 닉네임 (2~16자)</div>
+    <input id="nickname-input" class="input-field" type="text" maxlength="16" placeholder="예: 펩타이드마니아"
+      style="width:100%;box-sizing:border-box;padding:10px 12px;font-size:15px;margin-bottom:6px;border-radius:10px"
+      onkeydown="if(event.key==='Enter')saveNickname()"/>
+    <div style="font-size:11px;color:#4a5568;margin-bottom:16px">닉네임은 커뮤니티 글/댓글에 공개됩니다. 언제든 변경 가능합니다.</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="document.getElementById('nickname-modal').style.display='none'" style="padding:9px 18px;background:#374151;border:none;border-radius:10px;color:#9ca3af;font-size:13px;font-family:inherit;cursor:pointer">취소</button>
+      <button onclick="saveNickname()" style="padding:9px 20px;background:#1d4ed8;border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">저장</button>
     </div>
   </div>
 </div>
