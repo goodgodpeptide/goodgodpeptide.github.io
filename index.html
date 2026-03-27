@@ -3371,7 +3371,8 @@
         .filter(([drug]) => activeDrugs.includes(drug) || true)
         .map(([drug, v]) => {
           const cfg = DRUG_CONFIG[drug] || {};
-          const totalInj = v.vialMg > 0 && v.doseMg > 0 ? Math.floor(v.vialMg * 1000 / v.doseMg) : 0;
+          // 버그수정: vialMg/doseMg (단위 mg 통일, ×1000 제거)
+          const totalInj = v.vialMg > 0 && v.doseMg > 0 ? Math.floor(v.vialMg / v.doseMg) : 0;
           const remaining = Math.max(0, totalInj - (v.injDone || 0));
           const pct = totalInj > 0 ? Math.round(remaining / totalInj * 100) : 0;
           const intervalDays = getDoseCycle(drug);
@@ -3395,7 +3396,11 @@
           return `<div style="background:${rowBg};border:1px solid ${borderClr};border-radius:12px;padding:12px;margin-bottom:8px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
               <div style="font-size:13px;font-weight:700;color:${cfg.color||'#60a5fa'}">${cfg.emoji||''} ${drug.split(' ')[0]}</div>
-              <div style="font-size:11px;color:#6b7280">${reconDateStr} 조제 · ${v.vialMg}mg/${v.waterMl}ml</div>
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="font-size:11px;color:#6b7280">${reconDateStr} 조제 · ${v.vialMg}mg/${v.waterMl}ml</div>
+                <button onclick="openEditReconModal(${v.id})" title="수정" style="width:22px;height:22px;border-radius:5px;border:1px solid ${isLight?'#d1d5db':'#374151'};background:transparent;color:#6b7280;font-size:12px;cursor:pointer;line-height:1">✏️</button>
+                <button onclick="deleteRecon(${v.id})" title="삭제" style="width:22px;height:22px;border-radius:5px;border:1px solid #f8717133;background:transparent;color:#f87171;font-size:12px;cursor:pointer;line-height:1">🗑</button>
+              </div>
             </div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
               <div style="flex:1">
@@ -3430,10 +3435,37 @@
     window.adjustInjDone = function(vialId, delta) {
       const v = (appData.reconVials || []).find(v => v.id === vialId);
       if (!v) return;
-      const totalInj = v.vialMg > 0 && v.doseMg > 0 ? Math.floor(v.vialMg * 1000 / v.doseMg) : 0;
+      const totalInj = v.vialMg > 0 && v.doseMg > 0 ? Math.floor(v.vialMg / v.doseMg) : 0;
       v.injDone = Math.max(0, Math.min(totalInj, (v.injDone || 0) + delta));
       scheduleSave();
       renderReconSection();
+    };
+
+    window.deleteRecon = function(vialId) {
+      if (!confirm('이 조제 기록을 삭제할까요?')) return;
+      appData.reconVials = (appData.reconVials || []).filter(v => v.id !== vialId);
+      scheduleSave();
+      renderReconSection();
+    };
+
+    window.openEditReconModal = function(vialId) {
+      const v = (appData.reconVials || []).find(v => v.id === vialId);
+      if (!v) return;
+      openReconModal(v.drug);
+      // 모달이 DOM에 삽입된 직후 필드 채우기
+      setTimeout(() => {
+        const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+        set('recon-drug', v.drug);
+        set('recon-vial-mg', v.vialMg);
+        set('recon-water-ml', v.waterMl);
+        set('recon-dose-mg', v.doseMg);
+        set('recon-date', kstDateStr(v.reconDate));
+        set('recon-notes', v.notes || '');
+        const preview = document.getElementById('recon-inj-preview');
+        if (preview && v.vialMg && v.doseMg) preview.textContent = `→ 약 ${Math.floor(v.vialMg/v.doseMg)}회 투약`;
+        // submitRecon 재정의: 기존 항목 업데이트 후 저장
+        window._editingReconId = vialId;
+      }, 50);
     };
 
     window.openReconModal = function(drug) {
@@ -3467,14 +3499,16 @@
                 <input id="recon-water-ml" type="number" step="0.1" placeholder="예: 2" style="${inputStyle}" />
               </div>
               <div>
-                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">1회 용량 (μg/mg)</div>
-                <input id="recon-dose-mg" type="number" step="0.001" placeholder="예: 0.5" style="${inputStyle}" />
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">1회 용량 (mg)</div>
+                <input id="recon-dose-mg" type="number" step="0.001" placeholder="예: 3" style="${inputStyle}"
+                  oninput="(function(){const v=parseFloat(document.getElementById('recon-vial-mg')?.value)||0;const d=parseFloat(this.value)||0;const el=document.getElementById('recon-inj-preview');if(el)el.textContent=v&&d?'→ 약 '+Math.floor(v/d)+'회 투약':'';}).call(this)" />
               </div>
               <div>
                 <div style="font-size:11px;color:#6b7280;margin-bottom:4px">조제일</div>
                 <input id="recon-date" type="date" value="${kstDateStr(Date.now())}" style="${inputStyle}" />
               </div>
             </div>
+            <div id="recon-inj-preview" style="font-size:12px;color:#4ade80;margin:-4px 0 10px;text-align:right"></div>
             <div style="margin-bottom:12px">
               <div style="font-size:11px;color:#6b7280;margin-bottom:4px">메모 (선택)</div>
               <input id="recon-notes" type="text" placeholder="예: 냉장 보관 중" style="${inputStyle}" />
@@ -3500,20 +3534,25 @@
         return;
       }
       appData.reconVials = appData.reconVials || [];
-      appData.reconVials.push({
-        id: Date.now(),
-        drug,
-        vialMg,
-        waterMl: waterMl || 0,
-        doseMg,
-        reconDate: new Date(dateStr + 'T00:00:00+09:00').getTime(),
-        injDone: 0,
-        notes,
-      });
+      const editId = window._editingReconId;
+      if (editId) {
+        // 수정 모드: 기존 항목 업데이트
+        const idx = appData.reconVials.findIndex(v => v.id === editId);
+        if (idx !== -1) {
+          appData.reconVials[idx] = { ...appData.reconVials[idx], drug, vialMg, waterMl: waterMl||0, doseMg, reconDate: new Date(dateStr+'T00:00:00+09:00').getTime(), notes };
+        }
+        window._editingReconId = null;
+        showToast('✅ 조제 기록 수정');
+      } else {
+        appData.reconVials.push({
+          id: Date.now(), drug, vialMg, waterMl: waterMl||0, doseMg,
+          reconDate: new Date(dateStr+'T00:00:00+09:00').getTime(), injDone: 0, notes,
+        });
+        showToast('✅ 조제 기록 저장');
+      }
       scheduleSave();
       document.getElementById("recon-modal")?.remove();
       renderReconSection();
-      showToast('✅ 조제 기록 저장');
     };
 
     // ── 역산 계산기 ────────────────────────────────────────
