@@ -321,7 +321,9 @@
       if (!await customConfirm(`${email} 의 접근을 취소할까요?`)) return;
       try {
         await updateDoc(APPROVED_DOC, { emails: arrayRemove(email) });
-        await openAdminPanel();
+        // DOM에서 직접 제거 (Firestore 캐시 불일치 우회)
+        _removeAdminListRow("admin-approved-list", email, "승인된 사용자 없음");
+        showToast(`✅ ${email.split('@')[0]} 승인 취소됨`);
       } catch(e) { alert("오류: " + e.message); }
     };
 
@@ -335,9 +337,22 @@
         } else {
           await setDoc(REJECTED_DOC, update);
         }
-        await openAdminPanel();
+        // DOM에서 직접 제거 (Firestore 캐시 불일치 우회)
+        _removeAdminListRow("admin-pending-list", email, "대기 중인 사용자 없음");
+        showToast(`🚫 ${email.split('@')[0]} 거절됨`);
       } catch(e) { alert("오류: " + e.message); }
     };
+
+    function _removeAdminListRow(listId, email, emptyMsg) {
+      const list = document.getElementById(listId);
+      if (!list) return;
+      Array.from(list.children).forEach(el => {
+        if (el.textContent.includes(email)) el.remove();
+      });
+      if (!list.children.length) {
+        list.innerHTML = `<div style="color:#4b5563;font-size:13px;padding:10px 0">${emptyMsg}</div>`;
+      }
+    }
 
     window.addAdmin = async function() {
       const input = document.getElementById("new-admin-input");
