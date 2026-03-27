@@ -2957,6 +2957,8 @@
     window.setCostUnit = function(unit) {
       const kitWrap = document.getElementById("cost-kit-wrap");
       if (kitWrap) kitWrap.style.display = unit === 'kit' ? 'block' : 'none';
+      const priceLabel = document.getElementById("cost-price-label");
+      if (priceLabel) priceLabel.textContent = unit === 'kit' ? '박스/키트 가격' : '바이알 1개 가격';
       document.querySelectorAll('.cost-unit-btn').forEach(b => {
         const isActive = b.dataset.unit === unit;
         b.style.background = isActive ? '#1d4ed8' : (document.body.classList.contains("light-mode") ? '#f3f4f6' : '#1f2937');
@@ -3005,6 +3007,16 @@
       const syringePerInj = syringeAmt ? toKRW(syringeAmt, syringeCurrency) / syringeQty : 0;
       const swabPerInj = swabAmt ? toKRW(swabAmt, swabCurrency) / swabQty : 0;
       const bacPerInj = bacAmt && injPerVial > 0 ? toKRW(bacAmt, bacCurrency) / injPerVial : 0;
+      // 바이알당 hint (박스/키트 모드)
+      const vialHint = document.getElementById('cost-vial-hint');
+      if (vialHint) {
+        if (purchaseUnit === 'kit' && purchasePrice && vialsPerKit > 1) {
+          const perVialKRW = (toKRW(purchasePrice, purchaseCurrency) + toKRW(shippingAmt, shippingCurrency)) / vialsPerKit;
+          vialHint.textContent = `→ 바이알당 ₩${Math.round(perVialKRW).toLocaleString()} (${vialsPerKit}개 기준)`;
+        } else {
+          vialHint.textContent = '';
+        }
+      }
       // 회당 힌트 표시
       const sh = document.getElementById('cost-syringe-hint');
       if (sh) sh.textContent = syringeAmt && syringeQty > 0 ? `→ 회당 ₩${Math.round(syringePerInj).toLocaleString()}` : '';
@@ -5469,37 +5481,39 @@
         <div id="fx-status" style="font-size:10px;color:#4a5568;margin-bottom:6px">환율 로딩 전</div>
         <div id="fx-rates-bar" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:8px;background:#0d0d1a;border-radius:8px;min-height:28px"></div>
 
-        <!-- 구매 가격 입력 -->
+        <!-- 약물 구매 (가격 + 단위 통합) -->
         <div class="card" style="margin-bottom:10px;background:#0d0d1a">
-          <div class="section-title">구매 가격</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <select id="cost-currency" class="input-field" style="flex:0 0 auto;width:90px" onchange="calcCost();saveCostSettings()">
-              <option value="KRW">🇰🇷 KRW</option>
-              <option value="USD" selected>🇺🇸 USD</option>
-              <option value="JPY">🇯🇵 JPY</option>
-              <option value="CNY">🇨🇳 CNY</option>
-              <option value="INR">🇮🇳 INR</option>
-            </select>
-            <input id="cost-price" class="input-field" type="number" min="0" step="0.01"
-              placeholder="0" style="flex:1" oninput="calcCost();saveCostSettings()" />
-          </div>
-          <div style="font-size:10px;color:#4a5568;margin-top:6px">조제계산의 바이알 정보와 자동 연동됩니다</div>
-        </div>
-
-        <!-- 구매 단위 -->
-        <div class="card" style="margin-bottom:10px;background:#0d0d1a">
-          <div class="section-title">구매 단위</div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div class="section-title">💊 약물 구매</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
             <button class="cost-unit-btn" data-unit="vial" onclick="setCostUnit('vial')"
-              style="flex:1;padding:8px;border-radius:8px;border:1px solid #374151;background:#1d4ed8;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">바이알 단위</button>
+              style="flex:1;padding:8px;border-radius:8px;border:1px solid #374151;background:#1d4ed8;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">바이알 1개</button>
             <button class="cost-unit-btn" data-unit="kit" onclick="setCostUnit('kit')"
-              style="flex:1;padding:8px;border-radius:8px;border:1px solid #374151;background:#1f2937;color:#9ca3af;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">키트 단위</button>
+              style="flex:1;padding:8px;border-radius:8px;border:1px solid #374151;background:#1f2937;color:#9ca3af;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">박스/키트</button>
           </div>
-          <div id="cost-kit-wrap" style="display:none">
-            <div style="font-size:10px;color:#4a5568;margin-bottom:4px">키트당 바이알 수</div>
-            <input id="cost-vials-per-kit" class="input-field" type="number" min="1" step="1" value="1"
-              placeholder="예: 10" oninput="calcCost();saveCostSettings()" />
+          <div style="display:grid;grid-template-columns:80px 1fr 70px;gap:6px;align-items:end">
+            <div>
+              <div style="font-size:10px;color:#4a5568;margin-bottom:4px">통화</div>
+              <select id="cost-currency" class="input-field" style="width:100%" onchange="calcCost();saveCostSettings()">
+                <option value="KRW">🇰🇷 KRW</option>
+                <option value="USD" selected>🇺🇸 USD</option>
+                <option value="JPY">🇯🇵 JPY</option>
+                <option value="CNY">🇨🇳 CNY</option>
+                <option value="INR">🇮🇳 INR</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#4a5568;margin-bottom:4px" id="cost-price-label">바이알 1개 가격</div>
+              <input id="cost-price" class="input-field" type="number" min="0" step="0.01"
+                placeholder="0" style="width:100%;box-sizing:border-box" oninput="calcCost();saveCostSettings()" />
+            </div>
+            <div id="cost-kit-wrap" style="display:none">
+              <div style="font-size:10px;color:#4a5568;margin-bottom:4px">바이알 수</div>
+              <input id="cost-vials-per-kit" class="input-field" type="number" min="1" step="1" value="1"
+                placeholder="10" style="width:100%;box-sizing:border-box" oninput="calcCost();saveCostSettings()" />
+            </div>
           </div>
+          <div id="cost-vial-hint" style="font-size:11px;color:#4ade80;margin-top:6px"></div>
+          <div style="font-size:10px;color:#4a5568;margin-top:4px">💡 조제계산의 바이알 정보와 자동 연동됩니다</div>
         </div>
 
         <!-- X일에 한번 -->
