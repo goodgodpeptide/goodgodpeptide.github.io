@@ -470,6 +470,8 @@ appData.costCalc.customConsumables = [
 - [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
 - [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
 - [ ] 운동 탭 추가 예정
+- ✅ D-day 달력 기준 계산 수정 (24시간 단위 → KST 날짜 기준 calDiff, renderRemainingCards + _tickLiveUpdate 두 곳)
+- ✅ 관리자 패널 거절/취소 후 목록 안 사라지는 버그 (Firestore 캐시 불일치 → DOM 직접 제거, _removeAdminListRow)
 - ✅ 달력 체크리스트 약물 주기 버그 수정 (isDrugDueOnDate — 마지막 투약일 기준 계산)
 - ✅ 투약 목록 경로 뱃지 한국어 표시 (SC→피하주사, IM→근육주사, IN→비강)
 - ✅ 달력 하단 범례 추가 (✅⚠️🔵 인디케이터 + 도트 색상 설명)
