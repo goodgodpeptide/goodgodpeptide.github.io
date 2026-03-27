@@ -1450,7 +1450,9 @@
     ];
 
     function getSupplements() {
-      return appData.supplements || DEFAULT_SUPPLEMENTS.map(s => ({ ...s, taken: {} }));
+      const s = appData.supplements;
+      if (!s || s.length === 0) return DEFAULT_SUPPLEMENTS.map(s => ({ ...s, taken: {} }));
+      return s;
     }
 
     function getTodayKey() {
@@ -4915,13 +4917,26 @@
     window.calAddDrug = () => {
       const m = document.getElementById("cal-add-modal");
       m.style.display = "none";
+      _editRecordId = null;
+      document.querySelector("#add-modal .modal-title").textContent = "💊 약물 기록 추가";
       document.getElementById("add-time").value = m.dataset.date + "T08:00";
       document.getElementById("add-dose").value = "";
       selectedSite = null;
       selectedRoute = null;
       const sel = document.getElementById("add-drug");
       if (sel) {
+        sel.innerHTML = Object.keys(DRUG_CONFIG).map(d =>
+          `<option value="${d}">${DRUG_CONFIG[d].emoji} ${d}</option>`
+        ).join('');
+        const lastDose = getLastDose(sel.value);
+        if (lastDose) document.getElementById("add-dose").value = lastDose;
         selectedRoute = DRUG_CONFIG[sel.value]?.defaultRoute || 'SC';
+        sel.onchange = () => {
+          const ld = getLastDose(sel.value);
+          if (ld) document.getElementById("add-dose").value = ld;
+          selectedRoute = DRUG_CONFIG[sel.value]?.defaultRoute || 'SC';
+          renderRouteSelector(sel.value);
+        };
       }
       document.getElementById("add-modal").style.display = "flex";
       setTimeout(() => { renderSiteSelector(); if (sel) renderRouteSelector(sel.value); }, 50);
