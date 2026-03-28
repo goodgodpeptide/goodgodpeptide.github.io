@@ -10,7 +10,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, serverTimestamp, getDocs, arrayUnion, arrayRemove, onSnapshot, query, orderBy, limit }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -73,6 +73,9 @@
 
     onAuthStateChanged(auth, async (user) => {
       currentUser = user;
+      // auth 확인 완료 → 로딩 오버레이 제거
+      const authLoading = document.getElementById("auth-loading");
+      if (authLoading) authLoading.style.display = "none";
       if (user) {
         // ── 승인 여부 확인 ──────────────────────────────
         let isApproved = false;
@@ -5781,8 +5784,18 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; background: #0a0a14; color: #e2e8f0; font-family: 'Noto Sans KR', sans-serif; -webkit-tap-highlight-color: transparent; }
 
+    #auth-loading {
+      display: flex; align-items: center; justify-content: center;
+      position: fixed; inset: 0; background: #0a0a14; z-index: 9999;
+    }
+    #auth-loading .spin {
+      width: 32px; height: 32px; border: 3px solid #1f2937; border-top-color: #60a5fa;
+      border-radius: 50%; animation: authspin .7s linear infinite;
+    }
+    @keyframes authspin { to { transform: rotate(360deg); } }
+
     #login-screen {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      display: none; flex-direction: column; align-items: center; justify-content: center;
       min-height: 100vh; padding: 32px 20px; text-align: center;
       background: radial-gradient(ellipse at 50% 20%, #1a1a3e 0%, #0a0a14 70%);
     }
@@ -5790,6 +5803,8 @@
     @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.07)} }
     .login-title { font-size: 26px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; color: #f1f5f9; }
     .login-sub { font-size: 14px; color: #94a3b8; margin-bottom: 48px; }
+    body.light-mode #auth-loading { background: #f0f4ff; }
+    body.light-mode #auth-loading .spin { border-color: #e2e8f0; border-top-color: #2563eb; }
     body.light-mode #login-screen {
       background: radial-gradient(ellipse at 50% 20%, #dbeafe 0%, #f0f4ff 70%);
     }
@@ -6009,6 +6024,8 @@
 <body>
 
 <!-- 로그인 -->
+<div id="auth-loading"><div class="spin"></div></div>
+
 <div id="login-screen">
   <div class="login-logo">⚖️</div>
   <div class="login-title">체중관리 매니저</div>
