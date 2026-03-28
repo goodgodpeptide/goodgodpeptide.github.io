@@ -490,16 +490,34 @@
     window.toggleTheme = () => {
       const isLight = document.body.classList.toggle("light-mode");
       document.documentElement.style.background = isLight ? "#f0f2f5" : "#0a0a14";
-      document.getElementById("theme-toggle").textContent = isLight ? "☀️" : "🌙";
+      document.getElementById("theme-toggle").textContent = isLight ? "☀️ 라이트 모드" : "🌙 다크 / 라이트";
       localStorage.setItem("theme", isLight ? "light" : "dark");
     };
+
+    window.toggleSettingsMenu = function() {
+      const menu = document.getElementById("settings-menu");
+      const isOpen = menu.style.display === "block";
+      menu.style.display = isOpen ? "none" : "block";
+    };
+    window.closeSettingsMenu = function() {
+      const menu = document.getElementById("settings-menu");
+      if (menu) menu.style.display = "none";
+    };
+    // 메뉴 외부 클릭 시 닫기
+    document.addEventListener("click", function(e) {
+      const btn = document.getElementById("settings-btn");
+      const menu = document.getElementById("settings-menu");
+      if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.style.display = "none";
+      }
+    });
     // 저장된 테마 복원
     if (localStorage.getItem("theme") === "light") {
       document.body.classList.add("light-mode");
       document.documentElement.style.background = "#f0f2f5";
       document.addEventListener("DOMContentLoaded", () => {
         const btn = document.getElementById("theme-toggle");
-        if (btn) btn.textContent = "☀️";
+        if (btn) btn.textContent = "☀️ 라이트 모드";
       });
     }
 
@@ -6143,8 +6161,10 @@
     body.light-mode .result-row span:last-child { color: #1a1a2e; }
     body.light-mode #toast { background: #374151 !important; color: #f9fafb !important; }
     body.light-mode .quick-btns .qbtn { background: #f3f4f6; color: #6b7280; }
-    #theme-toggle { background: none; border: 1px solid #374151; border-radius: 8px; padding: 4px 10px; font-size: 16px; cursor: pointer; transition: all .2s; }
-    body.light-mode #theme-toggle { border-color: #d1d5db; }
+    #settings-menu button:hover { background: #ffffff11 !important; }
+    body.light-mode #settings-menu { background: #ffffff; border-color: #e2e8f0; }
+    body.light-mode #settings-menu button { color: #374151 !important; border-color: #e2e8f0 !important; }
+    body.light-mode #settings-menu button:last-child { color: #dc2626 !important; }
     /* ── 라이트모드 인라인 스타일 오버라이드 ── */
     body.light-mode button[title="백업/복원"] { border-color: #d1d5db !important; color: #6b7280 !important; }
     body.light-mode #enc-search { background: #f8fafc !important; border-color: #e2e8f0 !important; color: #1a1a2e !important; }
@@ -6277,14 +6297,44 @@
     <div class="top-bar-title" onclick="switchTab('peptide')" style="cursor:pointer">체중관리 매니저</div>
     <div class="top-bar-right">
       <div id="save-status">☁️ 저장됨</div>
-      <button id="admin-btn" onclick="openAdminPanel()" style="display:none;background:none;border:none;font-size:18px;cursor:pointer;padding:4px" title="관리자">👑</button>
-      <button onclick="openBackupModal()" style="background:none;border:1px solid #374151;border-radius:8px;padding:4px 8px;font-size:14px;cursor:pointer;color:#6b7280" title="백업/복원">💾</button>
-      <button id="theme-toggle" onclick="toggleTheme()" title="다크/라이트 모드">🌙</button>
       <button id="nickname-avatar-btn" onclick="openNicknameModal()" title="닉네임 설정"
         style="width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;
                font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;
                font-family:inherit;flex-shrink:0;background:#374151;color:#f97316">?</button>
-      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+      <!-- 설정 드롭다운 -->
+      <div style="position:relative">
+        <button id="settings-btn" onclick="toggleSettingsMenu()"
+          style="width:32px;height:32px;background:none;border:1px solid #374151;border-radius:8px;
+                 cursor:pointer;display:flex;align-items:center;justify-content:center;
+                 color:#9ca3af;font-size:16px;flex-shrink:0">⚙</button>
+        <div id="settings-menu" style="display:none;position:absolute;right:0;top:38px;
+             background:#1e293b;border:1px solid #374151;border-radius:12px;
+             min-width:160px;z-index:200;overflow:hidden;box-shadow:0 8px 24px #0006">
+          <button id="admin-btn" onclick="closeSettingsMenu();openAdminPanel()"
+            style="display:none;width:100%;padding:12px 16px;background:none;border:none;
+                   border-bottom:1px solid #374151;color:#fbbf24;font-size:13px;
+                   text-align:left;cursor:pointer;font-family:inherit">
+            👑 관리자 패널
+          </button>
+          <button onclick="closeSettingsMenu();openBackupModal()"
+            style="width:100%;padding:12px 16px;background:none;border:none;
+                   border-bottom:1px solid #374151;color:#e2e8f0;font-size:13px;
+                   text-align:left;cursor:pointer;font-family:inherit">
+            💾 백업 / 복원
+          </button>
+          <button id="theme-toggle" onclick="toggleTheme()"
+            style="width:100%;padding:12px 16px;background:none;border:none;
+                   border-bottom:1px solid #374151;color:#e2e8f0;font-size:13px;
+                   text-align:left;cursor:pointer;font-family:inherit">
+            🌙 다크 / 라이트
+          </button>
+          <button onclick="closeSettingsMenu();doLogout()"
+            style="width:100%;padding:12px 16px;background:none;border:none;
+                   color:#f87171;font-size:13px;text-align:left;cursor:pointer;font-family:inherit">
+            로그아웃
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 
