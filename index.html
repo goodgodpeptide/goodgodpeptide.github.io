@@ -357,13 +357,8 @@
     window.rejectUser = async function(email) {
       if (!await customConfirm(`${email} 을 거절할까요?\n(재로그인하면 다시 대기 목록에 표시됩니다)`)) return;
       try {
-        const snap = await getDoc(REJECTED_DOC);
-        const update = { [email]: serverTimestamp() };
-        if (snap.exists()) {
-          await updateDoc(REJECTED_DOC, update);
-        } else {
-          await setDoc(REJECTED_DOC, update);
-        }
+        // setDoc + merge:true — 이메일의 점(.)이 updateDoc에서 중첩경로로 해석되는 버그 방지
+        await setDoc(REJECTED_DOC, { [email]: serverTimestamp() }, { merge: true });
         // DOM에서 직접 제거 (Firestore 캐시 불일치 우회)
         _removeAdminListRow("admin-pending-list", email, "대기 중인 사용자 없음");
         showToast(`🚫 ${email.split('@')[0]} 거절됨`);
@@ -4010,7 +4005,15 @@
       const val = document.getElementById("nickname-input").value.trim();
       if (!val || val.length < 2 || val.length > 16) { alert("닉네임은 2~16자로 입력하세요."); return; }
       appData.nickname = val;
-      scheduleSave();
+      // nickname 필드만 부분 업데이트 (전체 덮어쓰기 방지 — 데이터 손실 위험)
+      if (currentUser) {
+        try {
+          await updateDoc(doc(db, "users", currentUser.uid), { nickname: val });
+        } catch(e) {
+          // 문서 미존재 시 전체 저장
+          await saveData();
+        }
+      }
       try {
         await setDoc(doc(db, "user_profiles", currentUser.uid), {
           nickname: val, email: currentUser.email, updatedAt: serverTimestamp()
@@ -5816,6 +5819,18 @@
         // 동적 생성 enc-modal 우선 확인
         const encModal = document.getElementById('enc-modal');
         if (encModal) { encModal.remove(); return true; }
+        // admin-modal (modal-overlay 아니므로 별도 처리)
+        const adminModal = document.getElementById('admin-modal');
+        if (adminModal && adminModal.style.display === 'flex') {
+          adminModal.style.display = 'none';
+          return true;
+        }
+        // nickname-modal
+        const nickModal = document.getElementById('nickname-modal');
+        if (nickModal && nickModal.style.display === 'flex') {
+          nickModal.style.display = 'none';
+          return true;
+        }
         // custom-confirm 모달
         const cc = document.getElementById('custom-confirm-modal');
         if (cc && cc.style.display === 'flex') {
@@ -5840,8 +5855,8 @@
         history.pushState({ modal: true }, '');
       });
 
-      // .modal-overlay가 열릴 때 history state push
-      function watchOverlay(el) {
+      // 모달이 열릴 때 history state push — modal-overlay + 특수 모달 공통 감시
+      function watchModal(el) {
         new MutationObserver(function(muts) {
           for (const m of muts) {
             if (m.type === 'attributes' && el.style.display === 'flex') {
@@ -5850,7 +5865,12 @@
           }
         }).observe(el, { attributes: true, attributeFilter: ['style'] });
       }
-      document.querySelectorAll('.modal-overlay').forEach(watchOverlay);
+      document.querySelectorAll('.modal-overlay').forEach(watchModal);
+      // modal-overlay 클래스 없는 특수 모달들
+      ['admin-modal', 'nickname-modal', 'custom-confirm-modal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) watchModal(el);
+      });
 
       // enc-modal 래핑 (동적 생성 — open 시 직접 pushState)
       const _origOpenEnc = window.openEncyclopediaModal;
