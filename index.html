@@ -132,8 +132,6 @@
         document.getElementById("login-screen").style.display = "none";
         document.getElementById("pending-screen").style.display = "none";
         document.getElementById("app-screen").style.display = "flex";
-        document.getElementById("user-avatar").src = user.photoURL || "";
-        document.getElementById("user-name").style.display = "none";
         // 관리자이면 👑 버튼 표시
         currentUserIsAdmin = isAdmin;
         if (isAdmin) {
