@@ -2610,12 +2610,18 @@
         ctx.strokeStyle = cfg.color + "bb"; ctx.lineWidth = 1.5; ctx.setLineDash([5, 4]);
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
         ctx.setLineDash([]);
-        // 오른쪽 레이블 (정규화 모드: %, 단독: mg)
-        ctx.fillStyle = cfg.color; ctx.font = "bold 9px 'JetBrains Mono'"; ctx.textAlign = "right";
-        const remLabel = normalizeMode
-          ? `${cfg.short} ${(remRatio * 100).toFixed(1)}%`
-          : rem.toFixed(3) + 'mg';
-        ctx.fillText(remLabel, PAD.l + gW - 2, y - 3);
+        // 오른쪽 레이블 (정규화 모드: % + mg 둘 다, 단독: mg)
+        ctx.fillStyle = cfg.color; ctx.textAlign = "right";
+        if (normalizeMode) {
+          ctx.font = "bold 9px 'JetBrains Mono'";
+          ctx.fillText(`${cfg.short} ${(remRatio * 100).toFixed(1)}%`, PAD.l + gW - 2, y - 3);
+          ctx.font = "9px 'JetBrains Mono'";
+          ctx.fillStyle = cfg.color + "aa";
+          ctx.fillText(`${rem.toFixed(2)}mg`, PAD.l + gW - 2, y + 8);
+        } else {
+          ctx.font = "bold 9px 'JetBrains Mono'";
+          ctx.fillText(rem.toFixed(3) + 'mg', PAD.l + gW - 2, y - 3);
+        }
       });
 
       // 현재 시각 선
