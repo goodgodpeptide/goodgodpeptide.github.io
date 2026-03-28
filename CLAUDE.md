@@ -508,11 +508,29 @@ appData.costCalc.customConsumables = [
 
 ---
 
+## ⚠️ 데이터 안전 규칙 (CRITICAL — 반드시 준수)
+- **saveData() 직접 호출 금지**: 항상 `scheduleSave()` 경유. 단, nickname 저장은 `updateDoc({nickname})` 부분 업데이트만 사용
+- **닉네임 저장**: `saveNickname()`은 `updateDoc(users/{uid}, {nickname})` 으로만 — `scheduleSave()` 절대 금지
+- **자동 팝업 금지**: 로그인 후 자동으로 모달/팝업 띄우는 기능 추가 금지 (auth 이중 실행 시 데이터 덮어쓰기 위험)
+- **saveData 빈 데이터 가드**: `records + weightRecords = 0`이고 Firestore에 기존 데이터 있으면 저장 차단
+- **localStorage 자동백업**: `saveData()` 성공 시 `localStorage["goodgod_backup_{uid}"]`에 동시 저장
+- **복구 UI**: 💾 백업 모달에 UID 표시 + UID 직접 입력 복구 기능
+
 ## 현재 알려진 이슈 / TODO
 - [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
 - [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
 - [ ] 운동 탭 추가 예정
 - [ ] Firestore 보안 규칙 업데이트 (posts, user_profiles 컬렉션 추가됨)
+- ✅ saveData 빈 데이터 가드 + localStorage 자동백업 + 복구 UID 입력 UI
+- ✅ 닉네임 저장 버그 수정: scheduleSave() → updateDoc({nickname}) 부분 업데이트
+- ✅ 로그인 자동 닉네임 팝업 제거 (데이터 손실 원인)
+- ✅ 거절 사용자 재표시 버그: rejectUser updateDoc→setDoc+merge (이메일 점(.) 경로 해석 버그)
+- ✅ 관리자 패널 뒤로가기 지원 (admin-modal / nickname-modal MutationObserver 추가)
+- ✅ 뒤로가기 키 → 모달 닫기 (History API, popstate, MutationObserver)
+- ✅ 탑바 구글 아바타 → 닉네임 아바타 버튼 (첫글자+색상 원, 클릭으로 닉네임 변경)
+- ✅ 체중 서브탭 이모지 제거 + 탑바 줄바꿈 방지 (white-space:nowrap, flex-shrink:0)
+- ✅ 탑바 타이틀 이모지 제거 + 클릭 시 투약 탭 이동
+- ✅ 거절 사용자 시간 비교 버그: Date.now()→serverTimestamp() (클라이언트/서버 시간 차이)
 - ✅ 커뮤니티 탭 추가 (글/댓글/좋아요 + 닉네임 시스템, Firestore posts/user_profiles)
 - ✅ 탭 바 클린 리디자인 (이모지 제거, 텍스트만, 세로 구분선, overflow-x 스크롤)
 - ✅ 그래프 현재 농도 실시간 도트 추가 (현재 시각선 × 약물 곡선 교차점, 3겹 글로우)
