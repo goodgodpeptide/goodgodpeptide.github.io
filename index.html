@@ -6025,6 +6025,12 @@
         // 동적 생성 enc-modal 우선 확인
         const encModal = document.getElementById('enc-modal');
         if (encModal) { encModal.remove(); return true; }
+        // 동적 생성 모달들 (insertAdjacentHTML → remove 방식)
+        const dynamicRemoveIds = ['sched-modal','supp-sched-modal','add-supp-modal','supp-stock-modal','inventory-modal','recon-modal'];
+        for (const id of dynamicRemoveIds) {
+          const el = document.getElementById(id);
+          if (el) { el.remove(); return true; }
+        }
         // admin-modal (modal-overlay 아니므로 별도 처리)
         const adminModal = document.getElementById('admin-modal');
         if (adminModal && adminModal.style.display === 'flex') {
@@ -6083,6 +6089,18 @@
         const el = document.getElementById(id);
         if (el) watchModal(el);
       });
+
+      // 동적 생성 모달 감시 — body childList 변화로 감지
+      const DYNAMIC_MODAL_IDS = new Set(['sched-modal','supp-sched-modal','add-supp-modal','supp-stock-modal','inventory-modal','recon-modal']);
+      new MutationObserver(function(mutations) {
+        for (const m of mutations) {
+          for (const node of m.addedNodes) {
+            if (node.nodeType === 1 && DYNAMIC_MODAL_IDS.has(node.id)) {
+              history.pushState({ modal: true }, '');
+            }
+          }
+        }
+      }).observe(document.body, { childList: true });
 
       // enc-modal 래핑 (동적 생성 — open 시 직접 pushState)
       const _origOpenEnc = window.openEncyclopediaModal;
