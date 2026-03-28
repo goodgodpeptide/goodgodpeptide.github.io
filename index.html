@@ -2750,6 +2750,21 @@
           });
         }
       }
+
+      // 그래프 아래 안내 텍스트
+      const hint = document.getElementById("graph-legend-hint");
+      if (hint) {
+        if (normalizeMode && curves.length > 0) {
+          const drugList = curves.map(({ drug, cfg }) => {
+            const cm = cfg.clinicalMax;
+            return `<span style="color:${cfg.color};font-weight:700">${cfg.short}</span> 100% = ${cm}mg`;
+          }).join(' &nbsp;·&nbsp; ');
+          hint.style.display = "block";
+          hint.innerHTML = `<span style="color:#94a3b8;font-weight:700">% 기준:</span> 각 약물의 임상 최대 용량 대비 현재 체내 잔류량<br><span style="font-size:10px">${drugList}</span>`;
+        } else {
+          hint.style.display = "none";
+        }
+      }
     }
 
     function roundRect(ctx, x, y, w, h, r) {
@@ -6472,6 +6487,7 @@
         </div>
         <canvas id="peptide-chart"></canvas>
         <div class="zoom-hint">👆 드래그 이동 · 핀치 확대/축소 · 탭/클릭 수치확인</div>
+        <div id="graph-legend-hint" style="display:none;margin-top:8px;padding:8px 12px;background:#0f172a;border:1px solid #1e293b;border-radius:10px;font-size:11px;color:#64748b;line-height:1.7"></div>
       </div>
 
       <button class="big-btn blue" onclick="openAddModal()" style="margin-bottom:12px">+ 고급 기록 추가 (날짜 지정)</button>
