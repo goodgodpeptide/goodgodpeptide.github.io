@@ -770,23 +770,23 @@
     // appData.drugCycle[drug] 에 저장, 없으면 DRUG_CONFIG.defaultDoseDays 사용
     const DRUG_CONFIG = {
       "마운자로 (Tirzepatide)":   {
-        halfLifeDays: 5, tmaxHours: 24, defaultDoseDays: 7, defaultRoute: 'SC',
+        halfLifeDays: 5, tmaxHours: 8, defaultDoseDays: 7, defaultRoute: 'SC',
         color: "#60a5fa", emoji: "🔵", short: "마운자로",
-        note: "반감기 5일 · 임상 표준 7일 주기",
+        note: "반감기 5일 · Tmax ~8hr · 임상 표준 7일 주기 (FDA NDA215866)",
         doseSteps: [2.5, 5, 7.5, 10, 12.5, 15], clinicalMax: 15,
         encyclopediaId: "tirzepatide"
       },
       "레타 (Retatrutide)": {
-        halfLifeDays: 6, tmaxHours: 48, defaultDoseDays: 7, defaultRoute: 'SC',
+        halfLifeDays: 6, tmaxHours: 24, defaultDoseDays: 7, defaultRoute: 'SC',
         color: "#f87171", emoji: "🔴", short: "레타",
-        note: "반감기 6일 · 임상 표준 7일 주기",
+        note: "반감기 6일 · Tmax ~24hr · 임상 표준 7일 주기 (NEJM 2023 Phase2)",
         doseSteps: [1, 2, 4, 8, 12], clinicalMax: 12,
         encyclopediaId: "retatrutide"
       },
       "위고비 (Semaglutide)": {
-        halfLifeDays: 7, tmaxHours: 36, defaultDoseDays: 7, defaultRoute: 'SC',
+        halfLifeDays: 7, tmaxHours: 24, defaultDoseDays: 7, defaultRoute: 'SC',
         color: "#4ade80", emoji: "🟢", short: "위고비",
-        note: "반감기 7일 · 임상 표준 7일 주기",
+        note: "반감기 7일 · Tmax ~24hr · 임상 표준 7일 주기 (FDA Ozempic 라벨)",
         doseSteps: [0.25, 0.5, 1, 1.7, 2.4], clinicalMax: 2.4,
         encyclopediaId: "semaglutide"
       },
@@ -798,9 +798,9 @@
         encyclopediaId: "klow"
       },
       "카그릴린타이드 (Cagrilintide)": {
-        halfLifeDays: 7.5, tmaxHours: 48, defaultDoseDays: 7, defaultRoute: 'SC',
+        halfLifeDays: 7, tmaxHours: 24, defaultDoseDays: 7, defaultRoute: 'SC',
         color: "#f9a8d4", emoji: "🌸", short: "카그릴",
-        note: "반감기 7.5일 · 아밀린 유사체 · 주 1회",
+        note: "반감기 7일 · Tmax ~24hr · 아밀린 유사체 · 주 1회 (Lau 2021 Phase1b)",
         doseSteps: [0.16, 0.3, 0.45, 0.6, 0.9, 1.2, 1.7, 2.4], clinicalMax: 2.4,
         encyclopediaId: "cagrilintide"
       },
@@ -812,9 +812,9 @@
         encyclopediaId: "epitalon"
       },
       "티모신알파1 (Thymosin α1)": {
-        halfLifeDays: 0.125, tmaxHours: 1.5, defaultDoseDays: 3, defaultRoute: 'SC',
+        halfLifeDays: 0.083, tmaxHours: 2, defaultDoseDays: 3, defaultRoute: 'SC',
         color: "#fb923c", emoji: "🟠", short: "Tα1",
-        note: "반감기 ~3시간 · 면역조절 · 주 2회",
+        note: "반감기 ~2시간 · Tmax ~2hr · 면역조절 · 주 2회 (Goldstein 1981, Zadaxin 라벨)",
         doseSteps: [0.5, 1, 1.6, 3.2], clinicalMax: 3.2,
         encyclopediaId: "thymosin-alpha-1"
       },
@@ -847,9 +847,9 @@
         encyclopediaId: "cjc-ipa-protocol"
       },
       "테사모렐린 (Tesamorelin)": {
-        halfLifeDays: 0.1, tmaxHours: 1, defaultDoseDays: 1, defaultRoute: 'SC',
+        halfLifeDays: 0.005, tmaxHours: 0.15, defaultDoseDays: 1, defaultRoute: 'SC',
         color: "#2dd4bf", emoji: "💎", short: "테사모렐린",
-        note: "반감기 ~2.4시간 · GHRH 유사체 · FDA 승인",
+        note: "반감기 ~7분 · Tmax ~9분 · GHRH 유사체 · FDA 승인 · GH 효과는 수 시간 지속 (FDA NDA022505)",
         doseSteps: [1, 2], clinicalMax: 2,
         encyclopediaId: "tesamorelin"
       },
@@ -1248,21 +1248,40 @@
 
     // 1-compartment oral PK: 흡수 + 소실 모델
     // 반환값: 상대농도 (dose 단위 기준 mg 환산)
+
+    // ka 수치 계산: 모델이 정확히 tmaxHours에서 피크가 되도록 Newton-Raphson 풀이
+    // 1-compartment tmax = ln(ka/ke)/(ka-ke), u=ka/ke → ln(u)/(u-1) = tmax*ke
+    function computeKa(ke, tmaxHours) {
+      if (tmaxHours <= 0 || ke <= 0) return ke * 10;
+      const x = tmaxHours * ke; // 무차원: tmax × ke
+      if (x >= 1 - 1e-9) return ke * 1.0001; // tmax ≥ halfLife/ln2 → 비현실적, ka≈ke 처리
+      // Newton-Raphson: f(u) = ln(u) - x*(u-1) = 0, f'(u) = 1/u - x
+      let u = Math.max(1.001, 2 + 1 / x);
+      for (let i = 0; i < 100; i++) {
+        const fu = Math.log(u) - x * (u - 1);
+        const fpu = 1 / u - x;
+        if (Math.abs(fpu) < 1e-15) break;
+        const du = -fu / fpu;
+        const uNew = Math.max(1.0001, u + du);
+        if (Math.abs(uNew - u) < 1e-12 * u) { u = uNew; break; }
+        u = uNew;
+      }
+      return u * ke;
+    }
+
     function pkConcentration(dose, elapsedHours, cfg) {
       if (elapsedHours < 0) return 0;
       const ke = Math.LN2 / (cfg.halfLifeDays * 24); // 1/hr
-      const ka = Math.LN2 / cfg.tmaxHours;           // 1/hr
-      if (Math.abs(ka - ke) < 1e-10) {
+      const ka = computeKa(ke, cfg.tmaxHours);        // 모델 피크 = tmaxHours 보장
+      if (Math.abs(ka - ke) < 1e-8) {
         // ka ≈ ke: 단순 반감기 사용
         return dose * Math.pow(0.5, elapsedHours / (cfg.halfLifeDays * 24));
       }
-      // 정규화 상수: 피크를 dose로 맞추기 위해
-      // C_peak = dose × (ka/(ka-ke)) × (e^(-ke*Tmax) - e^(-ka*Tmax))
-      // 여기서는 상대적 형태 그대로 → 실제 잔류량은 dose 단위로 표현
+      // 정규화: 피크값 = dose (tmax_h ≈ cfg.tmaxHours)
       const tmax_h = Math.log(ka / ke) / (ka - ke);
       const peakFactor = (ka / (ka - ke)) * (Math.exp(-ke * tmax_h) - Math.exp(-ka * tmax_h));
       const raw = (ka / (ka - ke)) * (Math.exp(-ke * elapsedHours) - Math.exp(-ka * elapsedHours));
-      return dose * (raw / peakFactor);
+      return Math.max(0, dose * (raw / peakFactor));
     }
 
     function calcConcentrationAt(drug, targetTime) {
