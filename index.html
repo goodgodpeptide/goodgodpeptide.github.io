@@ -2529,8 +2529,14 @@
           const lines = [{ text: timeLabel, color: "#e2e8f0" }];
           curves.forEach(({ drug, cfg }) => {
             const val = calcConcentrationAt(drug, t);
-            if (val > 0.001) lines.push({ text: `${cfg.short}: ${val.toFixed(3)}mg`, color: cfg.color });
-            const y = PAD.t + gH - (val / globalMax) * gH;
+            const cm = cfg.clinicalMax || 1;
+            const ratio = plotRatio(val, cm);
+            if (val > 0.001) {
+              const valLabel = normalizeMode ? `${cfg.short}: ${(ratio*100).toFixed(1)}%` : `${cfg.short}: ${val.toFixed(3)}mg`;
+              lines.push({ text: valLabel, color: cfg.color });
+            }
+            if (ratio <= 0) return;
+            const y = PAD.t + gH - ratio * gH;
             ctx.beginPath(); ctx.arc(tx, y, 5, 0, Math.PI*2);
             ctx.fillStyle = cfg.color; ctx.fill();
             ctx.strokeStyle = "#080810"; ctx.lineWidth = 2; ctx.stroke();
