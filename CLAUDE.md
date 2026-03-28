@@ -96,33 +96,35 @@ removeAdmin(email)     // admins에서 arrayRemove (본인 불가)
 ## 약물 설정 (DRUG_CONFIG)
 
 ```js
-"마운자로 (Tirzepatide)": { halfLifeDays: 5, tmaxHours: 24, defaultDoseDays: 7 }
-// GLP-1 / 아밀린
-"마운자로 (Tirzepatide)":         { halfLifeDays: 5,     tmaxHours: 24,  defaultDoseDays: 7,  encyclopediaId: "tirzepatide" }
-"레타 (Retatrutide)":             { halfLifeDays: 6,     tmaxHours: 48,  defaultDoseDays: 7,  encyclopediaId: "retatrutide" }
-"위고비 (Semaglutide)":           { halfLifeDays: 7,     tmaxHours: 36,  defaultDoseDays: 7,  encyclopediaId: "semaglutide" }
-"카그릴린타이드 (Cagrilintide)":   { halfLifeDays: 7.5,  tmaxHours: 48,  defaultDoseDays: 7,  encyclopediaId: "cagrilintide" }
+// GLP-1 / 아밀린 (파라미터: FDA 라벨 / 임상논문 기반)
+"마운자로 (Tirzepatide)":         { halfLifeDays: 5,     tmaxHours: 8,    defaultDoseDays: 7,  encyclopediaId: "tirzepatide" }   // FDA NDA215866
+"레타 (Retatrutide)":             { halfLifeDays: 6,     tmaxHours: 24,   defaultDoseDays: 7,  encyclopediaId: "retatrutide" }   // NEJM 2023 Phase2
+"위고비 (Semaglutide)":           { halfLifeDays: 7,     tmaxHours: 24,   defaultDoseDays: 7,  encyclopediaId: "semaglutide" }   // FDA Ozempic 라벨
+"카그릴린타이드 (Cagrilintide)":   { halfLifeDays: 7,     tmaxHours: 24,   defaultDoseDays: 7,  encyclopediaId: "cagrilintide" }  // Lau 2021 Phase1b
 // 복합/재생
-"KLOW (GHK-Cu+TB500+BPC157+KPV)": { halfLifeDays: 0.2,  tmaxHours: 1.5, defaultDoseDays: 1,  encyclopediaId: "klow" }
-"에피탈론 (Epithalon)":            { halfLifeDays: 0.125,tmaxHours: 1,   defaultDoseDays: 1,  encyclopediaId: "epitalon" }
-"티모신알파1 (Thymosin α1)":       { halfLifeDays: 0.125,tmaxHours: 1.5, defaultDoseDays: 3,  encyclopediaId: "thymosin-alpha-1" }
-"GHK-Cu (구리펩타이드)":           { halfLifeDays: 0.083,tmaxHours: 1,   defaultDoseDays: 1,  encyclopediaId: "ghk-cu" }
+"KLOW (GHK-Cu+TB500+BPC157+KPV)": { halfLifeDays: 0.2,  tmaxHours: 1.5,  defaultDoseDays: 1,  encyclopediaId: "klow" }
+"에피탈론 (Epithalon)":            { halfLifeDays: 0.125,tmaxHours: 1,    defaultDoseDays: 1,  encyclopediaId: "epitalon" }
+"티모신알파1 (Thymosin α1)":       { halfLifeDays: 0.083,tmaxHours: 2,    defaultDoseDays: 3,  encyclopediaId: "thymosin-alpha-1" } // Goldstein 1981, Zadaxin 라벨
+"GHK-Cu (구리펩타이드)":           { halfLifeDays: 0.083,tmaxHours: 1,    defaultDoseDays: 1,  encyclopediaId: "ghk-cu" }
 // 뇌/인지
-"세맥스 (Semax)":                  { halfLifeDays: 0.021,tmaxHours: 0.25,defaultDoseDays: 1,  encyclopediaId: "semax" }
-"셀랑크 (Selank)":                 { halfLifeDays: 0.021,tmaxHours: 0.25,defaultDoseDays: 1,  encyclopediaId: "selank" }
+"세맥스 (Semax)":                  { halfLifeDays: 0.021,tmaxHours: 0.25, defaultDoseDays: 1,  encyclopediaId: "semax" }
+"셀랑크 (Selank)":                 { halfLifeDays: 0.021,tmaxHours: 0.25, defaultDoseDays: 1,  encyclopediaId: "selank" }
 // GH 축
-"CJC-1295+Ipamorelin":            { halfLifeDays: 0.083,tmaxHours: 0.5, defaultDoseDays: 1,  encyclopediaId: "cjc-ipa-protocol" }
-"테사모렐린 (Tesamorelin)":        { halfLifeDays: 0.1,  tmaxHours: 1,   defaultDoseDays: 1,  encyclopediaId: "tesamorelin" }
+"CJC-1295+Ipamorelin":            { halfLifeDays: 0.083,tmaxHours: 0.5,  defaultDoseDays: 1,  encyclopediaId: "cjc-ipa-protocol" }
+"테사모렐린 (Tesamorelin)":        { halfLifeDays: 0.005,tmaxHours: 0.15, defaultDoseDays: 1,  encyclopediaId: "tesamorelin" }    // FDA NDA022505 (t½~7min, Tmax~9min)
 // 미토콘드리아
-"SS-31 (Elamipretide)":           { halfLifeDays: 0.083,tmaxHours: 0.5, defaultDoseDays: 1,  encyclopediaId: "ss-31" }
-"MOTS-c":                         { halfLifeDays: 0.125,tmaxHours: 1,   defaultDoseDays: 3,  encyclopediaId: "mots-c" }
-"NAD+":                           { halfLifeDays: 0.083,tmaxHours: 0.5, defaultDoseDays: 3,  encyclopediaId: "nad-plus" }
+"SS-31 (Elamipretide)":           { halfLifeDays: 0.083,tmaxHours: 0.5,  defaultDoseDays: 1,  encyclopediaId: "ss-31" }
+"MOTS-c":                         { halfLifeDays: 0.125,tmaxHours: 1,    defaultDoseDays: 3,  encyclopediaId: "mots-c" }
+"NAD+":                           { halfLifeDays: 0.083,tmaxHours: 0.5,  defaultDoseDays: 3,  encyclopediaId: "nad-plus" }
 ```
 - **단기 반감기**: fractional halfLifeDays 사용 (세맥스 0.021일 = ~30분). PK 계산은 시간 단위라 수학적으로 정상 동작
 - **encyclopediaId**: peptides_v3.json의 slug ID. 투약 카드 📖 버튼으로 직접 모달 연동
 
 - **PK 모델**: 1-compartment oral absorption
-  - `ka = ln2 / tmaxHours`, `ke = ln2 / (halfLifeDays × 24)`
+  - `ke = ln2 / (halfLifeDays × 24)`
+  - `ka = computeKa(ke, tmaxHours)` — Newton-Raphson 수치풀이로 모델이 정확히 tmaxHours에서 피크가 되도록 ka 계산
+    - 풀이: `ln(u)/(u-1) = tmaxHours × ke`, `u = ka/ke`
+    - 기존 `ka = ln2/tmaxHours` 공식은 실제 피크 시간이 tmaxHours와 달라지는 버그 있었음 (수정됨)
   - `C(t) = dose × (ka/(ka-ke)) × (e^(-ke·t) - e^(-ka·t))` — 피크 기준 정규화
 - **isOverride 기록**: 단순 반감기만 적용 (PK 흡수 모델 미적용)
 
@@ -521,6 +523,14 @@ appData.costCalc.customConsumables = [
 - [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
 - [ ] 운동 탭 추가 예정
 - [ ] Firestore 보안 규칙 업데이트 (posts, user_profiles 컬렉션 추가됨)
+- ✅ Firebase API 키 도메인 제한 (goodgodpeptide.github.io/* 만 허용 — GCP Console에서 설정 완료)
+- ✅ PK 모델 ka 수식 근본 수정: `ka=ln2/tmaxHours` → `computeKa()` Newton-Raphson 풀이 (모델이 정확히 tmaxHours에서 피크)
+- ✅ DRUG_CONFIG 파라미터 논문/FDA 라벨 기반 업데이트 (마운자로 tmax 8hr, 레타/위고비/카그릴 tmax 24hr, 티모신알파1 halfLife 2hr, 테사모렐린 halfLife 7min/tmax 9min)
+- ✅ 백업 모달 스크롤 수정 (max-height:85vh + overflow-y:auto) + 뒤로가기 지원 추가
+- ✅ 설정 드롭다운 테마 버튼 '다크 / 라이트' → '다크 모드'/'라이트 모드' 명확하게 수정
+- ✅ 다약제 그래프 농도 점선 레이블 % + mg 동시 표시 (다크/라이트 색상 분기)
+- ✅ 그래프 툴팁 다약제 뷰에서 % + mg 동시 표시 (└ X.XXXmg 서브라인)
+- ✅ 그래프 캔버스 하단 % 기준 안내 박스 추가 (다약제 뷰 시만 표시, 라이트/다크 색상 분기)
 - ✅ saveData 빈 데이터 가드 + localStorage 자동백업 + 복구 UID 입력 UI
 - ✅ 닉네임 저장 버그 수정: scheduleSave() → updateDoc({nickname}) 부분 업데이트
 - ✅ 로그인 자동 닉네임 팝업 제거 (데이터 손실 원인)
