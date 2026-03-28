@@ -1872,6 +1872,10 @@
     }
 
     let drugListExpanded = false; // 기본 접힘
+    let peptideListExpanded = false;
+    let weightListExpanded = false;
+    window.togglePeptideList = function() { peptideListExpanded = !peptideListExpanded; renderPeptideList(); };
+    window.toggleWeightList  = function() { weightListExpanded  = !weightListExpanded;  renderWeightList(); };
 
     window.toggleDrugListPanel = function() {
       drugListExpanded = !drugListExpanded;
@@ -1889,21 +1893,22 @@
       c.innerHTML = Object.entries(DRUG_CONFIG).map(([drug, cfg]) => {
         const on = active.includes(drug);
         return `<button onclick="toggleActiveDrug('${drug}')"
-          style="padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;
-                 border:1.5px solid ${on ? cfg.color : (isLight?'#d1d5db':'#374151')};
-                 background:${on ? cfg.color+'22' : 'transparent'};
-                 color:${on ? cfg.color : (isLight?'#6b7280':'#4a5568')};
-                 font-family:inherit;transition:all .2s">
-          ${cfg.emoji} ${cfg.short}
+          style="padding:5px 14px;border-radius:20px;font-size:11px;font-weight:${on?'700':'400'};cursor:pointer;
+                 border:1px solid ${on ? cfg.color+'99' : (isLight?'#e2e8f0':'#2d2d3d')};
+                 background:${on ? cfg.color+'15' : 'transparent'};
+                 color:${on ? cfg.color : (isLight?'#94a3b8':'#4b5563')};
+                 font-family:inherit;transition:all .2s;letter-spacing:0.2px;
+                 box-shadow:${on ? '0 0 10px '+cfg.color+'33,inset 0 0 6px '+cfg.color+'11' : 'none'}">
+          ${cfg.short}
         </button>`;
       }).join('');
       // 접힘 상태 유지
       c.style.display = drugListExpanded ? 'flex' : 'none';
-      // 요약 업데이트
+      // 요약 업데이트 (이모지 없이 텍스트만)
       const summary = document.getElementById('drug-list-summary');
       if (summary) {
         const onDrugs = Object.entries(DRUG_CONFIG).filter(([d]) => active.includes(d));
-        summary.textContent = onDrugs.map(([,c]) => c.emoji+c.short).join(' · ');
+        summary.textContent = onDrugs.map(([,c]) => c.short).join(' · ');
       }
     }
 
@@ -2207,25 +2212,35 @@
       const filter = document.getElementById("peptide-filter")?.value || "전체";
       const c = document.getElementById("peptide-list");
       if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
       let recs = (appData.records || []).filter(r => filter === "전체" || DRUG_CONFIG[r.drug]?.short === filter)
         .sort((a, b) => b.time - a.time);
       if (!recs.length) { c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:32px 0;font-size:14px">기록이 없습니다</div>`; return; }
-      c.innerHTML = recs.map(r => {
+      const count = recs.length;
+      const hdrBorder = isLight ? '#e2e8f0' : '#1f2937';
+      const hdrTxt = isLight ? '#6b7280' : '#4b5563';
+      const header = `
+        <div onclick="togglePeptideList()" style="display:flex;justify-content:space-between;align-items:center;padding:10px 2px;cursor:pointer;user-select:none;border-bottom:1px solid ${hdrBorder};margin-bottom:${peptideListExpanded?'8':'0'}px">
+          <span style="font-size:13px;font-weight:600;color:${isLight?'#374151':'#9ca3af'}">투약 기록 <span style="font-size:11px;font-weight:400;color:${hdrTxt}">${count}건</span></span>
+          <span style="font-size:11px;color:${hdrTxt}">${peptideListExpanded ? '▲ 접기' : '▼ 펼치기'}</span>
+        </div>`;
+      const rows = peptideListExpanded ? recs.map(r => {
         const cfg = DRUG_CONFIG[r.drug] || {};
         const siteInfo = r.site ? INJECTION_SITES.find(s => s.id === r.site) : null;
         const routeInfo = ADMIN_ROUTES.find(rt => rt.id === (r.route || cfg.defaultRoute || 'SC'));
         return `<div class="record-row" style="border-color:${cfg.color}22">
           <div>
-            <div style="font-size:12px;color:${cfg.color};margin-bottom:3px">${cfg.emoji||""} ${r.drug}${r.isOverride?' <span style="font-size:10px;color:#facc15">[수동]</span>':''}${routeInfo ? ` <span style="font-size:9px;background:${routeInfo.color}22;border:1px solid ${routeInfo.color}55;border-radius:6px;padding:1px 5px;color:${routeInfo.color}">${routeInfo.emoji} ${routeInfo.label}</span>` : ''}</div>
-            <div style="font-size:17px;font-weight:700;color:#e2e8f0;font-family:'JetBrains Mono',monospace">${r.dose} mg</div>
-            <div style="font-size:11px;color:#4a5568;margin-top:2px">${toKSTString(r.time)}${siteInfo ? ` · <span style="color:#6b7280">${siteInfo.emoji}${siteInfo.label}</span>` : ''}</div>
+            <div style="font-size:12px;color:${cfg.color};margin-bottom:3px">${r.drug}${r.isOverride?' <span style="font-size:10px;color:#facc15">[수동]</span>':''}${routeInfo ? ` <span style="font-size:9px;background:${routeInfo.color}22;border:1px solid ${routeInfo.color}55;border-radius:6px;padding:1px 5px;color:${routeInfo.color}">${routeInfo.label}</span>` : ''}</div>
+            <div style="font-size:17px;font-weight:700;color:${isLight?'#1e293b':'#e2e8f0'};font-family:'JetBrains Mono',monospace">${r.dose} mg</div>
+            <div style="font-size:11px;color:#4a5568;margin-top:2px">${toKSTString(r.time)}${siteInfo ? ` · <span style="color:#6b7280">${siteInfo.label}</span>` : ''}</div>
           </div>
           <div style="display:flex;gap:6px">
             <button class="edit-btn" onclick="openEditRecordModal(${r.id})">수정</button>
             <button class="del-btn" onclick="deleteRecord(${r.id})">삭제</button>
           </div>
         </div>`;
-      }).join("");
+      }).join("") : '';
+      c.innerHTML = header + rows;
     }
 
     // ══════════════════════════════════════════════
@@ -3075,9 +3090,18 @@
     function renderWeightList() {
       const c = document.getElementById("weight-list");
       if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
       const recs = (appData.weightRecords || []).sort((a,b) => b.time - a.time);
       if (!recs.length) { c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:32px 0;font-size:14px">기록이 없습니다</div>`; return; }
-      c.innerHTML = recs.map(r => `
+      const count = recs.length;
+      const hdrBorder = isLight ? '#e2e8f0' : '#1f2937';
+      const hdrTxt = isLight ? '#6b7280' : '#4b5563';
+      const header = `
+        <div onclick="toggleWeightList()" style="display:flex;justify-content:space-between;align-items:center;padding:10px 2px;cursor:pointer;user-select:none;border-bottom:1px solid ${hdrBorder};margin-bottom:${weightListExpanded?'8':'0'}px">
+          <span style="font-size:13px;font-weight:600;color:${isLight?'#374151':'#9ca3af'}">체중 기록 <span style="font-size:11px;font-weight:400;color:${hdrTxt}">${count}건</span></span>
+          <span style="font-size:11px;color:${hdrTxt}">${weightListExpanded ? '▲ 접기' : '▼ 펼치기'}</span>
+        </div>`;
+      const rows = weightListExpanded ? recs.map(r => `
         <div class="record-row" style="border-color:#4ade8022">
           <div>
             <div style="font-size:20px;font-weight:700;color:#4ade80;font-family:'JetBrains Mono',monospace">${r.weight} kg</div>
@@ -3087,7 +3111,8 @@
             <button class="edit-btn" onclick="openEditWeightModal(${r.id})">수정</button>
             <button class="del-btn" onclick="deleteWeightRecord(${r.id})">삭제</button>
           </div>
-        </div>`).join("");
+        </div>`).join("") : '';
+      c.innerHTML = header + rows;
     }
 
     // ══════════════════════════════════════════════
