@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>⚖️ 체중관리 매니저</title>
+  <title>체중관리 매니저</title>
   <meta name="theme-color" content="#0a0a14" />
   <link rel="manifest" href="manifest.json" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
@@ -235,8 +235,9 @@
       // 미승인 + (거절 기록 없거나 거절 이후 재로그인한) 이메일만 대기 목록에 표시
       const pendingEmails = Object.keys(lastLoginMap).filter(e => {
         if (approvedEmails.includes(e)) return false;
-        const rejectedAt = rejectedMap[e];
-        if (!rejectedAt) return true; // 거절 기록 없음 → 표시
+        const rejectedRaw = rejectedMap[e];
+        if (!rejectedRaw) return true; // 거절 기록 없음 → 표시
+        const rejectedAt = rejectedRaw?.toMillis ? rejectedRaw.toMillis() : Number(rejectedRaw);
         return lastLoginMap[e] > rejectedAt; // 거절 이후 재로그인 → 다시 표시
       });
       const approvedOthers = approvedEmails.filter(e => !adminEmails.includes(e));
@@ -352,7 +353,7 @@
       if (!await customConfirm(`${email} 을 거절할까요?\n(재로그인하면 다시 대기 목록에 표시됩니다)`)) return;
       try {
         const snap = await getDoc(REJECTED_DOC);
-        const update = { [email]: Date.now() };
+        const update = { [email]: serverTimestamp() };
         if (snap.exists()) {
           await updateDoc(REJECTED_DOC, update);
         } else {
@@ -6096,7 +6097,7 @@
 <!-- 앱 -->
 <div id="app-screen">
   <div class="top-bar">
-    <div class="top-bar-title">⚖️ 체중관리 매니저</div>
+    <div class="top-bar-title" onclick="switchTab('peptide')" style="cursor:pointer">체중관리 매니저</div>
     <div class="top-bar-right">
       <div id="save-status">☁️ 저장됨</div>
       <button id="admin-btn" onclick="openAdminPanel()" style="display:none;background:none;border:none;font-size:18px;cursor:pointer;padding:4px" title="관리자">👑</button>
