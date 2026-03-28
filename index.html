@@ -2035,7 +2035,13 @@
       if (document.getElementById("wtab-inbody")?.style.display !== "none") renderInbodyPanel();
       if (document.getElementById("recon-section")) renderReconSection();
       if (document.getElementById("inventory-section")) renderInventorySection();
-      startLiveUpdate();
+      // 마지막으로 사용한 탭 복원 (새로고침 시 유지)
+      const savedTab = localStorage.getItem("lastTab");
+      if (savedTab && document.getElementById("panel-" + savedTab)) {
+        switchTab(savedTab);
+      } else {
+        startLiveUpdate();
+      }
     }
 
     // ── 활성 약물 설정 ──────────────────────────────
@@ -4395,6 +4401,7 @@
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("panel-"+tab).style.display = "block";
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
+      localStorage.setItem("lastTab", tab);
       if (tab === "peptide") {
         setTimeout(() => { renderPeptideGraph(); initGraphTouch(); startLiveUpdate(); fetchFxRates(); loadCostSettings(); }, 50);
       } else {
