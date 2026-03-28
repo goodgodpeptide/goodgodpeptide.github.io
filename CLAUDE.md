@@ -531,6 +531,9 @@ appData.costCalc.customConsumables = [
 - ✅ 다약제 그래프 농도 점선 레이블 % + mg 동시 표시 (다크/라이트 색상 분기)
 - ✅ 그래프 툴팁 다약제 뷰에서 % + mg 동시 표시 (└ X.XXXmg 서브라인)
 - ✅ 그래프 캔버스 하단 % 기준 안내 박스 추가 (다약제 뷰 시만 표시, 라이트/다크 색상 분기)
+- ✅ 달력 D-day 약물 커스텀 주기 버그 수정 (isDrugDueOnDate: cfg.defaultDoseDays → getDoseCycle(drug))
+- ✅ 탭 새로고침 시 마지막 탭 유지 (localStorage "lastTab" 저장/복원)
+- ✅ 동적 생성 모달 뒤로가기 지원 — sched/supp-sched/add-supp/supp-stock/inventory/recon 6종 (closeTopModal + MutationObserver body childList)
 - ✅ saveData 빈 데이터 가드 + localStorage 자동백업 + 복구 UID 입력 UI
 - ✅ 닉네임 저장 버그 수정: scheduleSave() → updateDoc({nickname}) 부분 업데이트
 - ✅ 로그인 자동 닉네임 팝업 제거 (데이터 손실 원인)
