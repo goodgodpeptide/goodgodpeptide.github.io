@@ -5877,8 +5877,9 @@
       padding: 10px 14px; background: #0f0f1e; border-bottom: 1px solid #1f2937;
       position: sticky; top: 0; z-index: 10;
     }
-    .top-bar-title { font-size: 16px; font-weight: 900; letter-spacing: -0.5px; }
-    .top-bar-right { display: flex; align-items: center; gap: 8px; }
+    .top-bar-title { font-size: 16px; font-weight: 900; letter-spacing: -0.5px; white-space: nowrap; flex-shrink: 0; }
+    .top-bar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    #save-status { white-space: nowrap; }
     #user-avatar { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #374151; }
     #user-name { font-size: 11px; color: #9ca3af; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #save-status { font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid; transition: all .3s; }
@@ -6416,9 +6417,9 @@
     <div id="panel-weight" class="tab-panel">
       <!-- 서브탭 네비게이션 -->
       <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
-        <button class="calc-tab-btn wtab-btn active" data-wtab="record" onclick="switchWeightTab('record')">⚖️ 기록/그래프</button>
-        <button class="calc-tab-btn wtab-btn" data-wtab="inbody" onclick="switchWeightTab('inbody')">🏋️ 인바디</button>
-        <button class="calc-tab-btn wtab-btn" data-wtab="analysis" onclick="switchWeightTab('analysis')">📊 분석</button>
+        <button class="calc-tab-btn wtab-btn active" data-wtab="record" onclick="switchWeightTab('record')">기록/그래프</button>
+        <button class="calc-tab-btn wtab-btn" data-wtab="inbody" onclick="switchWeightTab('inbody')">인바디</button>
+        <button class="calc-tab-btn wtab-btn" data-wtab="analysis" onclick="switchWeightTab('analysis')">분석</button>
       </div>
 
       <!-- wtab: 기록/그래프 -->
