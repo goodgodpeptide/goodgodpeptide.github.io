@@ -5779,6 +5779,58 @@
     window.addEventListener("load", () => {
       setTimeout(() => { initGraphTouch(); initWeightTouch(); }, 500);
     });
+
+    // ── 뒤로가기 → 모달 닫기 ────────────────────────────────
+    (function initBackButtonHandler() {
+      function closeTopModal() {
+        // 동적 생성 enc-modal 우선 확인
+        const encModal = document.getElementById('enc-modal');
+        if (encModal) { encModal.remove(); return true; }
+        // custom-confirm 모달
+        const cc = document.getElementById('custom-confirm-modal');
+        if (cc && cc.style.display === 'flex') {
+          cc.style.display = 'none';
+          return true;
+        }
+        // 일반 .modal-overlay 중 열린 것 (역순으로 최상위부터)
+        const overlays = Array.from(document.querySelectorAll('.modal-overlay'));
+        for (let i = overlays.length - 1; i >= 0; i--) {
+          if (overlays[i].style.display === 'flex') {
+            overlays[i].style.display = 'none';
+            return true;
+          }
+        }
+        return false;
+      }
+
+      // 뒤로가기(popstate) 감지 → 모달 닫기
+      window.addEventListener('popstate', function() {
+        if (!closeTopModal()) return; // 닫을 모달 없으면 일반 뒤로가기
+        // 모달을 닫았으므로 현재 상태 다시 push (연속 뒤로가기 방지)
+        history.pushState({ modal: true }, '');
+      });
+
+      // .modal-overlay가 열릴 때 history state push
+      function watchOverlay(el) {
+        new MutationObserver(function(muts) {
+          for (const m of muts) {
+            if (m.type === 'attributes' && el.style.display === 'flex') {
+              history.pushState({ modal: true }, '');
+            }
+          }
+        }).observe(el, { attributes: true, attributeFilter: ['style'] });
+      }
+      document.querySelectorAll('.modal-overlay').forEach(watchOverlay);
+
+      // enc-modal 래핑 (동적 생성 — open 시 직접 pushState)
+      const _origOpenEnc = window.openEncyclopediaModal;
+      if (_origOpenEnc) {
+        window.openEncyclopediaModal = function(id) {
+          history.pushState({ modal: true }, '');
+          _origOpenEnc(id);
+        };
+      }
+    })();
   </script>
 
   <style>
