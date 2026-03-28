@@ -144,10 +144,6 @@
         renderAll();
         updateNicknameAvatar();
         fetchFxRates(); // 초기 환율 로드 (비동기, UI 블로킹 없음)
-        // 닉네임 미설정 시 자동으로 설정 모달 표시
-        if (!appData.nickname) {
-          setTimeout(() => openNicknameModal(), 800);
-        }
       } else {
         document.getElementById("login-screen").style.display = "flex";
         document.getElementById("pending-screen").style.display = "none";
@@ -644,6 +640,21 @@
 
     async function saveData() {
       if (!currentUser) return;
+      // 안전가드: records + weightRecords 모두 비어있고 Firestore에 기존 데이터 있으면 저장 중단
+      const recCount = (appData.records||[]).length + (appData.weightRecords||[]).length;
+      if (recCount === 0) {
+        try {
+          const snap = await getDoc(doc(db, "users", currentUser.uid));
+          if (snap.exists()) {
+            const existing = snap.data();
+            const exCount = (existing.records||[]).length + (existing.weightRecords||[]).length;
+            if (exCount > 0) {
+              console.warn("saveData 중단: 빈 appData로 기존 데이터 덮어쓰기 방지");
+              return;
+            }
+          }
+        } catch(e) {}
+      }
       setSaveStatus("saving");
       try {
         await setDoc(doc(db, "users", currentUser.uid), appData);
