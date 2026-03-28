@@ -413,9 +413,30 @@
     window.openBackupModal = function() {
       pendingRestoreData = null;
       document.getElementById("backup-restore-warning").style.display = "none";
+      // UID 표시 업데이트
+      const uidEl = document.getElementById("my-uid-display");
+      if (uidEl && currentUser) uidEl.textContent = currentUser.uid;
       const modal = document.getElementById("backup-modal");
       modal.style.display = "flex";
       modal.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
+    };
+
+    // 다른 Firestore 문서에서 데이터 복구 (UID 직접 입력)
+    window.restoreFromUid = async function() {
+      const uid = document.getElementById("recover-uid-input").value.trim();
+      if (!uid) return;
+      try {
+        const snap = await getDoc(doc(db, "users", uid));
+        if (!snap.exists()) { alert("해당 UID의 데이터가 없습니다."); return; }
+        const data = snap.data();
+        const cnt = (data.records||[]).length + (data.weightRecords||[]).length;
+        if (!await customConfirm(`UID: ${uid.slice(0,12)}...\n기록 ${cnt}건 발견. 현재 데이터를 이 데이터로 교체할까요?`)) return;
+        appData = { ...appData, ...migrateData(data) };
+        await saveData();
+        renderAll();
+        showToast("✅ 데이터 복구 완료!");
+        document.getElementById("backup-modal").style.display = "none";
+      } catch(e) { alert("오류: " + e.message); }
     };
 
     window.exportBackup = function() {
@@ -567,12 +588,55 @@
       return data;
     }
 
+    function lsBackupKey() { return `goodgod_backup_${currentUser?.uid}`; }
+
+    function saveLsBackup() {
+      try {
+        if (!currentUser) return;
+        const recs = (appData.records||[]).length + (appData.weightRecords||[]).length;
+        if (recs === 0) return; // 빈 데이터는 백업 안 함
+        localStorage.setItem(lsBackupKey(), JSON.stringify({ data: appData, savedAt: Date.now() }));
+      } catch(e) {}
+    }
+
+    function loadLsBackup() {
+      try {
+        const raw = localStorage.getItem(lsBackupKey());
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch(e) { return null; }
+    }
+
     async function loadData() {
       setSaveStatus("loading");
       try {
         const snap = await getDoc(doc(db, "users", currentUser.uid));
         if (snap.exists()) {
-          appData = { ...appData, ...migrateData(snap.data()) };
+          const fsData = migrateData(snap.data());
+          const fsCount = (fsData.records||[]).length + (fsData.weightRecords||[]).length;
+          // Firestore가 비어있는데 로컬백업에 데이터가 있으면 자동 복구 제안
+          if (fsCount === 0) {
+            const lb = loadLsBackup();
+            const lsCount = lb ? (lb.data.records||[]).length + (lb.data.weightRecords||[]).length : 0;
+            if (lsCount > 0) {
+              const when = new Date(lb.savedAt).toLocaleString("ko-KR");
+              const ok = await new Promise(r => {
+                const m = document.getElementById("custom-confirm-modal");
+                document.getElementById("custom-confirm-msg").textContent =
+                  `⚠️ 클라우드 데이터가 비어있습니다.\n로컬 백업(${when}, 기록 ${lsCount}건)으로 복구할까요?`;
+                m.style.display = "flex";
+                document.getElementById("custom-confirm-ok").onclick = () => { m.style.display="none"; r(true); };
+                document.getElementById("custom-confirm-cancel").onclick = () => { m.style.display="none"; r(false); };
+              });
+              if (ok) {
+                appData = { ...appData, ...lb.data };
+                await setDoc(doc(db, "users", currentUser.uid), appData);
+                setSaveStatus("saved");
+                return;
+              }
+            }
+          }
+          appData = { ...appData, ...fsData };
         }
         setSaveStatus("saved");
       } catch(e) { setSaveStatus("error"); }
@@ -583,6 +647,7 @@
       setSaveStatus("saving");
       try {
         await setDoc(doc(db, "users", currentUser.uid), appData);
+        saveLsBackup(); // 로컬백업도 동시에 저장
         setSaveStatus("saved");
       } catch(e) { setSaveStatus("error"); }
     }
@@ -6693,10 +6758,21 @@
 <!-- 백업/복원 모달 -->
 <div id="backup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-end">
   <div style="background:#0f172a;border-top:2px solid #60a5fa;border-radius:20px 20px 0 0;width:100%;padding:24px 20px 36px;color:#f1f5f9;font-family:inherit">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <div style="font-size:18px;font-weight:700">💾 데이터 백업 / 복원</div>
       <button onclick="document.getElementById('backup-modal').style.display='none'"
         style="background:none;border:none;color:#6b7280;font-size:22px;cursor:pointer">✕</button>
+    </div>
+    <!-- 내 UID 표시 -->
+    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#64748b">
+      내 Firebase UID: <span id="my-uid-display" style="color:#60a5fa;font-family:monospace;word-break:break-all;user-select:all"></span>
+    </div>
+    <!-- UID로 복구 -->
+    <div style="background:#1a1a2e;border:1px solid #312e81;border-radius:14px;padding:14px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:700;color:#a78bfa;margin-bottom:6px">🔧 UID로 데이터 복구</div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Firebase Console에서 데이터가 있는 문서의 UID를 입력하세요.</div>
+      <input id="recover-uid-input" class="input-field" type="text" placeholder="UID 붙여넣기 (예: xn3TVpwD...)" style="margin-bottom:8px;font-size:12px;font-family:monospace" />
+      <button onclick="restoreFromUid()" style="width:100%;padding:10px;background:#312e81;border:none;border-radius:10px;color:#a78bfa;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">해당 UID 데이터로 복구</button>
     </div>
 
     <!-- 백업 -->
