@@ -2720,14 +2720,18 @@
           else
             timeLabel = `${d.getUTCMonth()+1}/${d.getUTCDate()} ${d.getUTCHours()}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
 
-          const lines = [{ text: timeLabel, color: "#e2e8f0" }];
+          const lines = [{ text: timeLabel, color: "#e2e8f0", size: '10px' }];
           curves.forEach(({ drug, cfg }) => {
             const val = calcConcentrationAt(drug, t);
             const cm = cfg.clinicalMax || 1;
             const ratio = plotRatio(val, cm);
             if (val > 0.001) {
-              const valLabel = normalizeMode ? `${cfg.short}: ${(ratio*100).toFixed(1)}%` : `${cfg.short}: ${val.toFixed(3)}mg`;
-              lines.push({ text: valLabel, color: cfg.color });
+              if (normalizeMode) {
+                lines.push({ text: `${cfg.short}: ${(ratio*100).toFixed(1)}%`, color: cfg.color, size: '12px' });
+                lines.push({ text: `  └ ${val.toFixed(3)}mg`, color: cfg.color + "99", size: '10px' });
+              } else {
+                lines.push({ text: `${cfg.short}: ${val.toFixed(3)}mg`, color: cfg.color, size: '12px' });
+              }
             }
             if (ratio <= 0) return;
             const y = PAD.t + gH - ratio * gH;
@@ -2736,17 +2740,19 @@
             ctx.strokeStyle = "#080810"; ctx.lineWidth = 2; ctx.stroke();
           });
 
-          const bw = 148, bh = lines.length * 17 + 14;
+          const bw = 148, bh = lines.length * 15 + 14;
           let bx = tx + 10, by = PAD.t + 6;
           if (bx + bw > cW - 4) bx = tx - bw - 10;
           if (by + bh > PAD.t + gH) by = PAD.t + gH - bh - 4;
           ctx.fillStyle = "#12122aee"; ctx.strokeStyle = "#374151"; ctx.lineWidth = 1;
           roundRect(ctx, bx, by, bw, bh, 8); ctx.fill(); ctx.stroke();
-          lines.forEach((l, i) => {
+          let lineY = by + 14;
+          lines.forEach((l) => {
             ctx.fillStyle = l.color;
-            ctx.font = `${i===0?'10px':'12px'} 'JetBrains Mono'`;
+            ctx.font = `${l.size || '11px'} 'JetBrains Mono'`;
             ctx.textAlign = "left";
-            ctx.fillText(l.text, bx + 10, by + 14 + i * 17);
+            ctx.fillText(l.text, bx + 10, lineY);
+            lineY += 15;
           });
         }
       }
