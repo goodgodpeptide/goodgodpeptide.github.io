@@ -142,6 +142,7 @@
         renderAll();
         updateNicknameAvatar();
         fetchFxRates(); // 초기 환율 로드 (비동기, UI 블로킹 없음)
+        setTimeout(runWeeklyBackup, 3000); // 로그인 후 3초 뒤 주간 백업 체크 (UI 블로킹 없음)
       } else {
         document.getElementById("login-screen").style.display = "flex";
         document.getElementById("pending-screen").style.display = "none";
@@ -415,6 +416,43 @@
       modal.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
     };
 
+    window.loadServerBackups = async function() {
+      const el = document.getElementById("server-backup-list");
+      if (!el || !currentUser) return;
+      el.innerHTML = '<div style="font-size:12px;color:#64748b">로딩 중...</div>';
+      try {
+        const snaps = await getDocs(collection(db, "backups", currentUser.uid, "snapshots"));
+        if (snaps.empty) { el.innerHTML = '<div style="font-size:12px;color:#64748b">저장된 백업 없음</div>'; return; }
+        const docs = [];
+        snaps.forEach(d => docs.push({ date: d.id, data: d.data() }));
+        docs.sort((a, b) => b.date.localeCompare(a.date));
+        el.innerHTML = docs.map(d => {
+          const cnt = (d.data.data?.records||[]).length + (d.data.data?.weightRecords||[]).length;
+          return `<div style="display:flex;justify-content:space-between;align-items:center;
+                              padding:8px 10px;background:#1e293b;border-radius:8px;margin-top:6px">
+            <span style="font-size:12px;color:#94a3b8">${d.date} · ${cnt}건</span>
+            <button onclick="restoreServerBackup('${d.date}')"
+              style="padding:4px 12px;background:#14532d;border:none;border-radius:6px;
+                     color:#4ade80;font-size:12px;cursor:pointer;font-family:inherit;font-weight:700">복구</button>
+          </div>`;
+        }).join('');
+      } catch(e) { el.innerHTML = `<div style="font-size:12px;color:#f87171">오류: ${e.message}</div>`; }
+    };
+
+    window.restoreServerBackup = async function(dateStr) {
+      if (!currentUser) return;
+      if (!await customConfirm(`${dateStr} 백업으로 복구할까요?\n현재 데이터가 덮어씌워집니다.`)) return;
+      try {
+        const snap = await getDoc(doc(db, "backups", currentUser.uid, "snapshots", dateStr));
+        if (!snap.exists()) { alert("백업 데이터가 없습니다."); return; }
+        appData = { ...appData, ...migrateData(snap.data().data || {}) };
+        await saveData();
+        renderAll();
+        showToast(`✅ ${dateStr} 백업으로 복구 완료!`);
+        document.getElementById("backup-modal").style.display = "none";
+      } catch(e) { alert("복구 오류: " + e.message); }
+    };
+
     // 다른 Firestore 문서에서 데이터 복구 (UID 직접 입력)
     window.restoreFromUid = async function() {
       const uid = document.getElementById("recover-uid-input").value.trim();
@@ -677,6 +715,26 @@
         saveLsBackup(); // 로컬백업도 동시에 저장
         setSaveStatus("saved");
       } catch(e) { setSaveStatus("error"); }
+    }
+
+    // ── 주간 자동 서버 백업 ────────────────────────────────
+    async function runWeeklyBackup() {
+      if (!currentUser) return;
+      const recCount = (appData.records||[]).length + (appData.weightRecords||[]).length;
+      if (recCount === 0) return; // 빈 데이터는 백업 안 함
+      try {
+        const metaRef = doc(db, "backups", currentUser.uid, "meta", "info");
+        const metaSnap = await getDoc(metaRef);
+        const lastAt = metaSnap.exists() ? (metaSnap.data().lastBackupAt?.toMillis?.() || 0) : 0;
+        const sevenDays = 7 * 24 * 60 * 60 * 1000;
+        if (Date.now() - lastAt < sevenDays) return; // 7일 안 지났으면 스킵
+        const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        await setDoc(doc(db, "backups", currentUser.uid, "snapshots", dateStr), {
+          data: appData, savedAt: serverTimestamp()
+        });
+        await setDoc(metaRef, { lastBackupAt: serverTimestamp() });
+        console.log("주간 자동 백업 완료:", dateStr);
+      } catch(e) { console.warn("주간 백업 실패:", e); }
     }
 
     function scheduleSave() {
@@ -6831,6 +6889,13 @@
     <!-- 내 UID 표시 -->
     <div style="background:#0f172a;border:1px solid #1e293b;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#64748b">
       내 Firebase UID: <span id="my-uid-display" style="color:#60a5fa;font-family:monospace;word-break:break-all;user-select:all"></span>
+    </div>
+    <!-- 자동 서버 백업 복구 -->
+    <div style="background:#0f2a1a;border:1px solid #166534;border-radius:14px;padding:14px;margin-bottom:12px">
+      <div style="font-size:13px;font-weight:700;color:#4ade80;margin-bottom:4px">☁️ 자동 서버 백업</div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:10px">로그인 시 7일마다 자동으로 클라우드에 저장됩니다.</div>
+      <button onclick="loadServerBackups()" style="width:100%;padding:10px;background:#14532d;border:none;border-radius:10px;color:#4ade80;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">백업 목록 불러오기</button>
+      <div id="server-backup-list" style="margin-top:8px"></div>
     </div>
     <!-- UID로 복구 -->
     <div style="background:#1a1a2e;border:1px solid #312e81;border-radius:14px;padding:14px;margin-bottom:12px">
