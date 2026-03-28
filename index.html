@@ -5033,8 +5033,8 @@
         const period = (sched.courseDays || 30) + (sched.restDays || 14);
         return (diff % period) < (sched.courseDays || 30);
       }
-      // interval 또는 스케줄 없음: 마지막 투약일 기준 주기 계산
-      const intervalDays = sched?.intervalDays || cfg.defaultDoseDays || 7;
+      // interval 또는 스케줄 없음: 마지막 투약일 기준 주기 계산 (사용자 커스텀 주기 우선)
+      const intervalDays = sched?.intervalDays || getDoseCycle(drug);
       const recs = (appData.records || [])
         .filter(r => r.drug === drug && kstDateStr(r.time) <= dateStr)
         .sort((a, b) => b.time - a.time);
