@@ -1,7 +1,7 @@
 {
   "version": "3.0",
   "lastUpdated": "2026-03-26T17:32:47.104265",
-  "totalCount": 72,
+  "totalCount": 76,
   "index": [
     {
       "id": "5-amino-1mq",
@@ -1283,6 +1283,87 @@
       ],
       "typicalDose": "",
       "cycle": "4-8 weeks"
+    },
+    {
+      "id": "ghrp-6",
+      "nameEn": "GHRP-6",
+      "nameKo": "성장호르몬 분비촉진 펩타이드-6",
+      "subtitle": "Growth Hormone Releasing Peptide-6 | GH Release & Cardioprotection",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Extensively Studied",
+      "isApproved": false,
+      "tags": [
+        "GH 분비촉진",
+        "성장호르몬",
+        "그렐린",
+        "근육 성장",
+        "심장 보호"
+      ],
+      "typicalDose": "100-300mcg",
+      "cycle": "8-12주"
+    },
+    {
+      "id": "bromantane",
+      "nameEn": "Bromantane (Ladasten)",
+      "nameKo": "브로만탄 (라다스텐)",
+      "subtitle": "Adamantane Actoprotector | Dopamine & Serotonin Synthesis Enhancer",
+      "routes": [
+        "Oral"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "인지 강화",
+        "도파민",
+        "세로토닌",
+        "항불안",
+        "적응원",
+        "러시아"
+      ],
+      "typicalDose": "50-100mg",
+      "cycle": "4-8주"
+    },
+    {
+      "id": "cardiogen",
+      "nameEn": "Cardiogen",
+      "nameKo": "카르디오겐",
+      "subtitle": "Cardiac Bioregulatory Tetrapeptide | Cardiovascular & Tissue Repair",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "tags": [
+        "심혈관",
+        "심장 보호",
+        "바이오레귤레이터",
+        "테트라펩타이드",
+        "러시아"
+      ],
+      "typicalDose": "10-20mg",
+      "cycle": "2-4주"
+    },
+    {
+      "id": "pnc-27",
+      "nameEn": "PNC-27",
+      "nameKo": "PNC-27",
+      "subtitle": "Chimeric p53-Penetratin Anticancer Peptide | HDM-2 Targeting",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "항암",
+        "p53",
+        "HDM-2",
+        "전임상",
+        "FDA 경고"
+      ],
+      "typicalDose": "실험적 단계",
+      "cycle": "미확립"
     }
   ],
   "peptides": {
@@ -1329,22 +1410,22 @@
       "protocolTiming": "Take 5-Amino-1MQ with food to improve absorption and reduce potential GI effects. Consistent daily timing helps maintain steady NAD+ levels. Morning or early afternoon dosing is preferred to avoid potential sleep interference.Peptide InteractionsNAD+ Precursors (NMN, NR)SynergisticResveratrolSynergi",
       "protocols": [
         {
-          "goal": "Conservative approach",
+          "goal": "시작 용량",
           "dose": "25mg",
-          "frequency": "1x daily",
-          "route": "Oral (with food)Standard starting dose50mg1x dailyOral"
+          "frequency": "1일 1회",
+          "route": "경구 (식사 중)"
         },
         {
-          "goal": "Typical maintenance",
-          "dose": "75mg",
-          "frequency": "1x daily",
-          "route": "Oral (with food)Maximum dose100mg1x dailyOral (with fo"
+          "goal": "표준 유지",
+          "dose": "50-100mg",
+          "frequency": "1일 1회",
+          "route": "경구 (식사 중)"
         },
         {
-          "goal": "Split dosing option",
+          "goal": "분할 복용",
           "dose": "50mg",
-          "frequency": "2x daily",
-          "route": "Oral (with meals)"
+          "frequency": "1일 2회",
+          "route": "경구 (식사 중)"
         }
       ],
       "interactions": [
@@ -1419,7 +1500,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "200-500mcg1-",
+      "typicalDose": "200-500mcg",
       "frequency": "",
       "cycle": "2-4 weeks",
       "storage": "냉장 (2-8°C)",
@@ -1450,7 +1531,20 @@
         }
       ],
       "protocolTiming": "Injectable Adalank is most effective when administered in the morning to align with natural cortisol rhythms and maximize anxiolytic benefits throughout the day. If taking twice daily, second dose should be early afternoon. Avoid evening administration to prevent potential sleep disruption.Peptide I",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "인지 개선",
+          "dose": "200mcg",
+          "frequency": "1일 1회 (아침)",
+          "route": "비강 분무"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "300-500mcg",
+          "frequency": "1일 2회",
+          "route": "비강 분무"
+        }
+      ],
       "interactions": [
         {
           "name": "SelankSimilarSemax",
@@ -1510,7 +1604,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "200-300mcg1-",
+      "typicalDose": "200-300mcg",
       "frequency": "",
       "cycle": "2-4 weeks",
       "storage": "냉장 (2-8°C)",
@@ -1541,7 +1635,20 @@
         }
       ],
       "protocolTiming": "Injectable Adamax is most effective when administered in the morning to align with natural circadian rhythms and maximize cognitive benefits throughout the day. Consistent daily timing optimizes neuroplasticity effects. Avoid evening administration if sensitive to stimulatory effects.Peptide Interac",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "인지/기억 개선",
+          "dose": "200mcg",
+          "frequency": "1일 1-2회",
+          "route": "비강 분무"
+        },
+        {
+          "goal": "유지 용량",
+          "dose": "300mcg",
+          "frequency": "1일 1회",
+          "route": "비강 분무"
+        }
+      ],
       "interactions": [
         {
           "name": "SemaxSimilarP21",
@@ -1599,7 +1706,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "0.5mg/kg",
       "frequency": "",
       "cycle": "28 days",
       "storage": "냉장 (2-8°C)",
@@ -1630,7 +1737,20 @@
         }
       ],
       "protocolTiming": "Rotate SC sites to reduce irritation; ensure adequate hydration and frequent renal labs during treatment.Peptide InteractionsSemaglutide (GLP‑1 RA)Monitor CombinationTirzepatide (GLP‑1/GIP RA)Monitor CombinationCagrilintide (Amylin analog)UnknownAOD‑9604UnknownBPC‑157CompatibleCJC‑1295 / IpamorelinU",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "지방 감소 (연구)",
+          "dose": "0.5mg/kg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "보수적 시작",
+          "dose": "0.25mg/kg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "RA)",
@@ -1683,7 +1803,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "0.3-1% concentration1-",
+      "typicalDose": "0.3-1% 농도",
       "frequency": "",
       "cycle": "12-24 weeks minimum",
       "storage": "냉장 (2-8°C)",
@@ -1704,7 +1824,20 @@
         }
       ],
       "protocolTiming": "Apply to clean, dry scalp or skin. Evening application is preferred to avoid UV exposure which can degrade the peptide. If using other actives, apply AHK-Cu first and allow to absorb before layering.Peptide InteractionsGHK-CuSynergisticMinoxidilSynergisticFinasteride / DutasterideComplementaryCopper",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "모발 성장",
+          "dose": "0.5% 농도",
+          "frequency": "1일 2회",
+          "route": "국소 도포"
+        },
+        {
+          "goal": "항노화 스킨케어",
+          "dose": "1% 농도",
+          "frequency": "1일 1-2회",
+          "route": "국소 도포"
+        }
+      ],
       "interactions": [
         {
           "name": "GHK-Cu",
@@ -1803,7 +1936,26 @@
         }
       ],
       "protocolTiming": "Best administered in the morning on an empty stomach. Wait 30 minutes before eating. Some research protocols suggest injection into abdominal subcutaneous fat for localized effect.Peptide InteractionsHyaluronic AcidSynergisticBPC-157CompatibleCJC-1295CompatibleIpamorelinCompatibleSemaglutideCompatib",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "지방 감소 (시작)",
+          "dose": "250mcg",
+          "frequency": "1일 1회 (공복)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "500mcg",
+          "frequency": "1일 1회 (공복)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "경구 보조",
+          "dose": "1mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "Hyaluronic Acid",
@@ -1874,7 +2026,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "4mg/day",
       "frequency": "",
       "cycle": "28 days",
       "storage": "냉장 (2-8°C)",
@@ -1905,7 +2057,20 @@
         }
       ],
       "protocolTiming": "Ara 290 has a short half-life (~20 minutes) but triggers long-lasting cellular effects. Morning administration may optimize circadian alignment with tissue repair processes.Peptide InteractionsBPC-157SynergisticTB-500SynergisticThymosin Beta-4CompatibleEPO (Erythropoietin)Avoid CombinationNAD+Monito",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "신경 보호",
+          "dose": "4mg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "통증 완화 연구",
+          "dose": "4mg",
+          "frequency": "주 3회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "BPC-157",
@@ -1977,7 +2142,7 @@
       "routes": [
         "Oral"
       ],
-      "typicalDose": "50-150mgOnce daily",
+      "typicalDose": "50-150mg",
       "frequency": "",
       "cycle": "",
       "storage": "실온",
@@ -2008,7 +2173,20 @@
         }
       ],
       "protocolTiming": "NA-931 can be taken at any time of day with or without food. Unlike oral semaglutide, no fasting period or absorption enhancer required. Half-life of 16-24 hours supports once-daily dosing.Peptide InteractionsTirzepatideBeing StudiedSemaglutideAvoid CombinationRetatrutideAvoid CombinationCJC-1295Com",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "혈당 조절 (시작)",
+          "dose": "50mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        },
+        {
+          "goal": "표준 유지",
+          "dose": "100-150mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "TirzepatideBeing StudiedSemaglutide",
@@ -2087,7 +2265,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "250-500mcg1-",
+      "typicalDose": "250-500mcg",
       "frequency": "",
       "cycle": "4-8 weeks",
       "storage": "냉장 (2-8°C)",
@@ -2118,7 +2296,26 @@
         }
       ],
       "protocolTiming": "Injectable BPC-157 is most effective on empty stomach. For injury healing, inject as close to the injury site as possible (subcutaneous). Rotate injection sites to prevent tissue irritation.Peptide InteractionsTB-500SynergisticGHRP-6CompatibleIpamorelinSynergisticCJC-1295SynergisticMelanotan IICompa",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "소화관 치유",
+          "dose": "250mcg",
+          "frequency": "1일 2회",
+          "route": "경구"
+        },
+        {
+          "goal": "근골격 회복",
+          "dose": "500mcg",
+          "frequency": "1일 1회",
+          "route": "피하주사 (부위 근처)"
+        },
+        {
+          "goal": "전신 용량",
+          "dose": "250-500mcg",
+          "frequency": "1일 1-2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "TB-500",
@@ -2191,7 +2388,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "0.3-4.5mg",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -2217,7 +2414,20 @@
         }
       ],
       "protocolTiming": "Administer same day each week. Evening injection may reduce morning nausea. Can be given with or without food due to subcutaneous route.Peptide InteractionsSemaglutideSynergisticTirzepatideCompatibleRetatrutideUse CautionLiraglutideCompatibleInsulinMonitor CombinationMetforminCompatibleSGLT2 Inhibit",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "시작 용량",
+          "dose": "0.3mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "단계별 증량 목표",
+          "dose": "2.4-4.5mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Semaglutide",
@@ -2295,7 +2505,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "100-200mcg (1-2 capsules)1-",
+      "typicalDose": "100-200mcg",
       "frequency": "",
       "cycle": "1-3 months",
       "storage": "실온",
@@ -2316,7 +2526,20 @@
         }
       ],
       "protocolTiming": "Russian manufacturers specifically recommend taking with meals to optimize tolerance.Peptide InteractionsOther Khavinson PeptidesSynergisticCollagen SupplementsSynergisticBPC-157CompatibleTB-500CompatibleGrowth Factors (IGF-1, GH)Monitor CombinationAnti-inflammatory MedicationsCompatibleGlucosamine/",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "연골 보호",
+          "dose": "100mcg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "200mcg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "Other Khavinson Peptides",
@@ -2391,7 +2614,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "5-30mL/day",
       "frequency": "",
       "cycle": "7-30 days",
       "storage": "실온",
@@ -2427,7 +2650,26 @@
         }
       ],
       "protocolTiming": "Start as soon as possible for acute conditions (stroke/TBI). Chronic conditions use 5-day weekly schedules. Administer in morning when possible.Peptide InteractionsPiracetamCompatibleDonepezilCompatibleSSRIsMonitor CombinationTricyclic AntidepressantsUse CautionAmino Acid SolutionsAvoid CombinationC",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "인지 개선 (경증)",
+          "dose": "5mL",
+          "frequency": "1일 1회 (10-20일)",
+          "route": "정맥주사 (희석)"
+        },
+        {
+          "goal": "표준 치료",
+          "dose": "10-30mL",
+          "frequency": "1일 1회 (20-30일)",
+          "route": "정맥주사 (희석)"
+        },
+        {
+          "goal": "근육주사 보수적",
+          "dose": "5mL",
+          "frequency": "1일 1회",
+          "route": "근육주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Piracetam",
@@ -2504,7 +2746,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "CJC 1mg + Ipa 100mcg",
       "frequency": "",
       "cycle": "8-12 weeks on, 4 weeks off",
       "storage": "냉장 (2-8°C)",
@@ -2535,7 +2777,26 @@
         }
       ],
       "protocolTiming": "CJC-1295 without DAC has a short 30-minute to 2-hour half-life, similar to Ipamorelin (~2 hours). This enables pulsatile GH release rather than sustained elevation. Once daily (before bed) is convenient; twice daily (AM + PM) better mimics natural GH pulsatility and allows receptor recovery between ",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "GH 펄스 + 지속 (표준)",
+          "dose": "CJC-1295 1mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "Ipamorelin 병용",
+          "dose": "Ipamorelin 100-200mcg",
+          "frequency": "1일 2-3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "취침 전 단독",
+          "dose": "각 100mcg",
+          "frequency": "취침 30분 전",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "MK-677",
@@ -2599,7 +2860,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "1-2mg",
       "frequency": "",
       "cycle": "12-16 weeks",
       "storage": "냉장 (2-8°C)",
@@ -2625,7 +2886,20 @@
         }
       ],
       "protocolTiming": "Administer 30+ minutes away from food for optimal absorption. Morning dose upon waking, evening dose before bed for best results.Peptide InteractionsIpamorelinSynergisticGHRP-6SynergisticGHRP-2SynergisticHexarelinMonitor CombinationCJC-1295 with DACAvoid CombinationTesamorelinUse CautionMK-677Compat",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "GH 분비 촉진",
+          "dose": "1mg",
+          "frequency": "주 1-2회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 유지",
+          "dose": "1-2mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Ipamorelin",
@@ -2695,7 +2969,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "1-2mg",
       "frequency": "",
       "cycle": "8-12 weeks",
       "storage": "냉장 (2-8°C)",
@@ -2721,7 +2995,20 @@
         }
       ],
       "protocolTiming": "Due to long half-life, injection timing is flexible. Many prefer morning injections to monitor for side effects during the day.Peptide InteractionsIpamorelinUse CautionGHRP-6Use CautionCJC-1295Avoid CombinationMK-677Avoid CombinationTesamorelinAvoid CombinationHGHAvoid CombinationSermorelinUse Cauti",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "장기 GH 방출",
+          "dose": "1mg",
+          "frequency": "주 1-2회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 유지",
+          "dose": "2mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "IpamorelinUse CautionGHRP-6Use CautionCJC-1295",
@@ -2783,7 +3070,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "10-50mg",
       "frequency": "",
       "cycle": "4-12 weeks",
       "storage": "실온",
@@ -2814,7 +3101,20 @@
         }
       ],
       "protocolTiming": "cGP is orally bioavailable with effective brain uptake. Take consistently at the same time daily. Can be used long-term as it is an endogenous compound naturally found in the body.Peptide InteractionsIGF-1SynergisticBPC-157CompatibleSemaxCompatibleSelankCompatibleGH SecretagoguesMonitor CombinationH",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "인지 개선",
+          "dose": "10mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "50mg",
+          "frequency": "1일 1-2회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "IGF-1",
@@ -2919,10 +3219,22 @@
       "protocolTiming": "",
       "protocols": [
         {
-          "goal": "SubQCognitive Enhancement",
+          "goal": "인지 강화",
           "dose": "8-10mg",
-          "frequency": "1x daily (morning)",
-          "route": "OralIntensive Learning10-15mg1x dailyOralNeuroprotecti"
+          "frequency": "1일 1회 (아침)",
+          "route": "경구"
+        },
+        {
+          "goal": "집중 학습기",
+          "dose": "10-15mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        },
+        {
+          "goal": "신경 보호",
+          "dose": "0.5mg/kg",
+          "frequency": "격일",
+          "route": "피하주사"
         }
       ],
       "interactions": [
@@ -3020,7 +3332,20 @@
         }
       ],
       "protocolTiming": "Best taken 30-60 minutes before intended bedtime. Some prefer earlier evening dosing (2-3 hours before bed) for gradual onset. Consistency in timing improves results.Peptide InteractionsMelatoninSynergisticGABA AgonistsMonitor CombinationCortisol ModulatorsCompatibleSelankSynergisticSemaxCompatibleO",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "수면 유도",
+          "dose": "100mcg",
+          "frequency": "취침 30-60분 전",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "200-300mcg",
+          "frequency": "취침 전",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Melatonin",
@@ -3094,7 +3419,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "10mg/day",
       "frequency": "",
       "cycle": "10-20 days",
       "storage": "냉장 (2-8°C)",
@@ -3125,7 +3450,26 @@
         }
       ],
       "protocolTiming": "Morning administration aligns with natural cortisol rhythm and may enhance circadian regulation. Some prefer evening dosing for enhanced sleep effects.Peptide InteractionsMelatoninSynergisticThymalinSynergisticNAD+ PrecursorsCompatibleGrowth Hormone PeptidesCompatibleBPC-157CompatibleCortexinMonitor",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "항노화 코스",
+          "dose": "10mg",
+          "frequency": "1일 1회 (10-20일)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "유지 코스",
+          "dose": "5-10mg",
+          "frequency": "1일 1회 (10일)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "경구 보조",
+          "dose": "20mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "Melatonin",
@@ -3206,7 +3550,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "복합 스택",
       "frequency": "",
       "cycle": "4-12 weeks",
       "storage": "냉장 (2-8°C)",
@@ -3242,7 +3586,14 @@
         }
       ],
       "protocolTiming": "Morning injections often preferred for B vitamin energy benefits. Some users time pre-workout for L-Carnitine effects. Consistency matters more than specific time.Peptide InteractionsSemaglutideCompatibleTirzepatideCompatibleLipo-CMonitor CombinationB-Complex SupplementsMonitor CombinationMAOIsUse C",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "지방 감소 복합 스택",
+          "dose": "각 성분 표준 용량",
+          "frequency": "1일 1-2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Semaglutide",
@@ -3311,7 +3662,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "100mcg/day",
       "frequency": "",
       "cycle": "10-30 days (anecdotal)",
       "storage": "냉장 (2-8°C)",
@@ -3332,7 +3683,20 @@
         }
       ],
       "protocolTiming": "No established optimal timing. Short half-life (~90 min) means effects may not persist between daily doses.Peptide InteractionsIGF-1 LR3UnknownBPC-157UnknownTB-500UnknownCJC-1295UnknownHGHMonitor CombinationTestosterone/AndrogensMonitor CombinationACE-031Avoid CombinationOther Myostatin InhibitorsAv",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "근육 성장",
+          "dose": "100mcg",
+          "frequency": "1일 1회 (100일 이내)",
+          "route": "피하주사 (근육 근처)"
+        },
+        {
+          "goal": "보수적 시작",
+          "dose": "50mcg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "IGF-1 LR3",
@@ -3405,7 +3769,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "1-2mg/kg",
       "frequency": "",
       "cycle": "5 days per cycle",
       "storage": "냉장 (2-8°C)",
@@ -3441,7 +3805,20 @@
         }
       ],
       "protocolTiming": "Cellular uptake within 2-4 hours, detectable for 72+ hours. D-amino acid structure provides protease resistance.Peptide InteractionsRapamycinAvoid CombinationQuercetinAvoid CombinationDasatinibMonitor CombinationCorticosteroidsAvoid CombinationHumaninCompatibleMOTS-CUnknownEpitalonUnknown5-Amino-1MQ",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "노화세포 제거 연구",
+          "dose": "1mg/kg",
+          "frequency": "주 3회 (3주)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "유지 프로토콜",
+          "dose": "2mg/kg",
+          "frequency": "월 1-2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Rapamycin",
@@ -3517,7 +3894,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "0.5-2%1-",
+      "typicalDose": "0.5-2% 농도",
       "frequency": "",
       "cycle": "12-16 weeks",
       "storage": "실온",
@@ -3548,7 +3925,26 @@
         }
       ],
       "protocolTiming": "Apply GHK-Cu topically to clean, dry skin. Morning use requires sunscreen. Evening application allows for overnight repair. Start with once daily to assess tolerance.Peptide InteractionsBPC-157SynergisticTB-500SynergisticMelanotan IIUse CautionCopper SupplementsAvoid combinationCJC-1295CompatibleIro",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "스킨케어",
+          "dose": "0.5-1% 농도",
+          "frequency": "1일 1-2회",
+          "route": "국소 도포"
+        },
+        {
+          "goal": "모발 성장",
+          "dose": "1-2% 농도",
+          "frequency": "1일 2회",
+          "route": "국소 도포"
+        },
+        {
+          "goal": "전신 항노화",
+          "dose": "1-2mg",
+          "frequency": "주 3회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "BPC-157",
@@ -3611,7 +4007,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "복합 스택",
       "frequency": "",
       "cycle": "8-12 weeks",
       "storage": "냉장 (2-8°C)",
@@ -3642,7 +4038,14 @@
         }
       ],
       "protocolTiming": "Consider individual peptide half-lives and optimal dosing schedules for each component.Peptide InteractionsNAD+CompatibleVitamin-CCompatibleRetinoidsUse CautionAHA/BHARequires TimingIndividual-GHK-CuAvoid CombinationIndividual-BPC-157Monitor CombinationHow to ReconstituteCalculatorImportant: Always ",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "피부/항산화 스택",
+          "dose": "각 성분 표준 용량",
+          "frequency": "1일 1회",
+          "route": "경구/피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "NAD+",
@@ -3698,7 +4101,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "600-1200mg",
       "frequency": "",
       "cycle": "4-8 weeks",
       "storage": "냉장 (2-8°C)",
@@ -3739,7 +4142,26 @@
         }
       ],
       "protocolTiming": "Glutathione can be administered at any time of day. IV infusions are typically given in clinical settings. For home IM/SubQ injections, consistency in timing is more important than specific time of day.How to Administer1Most glutathione injections come pre-mixed - no reconstitution required2If lyoph",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "항산화 보충 (경구)",
+          "dose": "600-1200mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        },
+        {
+          "goal": "정맥 고용량",
+          "dose": "600-1200mg",
+          "frequency": "주 2-3회",
+          "route": "정맥주사"
+        },
+        {
+          "goal": "흡입 요법",
+          "dose": "600mg",
+          "frequency": "1일 1-2회",
+          "route": "분무 흡입"
+        }
+      ],
       "interactions": [],
       "reconstitute": [],
       "qualityGood": [
@@ -3787,7 +4209,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "250-500 IU",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -3818,7 +4240,26 @@
         }
       ],
       "protocolTiming": "Administer HCG 2-3 times weekly, evenly spaced. For TRT, many inject HCG on days between testosterone injections. Consistency of schedule is more important than specific timing.Peptide InteractionsTestosteroneSynergistic - Common CombinationClomiphene (Clomid)Use SequentiallyAromatase InhibitorsComm",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "테스토스테론 지지 (남성)",
+          "dose": "250 IU",
+          "frequency": "주 2-3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "생식능력 보조",
+          "dose": "500 IU",
+          "frequency": "주 3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "TRT 병용",
+          "dose": "500 IU",
+          "frequency": "주 2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Testosterone",
@@ -3876,7 +4317,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "100-200mcg",
       "frequency": "",
       "cycle": "8-16 weeks",
       "storage": "냉장 (2-8°C)",
@@ -3912,7 +4353,26 @@
         }
       ],
       "protocolTiming": "Administer on empty stomach (2+ hours after eating, 30+ minutes before eating) for optimal GH release. Evening dose 30 minutes before bed maximizes nocturnal GH pulse.Peptide InteractionsCJC-1295 (without DAC)SynergisticSermorelinSynergisticIpamorelinCompatibleGHRP-6Use CautionGHRP-2Use CautionCJC-1",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "GH 방출 (시작)",
+          "dose": "100mcg",
+          "frequency": "1일 2-3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "200mcg",
+          "frequency": "1일 2-3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "취침 전 단독",
+          "dose": "100-200mcg",
+          "frequency": "취침 전 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "CJC-1295 (without DAC)",
@@ -3986,7 +4446,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "1-3 IU/day",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -4012,7 +4472,26 @@
         }
       ],
       "protocolTiming": "Morning fasted injection maximizes fat-burning potential. Evening injection mimics natural nocturnal GH pulse. At doses >4 IU, splitting into AM and PM injections can reduce side effects and improve utilization.Peptide InteractionsInsulinComplex InteractionIGF-1 / IGF-1 LR3Synergistic but CautionThy",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "항노화/체성분 개선",
+          "dose": "1-2 IU",
+          "frequency": "1일 1회 (아침)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "지방 감소",
+          "dose": "2-3 IU",
+          "frequency": "1일 1-2회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "근육 성장",
+          "dose": "3-4 IU",
+          "frequency": "1일 1-2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "IGF-1 LR3",
@@ -4085,7 +4564,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "20-100mcg",
       "frequency": "",
       "cycle": "4-6 weeks maximum",
       "storage": "냉장 (2-8°C)",
@@ -4116,7 +4595,26 @@
         }
       ],
       "protocolTiming": "Post-workout window critical for safety and efficacy. IGF-1 receptors most sensitive when muscles depleted. Must consume carbohydrates immediately to prevent dangerous hypoglycemia lasting up to 30 hours.Peptide InteractionsHuman Growth HormoneAvoid CombinationCJC-1295/IpamorelinUse CautionMK-677Mon",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "근육 성장 (시작)",
+          "dose": "20-40mcg",
+          "frequency": "1일 1회 (운동 후)",
+          "route": "피하주사/근육주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "50-100mcg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "부위 특이적",
+          "dose": "20mcg",
+          "frequency": "운동 직후 (해당 근육)",
+          "route": "근육주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Human Growth Hormone",
@@ -4183,7 +4681,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "200-300mcg1-",
+      "typicalDose": "200-300mcg",
       "frequency": "",
       "cycle": "3-6 months",
       "storage": "냉장 (2-8°C)",
@@ -4214,7 +4712,26 @@
         }
       ],
       "protocolTiming": "Injectable Ipamorelin is most effective on an empty stomach. For sleep benefits, inject 30 minutes before bed. For body composition, consider morning fasted injection or pre-workout timing for enhanced fat oxidation.Peptide InteractionsCJC-1295SynergisticBPC-157SynergisticTB-500CompatibleSermorelinS",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "GH 방출 (시작)",
+          "dose": "100mcg",
+          "frequency": "1일 2-3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "200-300mcg",
+          "frequency": "1일 2-3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "취침 전 단독",
+          "dose": "200-300mcg",
+          "frequency": "취침 전 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "CJC-1295",
@@ -4291,7 +4808,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "100-200mcgOnce, or 2-",
+      "typicalDose": "100-200mcg",
       "frequency": "",
       "cycle": "2-4 weeks",
       "storage": "냉장 (2-8°C)",
@@ -4322,7 +4839,20 @@
         }
       ],
       "protocolTiming": "Kisspeptin is best administered in the morning to align with natural circadian patterns of reproductive hormones. For fertility applications, timing should be coordinated with menstrual cycle phase under medical supervision. Avoid daily dosing to prevent receptor desensitization.Peptide Interactions",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "생식 내분비 지지",
+          "dose": "100mcg",
+          "frequency": "주 2-3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "테스토스테론 지지",
+          "dose": "200mcg",
+          "frequency": "주 2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "GnRH",
@@ -4383,7 +4913,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "복합 스택",
       "frequency": "",
       "cycle": "4-6 weeks reported",
       "storage": "냉장 (2-8°C)",
@@ -4409,7 +4939,14 @@
         }
       ],
       "protocolTiming": "Evening dosing is common practice but not based on research. Some prefer morning administration.Peptide InteractionsGLOW ProtocolUse CautionIpamorelinUnknownNAD+UnknownAnticoagulantsUse CautionGrowth HormoneAvoid CombinationImmunosuppressantsUse CautionHow to ReconstituteCalculatorImportant: Always ",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "복합 회복/항노화 스택",
+          "dose": "각 성분 표준 용량",
+          "frequency": "1일 1-2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "GLOW ProtocolUse CautionIpamorelin",
@@ -4462,7 +4999,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "200-500mcg1-2 times daily",
+      "typicalDose": "200-500mcg",
       "frequency": "",
       "cycle": "4-8 weeks",
       "storage": "냉장 (2-8°C)",
@@ -4488,7 +5025,20 @@
         }
       ],
       "protocolTiming": "KPV can be dosed flexibly. For gut issues, some prefer morning dosing. For systemic inflammation, split doses may provide better coverage.Peptide InteractionsBPC-157SynergisticTB-500CompatibleLL-37SynergisticThymosin Alpha-1CompatibleGHK-CuSynergistic for SkinMelanotan IIUse CautionHow to Reconstitu",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "항염증",
+          "dose": "200mcg",
+          "frequency": "1일 2회",
+          "route": "경구/피하주사"
+        },
+        {
+          "goal": "장 건강",
+          "dose": "500mcg",
+          "frequency": "1일 1-2회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "BPC-157",
@@ -4554,7 +5104,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "500-2000mg1-",
+      "typicalDose": "500-2000mg",
       "frequency": "",
       "cycle": "",
       "storage": "실온",
@@ -4585,7 +5135,26 @@
         }
       ],
       "protocolTiming": "Injectable L-Carnitine can be administered any time. For exercise performance, some protocols administer 1-2 hours before training. For dialysis patients, administer into venous return line post-session.Peptide InteractionsNAD+SynergisticCoenzyme Q10SynergisticAlpha Lipoic AcidSynergisticOmega-3 Fat",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "지방 연소 보조",
+          "dose": "1000-2000mg",
+          "frequency": "1일 1-2회",
+          "route": "경구"
+        },
+        {
+          "goal": "운동 수행 개선",
+          "dose": "2000mg",
+          "frequency": "운동 30분 전",
+          "route": "경구"
+        },
+        {
+          "goal": "주사 고용량",
+          "dose": "500mg",
+          "frequency": "주 2-3회",
+          "route": "근육주사"
+        }
+      ],
       "interactions": [
         {
           "name": "NAD+",
@@ -4658,7 +5227,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "1-5mL",
       "frequency": "",
       "cycle": "4-12 weeks",
       "storage": "실온",
@@ -4689,7 +5258,20 @@
         }
       ],
       "protocolTiming": "Morning injections may be preferred if seeking energy benefits from B vitamins. Timing is flexible - consistency matters more than specific time of day.Peptide InteractionsSemaglutideCompatibleTirzepatideCompatibleB12 SupplementsMonitor CombinationMetforminCompatibleDiabetes MedicationsMonitor Combi",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "지방 분해 보조",
+          "dose": "1mL",
+          "frequency": "주 2-3회",
+          "route": "근육주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "2-5mL",
+          "frequency": "주 1-2회",
+          "route": "근육주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Semaglutide",
@@ -4755,7 +5337,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "100-500mcg",
       "frequency": "",
       "cycle": "2-8 weeks",
       "storage": "냉장 (2-8°C)",
@@ -4781,7 +5363,26 @@
         }
       ],
       "protocolTiming": "",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "항균/면역 (시작)",
+          "dose": "100mcg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "250-500mcg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "국소 항균",
+          "dose": "저농도",
+          "frequency": "1일 2회",
+          "route": "국소 도포"
+        }
+      ],
       "interactions": [
         {
           "name": "BPC-157",
@@ -4857,7 +5458,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "3-9mg weeklyOnce weekly",
+      "typicalDose": "3-9mg",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -4888,7 +5489,20 @@
         }
       ],
       "protocolTiming": "Inject at any time of day, with or without food. Choose a consistent day each week. If a dose is missed, take as soon as possible within 3 days, then resume regular schedule.Peptide InteractionsSemaglutideAvoid CombinationTirzepatideAvoid CombinationLiraglutideAvoid CombinationInsulinMonitor Closely",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "시작 용량",
+          "dose": "3mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "유지 목표",
+          "dose": "6-9mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Semaglutide",
@@ -4994,16 +5608,22 @@
       "protocolTiming": "Multiple daily injections needed due to 30-minute half-life. Best results when combined with minimal UV exposure 2-3 hours after injection for enhanced melanin synthesis.Peptide InteractionsMelanotan IICompatibleUV ExposureSynergisticBeta-CaroteneCompatibleTretinoin/RetinoidsMonitor CombinationPhoto",
       "protocols": [
         {
-          "goal": "x dailySubcutaneous injectionMaintenance Tanning",
+          "goal": "색소 침착 시작",
           "dose": "0.5mg",
-          "frequency": "1x daily",
-          "route": "Subcutaneous injectionEnhanced Pigmentation0.5mg2x dailySubcut"
+          "frequency": "1일 1회",
+          "route": "피하주사"
         },
         {
-          "goal": "aneous injectionPhotoprotection Only",
+          "goal": "유지 tanning",
+          "dose": "0.5mg",
+          "frequency": "주 2-3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "광보호 목적",
           "dose": "0.25mg",
-          "frequency": "1x daily",
-          "route": "Subcutaneous injection"
+          "frequency": "1일 1회",
+          "route": "피하주사"
         }
       ],
       "interactions": [
@@ -5095,10 +5715,22 @@
       "protocolTiming": "For tanning: morning dosing preferred. For sexual effects: 2-4 hours before activity. Can split daily dose to minimize side effects.Peptide InteractionsPT-141 (Bremelanotide)Use CautionAlpha-MSHAvoid CombinationCialis/ViagraMonitor CombinationBlood Pressure MedicationsMonitor CombinationBPC-157Compa",
       "protocols": [
         {
-          "goal": "mgEvery other daySubcutaneousPhotoprotection",
-          "dose": "0.5mg",
-          "frequency": "2x weekly",
-          "route": "Subcutaneous"
+          "goal": "색소 침착 시작",
+          "dose": "0.25mg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 tanning",
+          "dose": "0.5-1mg",
+          "frequency": "격일",
+          "route": "피하주사"
+        },
+        {
+          "goal": "성 기능 (as needed)",
+          "dose": "0.5-1mg",
+          "frequency": "필요시",
+          "route": "피하주사"
         }
       ],
       "interactions": [
@@ -5214,16 +5846,22 @@
       "protocolTiming": "Take MK-677 at bedtime (around 10:40 PM) on empty stomach to align with natural growth hormone patterns and minimize daytime appetite stimulation. Wait 2+ hours after last meal for optimal absorption.Peptide InteractionsCJC-1295SynergisticIpamorelinSynergisticGHRP-2SynergisticTB-500CompatibleBPC-157",
       "protocols": [
         {
-          "goal": "aging",
-          "dose": "25mg",
-          "frequency": "1x daily",
-          "route": "Oral (bedtime, empty stomach)Sleep quality improvement"
+          "goal": "GH/IGF-1 증가 (시작)",
+          "dose": "10mg",
+          "frequency": "1일 1회 (취침 전)",
+          "route": "경구"
         },
         {
-          "goal": "Conservative start",
-          "dose": "12.5mg",
-          "frequency": "1x daily",
-          "route": "Oral (assess tolerance first)Research protocol25mg1x d"
+          "goal": "표준 용량",
+          "dose": "25mg",
+          "frequency": "1일 1회 (취침 전)",
+          "route": "경구"
+        },
+        {
+          "goal": "벌크 사이클",
+          "dose": "25mg",
+          "frequency": "1일 1회",
+          "route": "경구"
         }
       ],
       "interactions": [
@@ -5331,10 +5969,16 @@
       "protocolTiming": "Optimal timing is morning before exercise. Exercise enhances endogenous MOTS-c production by 11.9-fold in muscle tissue. AMPK activation occurs within 30 minutes of administration.Peptide InteractionsMetforminUse CautionNAD+ PrecursorsSynergisticGrowth Hormone PeptidesCompatibleBerberineMonitor Comb",
       "protocols": [
         {
-          "goal": "aging protocol",
-          "dose": "15mg",
-          "frequency": "3x weekly",
-          "route": "SubcutaneousExercise performance10-15mgPre-workoutSubcutaneous"
+          "goal": "대사 개선 (시작)",
+          "dose": "5mg",
+          "frequency": "주 3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 유지",
+          "dose": "10-15mg",
+          "frequency": "주 3-5회",
+          "route": "피하주사"
         }
       ],
       "interactions": [
@@ -5399,7 +6043,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "100-600mcg",
       "frequency": "",
       "cycle": "10-30 days",
       "storage": "냉장 (2-8°C)",
@@ -5430,7 +6074,20 @@
         }
       ],
       "protocolTiming": "Morning or early afternoon administration recommended to avoid sleep interference.Peptide InteractionsNA Selank AmidateSynergisticBPC-157CompatibleLion's ManeCompatibleModafinilMonitor CombinationBlood Pressure MedicationsMonitor CombinationMAO InhibitorsAvoid CombinationHow to ReconstituteCalculato",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "인지 강화",
+          "dose": "100mcg",
+          "frequency": "1일 2회",
+          "route": "비강 분무"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "300-600mcg",
+          "frequency": "1일 1-3회",
+          "route": "비강 분무"
+        }
+      ],
       "interactions": [
         {
           "name": "NA Selank Amidate",
@@ -5500,7 +6157,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "100-1000mg1-",
+      "typicalDose": "100-1000mg",
       "frequency": "",
       "cycle": "4-12 weeks",
       "storage": "냉장 (2-8°C)",
@@ -5526,7 +6183,26 @@
         }
       ],
       "protocolTiming": "Morning administration aligns with natural circadian rhythms and provides sustained energy throughout the dayPeptide InteractionsBPC-157SynergisticTB-500SynergisticTirzepatideCompatibleIpamorelinSynergisticCJC-1295CompatibleAlcoholAvoid CombinationL-CarnitineSynergisticHow to ReconstituteCalculatorI",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "세포 에너지 보충",
+          "dose": "100-300mg",
+          "frequency": "1일 1회",
+          "route": "경구 (NMN/NR 전구체)"
+        },
+        {
+          "goal": "IV 고용량 요법",
+          "dose": "500-1000mg",
+          "frequency": "주 1-2회",
+          "route": "정맥주사 (4-8시간)"
+        },
+        {
+          "goal": "피하주사",
+          "dose": "100mg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "BPC-157",
@@ -5600,7 +6276,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "10-30mg1-3 times daily",
+      "typicalDose": "10-30mg",
       "frequency": "",
       "cycle": "4-8 weeks on, 2-4 weeks off",
       "storage": "실온",
@@ -5626,7 +6302,20 @@
         }
       ],
       "protocolTiming": "Morning and early afternoon dosing maximizes cognitive benefits while avoiding sleep disruptionPeptide InteractionsSemaxSynergisticSelankSynergisticNA-Semax-AmidateMonitor CombinationCerebrolysinCompatibleDihexaUse CautionCholine SourcesSynergisticHow to ReconstituteCalculatorImportant: Always use b",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "기억/학습 개선",
+          "dose": "10mg",
+          "frequency": "1일 1-2회",
+          "route": "경구"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "20-30mg",
+          "frequency": "1일 2-3회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "Semax",
@@ -5696,7 +6385,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "3-36mg dailyOnce daily",
+      "typicalDose": "3-36mg",
       "frequency": "",
       "cycle": "",
       "storage": "실온",
@@ -5727,7 +6416,20 @@
         }
       ],
       "protocolTiming": "Orforglipron can be taken at any time of day, with or without food or water. Choose a consistent time daily for optimal compliance. No fasting period or timing restrictions required.Peptide InteractionsSemaglutideAvoid CombinationTirzepatideAvoid CombinationLiraglutideAvoid CombinationInsulinMonitor",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "시작 용량",
+          "dose": "3mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        },
+        {
+          "goal": "유지 목표",
+          "dose": "12-36mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "Semaglutide",
@@ -5811,7 +6513,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "10-40 IU",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -5832,7 +6534,20 @@
         }
       ],
       "protocolTiming": "Injectable oxytocin is used in clinical settings for labor and delivery. Onset is immediate (IV) to 3-5 minutes (IM). Effects are short-lived requiring continuous infusion for labor.Peptide InteractionsVasopressin (AVP)Monitor CombinationSelankSynergisticSemaxCompatiblePT-141 (Bremelanotide)Synergis",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "사회적 불안 감소",
+          "dose": "20-40 IU",
+          "frequency": "필요시",
+          "route": "비강 분무"
+        },
+        {
+          "goal": "결속/신뢰 증진",
+          "dose": "10-20 IU",
+          "frequency": "상호작용 30분 전",
+          "route": "비강 분무"
+        }
+      ],
       "interactions": [
         {
           "name": "Vasopressin (AVP)",
@@ -5905,7 +6620,7 @@
       "routes": [
         "Intranasal"
       ],
-      "typicalDose": "500mcg-2mg1-",
+      "typicalDose": "500mcg-2mg",
       "frequency": "",
       "cycle": "4-6 weeks",
       "storage": "냉장 (2-8°C)",
@@ -5936,7 +6651,20 @@
         }
       ],
       "protocolTiming": "Intranasal P21 provides faster onset than subcutaneous administration. Some researchers prefer this route for acute cognitive demands. The top peptide chemist at Ceretropic insisted on intranasal over subcutaneous for noticeable cognitive enhancement.Peptide InteractionsAdamaxSynergisticSemaxCompati",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "노화세포 제거",
+          "dose": "500mcg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "1-2mg",
+          "frequency": "주 3-5회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Adamax",
@@ -6009,7 +6737,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "5-10mg",
       "frequency": "",
       "cycle": "4-8 weeks (research protocols)",
       "storage": "냉장 (2-8°C)",
@@ -6045,7 +6773,20 @@
         }
       ],
       "protocolTiming": "PE-22-28 has ~23 hour duration of action in animal studies, supporting once-daily administration. Morning dosing is common but specific timing may not be critical.Peptide InteractionsSSRIs (Fluoxetine, Sertraline)Monitor CombinationSemax / NA-SemaxPotentially SynergisticSelankSynergisticDihexaPotent",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "항우울 (시작)",
+          "dose": "5mg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "10mg",
+          "frequency": "1일 1-2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Sertraline)",
@@ -6124,7 +6865,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "200-400mcg2-3 times weekly",
+      "typicalDose": "200-400mcg",
       "frequency": "",
       "cycle": "4-8 weeks",
       "storage": "냉장 (2-8°C)",
@@ -6160,7 +6901,20 @@
         }
       ],
       "protocolTiming": "Post-workout administration may align with natural MGF upregulation patterns. For localized effects, inject bilaterally into or near target muscles.Peptide InteractionsIGF-1 LR3Use CautionHuman Growth HormoneMonitor CombinationBPC-157SynergisticTB-500SynergisticCJC-1295/IpamorelinMonitor Combination",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "근육 회복 촉진",
+          "dose": "200mcg",
+          "frequency": "주 2-3회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 성장",
+          "dose": "400mcg",
+          "frequency": "주 2-3회 (운동 후)",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "IGF-1 LR3Use CautionHuman Growth Hormone",
@@ -6234,7 +6988,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "5mgOnce daily",
+      "typicalDose": "5mg",
       "frequency": "",
       "cycle": "20 days",
       "storage": "냉장 (2-8°C)",
@@ -6260,7 +7014,20 @@
         }
       ],
       "protocolTiming": "Morning injection aligns with natural circadian rhythms. Rotate injection sites.Peptide InteractionsEpitalonSynergisticCortexinSynergisticThymalinCompatibleMelatoninMonitor CombinationBPC-157CompatibleNAD+CompatibleHow to ReconstituteCalculatorImportant: Always use bacteriostatic water (BAC). Steril",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "항노화/신경 보호 코스",
+          "dose": "5mg",
+          "frequency": "1일 1회 (10일)",
+          "route": "경구"
+        },
+        {
+          "goal": "수면 개선",
+          "dose": "5mg",
+          "frequency": "취침 전 1일 1회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "Epitalon",
@@ -6328,7 +7095,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "0.5-1mgOnce daily",
+      "typicalDose": "0.5-1mg",
       "frequency": "",
       "cycle": "10-20 days",
       "storage": "냉장 (2-8°C)",
@@ -6354,7 +7121,14 @@
         }
       ],
       "protocolTiming": "Morning administration recommended. Rotate injection sites to prevent irritation.Peptide InteractionsEpitalonCompatibleThymalinCompatiblePinealonCompatibleBPC-157Compatible5-Alpha Reductase InhibitorsUse CautionTestosterone/TRTMonitor CombinationSaw Palmetto (Serenoa repens)CompatibleHow to Reconsti",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "전립선 건강",
+          "dose": "0.5-1mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "Epitalon",
@@ -6424,7 +7198,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "1.75mgAs needed",
+      "typicalDose": "1.75mg",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -6455,7 +7229,26 @@
         }
       ],
       "protocolTiming": "Best taken 45-60 minutes before sexual activity. Can be taken with or without food, though food may reduce nausea. Effects last 6-12 hours.Peptide InteractionsSildenafil/TadalafilMonitor CombinationMelanotan IIUse CautionBlood Pressure MedicationsMonitor CombinationAlcoholUse CautionNitratesAvoid Co",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "성적 기능 개선",
+          "dose": "1mg",
+          "frequency": "필요시 (4-6시간 전)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "1.75mg",
+          "frequency": "필요시",
+          "route": "피하주사"
+        },
+        {
+          "goal": "비강 (저용량)",
+          "dose": "1mg",
+          "frequency": "필요시 (30분 전)",
+          "route": "비강 분무"
+        }
+      ],
       "interactions": [
         {
           "name": "Tadalafil",
@@ -6528,7 +7321,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "4-12mg",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -6559,7 +7352,20 @@
         }
       ],
       "protocolTiming": "Administer on the same day each week for consistent hormone regulation. Can be taken with or without food due to subcutaneous administration.Peptide InteractionsTirzepatideAvoid CombinationCagrilintideUse CautionSemaglutideAvoid CombinationInsulinMonitor CombinationMetforminCompatibleSGLT2 Inhibitor",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "시작 용량",
+          "dose": "4mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 유지",
+          "dose": "8-12mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Tirzepatide",
@@ -6641,7 +7447,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "250-500mcg",
       "frequency": "",
       "cycle": "2-8 weeks",
       "storage": "냉장 (2-8°C)",
@@ -6672,7 +7478,20 @@
         }
       ],
       "protocolTiming": "Selank can be injected any time of day. Morning injection may provide better cognitive benefits, while evening injection may enhance relaxation and sleep quality.Peptide InteractionsSemaxSynergisticBPC-157CompatibleNoopeptCompatiblePhenylpiracetamCompatibleBenzodiazepinesUse CautionSSRI Antidepressa",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "항불안/인지 개선",
+          "dose": "250mcg",
+          "frequency": "1일 2회",
+          "route": "비강 분무"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "500mcg",
+          "frequency": "1일 2-3회",
+          "route": "비강 분무"
+        }
+      ],
       "interactions": [
         {
           "name": "Semax",
@@ -6747,7 +7566,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "0.25-2.4mg weeklyOnce weekly",
+      "typicalDose": "0.25-2.4mg",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -6778,7 +7597,26 @@
         }
       ],
       "protocolTiming": "Inject on the same day each week at any time. If you miss a dose and it's within 5 days, take it as soon as remembered. If more than 5 days, skip and resume regular schedule.Peptide InteractionsInsulinMonitor CombinationTirzepatideAvoid CombinationCagrilintideSynergisticMetforminCompatibleGrowth Hor",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "시작 용량",
+          "dose": "0.25mg",
+          "frequency": "주 1회 (4주)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "증량 단계",
+          "dose": "0.5-1mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "최대 유지 용량",
+          "dose": "2.4mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Insulin",
@@ -6855,7 +7693,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "300-1000mcg1-3 times daily",
+      "typicalDose": "300-1000mcg",
       "frequency": "",
       "cycle": "2-4 weeks on, 1-2 weeks off",
       "storage": "냉장 (2-8°C)",
@@ -6881,7 +7719,26 @@
         }
       ],
       "protocolTiming": "Morning administration optimizes cognitive benefits throughout the day while avoiding evening alertness that could impact sleepPeptide InteractionsNA-Semax-AmidateUse CautionSelankSynergisticBPC-157CompatibleTB-500CompatibleStimulantsMonitor CombinationMAO-InhibitorsUse CautionHow to ReconstituteCal",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "인지 강화 (시작)",
+          "dose": "300mcg",
+          "frequency": "1일 1-2회",
+          "route": "비강 분무"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "600-1000mcg",
+          "frequency": "1일 1-3회",
+          "route": "비강 분무"
+        },
+        {
+          "goal": "집중 사이클",
+          "dose": "1000mcg",
+          "frequency": "1일 2회 (2-4주)",
+          "route": "비강 분무"
+        }
+      ],
       "interactions": [
         {
           "name": "NA-Semax-AmidateUse CautionSelank",
@@ -6944,7 +7801,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "200-500mcg",
       "frequency": "",
       "cycle": "3-6 months",
       "storage": "냉장 (2-8°C)",
@@ -6970,7 +7827,20 @@
         }
       ],
       "protocolTiming": "Bedtime administration aligns with natural nocturnal GH pulses. Avoid food 2+ hours before injection as carbohydrates blunt GH response. Morning administration less effective.Peptide InteractionsIpamorelinSynergisticCJC-1295SynergisticGHRP-2SynergisticOctreotideAvoid CombinationLanreotideAvoid Combi",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "GH 방출 (시작)",
+          "dose": "200mcg",
+          "frequency": "취침 전 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "300-500mcg",
+          "frequency": "취침 전 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Ipamorelin",
@@ -7047,7 +7917,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "실험적 단계",
       "frequency": "",
       "cycle": "4-8 weeks (preclinical studies)",
       "storage": "냉장 (2-8°C)",
@@ -7093,7 +7963,14 @@
         }
       ],
       "protocolTiming": "Animal studies used IP injection twice daily. Human administration protocols DO NOT EXIST. Researchers are developing oral pill formulation for potential future human use pending clinical trials.Peptide InteractionsMetforminMonitor CombinationInsulinMonitor CombinationTirzepatideMonitor CombinationS",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "실험적 대사 연구",
+          "dose": "미확립",
+          "frequency": "연구자 재량",
+          "route": "경구 (전임상)"
+        }
+      ],
       "interactions": [
         {
           "name": "Metformin",
@@ -7175,7 +8052,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "3-10% concentration",
+      "typicalDose": "3-10% 농도",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -7211,7 +8088,20 @@
         }
       ],
       "protocolTiming": "Apply SNAP-8 to clean, dry skin before heavier products. Morning application should be followed by sunscreen. Evening application can be layered with retinol on alternate days to minimize irritation.Peptide InteractionsArgireline (Acetyl Hexapeptide-3)SynergisticLeuphasylSynergisticGHK-CuCompatibleH",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "표정근 이완",
+          "dose": "3-5% 농도",
+          "frequency": "1일 2회",
+          "route": "국소 도포"
+        },
+        {
+          "goal": "유지 관리",
+          "dose": "5-10% 농도",
+          "frequency": "1일 1-2회",
+          "route": "국소 도포"
+        }
+      ],
       "interactions": [
         {
           "name": "Argireline (Acetyl Hexapeptide-3)",
@@ -7286,7 +8176,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "5-40mgOnce daily",
+      "typicalDose": "5-40mg",
       "frequency": "",
       "cycle": "4-12 weeks",
       "storage": "냉장 (2-8°C)",
@@ -7312,7 +8202,20 @@
         }
       ],
       "protocolTiming": "Morning dosing recommended to align with natural circadian rhythms of mitochondrial function. Pre-workout timing for athletic applications.Peptide InteractionsNAD+SynergisticMOTS-cSynergisticHumaninSynergisticGHK-CuCompatibleBPC-157CompatibleThymosin Beta-4CompatibleHow to ReconstituteCalculatorImpo",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "미토콘드리아 보호",
+          "dose": "5-10mg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "20-40mg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "NAD+",
@@ -7382,7 +8285,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "0.6-6.0mgOnce weekly",
+      "typicalDose": "0.6-6.0mg",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -7413,7 +8316,20 @@
         }
       ],
       "protocolTiming": "Administer once weekly on the same day. Can be taken any time of day regardless of meals. If you miss a dose and it's within 3 days, take it. If more than 3 days, skip and resume regular schedule.Peptide InteractionsSemaglutide/TirzepatideUse CautionMetforminCompatibleSGLT2 InhibitorsCompatibleSulfo",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "시작 용량",
+          "dose": "0.6mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "목표 유지 용량",
+          "dose": "3.6-6.0mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "TirzepatideUse CautionMetformin",
@@ -7478,7 +8394,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "2-5mg2-",
+      "typicalDose": "2-5mg",
       "frequency": "",
       "cycle": "6-8 weeks",
       "storage": "냉장 (2-8°C)",
@@ -7509,7 +8425,26 @@
         }
       ],
       "protocolTiming": "TB-500 timing is flexible and doesn't require empty stomach. For localized injuries, inject as close to the injury site as possible. For systemic effects, standard subcutaneous injection sites work well.Peptide InteractionsBPC-157SynergisticIpamorelinCompatibleCJC-1295SynergisticIGF-1SynergisticGHRP",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "급성 회복 (부상)",
+          "dose": "5mg",
+          "frequency": "주 2회 (2-4주)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "유지 용량",
+          "dose": "2mg",
+          "frequency": "주 1-2회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "만성 회복",
+          "dose": "2-2.5mg",
+          "frequency": "주 2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "BPC-157",
@@ -7580,7 +8515,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "2mg/day",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -7611,7 +8546,20 @@
         }
       ],
       "protocolTiming": "Evening injection aligns with natural growth hormone circadian rhythm. Take after dinner but before bedtime for optimal efficacy.Peptide InteractionsIpamorelinMonitor CombinationCJC-1295Use CautionCJC-1295 with DACAvoid CombinationSermorelinDose DependentInsulinMonitor CombinationMetforminCompatible",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "내장지방 감소 (FDA)",
+          "dose": "2mg",
+          "frequency": "1일 1회 (취침 전)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "항노화/GH 지지",
+          "dose": "1-2mg",
+          "frequency": "1일 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Ipamorelin",
@@ -7683,7 +8631,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "0.25-0.5mgOnce daily",
+      "typicalDose": "0.25-0.5mg",
       "frequency": "",
       "cycle": "",
       "storage": "실온",
@@ -7709,7 +8657,20 @@
         }
       ],
       "protocolTiming": "Take in the morning to minimize insomnia risk. The long half-life (~9 days) means consistent daily dosing is less critical than with shorter-acting medications, but morning dosing is still recommended.Peptide InteractionsSSRIs (Prozac, Zoloft, etc.)Avoid CombinationSNRIs (Effexor, Cymbalta, etc.)Avo",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "체중 감소 (시작)",
+          "dose": "0.25mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "0.5mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "Ritalin)",
@@ -7766,7 +8727,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "100-300mcgOnce daily",
+      "typicalDose": "100-300mcg",
       "frequency": "",
       "cycle": "8-12 weeks",
       "storage": "냉장 (2-8°C)",
@@ -7797,7 +8758,20 @@
         }
       ],
       "protocolTiming": "Administer SubQ once daily, preferably in the morning to align with natural circadian hormone rhythms. TSH and thyroid hormone release follow diurnal patterns. Consistent daily timing helps maintain stable peptide levels.Peptide InteractionsEpitalonSynergisticPinealonSynergisticThymalinCompatibleCJC",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "테스토스테론 지지",
+          "dose": "100mcg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "200-300mcg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
       "interactions": [
         {
           "name": "Epitalon",
@@ -7919,7 +8893,20 @@
         }
       ],
       "protocolTiming": "Injectable Ta1 can be administered at any time. Maintain consistent twice-weekly schedule (e.g., Monday/Thursday or Tuesday/Friday). Rotate injection sites to prevent tissue irritation.Peptide InteractionsImmunosuppressive AgentsContraindicatedCorticosteroidsMonitor CombinationInterferon-αSynergisti",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "면역 지지 (표준)",
+          "dose": "1.6mg",
+          "frequency": "주 2회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "집중 면역 부스팅",
+          "dose": "1.6mg",
+          "frequency": "1일 1회 (2주)",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Immunosuppressive AgentsContraindicatedCorticosteroids",
@@ -7979,7 +8966,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "750mcg-1.5mg",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -8010,7 +8997,26 @@
         }
       ],
       "protocolTiming": "Most effective when started early in the injury/healing process. For cardiac protection, must be given within 6 hours of symptom onset. Can be administered any time of day for chronic conditions.Peptide InteractionsTB-500SynergisticBPC-157SynergisticGrowth HormoneCompatibleIGF-1CompatibleCorticoster",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "회복 촉진",
+          "dose": "750mcg",
+          "frequency": "주 2회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "1.5mg",
+          "frequency": "주 2회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "부상 집중",
+          "dose": "1.5-2mg",
+          "frequency": "주 2-3회 (4-6주)",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "TB-500",
@@ -8083,7 +9089,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "5-20mcg",
       "frequency": "",
       "cycle": "5-10 days",
       "storage": "냉장 (2-8°C)",
@@ -8114,7 +9120,20 @@
         }
       ],
       "protocolTiming": "Very short half-life (~10 min). Natural thymulin follows circadian rhythm correlating with ACTH. Optimal timing unclear for exogenous administration.Peptide InteractionsZinc SupplementationSynergisticThymosin Alpha-1CompatibleThymosin Beta-4CompatibleEpitalonCompatibleCorticosteroidsMonitor Combinat",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "면역 조절",
+          "dose": "5mcg",
+          "frequency": "1일 1회 (10일)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 코스",
+          "dose": "10-20mcg",
+          "frequency": "1일 1회 (10-20일)",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Zinc Supplementation",
@@ -8187,7 +9206,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "2.5-15mg weeklyOnce weekly",
+      "typicalDose": "2.5-15mg",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -8213,7 +9232,26 @@
         }
       ],
       "protocolTiming": "Tirzepatide can be injected at any time of day, with or without food. Choose a consistent day of the week for weekly injections to maintain steady levels.Peptide InteractionsSemaglutideAvoid CombinationLiraglutideAvoid CombinationInsulinMonitor CombinationMetforminSynergisticCJC-1295CompatibleIpamor",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "시작 용량",
+          "dose": "2.5mg",
+          "frequency": "주 1회 (4주)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "증량 단계",
+          "dose": "5-10mg",
+          "frequency": "주 1회 (4주 간격 증량)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "유지 목표",
+          "dose": "10-15mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Semaglutide",
@@ -8294,7 +9332,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "75-200mg weekly1-",
+      "typicalDose": "75-200mg/week",
       "frequency": "",
       "cycle": "",
       "storage": "냉장 (2-8°C)",
@@ -8325,7 +9363,26 @@
         }
       ],
       "protocolTiming": "Inject on consistent days each week. For twice-weekly dosing, space injections 3.5 days apart (e.g., Monday AM/Thursday PM). Morning injections loosely mimic natural testosterone rhythm. Draw blood for labs at trough (before next injection) for accurate level assessment.Peptide InteractionshCGSynerg",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "생리적 보충 (주사)",
+          "dose": "75-100mg",
+          "frequency": "주 1-2회",
+          "route": "근육주사/피하주사"
+        },
+        {
+          "goal": "표준 TRT",
+          "dose": "150-200mg",
+          "frequency": "주 1회",
+          "route": "근육주사"
+        },
+        {
+          "goal": "겔 요법",
+          "dose": "1% 겔 5g",
+          "frequency": "1일 1회",
+          "route": "피부 도포"
+        }
+      ],
       "interactions": [
         {
           "name": "hCG",
@@ -8389,7 +9446,7 @@
       "routes": [
         "Intranasal"
       ],
-      "typicalDose": "200-400mcg2-",
+      "typicalDose": "200-400mcg",
       "frequency": "",
       "cycle": "4-12 weeks or ongoing",
       "storage": "냉장 (2-8°C)",
@@ -8420,7 +9477,20 @@
         }
       ],
       "protocolTiming": "VIP has a very short plasma half-life (1-2 minutes IV), but intranasal delivery provides more sustained local and CNS effects. Multiple daily doses maintain therapeutic levels. Morning dosing aligns with natural circadian VIP rhythms.Peptide InteractionsBPC-157CompatibleThymosin Alpha-1SynergisticLL",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "항염/폐 보호",
+          "dose": "200mcg",
+          "frequency": "1일 2회",
+          "route": "흡입 분무"
+        },
+        {
+          "goal": "신경 지지",
+          "dose": "200-400mcg",
+          "frequency": "1일 2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "BPC-157",
@@ -8496,7 +9566,7 @@
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "",
+      "typicalDose": "복합 스택",
       "frequency": "",
       "cycle": "4-8 weeks",
       "storage": "냉장 (2-8°C)",
@@ -8527,7 +9597,14 @@
         }
       ],
       "protocolTiming": "BPC-157 has short half-life (<30 min) so twice daily dosing maintains levels. TB-500 has longer duration allowing twice weekly dosing. Can inject at same time but use separate sites.Peptide InteractionsGrowth Hormone (HGH)SynergisticCJC-1295/IpamorelinSynergisticPEG-MGFSynergisticGHK-CuCompatibleNSA",
-      "protocols": [],
+      "protocols": [
+        {
+          "goal": "회복 복합 스택 표준",
+          "dose": "각 성분 표준 용량",
+          "frequency": "1일 1-2회",
+          "route": "피하주사"
+        }
+      ],
       "interactions": [
         {
           "name": "Growth Hormone (HGH)",
@@ -8592,6 +9669,506 @@
         "Anti Inflammatory"
       ],
       "sourceUrl": "https://pep-pedia.org/peptides/wolverine-stack"
+    },
+    "ghrp-6": {
+      "id": "ghrp-6",
+      "nameEn": "GHRP-6",
+      "nameKo": "성장호르몬 분비촉진 펩타이드-6",
+      "subtitle": "Growth Hormone Releasing Peptide-6 | GH Release & Cardioprotection",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Extensively Studied",
+      "isApproved": false,
+      "typicalDose": "100-300mcg",
+      "frequency": "1일 2-3회",
+      "cycle": "8-12주",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "피하주사 (SC)",
+      "descriptionEn": "GHRP-6 is a synthetic hexapeptide and one of the first growth hormone secretagogues developed in the 1980s. It stimulates GH release by activating the ghrelin receptor (GHS-R1a) and CD36 receptor, making it one of the most extensively studied GH-releasing peptides. Unlike GHRH-based peptides, GHRP-6 works through a distinct PKC/calcium-dependent pathway. It also demonstrates notable cardioprotective, wound healing, and cytoprotective properties beyond GH release.",
+      "keyBenefits": "강력한 GH 분비 촉진, 심장 보호 효과, 상처 치유 촉진, 근육 성장 지원, 식욕 증진 (그렐린 직접 활성화)",
+      "mechanism": "그렐린 수용체(GHS-R1a) 및 CD36 수용체 활성화 → PKC/칼슘 의존적 경로로 뇌하수체에서 GH 방출 자극. GHRH 계열과 상이한 메커니즘으로 병용 시 시너지 효과 가능.",
+      "pharmacokinetics": {
+        "peak": "15-60분",
+        "halfLife": "15-60분",
+        "cleared": "2-3시간"
+      },
+      "researchIndications": [
+        {
+          "name": "성장호르몬 분비 촉진",
+          "effectiveness": "Most Effective",
+          "level": "Extensively Studied"
+        },
+        {
+          "name": "심장 보호 (허혈 손상)",
+          "effectiveness": "Effective",
+          "level": "Well Researched"
+        },
+        {
+          "name": "근육 성장/회복",
+          "effectiveness": "Effective",
+          "level": "Well Researched"
+        },
+        {
+          "name": "상처 치유 촉진",
+          "effectiveness": "Moderate",
+          "level": "Well Researched"
+        },
+        {
+          "name": "지방 분해 보조",
+          "effectiveness": "Moderate",
+          "level": "Well Researched"
+        }
+      ],
+      "protocols": [
+        {
+          "goal": "GH 최적화 (시작)",
+          "dose": "100mcg",
+          "frequency": "1일 2회 (공복)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "200-300mcg",
+          "frequency": "1일 2-3회 (공복)",
+          "route": "피하주사"
+        },
+        {
+          "goal": "취침 전 단독",
+          "dose": "100-200mcg",
+          "frequency": "취침 30분 전",
+          "route": "피하주사"
+        }
+      ],
+      "protocolTiming": "공복 상태에서 투여 시 GH 방출 효과 극대화. 음식/인슐린 존재 시 효과 감소. CJC-1295 또는 Ipamorelin과 병용 권장.",
+      "interactions": [
+        {
+          "name": "CJC-1295",
+          "type": "Synergistic"
+        },
+        {
+          "name": "Ipamorelin",
+          "type": "Synergistic"
+        },
+        {
+          "name": "BPC-157",
+          "type": "Compatible"
+        },
+        {
+          "name": "Insulin",
+          "type": "Monitor Combination"
+        },
+        {
+          "name": "Corticosteroids",
+          "type": "Monitor Combination"
+        }
+      ],
+      "reconstitute": [
+        "멸균 주사용수 또는 BAC Water로 재구성",
+        "1mL당 1-2mg 농도 권장",
+        "재구성 후 냉장 보관, 28일 이내 사용"
+      ],
+      "qualityGood": [
+        "흰색 동결건조 분말",
+        "완전히 투명하게 용해",
+        "공급업체의 HPLC/MS 분석 성적서 확인"
+      ],
+      "qualityBad": [
+        "용액에 입자 또는 혼탁",
+        "변색 또는 이상한 냄새",
+        "재구성 후 침전물 발생"
+      ],
+      "effectsTimeline": [
+        "15-60분: GH 수치 급격히 상승 (피크)",
+        "1-2시간: IGF-1 수치 서서히 증가",
+        "1-4주: 수면 질 개선, 회복 속도 향상",
+        "4-8주: 근육 충만감 및 체성분 변화 시작",
+        "8-12주: 최대 근육/지방 체성분 효과"
+      ],
+      "sideEffects": [
+        "강한 식욕 증진 (그렐린 직접 활성화로 Ipamorelin보다 강함)",
+        "수분 저류 (특히 고용량)",
+        "손발 저림 (말초 부종)",
+        "피로감 (일부 사용자)",
+        "코르티솔 및 프로락틴 일시적 상승 (고용량)",
+        "인슐린 감수성 변화 (장기 사용 시)"
+      ],
+      "quickStart": {
+        "dose": "100mcg",
+        "frequency": "1일 2회",
+        "howToTake": "공복 상태에서 피하주사",
+        "bestTiming": "아침 공복 + 취침 전",
+        "effectsTimeline": "4-8주 후 체성분 변화",
+        "breakBetween": "8-12주 사이클 후 4-8주 휴식",
+        "cycleLength": "8-12주",
+        "storageNote": "냉장 (2-8°C) 보관, 재구성 후 28일 이내 사용"
+      },
+      "tags": [
+        "GH 분비촉진",
+        "성장호르몬",
+        "그렐린",
+        "근육 성장",
+        "심장 보호"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/ghrp-6"
+    },
+    "bromantane": {
+      "id": "bromantane",
+      "nameEn": "Bromantane (Ladasten)",
+      "nameKo": "브로만탄 (라다스텐)",
+      "subtitle": "Adamantane Actoprotector | Dopamine & Serotonin Synthesis Enhancer",
+      "routes": [
+        "Oral"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "typicalDose": "50-100mg",
+      "frequency": "1일 1-2회",
+      "cycle": "4-8주",
+      "storage": "실온",
+      "routeDetail": "경구 복용",
+      "descriptionEn": "Bromantane (Ladasten) is a unique actoprotector developed in Russia in the 1980s that combines stimulant and anxiolytic properties without causing tolerance, dependence, or withdrawal. It was approved in Russia in 1997 for the treatment of neurasthenia. Unlike classical stimulants, Bromantane works by upregulating the synthesis enzymes for dopamine and serotonin (tyrosine hydroxylase and AADC) rather than simply releasing stored monoamines. It also enhances GABAergic signaling, contributing to its anxiolytic effects.",
+      "keyBenefits": "내성·의존성 없는 각성 효과, 항불안 + 활력 동시 개선, 도파민/세로토닌 합성 증가, 열·피로 저항성 향상, 러시아 임상 승인",
+      "mechanism": "타이로신 수산화효소(TH) 및 방향족 아미노산 탈카르복실효소(AADC) 업레귤레이션 → 도파민·세로토닌 합성 증가. GABA성 신호전달 강화 → 항불안. 기존 자극제와 달리 모노아민을 방출하지 않으므로 소진 없음.",
+      "pharmacokinetics": {
+        "peak": "2-4시간",
+        "halfLife": "10-11시간",
+        "cleared": "48-72시간"
+      },
+      "researchIndications": [
+        {
+          "name": "신경쇠약 (neurasthenia) 치료",
+          "effectiveness": "Effective",
+          "level": "Well Researched"
+        },
+        {
+          "name": "인지 기능 및 각성도 개선",
+          "effectiveness": "Effective",
+          "level": "Well Researched"
+        },
+        {
+          "name": "항불안 효과",
+          "effectiveness": "Effective",
+          "level": "Well Researched"
+        },
+        {
+          "name": "운동 성과 및 열 저항성",
+          "effectiveness": "Moderate",
+          "level": "Well Researched"
+        },
+        {
+          "name": "피로 회복",
+          "effectiveness": "Effective",
+          "level": "Well Researched"
+        }
+      ],
+      "protocols": [
+        {
+          "goal": "시작 용량 (민감도 확인)",
+          "dose": "25-50mg",
+          "frequency": "1일 1회 (오전)",
+          "route": "경구"
+        },
+        {
+          "goal": "표준 용량",
+          "dose": "50-100mg",
+          "frequency": "1일 1-2회",
+          "route": "경구"
+        },
+        {
+          "goal": "운동 성과 개선",
+          "dose": "50mg",
+          "frequency": "운동 1-2시간 전",
+          "route": "경구"
+        }
+      ],
+      "protocolTiming": "오전 또는 오후 이른 시간 복용 권장 (수면 방해 가능). 음식과 함께 또는 공복 모두 가능. 저녁 늦게 복용 금지.",
+      "interactions": [
+        {
+          "name": "Selank",
+          "type": "Synergistic"
+        },
+        {
+          "name": "Semax",
+          "type": "Synergistic"
+        },
+        {
+          "name": "MAO inhibitors",
+          "type": "Avoid Combination"
+        },
+        {
+          "name": "Amphetamines",
+          "type": "Monitor Combination"
+        },
+        {
+          "name": "Alcohol",
+          "type": "Monitor Combination"
+        }
+      ],
+      "reconstitute": [
+        "경구 복용 — 재구성 불필요",
+        "캡슐 또는 분말 형태로 복용"
+      ],
+      "qualityGood": [
+        "순도 98%+ HPLC 성적서",
+        "특유의 약한 화학적 향",
+        "일관된 분말 색상 (흰색-크림색)"
+      ],
+      "qualityBad": [
+        "이상한 냄새 또는 변색",
+        "공급업체의 분석 성적서 부재"
+      ],
+      "effectsTimeline": [
+        "1-3시간: 초기 각성 및 집중력 향상",
+        "1-2주: 기분 안정화, 피로 저항성 개선",
+        "2-4주: 도파민/세로토닌 합성 최적화, 지속적 인지 개선",
+        "4-8주: 최대 적응원 효과"
+      ],
+      "sideEffects": [
+        "초기 가벼운 불안 또는 불편감 (일부 사용자)",
+        "수면 장애 (저녁 복용 시)",
+        "두통 (고용량 또는 초기)",
+        "식욕 감소 (일시적)",
+        "내성·의존성·금단 증상 없음 (임상 확인됨)"
+      ],
+      "quickStart": {
+        "dose": "50mg",
+        "frequency": "1일 1회 (오전)",
+        "howToTake": "경구, 오전 또는 오후 이른 시간",
+        "bestTiming": "오전 공복 또는 식사와 함께",
+        "effectsTimeline": "1-2주 내 기분/각성 개선",
+        "breakBetween": "4-8주 사이클 후 2-4주 휴식 권장",
+        "cycleLength": "4-8주",
+        "storageNote": "실온 보관, 직사광선·습기 차단"
+      },
+      "tags": [
+        "인지 강화",
+        "도파민",
+        "세로토닌",
+        "항불안",
+        "적응원",
+        "러시아"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/bromantane"
+    },
+    "cardiogen": {
+      "id": "cardiogen",
+      "nameEn": "Cardiogen",
+      "nameKo": "카르디오겐",
+      "subtitle": "Cardiac Bioregulatory Tetrapeptide | Cardiovascular & Tissue Repair",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "typicalDose": "10-20mg",
+      "frequency": "3-7일마다",
+      "cycle": "2-4주",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "피하주사 (SC)",
+      "descriptionEn": "Cardiogen is a bioregulatory tetrapeptide (Ala-Glu-Asp-Arg / AEDR) developed by Professor Vladimir Khavinson at the St. Petersburg Institute of Bioregulation and Gerontology. It belongs to the class of short peptide bioregulators ('cytomedins') designed to target cardiac tissue. Cardiogen regulates fibroblast proliferation, inhibits cardiomyocyte apoptosis via p53 downregulation, and upregulates cytoskeletal and nuclear matrix proteins. All published research is currently preclinical (in vitro and animal studies).",
+      "keyBenefits": "심근세포 세포사멸 억제, 섬유모세포 증식 조절, 심장 재형성 지원, 노화 관련 심혈관 기능 저하 완화 가능성",
+      "mechanism": "p53 단백질 하향조절 → 심근세포 세포사멸 억제. 섬유모세포 증식 조절 및 세포골격/핵 기질 단백질 업레귤레이션. 심장 조직 바이오레귤레이터로 특이적 작용.",
+      "pharmacokinetics": {
+        "peak": "1-2시간",
+        "halfLife": "수 시간 (추정)",
+        "cleared": "24-48시간 (추정)"
+      },
+      "researchIndications": [
+        {
+          "name": "심근 손상 회복",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        },
+        {
+          "name": "노화 관련 심혈관 저하",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        },
+        {
+          "name": "심장 세포 보호",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        }
+      ],
+      "protocols": [
+        {
+          "goal": "심혈관 보호 (전임상 기반)",
+          "dose": "10mg",
+          "frequency": "3-7일마다",
+          "route": "피하주사"
+        },
+        {
+          "goal": "표준 코스",
+          "dose": "10-20mg",
+          "frequency": "격일 (2-4주)",
+          "route": "피하주사"
+        }
+      ],
+      "protocolTiming": "⚠️ 모든 프로토콜은 전임상(체외/동물) 데이터 기반. 인간 임상시험 데이터 없음. 의료진 지도하에만 사용 권장.",
+      "interactions": [
+        {
+          "name": "Thymosin Alpha-1",
+          "type": "Compatible"
+        },
+        {
+          "name": "Anticoagulants",
+          "type": "Monitor Combination"
+        },
+        {
+          "name": "Cardiac medications",
+          "type": "Monitor Combination"
+        }
+      ],
+      "reconstitute": [
+        "멸균 주사용수 또는 BAC Water로 재구성",
+        "재구성 후 냉장 보관, 14일 이내 사용"
+      ],
+      "qualityGood": [
+        "흰색 동결건조 분말",
+        "투명하게 용해",
+        "공급업체 HPLC 성적서 확인"
+      ],
+      "qualityBad": [
+        "용액에 혼탁 또는 입자",
+        "변색",
+        "성적서 없는 제품"
+      ],
+      "effectsTimeline": [
+        "전임상 데이터 기반 — 인간 효과 타임라인 미확립",
+        "동물 연구: 수주 내 심근 보호 지표 개선 관찰"
+      ],
+      "sideEffects": [
+        "인간 임상 안전성 데이터 제한적",
+        "주사 부위 일시적 자극 가능",
+        "심장 약물 복용 중인 경우 반드시 의료진 상담"
+      ],
+      "quickStart": {
+        "dose": "10mg",
+        "frequency": "격일",
+        "howToTake": "피하주사",
+        "bestTiming": "의료진 지도 하에",
+        "effectsTimeline": "전임상 데이터만 존재",
+        "breakBetween": "2-4주 코스 후 충분한 휴식",
+        "cycleLength": "2-4주",
+        "storageNote": "냉장 (2-8°C) 보관"
+      },
+      "tags": [
+        "심혈관",
+        "심장 보호",
+        "바이오레귤레이터",
+        "테트라펩타이드",
+        "러시아"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/cardiogen"
+    },
+    "pnc-27": {
+      "id": "pnc-27",
+      "nameEn": "PNC-27",
+      "nameKo": "PNC-27",
+      "subtitle": "Chimeric p53-Penetratin Anticancer Peptide | HDM-2 Targeting",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "typicalDose": "실험적 단계",
+      "frequency": "미확립",
+      "cycle": "미확립",
+      "storage": "냉동 (-20°C)",
+      "routeDetail": "피하주사/정맥주사 (전임상)",
+      "descriptionEn": "PNC-27 is a 35-amino acid chimeric peptide combining a p53 transcriptional activation domain with an Antennapedia penetratin sequence, developed by Dr. Matthew Pincus and Dr. Joseph Michl at SUNY Downstate Medical Center in 2000. It targets HDM-2 protein expressed on cancer cell membranes, forming pores that cause necrotic cell death ('poptosis') while sparing normal cells. A 2024 discovery revealed a secondary mechanism involving selective mitochondrial membrane disruption. ⚠️ The FDA has issued explicit warnings about PNC-27 use. No validated human clinical trial data exists.",
+      "keyBenefits": "암세포 선택적 파괴 (정상세포 보존), HDM-2 표적 독특한 메커니즘, 다양한 암종 전임상 효과 (췌장암·유방암·흑색종 등)",
+      "mechanism": "1차: 암세포막 표면의 HDM-2에 결합 → 막 투과 기공 형성 → 괴사성 세포사멸(poptosis). 정상세포는 막 연관 HDM-2 부재로 영향 없음. 2차 (2024): 세포 진입 후 미토콘드리아막 선택적 파괴 (리소좀 보존).",
+      "pharmacokinetics": {
+        "peak": "미확립",
+        "halfLife": "미확립",
+        "cleared": "미확립"
+      },
+      "researchIndications": [
+        {
+          "name": "췌장암 (전임상)",
+          "effectiveness": "Emerging",
+          "level": "Emerging Research"
+        },
+        {
+          "name": "유방암 (전임상)",
+          "effectiveness": "Emerging",
+          "level": "Emerging Research"
+        },
+        {
+          "name": "흑색종 (전임상)",
+          "effectiveness": "Emerging",
+          "level": "Emerging Research"
+        },
+        {
+          "name": "백혈병 (전임상)",
+          "effectiveness": "Emerging",
+          "level": "Emerging Research"
+        }
+      ],
+      "protocols": [
+        {
+          "goal": "⚠️ 전임상 연구 단계 — 인간 프로토콜 미확립",
+          "dose": "미확립",
+          "frequency": "연구자 재량",
+          "route": "전임상 (피하/정맥)"
+        }
+      ],
+      "protocolTiming": "⚠️ 경고: FDA가 명시적 경고를 발행한 물질입니다. 검증된 인간 임상시험 데이터가 없으며, 상용 제품의 오염 위험성이 보고된 바 있습니다. 절대로 의료진 지도 없이 사용하지 마십시오.",
+      "interactions": [
+        {
+          "name": "Chemotherapy agents",
+          "type": "Unknown"
+        },
+        {
+          "name": "Immunosuppressants",
+          "type": "Unknown"
+        }
+      ],
+      "reconstitute": [
+        "⚠️ 인간 사용 재구성 프로토콜 미확립",
+        "냉동 보관 필수 (-20°C)"
+      ],
+      "qualityGood": [
+        "독립 제3자 HPLC/MS 분석 성적서 필수",
+        "오염 검사 완료된 제품만"
+      ],
+      "qualityBad": [
+        "출처 불명확한 제품 (오염 위험)",
+        "성적서 없는 제품",
+        "상온 보관 이력 있는 제품"
+      ],
+      "effectsTimeline": [
+        "⚠️ 인간 효과 타임라인 미확립",
+        "전임상: 체외 실험에서 암세포 선택적 사멸 확인",
+        "전임상: 동물 모델에서 종양 감소 보고"
+      ],
+      "sideEffects": [
+        "⚠️ 인간 안전성 데이터 전무",
+        "FDA 공식 경고 발행 (상용 제품 위험성)",
+        "상용 제품 오염 위험",
+        "알 수 없는 전신 독성 가능성",
+        "전임상 단계에서만 연구됨"
+      ],
+      "quickStart": {
+        "dose": "⚠️ 미확립",
+        "frequency": "미확립",
+        "howToTake": "인간 사용 프로토콜 없음",
+        "bestTiming": "해당 없음",
+        "effectsTimeline": "전임상 데이터만 존재",
+        "breakBetween": "미확립",
+        "cycleLength": "미확립",
+        "storageNote": "냉동 (-20°C) 보관 필수"
+      },
+      "tags": [
+        "항암",
+        "p53",
+        "HDM-2",
+        "전임상",
+        "FDA 경고"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/pnc-27"
     }
   }
 }

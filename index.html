@@ -1998,6 +1998,9 @@
     let graphRangeHours = 0;
     let graphZoom = { scale: 1, offsetX: 0 };
     let graphDrugFilter = "전체"; // 그래프 약물 필터
+    // renderPeptideGraph()가 매 렌더마다 기록하는 실제 범위값 (터치핸들러 공유용)
+    let _graphFullRange = 0;
+    let _graphFullMinTime = 0;
 
     window.setGraphRange = (hrs) => {
       graphRangeHours = hrs;
@@ -2467,6 +2470,9 @@
         fullMaxTime = Math.max(now, clearanceTime || now + 35 * 86400000);
       }
       const fullRange = fullMaxTime - fullMinTime;
+      // 터치핸들러(getFullRange)와 공유 — 반드시 renderPeptideGraph와 동일한 값 유지
+      _graphFullRange = fullRange;
+      _graphFullMinTime = fullMinTime;
 
       const visRange = fullRange / graphZoom.scale;
       const visMinTime = fullMinTime + graphZoom.offsetX;
@@ -2802,12 +2808,23 @@
       const PAD_L = 52, PAD_R = 14;
 
       function getFullRange() {
+        // renderPeptideGraph()와 동일한 범위값 사용 (불일치가 줌 시 그래프 튐의 원인이었음)
+        if (_graphFullRange > 0) return _graphFullRange;
+        // 최초 렌더 전 fallback
         const records = appData.records || [];
         if (graphRangeHours > 0) return graphRangeHours * 3600000;
         if (!records.length) return 7 * 86400000;
         const firstRec = Math.min(...records.map(r => r.time));
-        const lastRec = Math.max(...records.map(r => r.time));
-        return (lastRec + 35 * 86400000) - (firstRec - 35 * 86400000);
+        const now = Date.now();
+        let clearanceTime = 0;
+        Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+          const drugRecs = records.filter(r => r.drug === drug);
+          if (!drugRecs.length) return;
+          const lastDrugTime = Math.max(...drugRecs.map(r => r.time));
+          clearanceTime = Math.max(clearanceTime, lastDrugTime + cfg.halfLifeDays * 5 * 86400000);
+        });
+        const fullMaxTime = Math.max(now, clearanceTime || now + 35 * 86400000);
+        return fullMaxTime - (firstRec - 2 * 86400000);
       }
 
       // ── 터치 UX ──────────────────────────────────────────
@@ -4635,13 +4652,14 @@
 
       // Interactions
       const interTypeStyle = { 'Synergistic':'#4ade80', 'Compatible':'#60a5fa', 'Monitor Combination':'#fbbf24', 'Avoid Combination':'#ef4444', 'Unknown':'#94a3b8' };
+      const interTypeLabel = { 'Synergistic':'시너지', 'Compatible':'호환', 'Monitor Combination':'주의 필요', 'Avoid Combination':'병용 금지', 'Unknown':'불명확' };
       const interHTML = pep.interactions?.length ? `
         <div class="enc-section">
           <div class="enc-section-title">🔗 상호작용</div>
           ${pep.interactions.map(inter => `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid ${C.borderSub}">
               <span style="font-size:13px;color:${C.txtSub}">${inter.name}</span>
-              <span style="font-size:11px;color:${interTypeStyle[inter.type]||'#94a3b8'};padding:2px 8px;background:${C.bgDeep};border-radius:20px">${inter.type}</span>
+              <span style="font-size:11px;color:${interTypeStyle[inter.type]||'#94a3b8'};padding:2px 8px;background:${C.bgDeep};border-radius:20px">${interTypeLabel[inter.type]||inter.type}</span>
             </div>`).join('')}
         </div>` : '';
 
