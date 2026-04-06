@@ -4556,139 +4556,284 @@
       openEncyclopediaModal(peptideId);
     };
 
+    // 백과사전 모달 아코디언 토글 (전역 등록)
+    window._encToggle = function(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const isOpen = el.style.display !== 'none';
+      el.style.display = isOpen ? 'none' : 'block';
+      const arrow = document.getElementById(id + '_arrow');
+      if (arrow) arrow.textContent = isOpen ? '›' : '∨';
+    };
+    // 부작용 탭 전환
+    window._encTab = function(modalId, tab) {
+      ['se','sn','ss'].forEach(t => {
+        const panel = document.getElementById(modalId + '_tab_' + t);
+        const btn   = document.getElementById(modalId + '_tbtn_' + t);
+        if (!panel || !btn) return;
+        const active = t === tab;
+        panel.style.display = active ? 'block' : 'none';
+        btn.style.borderBottom = active ? '2px solid #60a5fa' : '2px solid transparent';
+        btn.style.color = active ? '#60a5fa' : '';
+      });
+    };
+
     window.openEncyclopediaModal = function(peptideId) {
       if (!encyclopediaData) return;
       const pep = encyclopediaData.peptides[peptideId];
       if (!pep) return;
 
       const isLight = document.body.classList.contains("light-mode");
-      // 테마 색상 변수
       const C = isLight ? {
-        bg:       '#ffffff', bgCard:   '#f1f5f9', bgCardAlt:'#e8edf2',
-        bgDeep:   '#e2e8f0', bgHdr:    '#ffffff',
-        border:   '#e2e8f0', borderSub:'#dde3ea',
-        txt:      '#0f172a', txtSub:   '#374151',
-        txtMuted: '#6b7280', txtFaint: '#9ca3af',
-        badge:    '#e2e8f0', badgeTxt: '#374151',
-        accent:   '#2563eb', protoRow1:'#f8fafc', protoRow2:'#f1f5f9',
-        protoHdr: '#e2e8f0', protoTxt: '#374151',
-        note:     '#eff6ff', noteBdr:  '#3b82f6', noteTxt: '#374151',
-        closeBtn: '#1e3a5f', closeBtnBdr:'#3b82f6', closeBtnTxt:'#2563eb',
+        bg:'#ffffff', bgCard:'#f1f5f9', bgDeep:'#e2e8f0', bgHdr:'#ffffff',
+        border:'#e2e8f0', borderSub:'#dde3ea',
+        txt:'#0f172a', txtSub:'#374151', txtMuted:'#6b7280', txtFaint:'#9ca3af',
+        badge:'#e2e8f0', badgeTxt:'#374151', accent:'#2563eb',
+        protoRow1:'#f8fafc', protoRow2:'#f1f5f9', protoHdr:'#e2e8f0', protoTxt:'#374151',
+        note:'#eff6ff', noteBdr:'#3b82f6', noteTxt:'#374151',
+        closeBtn:'#1e3a5f', closeBtnBdr:'#3b82f6', closeBtnTxt:'#2563eb',
+        accHdr:'#f8fafc', accHdrHov:'#f1f5f9', tabBg:'#f1f5f9',
+        researchCard:'#f8fafc', relCard:'#ffffff',
       } : {
-        bg:       '#0f172a', bgCard:   '#1e293b', bgCardAlt:'#111827',
-        bgDeep:   '#0f172a', bgHdr:    '#0f172a',
-        border:   '#1e293b', borderSub:'#1e293b',
-        txt:      '#f1f5f9', txtSub:   '#cbd5e1',
-        txtMuted: '#94a3b8', txtFaint: '#64748b',
-        badge:    '#1e293b', badgeTxt: '#94a3b8',
-        accent:   '#60a5fa', protoRow1:'#0f172a', protoRow2:'#111827',
-        protoHdr: '#1e293b', protoTxt: '#cbd5e1',
-        note:     '#1a1a2e', noteBdr:  '#3b82f6', noteTxt: '#94a3b8',
-        closeBtn: '#1e3a5f', closeBtnBdr:'#3b82f6', closeBtnTxt:'#60a5fa',
+        bg:'#0f172a', bgCard:'#1e293b', bgDeep:'#0f172a', bgHdr:'#0f172a',
+        border:'#1e293b', borderSub:'#1e293b',
+        txt:'#f1f5f9', txtSub:'#cbd5e1', txtMuted:'#94a3b8', txtFaint:'#64748b',
+        badge:'#1e293b', badgeTxt:'#94a3b8', accent:'#60a5fa',
+        protoRow1:'#0f172a', protoRow2:'#111827', protoHdr:'#1e293b', protoTxt:'#cbd5e1',
+        note:'#1a1a2e', noteBdr:'#3b82f6', noteTxt:'#94a3b8',
+        closeBtn:'#1e3a5f', closeBtnBdr:'#3b82f6', closeBtnTxt:'#60a5fa',
+        accHdr:'#1e293b', accHdrHov:'#263147', tabBg:'#1e293b',
+        researchCard:'#111827', relCard:'#1e293b',
       };
 
+      const mid = 'em_' + peptideId.replace(/[^a-z0-9]/g,'_');
       const st = ENC_STATUS[pep.researchStatus] || ENC_STATUS['Limited Research'];
       const routes = (pep.routes||[]).join(', ') || 'N/A';
+      const interTypeStyle = { Synergistic:'#4ade80', Compatible:'#60a5fa', 'Monitor Combination':'#fbbf24', 'Avoid Combination':'#ef4444', Unknown:'#94a3b8' };
+      const interTypeLabel = { Synergistic:'시너지', Compatible:'호환', 'Monitor Combination':'주의 필요', 'Avoid Combination':'병용 금지', Unknown:'불명확' };
+      const CAT_LABELS = {
+        longevity:'항노화 / 장수', metabolism:'대사', weightLoss:'체중 감량',
+        cognitiveFunction:'인지 기능', muscleMass:'근육 성장', fatLoss:'지방 감소',
+        antiInflammatory:'항염증', immuneFunction:'면역', skinHealth:'피부 건강',
+        cardiovascular:'심혈관', neuroprotection:'신경 보호', hormoneRegulation:'호르몬',
+        woundHealing:'상처 치유', sexualFunction:'성 기능', sleep:'수면',
+        pain:'통증 완화', antiAging:'항노화', bodyComposition:'체성분',
+        recovery:'회복', endurance:'지구력', strength:'근력', hairGrowth:'모발 성장',
+        pigmentation:'색소 침착', cardiac:'심장', antiCancer:'항암',
+      };
 
-      // 4개 stat 카드
+      // ── stat 카드 ──
       const statCards = [
-        { label:'일반 용량', value: pep.typicalDose || pep.quickStart?.dose || '—', sub: pep.frequency || pep.quickStart?.frequency || '' },
+        { label:'일반 용량', value: pep.typicalDose || pep.quickStart?.dose || '—', sub: pep.frequency || '' },
         { label:'투여 경로', value: routes, sub: pep.routeDetail || '' },
-        { label:'주기',     value: pep.cycle || pep.quickStart?.cycleLength || '—', sub: '일반적 기간' },
-        { label:'저장',     value: pep.storage || '—', sub: pep.quickStart?.storageNote || '' },
+        { label:'주기', value: pep.cycle || pep.quickStart?.cycleLength || '—', sub: '일반적 기간' },
+        { label:'저장', value: pep.storage || '—', sub: pep.quickStart?.storageNote || '' },
       ];
       const statsHTML = statCards.map(s => `
-        <div style="background:${C.bgCard};border-radius:12px;padding:14px;flex:1;min-width:120px">
+        <div style="background:${C.bgCard};border-radius:12px;padding:14px;flex:1;min-width:110px">
           <div style="font-size:11px;color:${C.txtFaint};margin-bottom:6px">${s.label}</div>
-          <div style="font-size:17px;font-weight:700;color:${C.txt};margin-bottom:2px">${s.value}</div>
+          <div style="font-size:15px;font-weight:700;color:${C.txt};margin-bottom:2px;line-height:1.3">${s.value}</div>
           <div style="font-size:10px;color:${C.txtMuted}">${s.sub}</div>
         </div>`).join('');
 
-      // PK
+      // ── 약동학 ──
       const pk = pep.pharmacokinetics || {};
       const pkHTML = (pk.peak || pk.halfLife || pk.cleared) ? `
         <div class="enc-section">
-          <div class="enc-section-title">📈 약동학 (Pharmacokinetics)</div>
+          <div class="enc-section-title">📈 약동학</div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
-            ${pk.peak ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:${C.txtFaint}">피크</div><div style="font-weight:700;color:#60a5fa">${pk.peak}</div></div>` : ''}
-            ${pk.halfLife ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:${C.txtFaint}">반감기</div><div style="font-weight:700;color:#fbbf24">${pk.halfLife}</div></div>` : ''}
-            ${pk.cleared ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:90px"><div style="font-size:10px;color:${C.txtFaint}">소실</div><div style="font-weight:700;color:${C.txtMuted}">${pk.cleared}</div></div>` : ''}
+            ${pk.peak    ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:10px;color:${C.txtFaint}">피크</div><div style="font-weight:700;color:#60a5fa;font-size:13px">${pk.peak}</div></div>` : ''}
+            ${pk.halfLife? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:10px;color:${C.txtFaint}">반감기</div><div style="font-weight:700;color:#fbbf24;font-size:13px">${pk.halfLife}</div></div>` : ''}
+            ${pk.cleared ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:10px;color:${C.txtFaint}">소실</div><div style="font-weight:700;color:${C.txtMuted};font-size:13px">${pk.cleared}</div></div>` : ''}
           </div>
         </div>` : '';
 
-      // Research Indications
-      const effColors = {
-        'Most Effective':'#4ade80','Effective':'#60a5fa','Moderate':'#fbbf24','Limited':'#94a3b8','Emerging':'#f87171'
-      };
-      const indHTML = pep.researchIndications?.length ? `
+      // ── 연구 인디케이션 (아코디언, 카테고리별) ──
+      const riDet = pep.researchIndicationsDetailed || {};
+      const riCats = Object.keys(riDet);
+      const indHTML = riCats.length ? `
+        <div class="enc-section">
+          <div class="enc-section-title">🎯 연구 결과</div>
+          ${riCats.map((cat, ci) => {
+            const items = riDet[cat] || [];
+            if (!items.length) return '';
+            const catId = mid + '_ri_' + ci;
+            const label = CAT_LABELS[cat] || cat;
+            return `
+            <div style="border:1px solid ${C.borderSub};border-radius:10px;margin-bottom:8px;overflow:hidden">
+              <div onclick="_encToggle('${catId}')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;background:${C.accHdr};user-select:none">
+                <span style="font-size:13px;font-weight:600;color:${C.txt}">${label}</span>
+                <span id="${catId}_arrow" style="color:${C.txtFaint};font-size:16px;transition:transform 0.2s">›</span>
+              </div>
+              <div id="${catId}" style="display:none;padding:0 14px 12px">
+                ${items.map(item => `
+                  <div style="padding:10px 0;border-bottom:1px solid ${C.borderSub}">
+                    <div style="font-size:13px;font-weight:600;color:${C.accent};margin-bottom:4px">${item.title}</div>
+                    ${item.description ? `<div style="font-size:12px;color:${C.txtMuted};line-height:1.6">${item.description}</div>` : ''}
+                  </div>`).join('')}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>` :
+        (pep.researchIndications?.length ? `
         <div class="enc-section">
           <div class="enc-section-title">🎯 연구 인디케이션</div>
-          ${pep.researchIndications.map(ind => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid ${C.borderSub}">
+          ${pep.researchIndications.map(ind => {
+            const ec = {'Most Effective':'#4ade80','Effective':'#60a5fa','Moderate':'#fbbf24','Limited':'#94a3b8','Emerging':'#f87171'};
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid ${C.borderSub}">
               <div style="display:flex;align-items:center;gap:8px">
-                <span style="width:8px;height:8px;border-radius:50%;background:${effColors[ind.effectiveness]||'#94a3b8'};display:inline-block;flex-shrink:0"></span>
+                <span style="width:8px;height:8px;border-radius:50%;background:${ec[ind.effectiveness]||'#94a3b8'};display:inline-block;flex-shrink:0"></span>
                 <span style="font-size:13px;color:${C.txtSub}">${ind.name}</span>
               </div>
-              <span style="font-size:11px;color:${effColors[ind.effectiveness]||'#94a3b8'};padding:2px 8px;background:${C.bgDeep};border-radius:20px">${ind.effectiveness}</span>
-            </div>`).join('')}
-        </div>` : '';
+              <span style="font-size:11px;color:${ec[ind.effectiveness]||'#94a3b8'};padding:2px 8px;background:${C.bgDeep};border-radius:20px">${ind.effectiveness}</span>
+            </div>`;
+          }).join('')}
+        </div>` : '');
 
-      // Protocols
+      // ── 프로토콜 ──
       const protoHTML = pep.protocols?.length ? `
         <div class="enc-section">
-          <div class="enc-section-title">📋 연구 프로토콜</div>
+          <div class="enc-section-title">📋 투여 프로토콜</div>
           <div style="background:${C.bgDeep};border-radius:8px;overflow:hidden;font-size:12px">
-            <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 2fr;gap:0;background:${C.protoHdr};padding:8px 12px;color:${C.txtFaint};font-size:11px">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 1.5fr;background:${C.protoHdr};padding:8px 12px;color:${C.txtFaint};font-size:11px">
               <span>목표</span><span>용량</span><span>빈도</span><span>경로</span>
             </div>
             ${pep.protocols.map((pr,i) => `
-              <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 2fr;gap:0;padding:8px 12px;color:${C.protoTxt};
-                          background:${i%2?C.protoRow1:C.protoRow2}">
-                <span>${pr.goal}</span><span style="color:#60a5fa">${pr.dose}</span><span>${pr.frequency}</span><span style="color:${C.txtMuted}">${pr.route}</span>
+              <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr 1.5fr;padding:8px 12px;color:${C.protoTxt};background:${i%2?C.protoRow1:C.protoRow2}">
+                <span style="font-size:11px">${pr.goal}</span>
+                <span style="color:#60a5fa;font-weight:600">${pr.dose}</span>
+                <span style="font-size:11px">${pr.frequency}</span>
+                <span style="color:${C.txtMuted};font-size:11px">${pr.route}</span>
               </div>`).join('')}
           </div>
           ${pep.protocolTiming ? `<div style="background:${C.note};border-left:3px solid ${C.noteBdr};padding:10px 12px;margin-top:8px;font-size:12px;color:${C.noteTxt};border-radius:0 6px 6px 0">${pep.protocolTiming}</div>` : ''}
         </div>` : '';
 
-      // Interactions
-      const interTypeStyle = { 'Synergistic':'#4ade80', 'Compatible':'#60a5fa', 'Monitor Combination':'#fbbf24', 'Avoid Combination':'#ef4444', 'Unknown':'#94a3b8' };
-      const interTypeLabel = { 'Synergistic':'시너지', 'Compatible':'호환', 'Monitor Combination':'주의 필요', 'Avoid Combination':'병용 금지', 'Unknown':'불명확' };
+      // ── 상호작용 (아코디언) ──
       const interHTML = pep.interactions?.length ? `
         <div class="enc-section">
-          <div class="enc-section-title">🔗 상호작용</div>
-          ${pep.interactions.map(inter => `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid ${C.borderSub}">
-              <span style="font-size:13px;color:${C.txtSub}">${inter.name}</span>
-              <span style="font-size:11px;color:${interTypeStyle[inter.type]||'#94a3b8'};padding:2px 8px;background:${C.bgDeep};border-radius:20px">${interTypeLabel[inter.type]||inter.type}</span>
+          <div class="enc-section-title">🔗 펩타이드 상호작용</div>
+          ${pep.interactions.map((inter, ii) => {
+            const iid = mid + '_inter_' + ii;
+            const clr = interTypeStyle[inter.type] || '#94a3b8';
+            const lbl = interTypeLabel[inter.type] || inter.type;
+            const hasDsc = inter.description && inter.description.trim();
+            return `
+            <div style="border:1px solid ${C.borderSub};border-radius:10px;margin-bottom:6px;overflow:hidden">
+              <div onclick="${hasDsc ? `_encToggle('${iid}')` : ''}"
+                   style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;${hasDsc?'cursor:pointer;':''}background:${C.accHdr};user-select:none">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="width:8px;height:8px;border-radius:50%;background:${clr};display:inline-block;flex-shrink:0"></span>
+                  <span style="font-size:13px;color:${C.txtSub}">${inter.name}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:11px;color:${clr};padding:2px 8px;background:${C.bgDeep};border-radius:20px">${lbl}</span>
+                  ${hasDsc ? `<span id="${iid}_arrow" style="color:${C.txtFaint};font-size:16px">›</span>` : ''}
+                </div>
+              </div>
+              ${hasDsc ? `<div id="${iid}" style="display:none;padding:10px 14px 12px;font-size:12px;color:${C.txtMuted};line-height:1.6;background:${C.bg}">${inter.description}</div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>` : '';
+
+      // ── 부작용 & 안전 (탭) ──
+      const se  = pep.sideEffects  || [];
+      const sn  = pep.safetyNotes  || [];
+      const ss  = pep.stopSigns    || [];
+      const hasAnySafety = se.length || sn.length || ss.length;
+      const safetyHTML = hasAnySafety ? `
+        <div class="enc-section">
+          <div class="enc-section-title">⚠️ 부작용 & 안전</div>
+          <div style="display:flex;gap:0;border-bottom:1px solid ${C.borderSub};margin-bottom:12px">
+            ${se.length ? `<button id="${mid}_tbtn_se" onclick="_encTab('${mid}','se')"
+              style="padding:8px 14px;background:none;border:none;border-bottom:2px solid #60a5fa;color:#60a5fa;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+              부작용 <span style="font-size:10px;opacity:.7">${se.length}</span></button>` : ''}
+            ${sn.length ? `<button id="${mid}_tbtn_sn" onclick="_encTab('${mid}','sn')"
+              style="padding:8px 14px;background:none;border:none;border-bottom:2px solid transparent;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;color:${C.txtMuted}">
+              안전 주의사항 <span style="font-size:10px;opacity:.7">${sn.length}</span></button>` : ''}
+            ${ss.length ? `<button id="${mid}_tbtn_ss" onclick="_encTab('${mid}','ss')"
+              style="padding:8px 14px;background:none;border:none;border-bottom:2px solid transparent;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;color:${C.txtMuted}">
+              언제 멈출까 <span style="font-size:10px;opacity:.7">${ss.length}</span></button>` : ''}
+          </div>
+          ${se.length ? `<div id="${mid}_tab_se">
+            <ul style="margin:0;padding-left:16px;color:${C.txtMuted};font-size:13px;line-height:1.9">
+              ${se.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+          </div>` : ''}
+          ${sn.length ? `<div id="${mid}_tab_sn" style="display:none">
+            <ul style="margin:0;padding-left:16px;color:${C.txtMuted};font-size:13px;line-height:1.9">
+              ${sn.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+          </div>` : ''}
+          ${ss.length ? `<div id="${mid}_tab_ss" style="display:none">
+            <ul style="margin:0;padding-left:0;list-style:none;color:${C.txtMuted};font-size:13px">
+              ${ss.map(s => `<li style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid ${C.borderSub}"><span style="color:#f87171;flex-shrink:0">⛔</span><span style="line-height:1.5">${s}</span></li>`).join('')}
+            </ul>
+          </div>` : ''}
+        </div>` : '';
+
+      // ── 효과 타임라인 ──
+      const tlHTML = pep.effectsTimeline?.length ? `
+        <div class="enc-section">
+          <div class="enc-section-title">⏱️ 무엇을 기대할까요?</div>
+          <ul style="margin:0;padding-left:0;list-style:none">
+            ${pep.effectsTimeline.map(t => `
+              <li style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid ${C.borderSub}">
+                <span style="color:#60a5fa;flex-shrink:0;margin-top:1px">●</span>
+                <span style="font-size:13px;color:${C.txtMuted};line-height:1.5">${t}</span>
+              </li>`).join('')}
+          </ul>
+        </div>` : '';
+
+      // ── 품질 지표 ──
+      const qiHTML = (pep.qualityGood?.length || pep.qualityBad?.length) ? `
+        <div class="enc-section">
+          <div class="enc-section-title">✅ 품질 확인</div>
+          ${(pep.qualityGood||[]).map(g => `<div style="display:flex;gap:8px;padding:6px 0;font-size:12px"><span style="color:#4ade80;flex-shrink:0">✓</span><span style="color:${C.txtMuted}">${g}</span></div>`).join('')}
+          ${(pep.qualityBad ||[]).map(b => `<div style="display:flex;gap:8px;padding:6px 0;font-size:12px"><span style="color:#ef4444;flex-shrink:0">✗</span><span style="color:${C.txtMuted}">${b}</span></div>`).join('')}
+        </div>` : '';
+
+      // ── 최신 연구 (참고문헌) ──
+      const lr = pep.latestResearch || [];
+      const lrHTML = lr.length ? `
+        <div class="enc-section">
+          <div class="enc-section-title">📚 참고 연구</div>
+          ${lr.map(r => `
+            <div style="background:${C.researchCard};border:1px solid ${C.borderSub};border-radius:10px;padding:12px 14px;margin-bottom:8px">
+              <div style="font-size:13px;font-weight:600;color:${C.txt};margin-bottom:4px;line-height:1.4">${r.title}</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+                ${r.date   ? `<span style="font-size:10px;color:${C.txtFaint};background:${C.bgDeep};padding:2px 7px;border-radius:4px">${r.date}</span>` : ''}
+                ${r.source ? `<span style="font-size:10px;color:${C.accent};background:${C.bgDeep};padding:2px 7px;border-radius:4px">${r.source}</span>` : ''}
+              </div>
+              ${r.excerpt ? `<div style="font-size:12px;color:${C.txtMuted};line-height:1.5">${r.excerpt}</div>` : ''}
+              ${r.link    ? `<a href="${r.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:12px;color:${C.accent}">연구 보기 →</a>` : ''}
             </div>`).join('')}
         </div>` : '';
 
-      // Side Effects
-      const seHTML = pep.sideEffects?.length ? `
+      // ── 관련 펩타이드 ──
+      const relSlugs = (pep.relatedSlugs || []).filter(s => encyclopediaData.peptides[s]);
+      const relHTML = relSlugs.length ? `
         <div class="enc-section">
-          <div class="enc-section-title">⚠️ 부작용 & 안전</div>
-          <ul style="margin:0;padding-left:16px;color:${C.txtMuted};font-size:13px;line-height:1.8">
-            ${pep.sideEffects.map(s => `<li>${s}</li>`).join('')}
-          </ul>
+          <div class="enc-section-title">🔬 관련 펩타이드</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            ${relSlugs.map(slug => {
+              const rp = encyclopediaData.peptides[slug];
+              const rst = ENC_STATUS[rp.researchStatus] || ENC_STATUS['Limited Research'];
+              return `
+              <div onclick="document.getElementById('enc-modal').remove();setTimeout(()=>openEncyclopediaModal('${slug}'),80)"
+                   style="background:${C.relCard};border:1px solid ${C.borderSub};border-radius:10px;padding:12px;cursor:pointer;transition:border-color .15s"
+                   onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor='${C.borderSub}'">
+                <div style="font-size:12px;font-weight:700;color:${C.txt};margin-bottom:4px">${rp.nameEn}</div>
+                <div style="font-size:10px;color:${rst.color};background:${rst.bg};padding:2px 7px;border-radius:20px;display:inline-block;margin-bottom:4px">${rst.label}</div>
+                <div style="display:flex;flex-wrap:wrap;gap:3px">
+                  ${(rp.tags||[]).slice(0,2).map(t=>`<span style="font-size:9px;color:${C.txtFaint};background:${C.bgDeep};padding:1px 5px;border-radius:3px">${t}</span>`).join('')}
+                </div>
+              </div>`;
+            }).join('')}
+          </div>
         </div>` : '';
 
-      // Timeline
-      const tlHTML = pep.effectsTimeline?.length ? `
-        <div class="enc-section">
-          <div class="enc-section-title">⏱️ 효과 타임라인</div>
-          <ul style="margin:0;padding-left:16px;color:${C.txtMuted};font-size:13px;line-height:1.8">
-            ${pep.effectsTimeline.map(t => `<li>${t}</li>`).join('')}
-          </ul>
-        </div>` : '';
-
-      // Quality Indicators
-      const qiHTML = (pep.qualityGood?.length || pep.qualityBad?.length) ? `
-        <div class="enc-section">
-          <div class="enc-section-title">✅ 품질 지표</div>
-          ${pep.qualityGood?.map(g => `<div style="display:flex;gap:8px;padding:6px 0;color:#4ade80;font-size:12px"><span>✓</span><span>${g}</span></div>`).join('')||''}
-          ${pep.qualityBad?.map(b => `<div style="display:flex;gap:8px;padding:6px 0;color:#ef4444;font-size:12px"><span>✗</span><span>${b}</span></div>`).join('')||''}
-        </div>` : '';
-
+      // ── 모달 조립 ──
       const modal = document.createElement('div');
       modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);display:flex;align-items:flex-end;z-index:1000;';
 
@@ -4697,45 +4842,45 @@
 
       box.innerHTML = `
         <div style="position:sticky;top:0;background:${C.bgHdr};padding:16px 20px 12px;border-bottom:1px solid ${C.border};z-index:1;display:flex;justify-content:space-between;align-items:start">
-          <div>
-            <div style="font-size:24px;font-weight:800;color:${C.txt};margin-bottom:4px">${pep.nameEn}</div>
-            <div style="font-size:12px;color:${C.txtFaint}">${pep.subtitle || ''}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:22px;font-weight:800;color:${C.txt};margin-bottom:3px;line-height:1.2">${pep.nameEn}</div>
+            <div style="font-size:11px;color:${C.txtFaint};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pep.subtitle || ''}</div>
           </div>
           <button onclick="document.getElementById('enc-modal').remove()"
-            style="background:none;border:none;color:${C.txtMuted};font-size:24px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-left:10px">✕</button>
+            style="background:none;border:none;color:${C.txtMuted};font-size:24px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-left:12px">✕</button>
         </div>
 
         <div style="padding:16px 20px 0">
-          <!-- 상태 & 경로 배지 -->
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-            <span style="padding:5px 12px;background:${st.bg};border-radius:20px;font-size:12px;color:${st.color};font-weight:600">${st.label}</span>
-            ${(pep.routes||[]).map(r => `<span style="padding:5px 12px;background:${C.badge};border-radius:20px;font-size:12px;color:${C.badgeTxt}">${r}</span>`).join('')}
+            <span style="padding:4px 12px;background:${st.bg};border-radius:20px;font-size:12px;color:${st.color};font-weight:600">${st.label}</span>
+            ${pep.isApproved ? `<span style="padding:4px 12px;background:#14532d;border-radius:20px;font-size:12px;color:#4ade80;font-weight:600">FDA 승인</span>` : ''}
+            ${(pep.routes||[]).map(r => `<span style="padding:4px 12px;background:${C.badge};border-radius:20px;font-size:12px;color:${C.badgeTxt}">${r}</span>`).join('')}
           </div>
 
-          <!-- 4개 stat 카드 -->
           <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">${statsHTML}</div>
 
-          <!-- 개요 -->
           ${pep.descriptionEn ? `
           <div class="enc-section">
             <div class="enc-section-title">📖 개요</div>
             <p style="margin:0;color:${C.txtMuted};font-size:13px;line-height:1.7">${pep.descriptionEn}</p>
             ${pep.keyBenefits ? `<div style="margin-top:10px;padding:10px;background:${C.bgCard};border-radius:8px;font-size:12px;color:${C.txtSub}"><strong style="color:${C.accent}">주요 이점:</strong> ${pep.keyBenefits}</div>` : ''}
+            ${pep.mechanism ? `<div style="margin-top:8px;padding:10px;background:${C.bgCard};border-radius:8px;font-size:12px;color:${C.txtSub}"><strong style="color:${C.accent}">작용 메커니즘:</strong> ${pep.mechanism}</div>` : ''}
           </div>` : ''}
 
           ${pkHTML}
           ${indHTML}
           ${protoHTML}
           ${interHTML}
-          ${seHTML}
+          ${safetyHTML}
           ${tlHTML}
           ${qiHTML}
+          ${lrHTML}
+          ${relHTML}
         </div>
 
         <div style="padding:16px 20px 24px">
           <button onclick="document.getElementById('enc-modal').remove()"
-            style="width:100%;padding:14px;background:${C.closeBtn};border:1px solid ${C.closeBtnBdr};border-radius:12px;
-                   color:${C.closeBtnTxt};font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+            style="width:100%;padding:14px;background:${C.closeBtn};border:1px solid ${C.closeBtnBdr};border-radius:12px;color:${C.closeBtnTxt};font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
             닫기
           </button>
         </div>`;
