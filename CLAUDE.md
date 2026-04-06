@@ -26,7 +26,7 @@
 | ⚖️ 체중 | `panel-weight` | 서브탭 3개: 기록/그래프, 🏋️ 인바디, 📊 분석 |
 | 💊 영양제 | `panel-supple` | 시간대별 영양제 체크, 수분 트래커, 영양소 배분 |
 | 📅 달력 | `panel-calendar` | 월간 뷰, 날짜별 투약·체중·영양제 기록 확인 및 추가 |
-| 🔬 백과사전 | `panel-encyclopedia` | 72개 펩타이드 DB, 검색/필터, 상세 모달 (pep-pedia 스타일) |
+| 🔬 백과사전 | `panel-encyclopedia` | 76개 펩타이드 DB, 검색/필터, 상세 모달 (pep-pedia 스타일) |
 
 ### 체중 탭 서브탭 구조
 | 서브탭 | id | 내용 |
@@ -314,8 +314,8 @@ let currentUserIsAdmin = false;   // auth listener에서 설정
 ## 백과사전 탭 (panel-encyclopedia)
 
 ### 데이터 파일
-- **`peptides_v3.json`** — 72개 펩타이드, v3.0 포맷
-  - 소스: `parse_peptides_v3.py` (pep-pedia.org 스크래핑 텍스트 파싱)
+- **`peptides_v3.json`** — 76개 펩타이드, v3.0 포맷 (2026-04-06 pep-pedia API 전량 보완)
+  - 소스: `parse_peptides_v3.py` (pep-pedia.org 스크래핑 텍스트 파싱) + pep-pedia.org/api/peptides
   - 원본: `C:/Users/JuneK/Downloads/peptides.txt` (4.3MB)
 
 ### JSON v3.0 구조
@@ -342,7 +342,12 @@ let currentUserIsAdmin = false;   // auth listener에서 설정
       researchIndications: [{ name, effectiveness, level }],
       protocols: [{ goal, dose, frequency, route }],
       protocolTiming: string,
-      interactions: [{ name, type }],  // type: "Synergistic"|"Compatible"|"Monitor Combination"|...
+      interactions: [{ name, type, description }],  // type: "Synergistic"|"Compatible"|"Monitor Combination"|... (pep-pedia API로 description 추가)
+      researchIndicationsDetailed: { [catKey]: [{title, description}] },  // 카테고리별 상세 (pep-pedia API)
+      latestResearch: [{ title, excerpt, date, source, link }],           // 참고 연구 (doi 링크)
+      relatedSlugs: string[],          // 관련 펩타이드 slug 목록
+      safetyNotes: string[],           // 안전주의사항
+      stopSigns: string[],             // 중단 신호
       reconstitute: string[],
       qualityGood: string[],
       qualityBad: string[],
@@ -526,7 +531,12 @@ appData.costCalc.customConsumables = [
 - ✅ 펩타이드 전량 typicalDose 보완 (32개 누락 → 전량 채움)
 - ✅ 펩타이드 전량 protocols 보완 (66개 누락 → 76개 전량 채움, 한국어)
 - ✅ 그래프 핀치줌 튐 버그 수정 (getFullRange() 공식 불일치 → _graphFullRange 공유 변수로 통일)
+- ✅ 그래프 핀치줌 피벗포인트 수정 (두 손가락 중간점 기준 줌, ratio 방향 수정 — 반감기 짧은 펩타이드 이퀄라이저 버그 해결)
 - ✅ 펩타이드 4개 신규 추가 (72→76개): GHRP-6 / Bromantane / Cardiogen / PNC-27 (pep-pedia.org 기준)
+- ✅ 백과사전 모달 전면 개선 (pep-pedia.org 수준 UI): 연구결과 카테고리별 아코디언 + effectiveness 배지(한국어) / 상호작용 설명 아코디언 / 부작용 3탭(부작용·안전주의·중단신호) / 참고연구 카드+링크 / 관련 펩타이드 그리드
+- ✅ peptides_v3.json pep-pedia API 전량 보완: interactions 설명 / researchIndicationsDetailed / latestResearch / relatedSlugs / safetyNotes / stopSigns / sideEffects 71개 실데이터 교체
+- ✅ 참고연구 링크 클릭 수정 (a href → window.open onclick, 모바일 터치 이슈)
+- ✅ 연구결과 effectiveness 배지 복원 (researchIndications ↔ researchIndicationsDetailed 카테고리 매핑)
 - ✅ Firebase API 키 도메인 제한 (goodgodpeptide.github.io/* + goodgodpeptide.firebaseapp.com/* 허용 — GCP Console HTTP referrers 설정, firebaseapp.com 누락 시 Auth 리다이렉트 오류 발생)
 - ✅ PK 모델 ka 수식 근본 수정: `ka=ln2/tmaxHours` → `computeKa()` Newton-Raphson 풀이 (모델이 정확히 tmaxHours에서 피크)
 - ✅ DRUG_CONFIG 파라미터 논문/FDA 라벨 기반 업데이트 (마운자로 tmax 8hr, 레타/위고비/카그릴 tmax 24hr, 티모신알파1 halfLife 2hr, 테사모렐린 halfLife 7min/tmax 9min)
