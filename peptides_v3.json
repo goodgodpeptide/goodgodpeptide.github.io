@@ -1471,7 +1471,13 @@
         "12: Sustained longevity benefits and cellular healthSide effects: Generally minimal, occasional mild GI adjustmentMost effective for: Metabolic health, longevity, energy enhancement"
       ],
       "sideEffects": [
-        "& SafetySide Effects7"
+        "위장 장애 (메스꺼움, 소화불량) — 식사 중 복용으로 완화",
+        "두통 (특히 초기 고용량)",
+        "불면증 또는 수면 변화 (저녁 복용 시)",
+        "식욕 감소 (일시적)",
+        "간 효소 수치 상승 가능 (장기 고용량, 모니터링 권장)",
+        "피로감 또는 졸음 (일부 사용자)",
+        "NAD+ 경로 과활성화에 따른 과민반응 (드물게)"
       ],
       "quickStart": {
         "dose": "50-75mg",
@@ -1577,7 +1583,15 @@
         "Acetyl form provides extended effects compared to standard Selank"
       ],
       "sideEffects": [
-        "& SafetySide Effects9"
+        "비강 자극 또는 타는 느낌 (비강 분무 시)",
+        "두통 (초기 또는 고용량)",
+        "졸음 또는 진정 효과 (일부 사용자)",
+        "불안 악화 (역설적 반응, 드물게)",
+        "코막힘 또는 점막 건조",
+        "혈압 일시적 변화",
+        "메스꺼움 (고용량)",
+        "집중력 저하 (적응 기간 중)",
+        "장기 안전성 데이터 제한적"
       ],
       "quickStart": {
         "dose": "200-300 mcg",
@@ -1679,7 +1693,14 @@
         "4: Neuroplasticity benefits, sustained cognitive improvementsWeek 4+: Maximum neuroprotective and structural brain benefitsNote: Effects highly individual and based primarily on anecdotal reports"
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "비강 자극 또는 타는 느낌",
+        "두통 (초기 사용 시)",
+        "졸음 또는 과도한 진정",
+        "코막힘 또는 점막 자극",
+        "불안 (역설적 반응, 드물게)",
+        "메스꺼움",
+        "혈압 변화 (모니터링 권장)",
+        "장기 안전성 데이터 부족"
       ],
       "quickStart": {
         "dose": "200-300 mcg",
@@ -1776,7 +1797,14 @@
       ],
       "effectsTimeline": [],
       "sideEffects": [
-        "& SafetySide Effects5"
+        "신장 독성 위험 (임상 연구에서 원숭이 대상 관찰) — 가장 심각한 부작용",
+        "탈수 및 전해질 불균형",
+        "주사 부위 통증 및 염증",
+        "메스꺼움 및 구토",
+        "전신 쇠약감",
+        "인간 임상 안전성 데이터 극히 제한적 — 의료 감독 필수",
+        "⚠️ 신장 기능 정기 모니터링 필수",
+        "⚠️ 현재 인간 임상 사용 승인 없음"
       ],
       "quickStart": {
         "dose": "0.43 mg/kg",
@@ -1884,7 +1912,16 @@
         "6: Significant results visible; continued improvement expectedMonth 6"
       ],
       "sideEffects": [
-        "& SafetySide Effects10"
+        "국소 피부 자극 (발적, 가려움) — 고농도 사용 시",
+        "일시적 피부 착색 (구리 함량으로 인한)",
+        "알레르기 반응 (드물게)",
+        "눈 주변 적용 시 자극 주의",
+        "구리 과부하 (전신 주사 고용량, 장기 사용 시)",
+        "두통 (전신 사용 시)",
+        "피부 건조 또는 박리 (일부 제형)",
+        "금속 알레르기 보유자 주의",
+        "고농도 제형의 점막 노출 금지",
+        "장기 전신 사용 데이터 제한적"
       ],
       "quickStart": {
         "dose": "0.5-1% concentration applied to scalp or skin",
@@ -2000,7 +2037,13 @@
         "tolerated, mild injection site reactions possible"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "주사 부위 발적 및 일시적 통증",
+        "두통 (초기)",
+        "메스꺼움 (드물게)",
+        "피로감 (일부 사용자)",
+        "혈당 변화 가능성 (당뇨 환자 모니터링 권장)",
+        "인슐린 감수성 영향 (드물게)",
+        "⚠️ 경구 투여 시 생체이용률 낮음"
       ],
       "quickStart": {
         "dose": "250-500mcg",
@@ -2115,7 +2158,13 @@
         "lasting benefits continue due to \"molecular switch\" effect, sustained tissue protection"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "주사 부위 발적 및 경미한 통증",
+        "두통 (경미, 일시적)",
+        "경미한 메스꺼움",
+        "피로감",
+        "혈압 변화 (드물게)",
+        "적혈구 생성 자극 (고용량 장기 사용 시 모니터링 권장)",
+        "⚠️ 전통적 EPO와 달리 조혈 자극 최소화 설계이나 모니터링 권장"
       ],
       "quickStart": {
         "dose": "4 mg daily",
@@ -2236,7 +2285,14 @@
         "14% total reduction possibleSide effects generally milder than injectable GLP"
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "메스꺼움 (특히 초기 또는 용량 증량 시)",
+        "구토 (고용량)",
+        "설사 또는 변비",
+        "식욕 감소",
+        "두통",
+        "저혈당 위험 (당뇨 약물 병용 시)",
+        "소화불량 및 복부 팽만",
+        "위 배출 지연 (GLP-1 기전)"
       ],
       "quickStart": {
         "dose": "50-150mg daily",
@@ -2361,7 +2417,12 @@
         "8: Maximum localized healing benefitsSide effects: Mild injection site redness or irritationMost effective for: Tendon, ligament, muscle injuries"
       ],
       "sideEffects": [
-        "& SafetySide Effects4"
+        "메스꺼움 (주로 경구 고용량 시)",
+        "주사 부위 일시적 통증 및 발적",
+        "두통 (드물게)",
+        "현기증 (드물게)",
+        "⚠️ 암 병력자: 조직 재생 촉진 특성으로 주의 (이론적 위험, 임상 미확인)",
+        "전반적으로 동물 연구 및 사용자 보고에서 높은 안전성 확인"
       ],
       "quickStart": {
         "dose": "250-500 mcg",
@@ -2479,7 +2540,14 @@
         "23% weight loss), sustained weight loss maintenance with continued therapy"
       ],
       "sideEffects": [
-        "& SafetySide Effects5"
+        "메스꺼움 (매우 흔함, 특히 증량 초기)",
+        "구토",
+        "설사 또는 변비",
+        "식욕 감소",
+        "주사 부위 반응 (발적, 부종)",
+        "심박수 증가 (아밀린 수용체 작용)",
+        "저혈당 가능성 (인슐린 병용 시)",
+        "피로감"
       ],
       "quickStart": {
         "dose": "2.4 mg weekly (after 16-week dose escalation)",
@@ -2587,7 +2655,11 @@
         "4: Gradual improvement in joint comfortMonth 2: Noticeable mobility improvementsMonth 3: Maximum therapeutic effect achieved"
       ],
       "sideEffects": [
-        "& SafetySide Effects5"
+        "주사 부위 경미한 자극",
+        "경미한 메스꺼움 (드물게)",
+        "두통 (드물게)",
+        "알레르기 반응 가능성 (드물게)",
+        "장기 안전성 데이터 제한적"
       ],
       "quickStart": {
         "dose": "1-2 capsules (100-200mcg total)",
@@ -2718,7 +2790,15 @@
         "12: Sustained benefits, cognitive enhancement plateaus in chronic conditions"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "주사 부위 통증 및 발열감",
+        "두통 및 어지럼증",
+        "메스꺼움 및 구토",
+        "과민반응 또는 알레르기 반응 (드물게, 피하 테스트 권장)",
+        "발열 (드물게)",
+        "경련 유발 가능 (발작 병력자 주의)",
+        "불면증 또는 수면 변화",
+        "⚠️ IV 투여 시 반드시 희석 후 천천히 투여",
+        "⚠️ 간질 또는 발작 병력자 사용 금지"
       ],
       "quickStart": {
         "dose": "20-50 mL (acute) or 10-30 mL (chronic)",
@@ -2833,7 +2913,14 @@
         "cycle: Some benefits may persist for several weeks due to improved sleep and recovery patterns"
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "수분 저류 및 부종 (손발 저림)",
+        "두통 (초기)",
+        "피로감 또는 졸음 (특히 취침 전 투여 후)",
+        "주사 부위 발적 및 통증",
+        "혈당 상승 가능성 (장기 GH 증가에 따른)",
+        "코르티솔 일시적 변화",
+        "인슐린 감수성 변화 (장기 사용)",
+        "손목터널증후군 유사 증상 (고용량 장기)"
       ],
       "quickStart": {
         "dose": "200-250 mcg each peptide once daily, or 100-150 mcg each twice daily",
@@ -2943,7 +3030,12 @@
         "12: More significant lean mass gains, fat loss, improved joint comfortWeek 12+: Continued gradual improvements in body composition and well"
       ],
       "sideEffects": [
-        "& SafetySide Effects5"
+        "수분 저류 및 부종",
+        "두통",
+        "주사 부위 발적 및 통증",
+        "피로감 (초기)",
+        "혈당 변화 (장기 GH 증가)",
+        "손발 저림 (말초 부종)"
       ],
       "quickStart": {
         "dose": "100mcg (10 units if mixed at 100mcg/10 units)",
@@ -3044,7 +3136,13 @@
         "1 returns to baseline in 2"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "수분 저류 및 말초 부종",
+        "두통",
+        "주사 부위 발적 및 통증",
+        "피로감",
+        "혈당 조절 변화 (장기 사용)",
+        "손발 저림",
+        "⚠️ DAC 형태로 GH 방출이 장기간 지속 — 과도한 GH 증가 모니터링 필요"
       ],
       "quickStart": {
         "dose": "1-2mg (0.5-1mL if mixed at 2mg/mL)",
@@ -3157,7 +3255,12 @@
         "1 ratioMost effective for: Cognitive decline prevention, healthy aging, metabolic support"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "경미한 두통 (초기)",
+        "소화불량 (드물게)",
+        "수면 변화 (드물게)",
+        "전반적으로 양호한 안전성 프로파일",
+        "장기 안전성 데이터 제한적",
+        "뇌혈관 질환자는 전문가 상담 권장"
       ],
       "quickStart": {
         "dose": "20-50 μg cGP or 300-600 mg blackcurrant extract",
@@ -3279,7 +3382,14 @@
         "cycle: Effects may persist for days to weeksCommon effects: Mental clarity, faster learningSide effects: Headaches (most common), anxiety, sleep disruption if taken late"
       ],
       "sideEffects": [
-        "& SafetySide Effects7"
+        "두통 (흔함, 특히 초기)",
+        "불안 또는 과민함 (고용량)",
+        "불면증 또는 수면 장애",
+        "혈압 상승 가능성 (모니터링 권장)",
+        "메스꺼움",
+        "기억 강화로 인한 과거 트라우마 재경험 가능성",
+        "⚠️ 혈압 이상 또는 뇌혈관 질환자 주의",
+        "⚠️ 과도한 신경 자극 가능성 — 낮은 용량에서 시작 필수"
       ],
       "quickStart": {
         "dose": "8-10mg oral / 0.5mg/kg injectable",
@@ -3393,7 +3503,13 @@
         "2 weeks after stopping"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "주사 부위 경미한 통증",
+        "과도한 졸음 (낮 투여 시)",
+        "두통 (드물게)",
+        "저혈압 (드물게)",
+        "코르티솔 수치 변화",
+        "전반적으로 양호한 단기 안전성",
+        "장기 사용 데이터 제한적"
       ],
       "quickStart": {
         "dose": "100-200mcg per injection",
@@ -3523,7 +3639,13 @@
         "aging effects with repeated cyclesNOTE: Effects should be similar to high"
       ],
       "sideEffects": [
-        "& SafetySide Effects7"
+        "주사 부위 경미한 통증 또는 발적",
+        "두통 (드물게)",
+        "피로감 (초기)",
+        "수면 패턴 변화",
+        "메스꺼움 (드물게)",
+        "전반적으로 우수한 안전성 프로파일 (수십 년 러시아 연구)",
+        "장기 텔로미어 영향에 대한 독립적 데이터 제한적"
       ],
       "quickStart": {
         "dose": "200-500μg per injection",
@@ -3634,7 +3756,16 @@
         "12: Modest supportive benefits possible for those following comprehensive weight management.Important: Clinical evidence for this specific combination is absent. Any weight loss is primarily due to di"
       ],
       "sideEffects": [
-        "& SafetySide Effects10"
+        "구성 성분별 부작용 누적 가능 (스택 조합 주의)",
+        "메스꺼움 또는 소화불량",
+        "심박수 증가 (교감신경 자극 성분 포함 시)",
+        "불면증 (각성 효과 성분 포함 시)",
+        "전해질 불균형 (이뇨 효과 성분 포함 시)",
+        "혈압 변화",
+        "두통",
+        "주사 부위 반응 (주사 성분 포함 시)",
+        "⚠️ 각 성분의 개별 부작용 반드시 검토 필요",
+        "⚠️ 심혈관 질환자 사용 금지"
       ],
       "quickStart": {
         "dose": "1-2 mL per injection",
@@ -3744,7 +3875,14 @@
         "acting injectionsInjectable peptide effects likely much more modest due to rapid clearance"
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "관절 통증 또는 경직 (근육 성장에 따른)",
+        "건(腱) 부상 위험 증가 (근육-건 불균형)",
+        "이론적 암 위험 증가 (세포 성장 촉진 기전)",
+        "⚠️ 100일 이상 사용 금지 (과도한 근육 성장, 장기 독성 위험)",
+        "주사 부위 통증",
+        "두통",
+        "호르몬 교란 가능성",
+        "⚠️ 암 병력자 절대 사용 금지"
       ],
       "quickStart": {
         "dose": "100 mcg (anecdotal - no clinical dosing established)",
@@ -3866,7 +4004,15 @@
         "3 weeksRenal function normalized within study period (weeks)Human effects poorly characterized; proceed with caution"
       ],
       "sideEffects": [
-        "& SafetySide Effects9"
+        "주사 부위 통증 및 발적",
+        "피로감 (세포 제거 과정 중)",
+        "일시적 염증 반응",
+        "메스꺼움",
+        "면역 반응 변화",
+        "장기 인간 안전성 데이터 전무",
+        "⚠️ 정상 세포에도 영향 가능성 (임상 미확인)",
+        "⚠️ 자가면역 질환자 주의",
+        "⚠️ 인간 임상시험 데이터 없음"
       ],
       "quickStart": {
         "dose": "No established human dose. Mouse: 5 mg/kg. Anecdotal human: ~25 mg",
@@ -3979,7 +4125,13 @@
         "aging, skin regeneration, hair growth"
       ],
       "sideEffects": [
-        "& SafetySide Effects5"
+        "국소 피부 자극 (발적, 가려움) — 고농도 사용 시",
+        "일시적 피부 착색 (구리 성분)",
+        "알레르기 반응 (드물게)",
+        "눈 주변 사용 시 자극 주의",
+        "구리 알레르기 보유자 주의",
+        "점막 노출 금지 (고농도)",
+        "전신 주사 고용량 장기 사용 시 구리 과부하 가능성"
       ],
       "quickStart": {
         "dose": "0.5-1% concentration",
@@ -4074,7 +4226,14 @@
       ],
       "effectsTimeline": [],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "구성 성분에 따른 피부 자극 가능",
+        "알레르기 반응 (드물게)",
+        "광과민성 증가 (일부 성분)",
+        "메스꺼움 (경구 성분 포함 시)",
+        "두통",
+        "호르몬 변화 (일부 성분)",
+        "⚠️ 각 성분의 개별 부작용 반드시 검토 필요",
+        "임신/수유 중 사용 금지"
       ],
       "quickStart": {
         "dose": "Calculate based on vial content",
@@ -4180,7 +4339,17 @@
         "8: Potential improvements in skin appearance, immune resilience, or neurological symptoms depending on indication. Effects are often subtle.Important: Glutathione is supportive therapy. Do not expect"
       ],
       "sideEffects": [
-        "& SafetySide Effects11"
+        "경미한 복통 또는 소화불량 (경구 고용량)",
+        "복부 팽만감",
+        "알레르기 반응 가능 (드물게)",
+        "아연 수치 감소 (장기 복용 시 — 아연 보충 권장)",
+        "아황산염 민감자 반응 가능",
+        "IV 투여 시 정맥 자극 또는 플레비티스",
+        "신장 결석 관련 우려 (고용량 장기, 일부 보고)",
+        "두통 (경미)",
+        "설사 (고용량 경구)",
+        "메스꺼움",
+        "⚠️ 천식 환자 흡입 투여 시 기관지 경련 주의"
       ],
       "quickStart": {
         "dose": "200-600 mg per injection",
@@ -4290,7 +4459,16 @@
         "term: Maintained testicular size and function with ongoing use; fertility preservedNote: Effects depend heavily on context (TRT adjunct vs monotherapy vs fertility protocol)"
       ],
       "sideEffects": [
-        "& SafetySide Effects10"
+        "주사 부위 통증 및 발적",
+        "여성형 유방증 (남성, 에스트로겐 전환으로 인한)",
+        "수분 저류 및 부종",
+        "두통",
+        "과민반응 또는 알레르기",
+        "난소 과자극 증후군 (OHSS, 여성 고용량)",
+        "혈전증 위험 증가 (고용량)",
+        "테스토스테론 과다 증가 (에스트로겐 동반 상승)",
+        "여드름 또는 피부 지성화",
+        "⚠️ 호르몬 의존성 암 병력자 사용 금지"
       ],
       "quickStart": {
         "dose": "500-1000 IU twice weekly for TRT adjunct; higher for monotherapy",
@@ -4418,7 +4596,15 @@
         "50% from baselineWeek 12"
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "코르티솔 및 프로락틴 상승 (ipamorelin보다 강함)",
+        "수분 저류 및 말초 부종",
+        "강한 식욕 증진",
+        "두통",
+        "졸음 또는 피로감",
+        "주사 부위 통증",
+        "혈당 변화 (GH 증가에 따른)",
+        "심장 수용체 탈감작 (장기 고용량 사용 시)",
+        "⚠️ 심혈관 작용 있음 — 심장 질환자 주의"
       ],
       "quickStart": {
         "dose": "100 mcg (10 units if mixed at 100mcg/10 units)",
@@ -4538,7 +4724,17 @@
         "term: Maintained benefits with ongoing use; effects diminish over weeks"
       ],
       "sideEffects": [
-        "& SafetySide Effects10"
+        "수분 저류 및 말초 부종 (흔함)",
+        "손목터널증후군",
+        "관절 통증 및 근육통",
+        "두통",
+        "혈당 상승 및 인슐린 저항성",
+        "여성형 유방증 (남성)",
+        "피로감 (초기 적응 기간)",
+        "갑상선 기능 억제 가능 (장기 사용)",
+        "말단비대증 위험 (초고용량 장기 사용)",
+        "⚠️ 당뇨 또는 당뇨 전단계 환자 주의",
+        "⚠️ 암 병력자 사용 금지 (세포 성장 촉진)"
       ],
       "quickStart": {
         "dose": "Start 1-2 IU daily, assess tolerance before increasing",
@@ -4654,7 +4850,15 @@
         "2 weeks. Strength/size gains may persist if training maintained."
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "저혈당 위험 (IGF-1의 인슐린 유사 작용)",
+        "두통",
+        "수분 저류",
+        "관절 통증",
+        "턱·코·발 비대 가능 (고용량 장기)",
+        "장기 비대 위험 (고용량)",
+        "암 성장 촉진 이론적 위험",
+        "⚠️ 혈당 모니터링 필수 (저혈당 응급 준비)",
+        "⚠️ 암 병력자 사용 금지"
       ],
       "quickStart": {
         "dose": "20-40mcg for beginners",
@@ -4781,7 +4985,12 @@
         "injectionMost effective for: Sleep optimization, body recomposition, anti"
       ],
       "sideEffects": [
-        "& SafetySide Effects5"
+        "두통 (경미, 초기)",
+        "수분 저류 (경미, 고용량 시)",
+        "주사 부위 발적",
+        "피로감 또는 졸음 (취침 전 투여 시 약한 진정)",
+        "⚠️ 코르티솔·프로락틴 상승이 거의 없어 GH 분비촉진제 중 안전성 프로파일 우수",
+        "전반적으로 가장 내약성 좋은 GH 분비촉진제 중 하나"
       ],
       "quickStart": {
         "dose": "200-300mcg",
@@ -4886,7 +5095,13 @@
         "causes receptor desensitization"
       ],
       "sideEffects": [
-        "& SafetySide Effects7"
+        "주사 부위 경미한 통증",
+        "두통",
+        "LH/FSH 과잉 자극 가능 (고용량)",
+        "호르몬 변동에 따른 기분 변화",
+        "메스꺼움 (드물게)",
+        "장기 안전성 데이터 제한적",
+        "⚠️ 호르몬 의존성 질환자 주의"
       ],
       "quickStart": {
         "dose": "100-200 mcg",
@@ -4973,7 +5188,13 @@
         "4 weeks if they occurNo clinical data exists to set realistic expectationsPlacebo effects may contribute to perceived benefits"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "구성 성분 각각의 부작용 누적 가능",
+        "주사 부위 통증 및 발적 (복합 주사 시)",
+        "메스꺼움",
+        "피로감 (초기)",
+        "두통",
+        "과민반응 (성분 알레르기)",
+        "⚠️ 각 성분(GHK-Cu, TB-500, BPC-157, KPV) 개별 부작용 검토 필수"
       ],
       "quickStart": {
         "dose": "2-3.2mg daily (0.1-0.16mL at 20mg/mL)",
@@ -5078,7 +5299,12 @@
         "inflammatory benefits, improved quality of life"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "주사 부위 경미한 통증",
+        "메스꺼움 (드물게)",
+        "두통 (드물게)",
+        "면역 조절에 따른 일시적 피로감",
+        "전반적으로 우수한 내약성",
+        "장기 인간 데이터 제한적"
       ],
       "quickStart": {
         "dose": "200-500mcg (0.2-0.5mL at 1mg/mL concentration)",
@@ -5200,7 +5426,13 @@
         "8: Sustained metabolic benefits, potential body composition changesSide effects: Injection site reactions (mild), fishy body odor at high doses"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "비린내 나는 체취 (TMAU 보유자에서 심함)",
+        "메스꺼움 및 구토 (고용량 경구)",
+        "설사 또는 소화불량",
+        "복부 경련",
+        "식욕 증가 또는 감소",
+        "⚠️ 갑상선 기능 저하증 환자: 갑상선 호르몬 활성도 감소 가능",
+        "⚠️ 심혈관 질환자: TMAO 전환 관련 장기 연구 주의 (논란 있음)"
       ],
       "quickStart": {
         "dose": "500-1000 mg",
@@ -5310,7 +5542,14 @@
         "12: Modest supportive benefits for those following comprehensive weight management.Important: If weight loss occurs, it is likely primarily due to diet and exercise, not the injections alone."
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "주사 부위 통증, 발열감, 발적 (흔함)",
+        "독감 유사 증상 (일부)",
+        "두통",
+        "메스꺼움",
+        "어지럼증",
+        "간 기능 부하 (콜린 고용량 시)",
+        "설사 (고용량)",
+        "⚠️ 간 질환자 또는 신장 질환자 주의"
       ],
       "quickStart": {
         "dose": "1-2 mL per injection",
@@ -5431,7 +5670,12 @@
         "8: Continued healing progress toward complete wound closure"
       ],
       "sideEffects": [
-        "& SafetySide Effects4"
+        "주사 부위 통증 및 발적 (흔함)",
+        "발열 반응 (면역 활성화로 인한, 초기)",
+        "알레르기 반응 또는 과민증",
+        "메스꺼움 (드물게)",
+        "⚠️ 자가면역 질환자: 면역 자극 특성으로 주의",
+        "⚠️ 패혈증 위험이 있는 환자 사용 금지"
       ],
       "quickStart": {
         "dose": "0.5-1.6 mg/mL",
@@ -5553,7 +5797,16 @@
         "16: Steady weight loss continues (7"
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "메스꺼움 (매우 흔함, 특히 증량 초기)",
+        "구토",
+        "설사 또는 변비",
+        "식욕 감소",
+        "주사 부위 반응",
+        "두통",
+        "저혈당 (당뇨 약물 병용 시)",
+        "위 배출 지연 (GLP-1/글루카곤 이중 작용)",
+        "⚠️ 췌장염 병력자 주의",
+        "⚠️ 갑상선 C세포 종양 병력자 사용 금지 (GLP-1 수용체 작용)"
       ],
       "quickStart": {
         "dose": "Start 1.5-3mg weekly, escalate every 4 weeks to target dose",
@@ -5661,7 +5914,14 @@
         "4: Peak tanning effects, maintained pigmentation with reduced injection frequency"
       ],
       "sideEffects": [
-        "& SafetySide Effects5"
+        "메스꺼움 (흔함, 특히 초기 고용량)",
+        "안면 홍조",
+        "피로감 또는 졸음",
+        "주사 부위 통증 및 발적",
+        "색소 침착 불균일 (점 어두워짐 포함)",
+        "두통",
+        "⚠️ 기존 점(mole) 또는 피부 병변 모니터링 필수",
+        "⚠️ 피부암 병력자 사용 주의"
       ],
       "quickStart": {
         "dose": "0.25-0.5mg per injection",
@@ -5780,14 +6040,17 @@
         "4: Significant tanning, stabilized sexual effectsWeek 4+: Maintained tan with less frequent dosing"
       ],
       "sideEffects": [
-        "0.25mgEvery other daySubcutaneousPhotoprotection0.5mg2x weeklySubcutaneousTiming: For tanning: morning dosing preferred. For sexual effects: 2",
-        "4 hours before activity. Can split daily dose to minimize side effects.Peptide InteractionsPT",
-        "141 (Bremelanotide)Use CautionAlpha",
-        "MSHAvoid CombinationCialis/ViagraMonitor CombinationBlood Pressure MedicationsMonitor CombinationBPC",
-        "157CompatibleGrowth Hormone PeptidesCompatibleAppetite SuppressantsMonitor CombinationThyroid MedicationsUnknownHow to ReconstituteCalculatorImportant: Use BAC water. Light sensitive",
-        "store in dark location or wrap vial to protect from light. Refrigerate and use within 30 days.1Clean vial tops with alcohol swab and let dry2Draw 2ml bacteriostatic water for 10mg vial (creates 5mg/ml",
-        "do not shake vigorously5Solution should be clear to slightly yellow",
-        "cloudiness indicates degradation6Store reconstituted peptide in refrigerator wrapped in foil (light sensitive)7Draw dose with insulin syringe"
+        "메스꺼움 (흔함, 특히 고용량)",
+        "안면 홍조",
+        "자발적 발기 (남성 — 의도하지 않은 효과)",
+        "피로감 및 졸음",
+        "주사 부위 통증 및 발적",
+        "색소 침착 불균일 (점 어두워짐)",
+        "두통",
+        "혈압 변화",
+        "⚠️ 기존 점(mole) 정기 검사 필수 (색소 변화 모니터링)",
+        "⚠️ 피부암 병력자 사용 금지",
+        "⚠️ 지속 발기 시 즉시 의료 처치 필요"
       ],
       "quickStart": {
         "dose": "0.25-1mg",
@@ -5907,7 +6170,15 @@
         "40%), possible lethargy (20"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "식욕 현저히 증가 (그렐린 수용체 작용)",
+        "수분 저류 및 부종",
+        "피로감 및 졸음 (특히 초기)",
+        "혈당 상승 및 인슐린 저항성 (장기 사용)",
+        "손목터널증후군 유사 증상",
+        "관절 통증",
+        "⚠️ 당뇨 또는 당뇨 전단계 환자: 혈당 정기 모니터링 필수",
+        "⚠️ 암 병력자: GH/IGF-1 증가로 사용 주의",
+        "⚠️ 일부 사용자에서 공복 혈당 상승 보고"
       ],
       "quickStart": {
         "dose": "25mg",
@@ -6016,7 +6287,13 @@
         "12: Maximum mitochondrial function enhancement, metabolic flexibilitySide effects: Generally mild, possible injection site reactions"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "주사 부위 경미한 통증",
+        "두통 (드물게)",
+        "피로감 (초기, 대사 적응 과정)",
+        "메스꺼움 (드물게)",
+        "혈당 변화 (대사 활성화)",
+        "장기 안전성 데이터 제한적",
+        "⚠️ 당뇨 약물 병용 시 혈당 모니터링 권장"
       ],
       "quickStart": {
         "dose": "5-15mg",
@@ -6129,7 +6406,11 @@
         "12 hours: Gradual return to baseline with lasting effects"
       ],
       "sideEffects": [
-        "& SafetySide Effects4"
+        "비강 자극 또는 타는 느낌",
+        "두통 (초기)",
+        "불안 또는 신경과민 (고용량)",
+        "불면증 (저녁 투여 시)",
+        "⚠️ 일반 Semax보다 작용이 강해 낮은 용량에서 시작 권장"
       ],
       "quickStart": {
         "dose": "600-800μg",
@@ -6250,7 +6531,14 @@
         "12: Optimized metabolic function and cognitive benefits"
       ],
       "sideEffects": [
-        "& SafetySide Effects5"
+        "홍조 (특히 IV 빠른 투여 시 — 서서히 투여로 완화)",
+        "두통",
+        "메스꺼움 및 소화불량",
+        "피로감 (역설적, 초기)",
+        "불안 또는 심박수 증가 (고용량 IV)",
+        "주사 부위 통증 (피하주사 시)",
+        "⚠️ IV 투여 시 반드시 4-8시간에 걸쳐 서서히 투여",
+        "⚠️ 암 병력자: NAD+ 경로가 암세포 에너지 공급 가능성 (논란 있음)"
       ],
       "quickStart": {
         "dose": "250-500mg",
@@ -6357,7 +6645,14 @@
         "2 weeks; some users report lasting improvements"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "두통 (흔함, 초기)",
+        "불안 또는 신경과민 (고용량)",
+        "수면 장애 또는 불면증",
+        "메스꺼움 (드물게)",
+        "식욕 변화",
+        "기억 강화로 인한 과거 경험 재경험",
+        "⚠️ 뇌전증(간질) 병력자 주의 (신경 자극 특성)",
+        "⚠️ 다른 노트로픽과 과잉 병용 주의"
       ],
       "quickStart": {
         "dose": "10-20mg per administration",
@@ -6484,7 +6779,18 @@
         "stay well hydratedWeek 2"
       ],
       "sideEffects": [
-        "& SafetySide Effects10"
+        "메스꺼움 (매우 흔함, 증량 초기)",
+        "구토",
+        "설사 또는 변비",
+        "소화불량 및 복통",
+        "식욕 감소",
+        "두통",
+        "피로감",
+        "저혈당 (당뇨 약물 병용 시)",
+        "심박수 증가 (경미)",
+        "⚠️ 경구 GLP-1 — 주사형보다 위장 부작용 발생률 높을 수 있음",
+        "⚠️ 췌장염 병력자 주의",
+        "⚠️ 갑상선 C세포 종양 병력자 사용 금지"
       ],
       "quickStart": {
         "dose": "Start 3-6mg daily, escalate every 4 weeks as tolerated",
@@ -6595,7 +6901,15 @@
         "5 min)May cause transient blood pressure changesCommon side effects: nausea, vomiting, headache"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "두통 (흔함)",
+        "메스꺼움",
+        "자궁 수축 (여성, 특히 임신 중 — 절대 사용 금지)",
+        "혈압 변화 (일시적 저하)",
+        "비강 자극 (비강 분무 시)",
+        "불안 또는 사회적 과민반응 (드물게)",
+        "의존성 가능성 (자주 사용 시)",
+        "⚠️ 임신 중 절대 사용 금지 (자궁 수축 유발)",
+        "⚠️ 자가면역 또는 뇌하수체 질환자 주의"
       ],
       "quickStart": {
         "dose": "10-20 units (varies by indication)",
@@ -6709,7 +7023,14 @@
         "low, slow dosing is recommended"
       ],
       "sideEffects": [
-        "& SafetySide Effects7"
+        "주사 부위 통증 및 발적",
+        "피로감 (세포 제거 과정 중)",
+        "일시적 염증 반응",
+        "두통",
+        "메스꺼움",
+        "면역 반응 변화",
+        "⚠️ 인간 임상 데이터 전무 — 전임상 단계",
+        "⚠️ 정상 조직에 대한 영향 미확인"
       ],
       "quickStart": {
         "dose": "500mcg-1mg",
@@ -6837,7 +7158,16 @@
         "context only; individual responses in humans are unknown"
       ],
       "sideEffects": [
-        "& SafetySide Effects10"
+        "주사 부위 통증 (흔함)",
+        "두통",
+        "기분 변화 (초기 적응)",
+        "불안 또는 과민함 (일부)",
+        "수면 변화",
+        "메스꺼움",
+        "성욕 변화",
+        "인지 기능 과도한 활성화 (고용량)",
+        "⚠️ 항우울제 병용 시 세로토닌 증후군 이론적 위험",
+        "⚠️ 정신과 약물 복용 중인 경우 의료진 상담 필수"
       ],
       "quickStart": {
         "dose": "50-200 mcg daily (research context)",
@@ -6960,7 +7290,15 @@
         "cycle: Benefits may persist for several weeks as tissue repair processes continue"
       ],
       "sideEffects": [
-        "& SafetySide Effects9"
+        "주사 부위 통증 및 발적",
+        "두통",
+        "수분 저류 (경미)",
+        "관절 통증 (근육 성장 불균형 시)",
+        "이론적 암 위험 증가 (세포 성장 촉진 기전)",
+        "저혈당 가능성 (IGF-1 유사 작용)",
+        "건(腱) 부상 위험 (근육-건 성장 불균형)",
+        "⚠️ 암 병력자 사용 금지",
+        "⚠️ 혈당 모니터링 권장"
       ],
       "quickStart": {
         "dose": "200-400mcg per injection",
@@ -7069,7 +7407,11 @@
         "aging benefitsSide effects: Minimal injection site reactionsMost effective for: Cognitive enhancement, neuroprotection"
       ],
       "sideEffects": [
-        "& SafetySide Effects4"
+        "졸음 또는 수면 패턴 변화 (취침 전 복용 권장 이유)",
+        "두통 (드물게)",
+        "메스꺼움 (드물게)",
+        "전반적으로 우수한 안전성 (러시아 임상 연구 기반)",
+        "⚠️ 낮 시간 투여 시 졸음 유발 가능"
       ],
       "quickStart": {
         "dose": "5mg daily",
@@ -7172,7 +7514,12 @@
         "effects extrapolated from preclinical research"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "경미한 소화불량",
+        "두통 (드물게)",
+        "호르몬 변화 (드물게)",
+        "메스꺼움 (드물게)",
+        "전립선 관련 증상 일시적 악화 (초기, 드물게)",
+        "⚠️ 전립선암 병력자 의료진 상담 필수"
       ],
       "quickStart": {
         "dose": "0.5-1mg daily",
@@ -7294,7 +7641,15 @@
         "12 hours: Effects gradually diminishLong"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "메스꺼움 (흔함, 특히 고용량)",
+        "안면 홍조",
+        "두통",
+        "혈압 상승 (일시적)",
+        "성적 흥분 과다 또는 지속 발기 (드물게 — 응급 가능)",
+        "구토 (고용량)",
+        "피로감",
+        "⚠️ 심혈관 질환자 사용 주의 (혈압 상승 효과)",
+        "⚠️ 지속 발기 시 즉시 의료 처치 필요"
       ],
       "quickStart": {
         "dose": "1.75mg for women, 1-2mg for men",
@@ -7420,7 +7775,17 @@
         "18%) with enhanced energy expenditure and metabolic improvementsWeek 16"
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "메스꺼움 (매우 흔함, 증량 초기)",
+        "구토",
+        "설사 또는 변비",
+        "식욕 감소",
+        "주사 부위 반응",
+        "두통",
+        "피로감",
+        "심박수 증가 (글루카곤 수용체 작용)",
+        "⚠️ GLP-1/GIP/글루카곤 삼중 작용 — 기존 GLP-1보다 위장 부작용 강할 수 있음",
+        "⚠️ 췌장염 병력자 주의",
+        "⚠️ 갑상선 C세포 종양 병력자 사용 금지"
       ],
       "quickStart": {
         "dose": "Start 0.5mg weekly (clinical practice) or 1mg weekly (trial protocol), escalate every 4 weeks to target 8-12mg",
@@ -7539,7 +7904,14 @@
         "2 weeksNo sedation, drowsiness, or cognitive impairmentPotential mild injection site irritation initiallySustained benefits may last several days after discontinuation"
       ],
       "sideEffects": [
-        "& SafetySide Effects7"
+        "비강 자극 또는 타는 느낌 (비강 분무 시)",
+        "졸음 또는 진정 (일부 사용자, 항불안 효과)",
+        "두통 (경미, 초기)",
+        "코막힘",
+        "의존성 없음 (벤조디아제핀 대비)",
+        "메스꺼움 (드물게)",
+        "기억력 과도한 활성화 (드물게)",
+        "⚠️ 장기 안전성은 주로 러시아 연구에 의존"
       ],
       "quickStart": {
         "dose": "250-500mcg daily",
@@ -7666,7 +8038,16 @@
         "term: Sustained benefits with continued use"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "메스꺼움 (매우 흔함 — 30-44%)",
+        "구토",
+        "설사 또는 변비",
+        "복통 및 소화불량",
+        "주사 부위 반응 (발적, 부종)",
+        "두통",
+        "저혈당 (인슐린 병용 시)",
+        "⚠️ 급성 췌장염 위험 (증상: 심한 복통 — 즉시 중단)",
+        "⚠️ 갑상선 C세포 종양 위험 (동물 연구 — MTC 병력자 사용 금지)",
+        "⚠️ 당뇨망막병증 악화 가능 (혈당 급격히 낮아질 때)"
       ],
       "quickStart": {
         "dose": "Start 0.25mg weekly, titrate monthly to target dose",
@@ -7774,7 +8155,13 @@
         "7 days, some benefits may persist"
       ],
       "sideEffects": [
-        "& SafetySide Effects5"
+        "비강 자극 또는 타는 느낌",
+        "두통 (초기)",
+        "불안 또는 신경과민 (고용량)",
+        "불면증 (저녁 투여 시)",
+        "메스꺼움 (드물게)",
+        "⚠️ 뇌전증 병력자 주의 (신경 자극 효과)",
+        "⚠️ 장기 내성 가능성 — 사이클 방식 사용 권장"
       ],
       "quickStart": {
         "dose": "300-600mcg per administration",
@@ -7891,7 +8278,12 @@
         "6: Maximum benefits including muscle growth, fat loss, and anti"
       ],
       "sideEffects": [
-        "& SafetySide Effects4"
+        "두통",
+        "홍조",
+        "주사 부위 통증 및 발적",
+        "졸음 (취침 전 투여 후)",
+        "⚠️ 다른 GH 분비촉진제에 비해 안전성 프로파일 우수 (짧은 반감기)",
+        "장기 고용량 사용 시 GH 수치 모니터링 권장"
       ],
       "quickStart": {
         "dose": "200-300 mcg daily",
@@ -8023,7 +8415,17 @@
         "Enhanced fatty acid oxidation (25% increase)"
       ],
       "sideEffects": [
-        "& SafetySide Effects11"
+        "인간 안전성 데이터 전무 (전임상 단계)",
+        "간 독성 가능성 (전임상 고용량)",
+        "대사율 과도한 증가에 따른 심혈관 부하",
+        "체온 상승",
+        "⚠️ 인간 사용에 적합한 용량 및 안전성 미확립",
+        "⚠️ 임상 연구 목적 외 사용 극히 주의",
+        "근육 손상 가능성 (과도한 미토콘드리아 활성화)",
+        "⚠️ 심혈관 질환자 절대 사용 금지",
+        "전반적으로 위험성이 높은 미확립 물질",
+        "신장 독성 가능성 (전임상)",
+        "⚠️ 현재 안전한 인간 투여 근거 없음"
       ],
       "quickStart": {
         "dose": "NO APPROVED HUMAN DOSE",
@@ -8147,7 +8549,13 @@
         "daily application with complementary hydrating ingredients"
       ],
       "sideEffects": [
-        "& SafetySide Effects7"
+        "국소 피부 자극 (발적, 가려움)",
+        "알레르기 반응 (드물게)",
+        "눈 주변 사용 시 자극 주의",
+        "표정 근육 과도한 이완 (고농도)",
+        "제형에 따른 피부 건조",
+        "전신 흡수 시 신경 관련 영향 (이론적, 고농도 다량 사용 시)",
+        "⚠️ 눈에 들어가지 않도록 주의"
       ],
       "quickStart": {
         "dose": "3-10% concentration in final formulation",
@@ -8259,7 +8667,13 @@
         "12: Sustained energy improvements, potential biomarker changes"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "주사 부위 통증 및 발적",
+        "두통",
+        "메스꺼움",
+        "피로감 (초기)",
+        "혈압 변화 (드물게)",
+        "전반적으로 내약성 우수 (임상 연구 기반)",
+        "⚠️ 신장 질환자: 용량 조절 필요 가능성"
       ],
       "quickStart": {
         "dose": "10-40mg depending on application",
@@ -8367,7 +8781,16 @@
         "state levels, more consistent effectsWeek 24+: Sustained weight loss, metabolic improvements become more apparentLong"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "메스꺼움 (매우 흔함)",
+        "구토",
+        "설사",
+        "복통",
+        "식욕 감소",
+        "주사 부위 반응",
+        "심박수 증가 (글루카곤 수용체 작용)",
+        "⚠️ GLP-1/글루카곤 이중 작용 — 심박수 변화 모니터링",
+        "⚠️ 췌장염 병력자 주의",
+        "⚠️ 갑상선 C세포 종양 병력자 사용 금지"
       ],
       "quickStart": {
         "dose": "0.6mg start, +0.6mg every 4wks to 3.6–4.8mg (max 6.0mg)",
@@ -8488,7 +8911,13 @@
         "12: Continued improvement in tissue strength and functionSide effects: Generally minimal, possible injection site reactionsMost effective for: Muscle, tendon, ligament, and soft tissue injuries"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "주사 부위 경미한 통증 및 발적",
+        "두통 (드물게)",
+        "피로감 (초기)",
+        "메스꺼움 (드물게)",
+        "이론적 암 촉진 가능성 (세포 이동·성장 촉진 기전)",
+        "⚠️ 암 병력자 사용 주의 (이론적 위험 — 임상 미확인)",
+        "전반적으로 우수한 안전성 프로파일 (사용자 보고 기반)"
       ],
       "quickStart": {
         "dose": "2-3mg",
@@ -8604,7 +9033,14 @@
         "26: Peak effects achieved with significant body composition improvements"
       ],
       "sideEffects": [
-        "& SafetySide Effects4"
+        "주사 부위 통증, 홍조, 발적 (흔함)",
+        "수분 저류 및 말초 부종",
+        "관절통 및 손발 저림",
+        "두통",
+        "혈당 상승 가능 (GH 증가로 인한)",
+        "메스꺼움",
+        "⚠️ 당뇨 환자: 혈당 조절에 영향 가능 — 모니터링 필수",
+        "⚠️ 암 병력자: GH 증가로 사용 주의"
       ],
       "quickStart": {
         "dose": "1.4 mg daily (FDA-approved) or 2 mg daily (research dose)",
@@ -8699,7 +9135,17 @@
         "6: Continued weight loss reaching 10"
       ],
       "sideEffects": [
-        "& SafetySide Effects9"
+        "혈압 및 심박수 증가 (흔함, 모니터링 필수)",
+        "불면증 또는 수면 장애",
+        "구강 건조",
+        "두통",
+        "변비 또는 설사",
+        "불안 또는 신경과민",
+        "메스꺼움",
+        "어지럼증",
+        "⚠️ 고혈압 또는 심혈관 질환자 사용 금지",
+        "⚠️ MAO 억제제와 병용 금지 (세로토닌 증후군 위험)",
+        "⚠️ 의존성 가능성 (도파민/세로토닌/노르에피네프린 재흡수 억제)"
       ],
       "quickStart": {
         "dose": "0.25-0.5mg once daily",
@@ -8825,7 +9271,14 @@
         "this is a bioregulator, not a hormoneConsider hormone panel testing before and after cycle for objective assessment"
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "경미한 소화불량",
+        "두통 (드물게)",
+        "호르몬 변화 (테스토스테론 수치 변동)",
+        "수면 변화 (드물게)",
+        "여드름 (호르몬 변화 시)",
+        "전반적으로 우수한 안전성 프로파일 (단기간 연구 기반)",
+        "⚠️ 호르몬 의존성 질환자 주의",
+        "장기 안전성 데이터 제한적"
       ],
       "quickStart": {
         "dose": "100-300mcg",
@@ -8937,7 +9390,12 @@
         "12: Maximum immunomodulatory benefitsWeek 12+: Sustained immune support with continued useMost effective for: Immune deficiencies, chronic infections, vaccine enhancement"
       ],
       "sideEffects": [
-        "& SafetySide Effects5"
+        "주사 부위 경미한 통증 및 발적",
+        "두통 (드물게)",
+        "메스꺼움 (드물게)",
+        "피로감 (면역 활성화 초기)",
+        "전반적으로 매우 우수한 안전성 프로파일 (수십 년 임상 사용)",
+        "⚠️ 자가면역 질환자: 면역 자극으로 증상 변화 가능 — 의료진 상담 필수"
       ],
       "quickStart": {
         "dose": "1.6mg",
@@ -9062,7 +9520,13 @@
         "complete healing in responsive conditions"
       ],
       "sideEffects": [
-        "& SafetySide Effects4"
+        "주사 부위 경미한 통증 및 발적",
+        "두통 (드물게)",
+        "피로감 (초기)",
+        "메스꺼움 (드물게)",
+        "이론적 암 촉진 가능성 (세포 이동·혈관신생 촉진 기전)",
+        "⚠️ 암 병력자 사용 금지 (이론적 위험)",
+        "전반적으로 우수한 안전성 (사용자 보고 및 소규모 연구)"
       ],
       "quickStart": {
         "dose": "2-6 mg daily",
@@ -9179,7 +9643,14 @@
         "2: Potential immune parameter improvements (requires testing)For pain/inflammation: Effects may be noticeable within days in animal modelsImmune reconstitution may require multiple cycles over monthsB"
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "주사 부위 경미한 통증",
+        "두통 (드물게)",
+        "피로감 (면역 조절 과정 중)",
+        "메스꺼움 (드물게)",
+        "아연 의존성 (아연 결핍 시 활성도 저하)",
+        "⚠️ 자가면역 질환자 의료진 상담 필수",
+        "장기 안전성 데이터 제한적",
+        "⚠️ 아연 보충 병행 권장 (thymulin 활성화에 필요)"
       ],
       "quickStart": {
         "dose": "No established human dose. Anecdotal: 1-5 mg",
@@ -9306,7 +9777,17 @@
         "24 weeksImproved energy levels after initial adaptation period"
       ],
       "sideEffects": [
-        "& SafetySide Effects7"
+        "메스꺼움 (매우 흔함 — 20-40%, 증량 초기 최대)",
+        "구토",
+        "설사 또는 변비",
+        "복통 및 소화불량",
+        "식욕 감소",
+        "주사 부위 반응",
+        "두통",
+        "저혈당 (인슐린/설포닐우레아 병용 시)",
+        "⚠️ 급성 췌장염 위험 (심한 복통 시 즉시 중단)",
+        "⚠️ 갑상선 C세포 종양 (MTC) 병력자 사용 금지",
+        "⚠️ 위 마비 병력자 주의"
       ],
       "quickStart": {
         "dose": "Start 2.5mg weekly, escalate every 4 weeks",
@@ -9419,7 +9900,16 @@
         "12: Bone density improvements, sustained metabolic benefitsOngoing: Continued benefits require continued treatment; cessation reverses effects"
       ],
       "sideEffects": [
-        "& SafetySide Effects6"
+        "여드름 및 피부 지성화",
+        "여성형 유방증 (에스트로겐 전환 과다 시)",
+        "수분 저류 및 부종",
+        "적혈구 증가증 (헤마토크릿 상승 — 혈전 위험)",
+        "수면무호흡증 악화",
+        "탈모 (DHT 전환, 유전적 소인 시)",
+        "⚠️ 내인성 테스토스테론 억제 및 정자 생성 감소 (투여 중)",
+        "⚠️ 전립선 비대증 또는 전립선암 병력자 사용 금지",
+        "⚠️ 헤마토크릿 정기 모니터링 (혈전 예방)",
+        "⚠️ 수면무호흡증 환자 주의"
       ],
       "quickStart": {
         "dose": "100-200mg weekly (often split into 2 doses)",
@@ -9538,7 +10028,15 @@
         "8: Progressive improvement in CIRS markers if applicableMonth 2+: Continued correction of inflammatory and neurological parametersNote: Full benefits in CIRS may take several months of consistent use"
       ],
       "sideEffects": [
-        "& SafetySide Effects9"
+        "혈압 저하 (저혈압, 특히 IV 빠른 투여 시)",
+        "안면 홍조",
+        "두통",
+        "메스꺼움",
+        "주사 부위 통증",
+        "심박수 증가 (혈관 확장 보상 반응)",
+        "설사 (소화관 자극)",
+        "⚠️ 저혈압 환자 사용 금지",
+        "⚠️ IV 투여 시 서서히 주입 필수"
       ],
       "quickStart": {
         "dose": "50-100mcg per spray",
@@ -9653,7 +10151,15 @@
         "cycle: Benefits may persist as healed tissue maintains integrity"
       ],
       "sideEffects": [
-        "& SafetySide Effects8"
+        "구성 성분 각각의 부작용 누적 가능",
+        "주사 부위 통증 (다부위 주사 시)",
+        "피로감 (초기 회복 과정)",
+        "메스꺼움",
+        "두통",
+        "염증 반응 (회복 촉진 과정 중)",
+        "호르몬 변화 (GH 성분 포함 시)",
+        "⚠️ 각 구성 성분의 부작용 및 상호작용 개별 검토 필수",
+        "⚠️ 암 병력자: 세포 성장 촉진 성분 포함 시 사용 금지"
       ],
       "quickStart": {
         "dose": "BPC-157: 250-500mcg + TB-500: 2-2.5mg",
