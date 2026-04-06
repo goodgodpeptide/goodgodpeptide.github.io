@@ -520,9 +520,13 @@ appData.costCalc.customConsumables = [
 
 ## 현재 알려진 이슈 / TODO
 - [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
-- [ ] 일부 펩타이드 typicalDose가 빈 값 (파서 개선 여지)
 - [ ] 운동 탭 추가 예정
 - [ ] Firestore 보안 규칙 업데이트 (posts, user_profiles 컬렉션 추가됨)
+- ✅ 백과사전 상호작용 뱃지 한국어 변환 (Synergistic→시너지, Compatible→호환, Monitor Combination→주의 필요, Avoid Combination→병용 금지)
+- ✅ 펩타이드 전량 typicalDose 보완 (32개 누락 → 전량 채움)
+- ✅ 펩타이드 전량 protocols 보완 (66개 누락 → 76개 전량 채움, 한국어)
+- ✅ 그래프 핀치줌 튐 버그 수정 (getFullRange() 공식 불일치 → _graphFullRange 공유 변수로 통일)
+- ✅ 펩타이드 4개 신규 추가 (72→76개): GHRP-6 / Bromantane / Cardiogen / PNC-27 (pep-pedia.org 기준)
 - ✅ Firebase API 키 도메인 제한 (goodgodpeptide.github.io/* + goodgodpeptide.firebaseapp.com/* 허용 — GCP Console HTTP referrers 설정, firebaseapp.com 누락 시 Auth 리다이렉트 오류 발생)
 - ✅ PK 모델 ka 수식 근본 수정: `ka=ln2/tmaxHours` → `computeKa()` Newton-Raphson 풀이 (모델이 정확히 tmaxHours에서 피크)
 - ✅ DRUG_CONFIG 파라미터 논문/FDA 라벨 기반 업데이트 (마운자로 tmax 8hr, 레타/위고비/카그릴 tmax 24hr, 티모신알파1 halfLife 2hr, 테사모렐린 halfLife 7min/tmax 9min)
