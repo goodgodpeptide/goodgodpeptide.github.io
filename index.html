@@ -2888,16 +2888,25 @@
           if (e.touches.length < 2) return;
           ts.isPinch = true;
           graphTooltip.visible = false;
-          const dist = Math.hypot(
-            e.touches[0].clientX - e.touches[1].clientX,
-            e.touches[0].clientY - e.touches[1].clientY
-          );
+          const t0 = e.touches[0], t1 = e.touches[1];
+          const dist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
           if (ts.prevDist > 0) {
-            const ratio = ts.prevDist / dist;
-            const newScale = Math.min(80, Math.max(1, graphZoom.scale / ratio));
+            const ratio = dist / ts.prevDist; // > 1: 확대, < 1: 축소
+            const newScale = Math.min(80, Math.max(1, graphZoom.scale * ratio));
             const fullRange = getFullRange();
+            const graphW = canvas.offsetWidth - PAD_L - PAD_R;
+
+            // 두 손가락 중간점(pivot)을 기준으로 줌 — 그 위치의 시간값이 줌 후에도 같은 픽셀에 유지됨
+            const midClientX = (t0.clientX + t1.clientX) / 2;
+            const midPixel = Math.max(0, Math.min(graphW, midClientX - rect.left - PAD_L));
+            const visRangeOld = fullRange / graphZoom.scale;
+            const pivotTime = graphZoom.offsetX + (midPixel / Math.max(graphW, 1)) * visRangeOld;
+
+            const visRangeNew = fullRange / newScale;
+            const newOffsetX = pivotTime - (midPixel / Math.max(graphW, 1)) * visRangeNew;
+
             graphZoom.scale = newScale;
-            graphZoom.offsetX = Math.max(0, Math.min(fullRange - fullRange / newScale, graphZoom.offsetX));
+            graphZoom.offsetX = Math.max(0, Math.min(fullRange - visRangeNew, newOffsetX));
           }
           ts.prevDist = dist;
           renderPeptideGraph();
