@@ -4660,6 +4660,24 @@
       // ── 연구 인디케이션 (아코디언, 카테고리별) ──
       const riDet = pep.researchIndicationsDetailed || {};
       const riCats = Object.keys(riDet);
+      // researchIndications에서 effectiveness 매핑 (카테고리키 정규화 → 이름 매칭)
+      const effMap = {};
+      const effColors = {'Most Effective':'#4ade80','Effective':'#60a5fa','Moderate':'#fbbf24','Limited':'#94a3b8','Emerging':'#f87171'};
+      const effLabels = {'Most Effective':'매우 효과적','Effective':'효과적','Moderate':'보통','Limited':'제한적','Emerging':'연구 초기'};
+      (pep.researchIndications || []).forEach(ri => {
+        // "Wound Healing" → "woundhealing", cat key "woundHealing" → "woundhealing"
+        const norm = ri.name.toLowerCase().replace(/[^a-z]/g, '');
+        effMap[norm] = ri.effectiveness;
+      });
+      function getCatEff(catKey) {
+        const norm = catKey.toLowerCase().replace(/[^a-z]/g, '');
+        if (effMap[norm]) return effMap[norm];
+        // 부분 매칭 시도
+        for (const [k, v] of Object.entries(effMap)) {
+          if (norm.includes(k) || k.includes(norm)) return v;
+        }
+        return null;
+      }
       const indHTML = riCats.length ? `
         <div class="enc-section">
           <div class="enc-section-title">🎯 연구 결과</div>
@@ -4668,11 +4686,20 @@
             if (!items.length) return '';
             const catId = mid + '_ri_' + ci;
             const label = CAT_LABELS[cat] || cat;
+            const eff = getCatEff(cat);
+            const effClr = effColors[eff] || null;
+            const effLbl = effLabels[eff] || eff;
             return `
             <div style="border:1px solid ${C.borderSub};border-radius:10px;margin-bottom:8px;overflow:hidden">
               <div onclick="_encToggle('${catId}')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;background:${C.accHdr};user-select:none">
-                <span style="font-size:13px;font-weight:600;color:${C.txt}">${label}</span>
-                <span id="${catId}_arrow" style="color:${C.txtFaint};font-size:16px;transition:transform 0.2s">›</span>
+                <div style="display:flex;align-items:center;gap:8px">
+                  ${effClr ? `<span style="width:8px;height:8px;border-radius:50%;background:${effClr};display:inline-block;flex-shrink:0"></span>` : ''}
+                  <span style="font-size:13px;font-weight:600;color:${C.txt}">${label}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  ${effClr ? `<span style="font-size:11px;color:${effClr};padding:2px 8px;background:${C.bgDeep};border-radius:20px">${effLbl}</span>` : ''}
+                  <span id="${catId}_arrow" style="color:${C.txtFaint};font-size:16px;transition:transform 0.2s">›</span>
+                </div>
               </div>
               <div id="${catId}" style="display:none;padding:0 14px 12px">
                 ${items.map(item => `
@@ -4815,7 +4842,7 @@
                 ${r.source ? `<span style="font-size:10px;color:${C.accent};background:${C.bgDeep};padding:2px 7px;border-radius:4px">${r.source}</span>` : ''}
               </div>
               ${r.excerpt ? `<div style="font-size:12px;color:${C.txtMuted};line-height:1.5">${r.excerpt}</div>` : ''}
-              ${r.link    ? `<a href="${r.link}" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;font-size:12px;color:${C.accent}">연구 보기 →</a>` : ''}
+              ${r.link    ? `<span onclick="window.open('${r.link}','_blank')" style="display:inline-block;margin-top:8px;font-size:12px;color:${C.accent};cursor:pointer;text-decoration:underline">연구 보기 →</span>` : ''}
             </div>`).join('')}
         </div>` : '';
 
