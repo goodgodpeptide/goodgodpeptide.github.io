@@ -78,6 +78,8 @@
     // ══════════════════════════════════════════════
     // Auth
     // ══════════════════════════════════════════════
+    // 재방문 시 로컬 캐시에서 즉시 auth 상태 복원 (Firebase 기본값이지만 명시 호출로 보장)
+    setPersistence(auth, browserLocalPersistence).catch(console.error);
     getRedirectResult(auth).catch(console.error);
 
     onAuthStateChanged(auth, async (user) => {
@@ -86,33 +88,45 @@
       const authLoading = document.getElementById("auth-loading");
       if (authLoading) authLoading.style.display = "none";
       if (user) {
-        // ── 승인 여부 확인 ──────────────────────────────
-        let isApproved = false;
+        // ── 승인 + 관리자 여부 동시 확인 (병렬 Firestore 호출) ──
+        const approvedRef = doc(db, "config", "approved_users");
+        const adminsRef   = doc(db, "config", "admins");
+        let isApproved = false, isAdmin = false;
         try {
-          const approvedRef = doc(db, "config", "approved_users");
-          const approvedSnap = await getDoc(approvedRef);
+          const [approvedSnap, adminsSnap] = await Promise.all([
+            getDoc(approvedRef),
+            getDoc(adminsRef),
+          ]);
+
+          // 승인 여부
           if (approvedSnap.exists()) {
-            const approvedEmails = approvedSnap.data().emails || [];
-            isApproved = approvedEmails.includes(user.email);
+            isApproved = (approvedSnap.data().emails || []).includes(user.email);
           } else if (user.email === "kingshotgoodgod1@gmail.com") {
             // 관리자 첫 로그인 시 문서 자동 생성
             await setDoc(approvedRef, { emails: ["kingshotgoodgod1@gmail.com"] });
             isApproved = true;
           }
-        } catch(e) { console.error("승인 확인 실패:", e); }
 
-        // 로그인 로그 기록 (승인 여부와 무관하게 항상 기록)
-        try {
-          await addDoc(collection(db, "login_logs"), {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName || "",
-            photoURL: user.photoURL || "",
-            loginAt: serverTimestamp(),
-            userAgent: navigator.userAgent,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          });
-        } catch(e) { /* 로그 실패는 조용히 */ }
+          // 관리자 여부
+          if (adminsSnap.exists()) {
+            isAdmin = (adminsSnap.data().emails || []).includes(user.email);
+          } else if (user.email === "kingshotgoodgod1@gmail.com") {
+            // 최초 1회 seed
+            await setDoc(adminsRef, { emails: ["kingshotgoodgod1@gmail.com"] });
+            isAdmin = true;
+          }
+        } catch(e) { console.error("권한 확인 실패:", e); }
+
+        // 로그인 로그 — UI를 블로킹하지 않도록 await 없이 fire-and-forget
+        addDoc(collection(db, "login_logs"), {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || "",
+          photoURL: user.photoURL || "",
+          loginAt: serverTimestamp(),
+          userAgent: navigator.userAgent,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        }).catch(() => { /* 로그 실패는 조용히 */ });
 
         if (!isApproved) {
           // 승인 대기 화면
@@ -122,20 +136,6 @@
           document.getElementById("pending-email").textContent = user.email;
           return;
         }
-
-        // 관리자 여부 확인 (Firestore config/admins 기반)
-        let isAdmin = false;
-        try {
-          const adminsRef = doc(db, "config", "admins");
-          const adminsSnap = await getDoc(adminsRef);
-          if (adminsSnap.exists()) {
-            isAdmin = (adminsSnap.data().emails || []).includes(user.email);
-          } else if (user.email === "kingshotgoodgod1@gmail.com") {
-            // 최초 1회 seed — 관리자 문서가 없으면 생성
-            await setDoc(adminsRef, { emails: ["kingshotgoodgod1@gmail.com"] });
-            isAdmin = true;
-          }
-        } catch(e) { console.error("관리자 확인 실패:", e); }
 
         // 승인된 사용자 → 앱 진입
         document.getElementById("login-screen").style.display = "none";
