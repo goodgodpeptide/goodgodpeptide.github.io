@@ -537,6 +537,7 @@ appData.costCalc.customConsumables = [
 - ✅ peptides_v3.json pep-pedia API 전량 보완: interactions 설명 / researchIndicationsDetailed / latestResearch / relatedSlugs / safetyNotes / stopSigns / sideEffects 71개 실데이터 교체
 - ✅ 참고연구 링크 클릭 수정 (a href → window.open onclick, 모바일 터치 이슈)
 - ✅ 연구결과 effectiveness 배지 복원 (researchIndications ↔ researchIndicationsDetailed 카테고리 매핑)
+- ✅ 초기 로딩 속도 개선: preconnect 3개(fonts.googleapis/gstatic/www.gstatic) + Firebase modulepreload 3개 + Noto Sans KR 300(미사용) 제거
 - ✅ Firebase API 키 도메인 제한 (goodgodpeptide.github.io/* + goodgodpeptide.firebaseapp.com/* 허용 — GCP Console HTTP referrers 설정, firebaseapp.com 누락 시 Auth 리다이렉트 오류 발생)
 - ✅ PK 모델 ka 수식 근본 수정: `ka=ln2/tmaxHours` → `computeKa()` Newton-Raphson 풀이 (모델이 정확히 tmaxHours에서 피크)
 - ✅ DRUG_CONFIG 파라미터 논문/FDA 라벨 기반 업데이트 (마운자로 tmax 8hr, 레타/위고비/카그릴 tmax 24hr, 티모신알파1 halfLife 2hr, 테사모렐린 halfLife 7min/tmax 9min)
