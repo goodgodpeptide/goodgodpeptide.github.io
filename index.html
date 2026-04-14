@@ -2912,10 +2912,16 @@
         drugGroups[r.drug].push(r);
       });
 
+      // ── 바 + 레이블 렌더 (레이블 겹침 방지: 약물별 마지막 레이블 x 추적) ──
+      const MIN_LABEL_GAP = 26; // px — 이 이하 간격이면 레이블 생략
       Object.entries(drugGroups).forEach(([drug, recs]) => {
         const cfg = DRUG_CONFIG[drug];
         if (!cfg) return;
-        recs.forEach(r => {
+        // x 오름차순 정렬 (레이블 간격 계산용)
+        const sorted = [...recs].sort((a, b) => a.time - b.time);
+        let lastLabelX = -999;
+
+        sorted.forEach(r => {
           const x = PAD.l + ((r.time - visMinTime) / visRange) * gW;
           if (x < PAD.l - zoomedBarW || x > PAD.l + gW + zoomedBarW) return;
           const barH = Math.max(2, (r.dose / maxDose) * gH);
@@ -2929,12 +2935,16 @@
           ctx.lineWidth = 1;
           ctx.strokeRect(x - zoomedBarW / 2, barY, zoomedBarW, barH);
 
-          // 용량 레이블 (바 위 — 충분한 공간이 있을 때만)
-          if (barH > 14 || (barH > 4 && zoomedBarW > 12)) {
+          // 용량 레이블 — 이전 레이블과 충분히 떨어진 경우에만 표시
+          const canShowLabel = (x - lastLabelX) >= MIN_LABEL_GAP;
+          if (canShowLabel) {
             ctx.fillStyle = cfg.color;
             ctx.font = `bold 8px 'JetBrains Mono'`;
             ctx.textAlign = "center";
-            ctx.fillText(r.dose + "mg", x, barY - 2);
+            // 레이블이 캔버스 위쪽으로 잘리지 않도록 최소 y 보장
+            const labelY = Math.max(barY - 2, PAD.t + 7);
+            ctx.fillText(r.dose + "mg", x, labelY);
+            lastLabelX = x;
           }
         });
       });
@@ -2956,19 +2966,17 @@
         ctx.fillText(label, x, PAD.t + gH + 12);
       });
 
-      // 범례 (약물별 색상 점 + 이름)
-      let lx = PAD.l + 4;
-      Object.entries(drugGroups).forEach(([drug]) => {
-        const cfg = DRUG_CONFIG[drug];
-        if (!cfg) return;
-        ctx.fillStyle = cfg.color;
-        ctx.fillRect(lx, 1, 10, 3);
-        ctx.fillStyle = isLight ? "#6b7280" : "#9ca3af";
-        ctx.font = "8px 'Noto Sans KR'";
-        ctx.textAlign = "left";
-        ctx.fillText(cfg.short, lx + 13, 7);
-        lx += 44;
-      });
+      // ── 약물별 총 투여량 → 헤더 summary 업데이트 ──
+      const summaryEl = document.getElementById("dose-history-summary");
+      if (summaryEl) {
+        const summaryParts = Object.entries(drugGroups).map(([drug, recs]) => {
+          const cfg = DRUG_CONFIG[drug];
+          const total = recs.reduce((s, r) => s + r.dose, 0);
+          const count = recs.length;
+          return `${cfg?.short || drug} 총 ${total % 1 === 0 ? total : total.toFixed(2)}mg (${count}회)`;
+        });
+        summaryEl.textContent = summaryParts.join("  ·  ");
+      }
     }
 
     function roundRect(ctx, x, y, w, h, r) {
@@ -6909,9 +6917,12 @@
         <!-- 투약 이력 바 차트 (메인 그래프와 x축 동기화) -->
         <div id="dose-history-wrap" style="margin-top:6px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-            <span style="font-size:10px;color:#4a5568">💉 투약 이력 (실투여량)</span>
+            <div style="display:flex;flex-direction:column;gap:1px">
+              <span style="font-size:10px;color:#4a5568">💉 투약 이력 (실투여량)</span>
+              <span id="dose-history-summary" style="font-size:9px;color:#6b7280;font-family:'JetBrains Mono',monospace"></span>
+            </div>
             <button onclick="toggleDoseHistory()" id="dose-history-toggle-btn"
-              style="padding:2px 8px;background:none;border:1px solid #374151;border-radius:6px;color:#6b7280;font-size:10px;cursor:pointer;font-family:inherit">숨기기</button>
+              style="padding:2px 8px;background:none;border:1px solid #374151;border-radius:6px;color:#6b7280;font-size:10px;cursor:pointer;font-family:inherit;flex-shrink:0">숨기기</button>
           </div>
           <canvas id="dose-history-chart"></canvas>
         </div>
