@@ -2913,41 +2913,49 @@
         drugGroups[r.drug].push(r);
       });
 
-      // ── 바 + 레이블 렌더 (레이블 겹침 방지: 약물별 마지막 레이블 x 추적) ──
-      const MIN_LABEL_GAP = 26; // px — 이 이하 간격이면 레이블 생략
-      Object.entries(drugGroups).forEach(([drug, recs]) => {
-        const cfg = DRUG_CONFIG[drug];
+      // ── 바 + 레이블 렌더 ──
+      // 레이블 겹침 방지: 전체 약물 통합 lastLabelRight 추적 (약물이 섞여도 겹침 방지)
+      // 각 약물의 바를 x 순서로 정렬해 전체 이벤트 합산
+      const allEvents = filteredRecs.map(r => {
+        const cfg = DRUG_CONFIG[r.drug];
+        return { r, cfg, x: PAD.l + ((r.time - visMinTime) / visRange) * gW };
+      }).sort((a, b) => a.x - b.x);
+
+      // 1pass: 바 먼저 전부 그리기
+      allEvents.forEach(({ r, cfg, x }) => {
         if (!cfg) return;
-        // x 오름차순 정렬 (레이블 간격 계산용)
-        const sorted = [...recs].sort((a, b) => a.time - b.time);
-        let lastLabelX = -999;
+        if (x < PAD.l - zoomedBarW || x > PAD.l + gW + zoomedBarW) return;
+        const barH = Math.max(2, (r.dose / maxDose) * gH);
+        const barY = PAD.t + gH - barH;
+        ctx.fillStyle = cfg.color + "77";
+        ctx.fillRect(x - zoomedBarW / 2, barY, zoomedBarW, barH);
+        ctx.strokeStyle = cfg.color + "cc";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x - zoomedBarW / 2, barY, zoomedBarW, barH);
+      });
 
-        sorted.forEach(r => {
-          const x = PAD.l + ((r.time - visMinTime) / visRange) * gW;
-          if (x < PAD.l - zoomedBarW || x > PAD.l + gW + zoomedBarW) return;
-          const barH = Math.max(2, (r.dose / maxDose) * gH);
-          const barY = PAD.t + gH - barH;
+      // 2pass: 레이블 — 실제 텍스트 너비 기준으로 겹침 방지
+      ctx.font = `bold 8px 'JetBrains Mono'`;
+      let lastLabelRight = -999; // 마지막으로 그린 레이블의 오른쪽 끝 x
 
-          // 바 채우기
-          ctx.fillStyle = cfg.color + "77";
-          ctx.fillRect(x - zoomedBarW / 2, barY, zoomedBarW, barH);
-          // 바 테두리
-          ctx.strokeStyle = cfg.color + "cc";
-          ctx.lineWidth = 1;
-          ctx.strokeRect(x - zoomedBarW / 2, barY, zoomedBarW, barH);
+      allEvents.forEach(({ r, cfg, x }) => {
+        if (!cfg) return;
+        if (x < PAD.l - zoomedBarW || x > PAD.l + gW + zoomedBarW) return;
+        const labelText = r.dose + "mg";
+        const textW = ctx.measureText(labelText).width;
+        const labelLeft = x - textW / 2;
 
-          // 용량 레이블 — 이전 레이블과 충분히 떨어진 경우에만 표시
-          const canShowLabel = (x - lastLabelX) >= MIN_LABEL_GAP;
-          if (canShowLabel) {
-            ctx.fillStyle = cfg.color;
-            ctx.font = `bold 8px 'JetBrains Mono'`;
-            ctx.textAlign = "center";
-            // 레이블이 캔버스 위쪽으로 잘리지 않도록 최소 y 보장 (PAD.t 안쪽)
-            const labelY = Math.max(barY - 2, PAD.t - 2);
-            ctx.fillText(r.dose + "mg", x, labelY);
-            lastLabelX = x;
-          }
-        });
+        // 이전 레이블 오른쪽 끝과 현재 레이블 왼쪽 끝 사이 2px 이상이어야 표시
+        if (labelLeft - lastLabelRight < 2) return;
+
+        const barH = Math.max(2, (r.dose / maxDose) * gH);
+        const barY = PAD.t + gH - barH;
+        const labelY = Math.max(barY - 2, PAD.t - 2);
+
+        ctx.fillStyle = cfg.color;
+        ctx.textAlign = "center";
+        ctx.fillText(labelText, x, labelY);
+        lastLabelRight = x + textW / 2;
       });
 
       // X축 구분선
