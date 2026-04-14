@@ -2822,7 +2822,7 @@
       const ctx = canvas.getContext("2d");
       const dpr = window.devicePixelRatio || 1;
       const cW = canvas.offsetWidth;
-      const cH = 72;
+      const cH = 90;
       canvas.width = cW * dpr;
       canvas.height = cH * dpr;
       canvas.style.height = cH + "px";
@@ -2839,7 +2839,8 @@
       }
 
       // 메인 그래프와 동일한 시간 범위 사용 (zoom/pan 싱크)
-      const PAD = { l: 52, r: 14, t: 6, b: 18 };
+      // PAD.t를 16으로 늘려 최대 높이 바 위쪽 레이블 공간 확보
+      const PAD = { l: 52, r: 14, t: 16, b: 18 };
       const gW = cW - PAD.l - PAD.r;
       const gH = cH - PAD.t - PAD.b;
 
@@ -2941,8 +2942,8 @@
             ctx.fillStyle = cfg.color;
             ctx.font = `bold 8px 'JetBrains Mono'`;
             ctx.textAlign = "center";
-            // 레이블이 캔버스 위쪽으로 잘리지 않도록 최소 y 보장
-            const labelY = Math.max(barY - 2, PAD.t + 7);
+            // 레이블이 캔버스 위쪽으로 잘리지 않도록 최소 y 보장 (PAD.t 안쪽)
+            const labelY = Math.max(barY - 2, PAD.t - 2);
             ctx.fillText(r.dose + "mg", x, labelY);
             lastLabelX = x;
           }
