@@ -3205,6 +3205,127 @@
     }
 
     // ══════════════════════════════════════════════
+    // 투약 이력 차트 터치/마우스 (메인 그래프와 graphZoom 공유)
+    // ══════════════════════════════════════════════
+    function initDoseHistoryTouch() {
+      const canvas = document.getElementById("dose-history-chart");
+      if (!canvas || canvas._touchInit) return;
+      canvas._touchInit = true;
+
+      const PAD_L = 52, PAD_R = 14;
+
+      // 메인 그래프와 동일한 fullRange getter
+      function getFullRange() {
+        if (_graphFullRange > 0) return _graphFullRange;
+        const records = appData.records || [];
+        if (graphRangeHours > 0) return graphRangeHours * 3600000;
+        if (!records.length) return 7 * 86400000;
+        const firstRec = Math.min(...records.map(r => r.time));
+        const now = Date.now();
+        let clearanceTime = 0;
+        Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+          const dr = records.filter(r => r.drug === drug);
+          if (!dr.length) return;
+          clearanceTime = Math.max(clearanceTime, Math.max(...dr.map(r => r.time)) + cfg.halfLifeDays * 5 * 86400000);
+        });
+        const fullMaxTime = Math.max(now, clearanceTime || now + 35 * 86400000);
+        return fullMaxTime - (firstRec - 2 * 86400000);
+      }
+
+      // ── 터치 (핀치 줌 + 드래그) ──
+      let ts = { active: false, isPinch: false, prevDist: 0, startX: 0, startOffset: 0 };
+
+      canvas.addEventListener("touchstart", e => {
+        e.preventDefault();
+        if (e.touches.length === 2) {
+          ts.isPinch = true;
+          ts.prevDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+          return;
+        }
+        if (e.touches.length === 1) {
+          const rect = canvas.getBoundingClientRect();
+          ts = { active: true, isPinch: false, prevDist: 0,
+                 startX: e.touches[0].clientX - rect.left,
+                 startOffset: graphZoom.offsetX };
+        }
+      }, { passive: false });
+
+      canvas.addEventListener("touchmove", e => {
+        e.preventDefault();
+        if (e.touches.length === 2 || ts.isPinch) {
+          if (e.touches.length < 2) return;
+          ts.isPinch = true;
+          const t0 = e.touches[0], t1 = e.touches[1];
+          const dist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+          if (ts.prevDist > 0) {
+            const ratio = dist / ts.prevDist;
+            const newScale = Math.min(80, Math.max(1, graphZoom.scale * ratio));
+            const fullRange = getFullRange();
+            const graphW = canvas.offsetWidth - PAD_L - PAD_R;
+            // 두 손가락 중간점 기준 줌 (메인 그래프와 동일 방식)
+            const midClientX = (t0.clientX + t1.clientX) / 2;
+            const rect = canvas.getBoundingClientRect();
+            const midPixel = Math.max(0, Math.min(graphW, midClientX - rect.left - PAD_L));
+            const visRangeOld = fullRange / graphZoom.scale;
+            const pivotTime = graphZoom.offsetX + (midPixel / Math.max(graphW, 1)) * visRangeOld;
+            const visRangeNew = fullRange / newScale;
+            const newOffsetX = pivotTime - (midPixel / Math.max(graphW, 1)) * visRangeNew;
+            graphZoom.scale = newScale;
+            graphZoom.offsetX = Math.max(0, Math.min(fullRange - visRangeNew, newOffsetX));
+          }
+          ts.prevDist = dist;
+          renderPeptideGraph(); // renderDoseHistoryChart()도 내부에서 호출됨
+          return;
+        }
+        if (!ts.active || e.touches.length !== 1) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = e.touches[0].clientX - rect.left;
+        const totalDx = x - ts.startX;
+        const fullRange = getFullRange();
+        const visRange = fullRange / graphZoom.scale;
+        const graphW = canvas.offsetWidth - PAD_L - PAD_R;
+        const msPerPx = visRange / Math.max(graphW, 1);
+        graphZoom.offsetX = Math.max(0, Math.min(fullRange - visRange, ts.startOffset - totalDx * msPerPx));
+        renderPeptideGraph();
+      }, { passive: false });
+
+      canvas.addEventListener("touchend", () => {
+        ts.active = false; ts.isPinch = false;
+      }, { passive: false });
+
+      // ── 마우스 (드래그 + 휠) ──
+      let mouseDown = false, mouseDragStartX = 0, mouseDragOffset = 0;
+      canvas.addEventListener("mousedown", e => {
+        mouseDown = true;
+        mouseDragStartX = e.offsetX; mouseDragOffset = graphZoom.offsetX;
+      });
+      canvas.addEventListener("mousemove", e => {
+        if (!mouseDown) return;
+        const dx = e.offsetX - mouseDragStartX;
+        if (Math.abs(dx) > 3) {
+          const fullRange = getFullRange();
+          const visRange = fullRange / graphZoom.scale;
+          const graphW = canvas.offsetWidth - PAD_L - PAD_R;
+          graphZoom.offsetX = Math.max(0, Math.min(fullRange - visRange, mouseDragOffset - dx * (visRange / graphW)));
+          renderPeptideGraph();
+        }
+      });
+      canvas.addEventListener("mouseup", () => { mouseDown = false; });
+      canvas.addEventListener("mouseleave", () => { mouseDown = false; });
+      canvas.addEventListener("wheel", e => {
+        e.preventDefault();
+        const ratio = e.deltaY > 0 ? 1.25 : 0.8;
+        graphZoom.scale = Math.min(80, Math.max(1, graphZoom.scale * ratio));
+        const fullRange = getFullRange();
+        graphZoom.offsetX = Math.min(fullRange - fullRange / graphZoom.scale, graphZoom.offsetX);
+        renderPeptideGraph();
+      }, { passive: false });
+    }
+
+    // ══════════════════════════════════════════════
     // 체중 그래프
     // ══════════════════════════════════════════════
     function renderWeightGraph() {
@@ -4629,7 +4750,7 @@
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
       localStorage.setItem("lastTab", tab);
       if (tab === "peptide") {
-        setTimeout(() => { renderPeptideGraph(); initGraphTouch(); startLiveUpdate(); fetchFxRates(); loadCostSettings(); }, 50);
+        setTimeout(() => { renderPeptideGraph(); initGraphTouch(); initDoseHistoryTouch(); startLiveUpdate(); fetchFxRates(); loadCostSettings(); }, 50);
       } else {
         stopLiveUpdate();
       }
@@ -6415,7 +6536,7 @@
 
     window.addEventListener("resize", () => { renderPeptideGraph(); renderWeightGraph(); });
     window.addEventListener("load", () => {
-      setTimeout(() => { initGraphTouch(); initWeightTouch(); }, 500);
+      setTimeout(() => { initGraphTouch(); initDoseHistoryTouch(); initWeightTouch(); }, 500);
     });
 
     // ── 뒤로가기 → 모달 닫기 ────────────────────────────────
