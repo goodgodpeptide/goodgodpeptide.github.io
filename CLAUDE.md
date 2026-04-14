@@ -540,6 +540,8 @@ appData.costCalc.customConsumables = [
 - ✅ 초기 로딩 속도 개선: preconnect 3개(fonts.googleapis/gstatic/www.gstatic) + Firebase modulepreload 3개 + Noto Sans KR 300(미사용) 제거
 - ✅ Auth 초기화 병렬화: approved_users+admins getDoc → Promise.all 동시 실행 / login_logs await 제거(fire-and-forget) / setPersistence 명시 호출
 - ✅ 투약 이력 바 차트 추가: 메인 그래프 아래 별도 캔버스(dose-history-chart), 실투여량 바 시각화, x축·zoom·pan 자동 싱크, 숨기기/보기 토글
+- ✅ 투약 이력 차트 UX 개선: 레이블 겹침 → ctx.measureText 실제 너비 기준 2-pass 렌더 / 캔버스 높이 90px·상단 패딩 16px 확보 / 약물별 총 투여량 합계 헤더 표시
+- ✅ 투약 이력 차트 독립 줌/팬: initDoseHistoryTouch() 추가 — 핀치줌·드래그·휠, graphZoom 공유로 메인 그래프와 양방향 완전 연동
 - ✅ Firebase API 키 도메인 제한 (goodgodpeptide.github.io/* + goodgodpeptide.firebaseapp.com/* 허용 — GCP Console HTTP referrers 설정, firebaseapp.com 누락 시 Auth 리다이렉트 오류 발생)
 - ✅ PK 모델 ka 수식 근본 수정: `ka=ln2/tmaxHours` → `computeKa()` Newton-Raphson 풀이 (모델이 정확히 tmaxHours에서 피크)
 - ✅ DRUG_CONFIG 파라미터 논문/FDA 라벨 기반 업데이트 (마운자로 tmax 8hr, 레타/위고비/카그릴 tmax 24hr, 티모신알파1 halfLife 2hr, 테사모렐린 halfLife 7min/tmax 9min)
