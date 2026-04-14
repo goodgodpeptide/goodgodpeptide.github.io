@@ -2795,6 +2795,180 @@
           hint.style.display = "none";
         }
       }
+
+      // 메인 그래프 렌더 후 투약 이력 차트도 함께 갱신
+      renderDoseHistoryChart();
+    }
+
+    // ══════════════════════════════════════════════
+    // 투약 이력 바 차트 (메인 그래프 x축과 동기화)
+    // ══════════════════════════════════════════════
+    let doseHistoryVisible = true;
+
+    window.toggleDoseHistory = function() {
+      doseHistoryVisible = !doseHistoryVisible;
+      const canvas = document.getElementById("dose-history-chart");
+      const btn = document.getElementById("dose-history-toggle-btn");
+      if (canvas) canvas.style.display = doseHistoryVisible ? "block" : "none";
+      if (btn) btn.textContent = doseHistoryVisible ? "숨기기" : "보기";
+    };
+
+    function renderDoseHistoryChart() {
+      const canvas = document.getElementById("dose-history-chart");
+      if (!canvas || !doseHistoryVisible) return;
+
+      const records = appData.records || [];
+      const isLight = document.body.classList.contains("light-mode");
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const cW = canvas.offsetWidth;
+      const cH = 72;
+      canvas.width = cW * dpr;
+      canvas.height = cH * dpr;
+      canvas.style.height = cH + "px";
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, cW, cH);
+
+      // 빈 기록이면 "기록 없음" 표시 후 종료
+      if (!records.length) {
+        ctx.fillStyle = isLight ? "#9ca3af" : "#4a5568";
+        ctx.font = "11px 'Noto Sans KR'";
+        ctx.textAlign = "center";
+        ctx.fillText("투약 기록 없음", cW / 2, cH / 2 + 4);
+        return;
+      }
+
+      // 메인 그래프와 동일한 시간 범위 사용 (zoom/pan 싱크)
+      const PAD = { l: 52, r: 14, t: 6, b: 18 };
+      const gW = cW - PAD.l - PAD.r;
+      const gH = cH - PAD.t - PAD.b;
+
+      let fullMinTime = _graphFullMinTime;
+      let fullRange   = _graphFullRange;
+      // 메인 그래프가 아직 렌더 전이면 직접 계산
+      if (!fullRange || !fullMinTime) {
+        const firstRec = Math.min(...records.map(r => r.time));
+        fullMinTime = firstRec - 2 * 86400000;
+        let clearanceTime = 0;
+        Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+          const dr = records.filter(r => r.drug === drug);
+          if (!dr.length) return;
+          clearanceTime = Math.max(clearanceTime, Math.max(...dr.map(r => r.time)) + cfg.halfLifeDays * 5 * 86400000);
+        });
+        const fullMaxTime = Math.max(Date.now(), clearanceTime || Date.now() + 35 * 86400000);
+        fullRange = fullMaxTime - fullMinTime;
+      }
+      const visRange   = fullRange / graphZoom.scale;
+      const visMinTime = fullMinTime + graphZoom.offsetX;
+
+      // 약물 필터 적용
+      const filteredRecs = records.filter(r => {
+        if (graphDrugFilter !== "전체") return DRUG_CONFIG[r.drug]?.short === graphDrugFilter;
+        return true;
+      });
+      if (!filteredRecs.length) return;
+
+      // 전체 최대 투여량 (Y축 스케일 기준)
+      const maxDose = Math.max(...filteredRecs.map(r => r.dose), 0.001);
+
+      // 배경
+      ctx.fillStyle = isLight ? "#f0f4f8" : "#080810";
+      ctx.fillRect(PAD.l, PAD.t, gW, gH);
+
+      // 수평 그리드 2선 (0%, 50%, 100%)
+      [0, 0.5, 1].forEach(ratio => {
+        const y = PAD.t + gH - ratio * gH;
+        ctx.strokeStyle = isLight ? "#dde3ea55" : "#1a1a2e88";
+        ctx.lineWidth = 1;
+        ctx.setLineDash(ratio === 0 ? [] : [2, 4]);
+        ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
+        ctx.setLineDash([]);
+      });
+
+      // Y축 레이블 (최대값 mg, 0)
+      ctx.fillStyle = isLight ? "#9ca3af" : "#4a5568";
+      ctx.font = "8px 'JetBrains Mono'";
+      ctx.textAlign = "right";
+      ctx.fillText(maxDose.toFixed(1), PAD.l - 3, PAD.t + 9);
+      ctx.fillText("0", PAD.l - 3, PAD.t + gH + 1);
+
+      // Y축 단위 레이블
+      ctx.save();
+      ctx.translate(PAD.l - 36, PAD.t + gH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillStyle = isLight ? "#9ca3af" : "#4a5568";
+      ctx.font = "8px 'Noto Sans KR'";
+      ctx.textAlign = "center";
+      ctx.fillText("mg", 0, 0);
+      ctx.restore();
+
+      // 바 너비: 줌에 따라 동적 조정
+      const zoomedBarW = Math.max(4, Math.min(20, gW / Math.max(filteredRecs.length, 1) * 0.6));
+
+      // 약물별로 그룹화 후 바 그리기
+      const drugGroups = {};
+      filteredRecs.forEach(r => {
+        if (!drugGroups[r.drug]) drugGroups[r.drug] = [];
+        drugGroups[r.drug].push(r);
+      });
+
+      Object.entries(drugGroups).forEach(([drug, recs]) => {
+        const cfg = DRUG_CONFIG[drug];
+        if (!cfg) return;
+        recs.forEach(r => {
+          const x = PAD.l + ((r.time - visMinTime) / visRange) * gW;
+          if (x < PAD.l - zoomedBarW || x > PAD.l + gW + zoomedBarW) return;
+          const barH = Math.max(2, (r.dose / maxDose) * gH);
+          const barY = PAD.t + gH - barH;
+
+          // 바 채우기
+          ctx.fillStyle = cfg.color + "77";
+          ctx.fillRect(x - zoomedBarW / 2, barY, zoomedBarW, barH);
+          // 바 테두리
+          ctx.strokeStyle = cfg.color + "cc";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x - zoomedBarW / 2, barY, zoomedBarW, barH);
+
+          // 용량 레이블 (바 위 — 충분한 공간이 있을 때만)
+          if (barH > 14 || (barH > 4 && zoomedBarW > 12)) {
+            ctx.fillStyle = cfg.color;
+            ctx.font = `bold 8px 'JetBrains Mono'`;
+            ctx.textAlign = "center";
+            ctx.fillText(r.dose + "mg", x, barY - 2);
+          }
+        });
+      });
+
+      // X축 구분선
+      ctx.strokeStyle = isLight ? "#d1d5db" : "#1f2937";
+      ctx.lineWidth = 1; ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(PAD.l, PAD.t + gH); ctx.lineTo(PAD.l + gW, PAD.t + gH); ctx.stroke();
+
+      // x축 날짜 레이블 (3개만, 메인과 동일 포맷)
+      ctx.fillStyle = isLight ? "#9ca3af" : "#4a5568";
+      ctx.font = "8px 'Noto Sans KR'";
+      ctx.textAlign = "center";
+      [0, 0.5, 1].forEach(ratio => {
+        const t = visMinTime + ratio * visRange;
+        const x = PAD.l + ratio * gW;
+        const d = new Date(t + 9 * 3600000); // KST
+        const label = `${d.getUTCMonth()+1}/${d.getUTCDate()}`;
+        ctx.fillText(label, x, PAD.t + gH + 12);
+      });
+
+      // 범례 (약물별 색상 점 + 이름)
+      let lx = PAD.l + 4;
+      Object.entries(drugGroups).forEach(([drug]) => {
+        const cfg = DRUG_CONFIG[drug];
+        if (!cfg) return;
+        ctx.fillStyle = cfg.color;
+        ctx.fillRect(lx, 1, 10, 3);
+        ctx.fillStyle = isLight ? "#6b7280" : "#9ca3af";
+        ctx.font = "8px 'Noto Sans KR'";
+        ctx.textAlign = "left";
+        ctx.fillText(cfg.short, lx + 13, 7);
+        lx += 44;
+      });
     }
 
     function roundRect(ctx, x, y, w, h, r) {
@@ -6480,6 +6654,8 @@
     body.light-mode .record-row { background: #f8fafc; border-color: #e2e8f0; }
     body.light-mode .stat-card { background: #ffffff; border-color: #e2e8f0; }
     body.light-mode .chart-wrap { background: #f8fafc; border-color: #e2e8f0; }
+    body.light-mode #dose-history-wrap span { color: #9ca3af !important; }
+    body.light-mode #dose-history-toggle-btn { border-color: #d1d5db; color: #9ca3af; }
     body.light-mode .input-field { background: #f8fafc; border-color: #d1d5db; color: #1a1a2e; }
     body.light-mode .modal-box { background: #ffffff; border-color: #e2e8f0; }
     body.light-mode .modal-overlay { background: #00000055; }
@@ -6730,6 +6906,15 @@
         <canvas id="peptide-chart"></canvas>
         <div class="zoom-hint">👆 드래그 이동 · 핀치 확대/축소 · 탭/클릭 수치확인</div>
         <div id="graph-legend-hint" style="display:none"></div>
+        <!-- 투약 이력 바 차트 (메인 그래프와 x축 동기화) -->
+        <div id="dose-history-wrap" style="margin-top:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+            <span style="font-size:10px;color:#4a5568">💉 투약 이력 (실투여량)</span>
+            <button onclick="toggleDoseHistory()" id="dose-history-toggle-btn"
+              style="padding:2px 8px;background:none;border:1px solid #374151;border-radius:6px;color:#6b7280;font-size:10px;cursor:pointer;font-family:inherit">숨기기</button>
+          </div>
+          <canvas id="dose-history-chart"></canvas>
+        </div>
       </div>
 
       <button class="big-btn blue" onclick="openAddModal()" style="margin-bottom:12px">+ 고급 기록 추가 (날짜 지정)</button>
