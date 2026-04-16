@@ -16,6 +16,8 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js" />
+  <!-- QR 코드 생성 라이브러리 (후원 모달용) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -6534,6 +6536,138 @@
       canvas.addEventListener("mouseleave", () => hideWT(0));
     }
 
+    // ══════════════════════════════════════════════
+    // 후원 모달
+    // ══════════════════════════════════════════════
+    const DON_NETWORKS = {
+      SOL: {
+        label: 'Solana (SOL)',
+        badge: '#9945ff',
+        coin: 'USDT',
+        address: '6dusedUJCtxdVLSTPGpArZnTTD4Ub1swgvVGnJtzA3tD',
+        notice: '⚠️ 반드시 <strong>Solana 네트워크</strong>로 USDT만 전송하세요.<br>다른 코인·다른 네트워크 전송 시 자산을 복구할 수 없습니다.',
+      },
+      BSC: {
+        label: 'BNB Smart Chain (BEP-20)',
+        badge: '#f0b90b',
+        coin: 'USDT',
+        address: '0x87f796ecfdecfc2d6dc2945969f2d183f5a63d66',
+        notice: '⚠️ 반드시 <strong>BSC (BEP-20) 네트워크</strong>로 USDT만 전송하세요.<br>ERC-20과 주소 형식이 같지만 네트워크가 다릅니다. 주의하세요.',
+      },
+      TRC20: {
+        label: 'Tron (TRC-20)',
+        badge: '#ef4444',
+        coin: 'USDT',
+        address: 'TJ463RQ7B2P63Fb3hYwRuvTnr2Drrf1Aam',
+        notice: '⚠️ 반드시 <strong>Tron (TRC-20) 네트워크</strong>로 USDT만 전송하세요.<br>최소 입금액 3 USDT. 미만 전송 시 잔고 미반영될 수 있습니다.',
+      },
+      APT: {
+        label: 'Aptos (APT)',
+        badge: '#22c55e',
+        coin: 'USDT',
+        address: '0x811fdea7c33bee626e725549f2223546d6953d37c168c5db21d7a6e57629ee7c',
+        notice: '⚠️ 반드시 <strong>Aptos 네트워크</strong>로 USDT만 전송하세요.<br>Contract: ***9dc2b. 다른 네트워크 전송 시 복구 불가.',
+      },
+    };
+
+    let _donCurrentNet = 'SOL';
+    let _donQrInstance = null;
+
+    window.openDonationModal = function() {
+      const modal = document.getElementById('donation-modal');
+      modal.style.display = 'flex';
+      switchDonTab('kakao');
+      history.pushState({ modal: true }, '');
+    };
+
+    window.closeDonationModal = function() {
+      document.getElementById('donation-modal').style.display = 'none';
+    };
+
+    window.switchDonTab = function(tab) {
+      const isKakao = tab === 'kakao';
+      document.getElementById('don-panel-kakao').style.display = isKakao ? 'block' : 'none';
+      document.getElementById('don-panel-usdt').style.display  = isKakao ? 'none'  : 'block';
+
+      const btnKakao = document.getElementById('don-tab-kakao');
+      const btnUsdt  = document.getElementById('don-tab-usdt');
+      const isLight  = document.body.classList.contains('light-mode');
+      const inactBg  = isLight ? '#f3f4f6' : 'none';
+      const inactClr = isLight ? '#6b7280' : '#6b7280';
+
+      if (isKakao) {
+        btnKakao.style.cssText += ';border-color:#fbbf24;background:#fbbf2422;color:#fbbf24';
+        btnUsdt.style.cssText  += `;border-color:${isLight?'#d1d5db':'#374151'};background:${inactBg};color:${inactClr}`;
+      } else {
+        btnUsdt.style.cssText  += ';border-color:#3b82f6;background:#3b82f622;color:#60a5fa';
+        btnKakao.style.cssText += `;border-color:${isLight?'#d1d5db':'#374151'};background:${inactBg};color:${inactClr}`;
+        switchDonNetwork(_donCurrentNet);
+      }
+    };
+
+    window.switchDonNetwork = function(net) {
+      _donCurrentNet = net;
+      const info = DON_NETWORKS[net];
+      if (!info) return;
+
+      // 네트워크 버튼 스타일 업데이트
+      document.querySelectorAll('.don-net-btn').forEach(btn => {
+        const active = btn.dataset.net === net;
+        btn.style.borderColor = active ? info.badge : '#374151';
+        btn.style.background  = active ? info.badge + '22' : 'none';
+        btn.style.color       = active ? info.badge : '#6b7280';
+      });
+
+      // 네트워크 배지
+      document.getElementById('don-net-badge').innerHTML =
+        `<span style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;background:${info.badge}22;border:1px solid ${info.badge}55;color:${info.badge}">${info.label}</span>`;
+
+      // 주소 텍스트
+      document.getElementById('don-addr-text').textContent = info.address;
+
+      // 주의사항
+      document.getElementById('don-notice').innerHTML = info.notice;
+
+      // QR 코드 생성
+      const wrap = document.getElementById('don-qr-canvas');
+      wrap.innerHTML = '';
+      if (typeof QRCode !== 'undefined') {
+        _donQrInstance = new QRCode(wrap, {
+          text: info.address,
+          width: 180,
+          height: 180,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M,
+        });
+        // QR 이미지에 border-radius 적용
+        setTimeout(() => {
+          const img = wrap.querySelector('img');
+          if (img) img.style.cssText = 'border-radius:10px;border:3px solid ' + info.badge + '66';
+        }, 50);
+      } else {
+        wrap.innerHTML = `<div style="color:#6b7280;font-size:12px">QR 로딩 중...</div>`;
+      }
+    };
+
+    window.copyDonAddress = function() {
+      const addr = DON_NETWORKS[_donCurrentNet]?.address;
+      if (!addr) return;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(addr).then(() => showToast('주소 복사됨 ✓'));
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = addr; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); document.body.removeChild(ta);
+        showToast('주소 복사됨 ✓');
+      }
+    };
+
+    // 모달 배경 클릭 닫기
+    document.getElementById('donation-modal')?.addEventListener('click', e => {
+      if (e.target === document.getElementById('donation-modal')) closeDonationModal();
+    });
+
     window.addEventListener("resize", () => { renderPeptideGraph(); renderWeightGraph(); });
     window.addEventListener("load", () => {
       setTimeout(() => { initGraphTouch(); initDoseHistoryTouch(); initWeightTouch(); }, 500);
@@ -6993,6 +7127,12 @@
                    border-bottom:1px solid #374151;color:#e2e8f0;font-size:13px;
                    text-align:left;cursor:pointer;font-family:inherit">
             🌙 다크 모드
+          </button>
+          <button onclick="closeSettingsMenu();openDonationModal()"
+            style="width:100%;padding:12px 16px;background:none;border:none;
+                   border-bottom:1px solid #374151;color:#fbbf24;font-size:13px;
+                   text-align:left;cursor:pointer;font-family:inherit">
+            ☕ 후원하기
           </button>
           <button onclick="closeSettingsMenu();doLogout()"
             style="width:100%;padding:12px 16px;background:none;border:none;
@@ -7811,6 +7951,88 @@
     <div class="modal-actions">
       <button class="big-btn" style="background:#374151;flex:1" onclick="closeWeightModal()">취소</button>
       <button class="big-btn green" style="flex:2" onclick="submitAddWeight()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 후원 모달 ── -->
+<div id="donation-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:flex-end;justify-content:center">
+  <div id="donation-box" style="background:#12121e;border-top:2px solid #fbbf24;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)">
+
+    <!-- 헤더 -->
+    <div style="position:sticky;top:0;background:#12121e;padding:16px 20px 12px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;z-index:1">
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#fbbf24">☕ 후원하기</div>
+        <div style="font-size:11px;color:#6b7280;margin-top:2px">개발에 힘이 됩니다 🙏</div>
+      </div>
+      <button onclick="closeDonationModal()" style="background:none;border:none;color:#6b7280;font-size:24px;cursor:pointer;padding:0;line-height:1">✕</button>
+    </div>
+
+    <!-- 탭 -->
+    <div style="display:flex;padding:12px 20px 0;gap:8px">
+      <button id="don-tab-kakao" onclick="switchDonTab('kakao')"
+        style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #fbbf24;background:#fbbf2422;color:#fbbf24;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+        💛 카카오페이
+      </button>
+      <button id="don-tab-usdt" onclick="switchDonTab('usdt')"
+        style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #374151;background:none;color:#6b7280;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+        💵 USDT (코인)
+      </button>
+    </div>
+
+    <!-- 카카오페이 탭 -->
+    <div id="don-panel-kakao" style="padding:20px">
+      <div style="text-align:center;margin-bottom:14px">
+        <img src="kakao_qr.png" alt="카카오페이 QR"
+          style="width:200px;height:200px;object-fit:contain;border-radius:12px;border:2px solid #fbbf2444">
+      </div>
+      <div style="background:#1e1a0a;border:1px solid #fbbf2433;border-radius:12px;padding:14px;font-size:12px;color:#d4a820;line-height:1.7">
+        📱 카카오톡 QR 스캔 또는 카카오페이 앱에서 QR 결제로 후원해주세요.<br>
+        <span style="color:#6b7280;font-size:11px">소액도 큰 힘이 됩니다. 감사합니다!</span>
+      </div>
+    </div>
+
+    <!-- USDT 탭 -->
+    <div id="don-panel-usdt" style="display:none;padding:20px">
+
+      <!-- 네트워크 선택 버튼 -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="don-net-btn active" onclick="switchDonNetwork('SOL')"   data-net="SOL"   style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #9945ff;background:#9945ff22;color:#9945ff">SOL</button>
+        <button class="don-net-btn"        onclick="switchDonNetwork('BSC')"   data-net="BSC"   style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #374151;background:none;color:#6b7280">BSC</button>
+        <button class="don-net-btn"        onclick="switchDonNetwork('TRC20')" data-net="TRC20" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #374151;background:none;color:#6b7280">TRC20</button>
+        <button class="don-net-btn"        onclick="switchDonNetwork('APT')"   data-net="APT"   style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #374151;background:none;color:#6b7280">APT</button>
+      </div>
+
+      <!-- QR + 주소 표시 영역 -->
+      <div id="don-qr-wrap" style="text-align:center;margin-bottom:14px;min-height:180px;display:flex;align-items:center;justify-content:center">
+        <div id="don-qr-canvas"></div>
+      </div>
+
+      <!-- 네트워크 정보 배지 -->
+      <div id="don-net-badge" style="text-align:center;margin-bottom:10px"></div>
+
+      <!-- 주소 -->
+      <div style="background:#0d1117;border:1px solid #374151;border-radius:10px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:10px;color:#6b7280;margin-bottom:6px">입금 주소</div>
+        <div id="don-addr-text" style="font-size:11px;color:#e2e8f0;font-family:'JetBrains Mono',monospace;word-break:break-all;line-height:1.6"></div>
+      </div>
+
+      <!-- 복사 버튼 -->
+      <button onclick="copyDonAddress()"
+        style="width:100%;padding:12px;background:#1d4ed8;border:none;border-radius:10px;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px">
+        📋 주소 복사
+      </button>
+
+      <!-- 주의사항 -->
+      <div id="don-notice" style="background:#1a0e0e;border:1px solid #f8717133;border-radius:10px;padding:12px 14px;font-size:11px;color:#fca5a5;line-height:1.7"></div>
+    </div>
+
+    <!-- 닫기 -->
+    <div style="padding:0 20px 20px">
+      <button onclick="closeDonationModal()"
+        style="width:100%;padding:14px;background:#1f2937;border:1px solid #374151;border-radius:12px;color:#9ca3af;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
+        닫기
+      </button>
     </div>
   </div>
 </div>
