@@ -6955,9 +6955,13 @@
     body.light-mode .result-row span:last-child { color: #1a1a2e; }
     body.light-mode #toast { background: #374151 !important; color: #f9fafb !important; }
     body.light-mode .quick-btns .qbtn { background: #f3f4f6; color: #6b7280; }
-    #settings-menu button:hover { background: #ffffff11 !important; }
-    body.light-mode #settings-menu { background: #ffffff; border-color: #e2e8f0; }
-    body.light-mode #settings-menu button { color: #374151 !important; border-color: #e2e8f0 !important; }
+    #settings-menu button:hover { background: #ffffff18 !important; }
+    body.light-mode #settings-menu { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 8px 24px #0002; }
+    body.light-mode #settings-menu button { color: #374151 !important; border-color: #e5e7eb !important; }
+    body.light-mode #settings-menu button:hover { background: #f3f4f6 !important; }
+    /* 관리자·후원 버튼은 라이트모드에서도 컬러 유지 */
+    body.light-mode #settings-menu #admin-btn { color: #b45309 !important; }
+    body.light-mode #settings-menu button[onclick*="openDonationModal"] { color: #b45309 !important; }
     body.light-mode #settings-menu button:last-child { color: #dc2626 !important; }
     /* ── 라이트모드 인라인 스타일 오버라이드 ── */
     body.light-mode button[title="백업/복원"] { border-color: #d1d5db !important; color: #6b7280 !important; }
@@ -7011,6 +7015,26 @@
     body.light-mode .stat-val { color: #1a1a2e !important; }
     /* 스크롤 과확장 시 html 배경 (라이트모드) */
     html:has(body.light-mode) { background: #f0f2f5; }
+    /* 후원 모달 — 라이트모드에서도 항상 다크 테마 유지 (ID 선택자로 전역 오버라이드 차단) */
+    body.light-mode #donation-modal { background: rgba(0,0,0,0.8) !important; }
+    body.light-mode #donation-box { background: #12121e !important; color: #e2e8f0 !important; }
+    body.light-mode #donation-box [style*="background:#12121e"] { background: #12121e !important; }
+    body.light-mode #donation-box [style*="background:#1e1a0a"] { background: #1e1a0a !important; }
+    body.light-mode #donation-box [style*="background:#1e293b"] { background: #1e293b !important; }
+    body.light-mode #donation-box [style*="background:#0d1117"] { background: #0d1117 !important; }
+    body.light-mode #donation-box [style*="background:#1a0e0e"] { background: #1a0e0e !important; }
+    body.light-mode #donation-box [style*="background:#1f2937"] { background: #1f2937 !important; }
+    body.light-mode #donation-box [style*="background:none"] { background: none !important; }
+    body.light-mode #donation-box [style*="color:#e2e8f0"] { color: #e2e8f0 !important; }
+    body.light-mode #donation-box [style*="color:#9ca3af"] { color: #9ca3af !important; }
+    body.light-mode #donation-box [style*="color:#6b7280"] { color: #6b7280 !important; }
+    body.light-mode #donation-box [style*="color:#fbbf24"] { color: #fbbf24 !important; }
+    body.light-mode #donation-box [style*="color:#d4a820"] { color: #d4a820 !important; }
+    body.light-mode #donation-box [style*="color:#fca5a5"] { color: #fca5a5 !important; }
+    body.light-mode #donation-box [style*="border:1px solid #374151"] { border-color: #374151 !important; }
+    body.light-mode #donation-box [style*="border:1px solid #fbbf24"] { border-color: #fbbf24 !important; }
+    body.light-mode #donation-box [style*="border-bottom:1px solid #1f2937"] { border-bottom-color: #1f2937 !important; }
+    body.light-mode #donation-box [style*="border-top:2px solid #fbbf24"] { border-top-color: #fbbf24 !important; }
   </style>
 </head>
 <body>
@@ -7095,6 +7119,12 @@
         style="width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;
                font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;
                font-family:inherit;flex-shrink:0;background:#374151;color:#f97316">?</button>
+      <!-- 후원하기 상단 버튼 -->
+      <button onclick="openDonationModal()"
+        style="height:32px;padding:0 10px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:8px;
+               cursor:pointer;display:flex;align-items:center;gap:4px;
+               color:#fff;font-size:12px;font-weight:800;flex-shrink:0;font-family:inherit;
+               box-shadow:0 2px 8px #f59e0b44">☕ 후원</button>
       <!-- 설정 드롭다운 -->
       <div style="position:relative">
         <button id="settings-btn" onclick="toggleSettingsMenu()"
