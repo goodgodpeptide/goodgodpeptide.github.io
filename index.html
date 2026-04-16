@@ -6806,9 +6806,39 @@
     window.openDonationModal = function() {
       const modal = document.getElementById('donation-modal');
       modal.style.display = 'flex';
+      _applyDonationTheme();
       switchDonTab('kakao');
       history.pushState({ modal: true }, '');
     };
+
+    // 후원 모달 열릴 때 정적 요소에 테마 적용
+    function _applyDonationTheme() {
+      const isL = document.body.classList.contains('light-mode');
+      const box = document.getElementById('donation-box');
+      if (!box) return;
+      const bg    = isL ? '#ffffff' : '#12121e';
+      const brd   = isL ? '#e2e8f0' : '#1f2937';
+      const txt   = isL ? '#374151' : '#e2e8f0';
+      const sub   = isL ? '#64748b' : '#9ca3af';
+      // 모달 박스
+      box.style.background = bg;
+      // sticky 헤더
+      const header = box.querySelector('[style*="position:sticky"]');
+      if (header) { header.style.background = bg; header.style.borderBottomColor = brd; }
+      // 닫기 ✕ 버튼
+      const closeX = box.querySelector('[onclick="closeDonationModal()"][style*="font-size:24px"]');
+      if (closeX) closeX.style.color = sub;
+      // 주소 박스 텍스트
+      const addrBox = document.getElementById('don-addr-text');
+      if (addrBox) addrBox.style.color = isL ? '#1e293b' : '#e2e8f0';
+      // 닫기 버튼 (하단)
+      const closeBtn = box.querySelector('[onclick="closeDonationModal()"][style*="font-size:15px"]');
+      if (closeBtn) {
+        closeBtn.style.background = isL ? '#f3f4f6' : '#1f2937';
+        closeBtn.style.borderColor = brd;
+        closeBtn.style.color = sub;
+      }
+    }
 
     window.closeDonationModal = function() {
       document.getElementById('donation-modal').style.display = 'none';
@@ -6839,13 +6869,14 @@
       _donCurrentNet = net;
       const info = DON_NETWORKS[net];
       if (!info) return;
+      const isL = document.body.classList.contains('light-mode');
 
       // 네트워크 버튼 스타일 업데이트
       document.querySelectorAll('.don-net-btn').forEach(btn => {
         const active = btn.dataset.net === net;
-        btn.style.borderColor = active ? info.badge : '#374151';
+        btn.style.borderColor = active ? info.badge : (isL ? '#d1d5db' : '#374151');
         btn.style.background  = active ? info.badge + '22' : 'none';
-        btn.style.color       = active ? info.badge : '#6b7280';
+        btn.style.color       = active ? info.badge : (isL ? '#6b7280' : '#6b7280');
       });
 
       // 네트워크 배지
@@ -7267,8 +7298,12 @@
     html:has(body.light-mode) { background: #f0f2f5; }
     /* 후원 모달 — 라이트모드 추가 색상 처리 (전역 미포함 색상) */
     body.light-mode [style*="background:#1e1a0a"] { background: #fffbeb !important; }
+    body.light-mode [style*="background:#12181e"] { background: #f8fafc !important; }
     body.light-mode [style*="background:#0d1117"] { background: #f8fafc !important; }
     body.light-mode [style*="background:#1a0e0e"] { background: #fef2f2 !important; }
+    /* 후원 USDT 주의사항: 라이트모드에서 핑크 → 진한 빨간색 */
+    body.light-mode #don-notice { color: #dc2626 !important; }
+    body.light-mode #don-addr-text { color: #1e293b !important; }
     /* 후원 인증 폼 라이트모드 */
     body.light-mode #don-cert-section { background: #f8fafc !important; border-color: #e2e8f0 !important; }
     body.light-mode #don-cert-section [style*="color:#9ca3af"] { color: #64748b !important; }
