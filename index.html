@@ -4578,6 +4578,9 @@
       renderCommunityTab();
     };
 
+    // 현재 답글 입력 중인 댓글 ID (포스트별로 1개만 열림)
+    let _replyTarget = {}; // { postId: commentId }
+
     function renderPostList(posts) {
       const el = document.getElementById("post-list");
       if (!el) return;
@@ -4608,44 +4611,66 @@
             ${canDel?`<button onclick="deletePost('${p.id}','${p.uid}')" style="background:none;border:none;color:${sub};cursor:pointer;font-size:14px;padding:2px 4px">🗑</button>`:''}
           </div>
           <div style="font-size:14px;color:${txt};line-height:1.65;margin-bottom:10px;white-space:pre-wrap;word-break:break-word">${escapeHtml(p.content)}</div>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;margin-bottom:10px">
             <button onclick="toggleLike('${p.id}')" style="background:${liked?(isL?'#eff6ff':'#1e3a5f'):'none'};border:1px solid ${liked?'#3b82f6':(isL?'#d1d5db':'#374151')};border-radius:20px;color:${liked?'#60a5fa':sub};padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s">❤️ ${(p.likes||[]).length}</button>
-            <button onclick="toggleComments('${p.id}')" style="background:none;border:1px solid ${isL?'#d1d5db':'#374151'};border-radius:20px;color:${sub};padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit">💬 댓글</button>
           </div>
-          <div id="comments-${p.id}" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid ${border}"></div>
+          <div id="comments-${p.id}" style="border-top:1px solid ${border};padding-top:10px">
+            <div style="color:${sub};font-size:12px;padding:4px 0">로딩 중...</div>
+          </div>
         </div>`;
       }).join('');
+      // 글 목록 렌더 완료 후 모든 댓글 병렬 로드
+      posts.forEach(p => loadComments(p.id));
     }
-
-    window.toggleComments = async function(postId) {
-      const box = document.getElementById('comments-'+postId);
-      if (!box) return;
-      if (box.style.display === 'none') { box.style.display='block'; await loadComments(postId); }
-      else box.style.display = 'none';
-    };
 
     async function loadComments(postId) {
       const box = document.getElementById('comments-'+postId);
-      if (!box || box.style.display==='none') return;
+      if (!box) return;
       const isL = document.body.classList.contains("light-mode");
-      const txt=isL?'#374151':'#d1d5db', sub=isL?'#64748b':'#4a5568', border=isL?'#f1f5f9':'#1f2937';
+      const txt=isL?'#374151':'#d1d5db', sub=isL?'#64748b':'#4a5568';
+      const border=isL?'#f1f5f9':'#1f2937', replyBg=isL?'#f8fafc':'#0d0d1a';
       const iBg=isL?'#f8fafc':'#0d0d1a', iB=isL?'#e2e8f0':'#374151';
-      box.innerHTML=`<div style="color:${sub};font-size:12px;padding:8px 0">로딩 중...</div>`;
       try {
         const snap = await getDocs(query(collection(db,"posts",postId,"comments"), orderBy("time","asc")));
         const cs=[]; snap.forEach(d=>cs.push({id:d.id,...d.data()}));
-        const html = cs.map(c=>{
+
+        // 최상위 댓글과 답글 분리
+        const topLevel = cs.filter(c => !c.replyTo);
+        const replyMap = {};  // parentId → [reply, ...]
+        cs.filter(c => c.replyTo).forEach(c => {
+          if (!replyMap[c.replyTo]) replyMap[c.replyTo] = [];
+          replyMap[c.replyTo].push(c);
+        });
+
+        function renderComment(c, isReply=false) {
           const mine=c.uid===currentUser?.uid, canDel=mine||currentUserIsAdmin;
           const uidTag=currentUserIsAdmin&&!mine?`<span style="font-size:9px;color:#f87171;opacity:.6;margin-left:3px">(${(c.uid||'').slice(0,6)})</span>`:'';
-          return `<div style="padding:7px 0;border-bottom:1px solid ${border}">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-              <div><span style="font-size:12px;font-weight:700;color:${mine?'#60a5fa':(isL?'#374151':'#9ca3af')}">${escapeHtml(c.nickname||'익명')}${mine?' <span style="font-size:10px">(나)</span>':''}${uidTag}</span><span style="font-size:10px;color:${sub};margin-left:6px">${timeAgo(c.time)}</span></div>
-              ${canDel?`<button onclick="deleteComment('${postId}','${c.id}','${c.uid}')" style="background:none;border:none;color:${sub};cursor:pointer;font-size:11px">🗑</button>`:''}
+          const nickColor = mine?'#60a5fa':(isL?'#374151':'#9ca3af');
+          const indent = isReply ? `margin-left:28px;padding-left:10px;border-left:2px solid ${isL?'#cbd5e1':'#374151'};` : '';
+          const replyBadge = isReply && c.replyToNickname
+            ? `<span style="font-size:11px;color:#60a5fa;margin-right:4px">@${escapeHtml(c.replyToNickname)}</span>` : '';
+          return `
+            <div id="comment-item-${c.id}" style="${indent}padding:7px 0 4px;border-bottom:1px solid ${border}">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+                <div>
+                  <span style="font-size:12px;font-weight:700;color:${nickColor}">${escapeHtml(c.nickname||'익명')}${mine?' <span style="font-size:10px">(나)</span>':''}${uidTag}</span>
+                  <span style="font-size:10px;color:${sub};margin-left:6px">${timeAgo(c.time)}</span>
+                </div>
+                <div style="display:flex;gap:4px;align-items:center">
+                  ${!isReply?`<button onclick="toggleReplyInput('${postId}','${c.id}','${escapeHtml(c.nickname||'익명')}')" style="background:none;border:none;color:${sub};cursor:pointer;font-size:11px;padding:2px 6px;font-family:inherit">↩ 답글</button>`:''}
+                  ${canDel?`<button onclick="deleteComment('${postId}','${c.id}','${c.uid}')" style="background:none;border:none;color:${sub};cursor:pointer;font-size:11px;padding:2px 4px">🗑</button>`:''}
+                </div>
+              </div>
+              <div style="font-size:13px;color:${txt};line-height:1.5;word-break:break-word">${replyBadge}${escapeHtml(c.content)}</div>
+              <div id="reply-input-${c.id}" style="display:none"></div>
             </div>
-            <div style="font-size:13px;color:${txt};line-height:1.5;word-break:break-word">${escapeHtml(c.content)}</div>
-          </div>`;
-        }).join('') || `<div style="font-size:12px;color:${sub};padding:6px 0">댓글이 없습니다</div>`;
-        box.innerHTML=`<div>${html}</div>
+            ${(replyMap[c.id]||[]).map(r=>renderComment(r,true)).join('')}`;
+        }
+
+        const html = topLevel.map(c => renderComment(c)).join('')
+          || `<div style="font-size:12px;color:${sub};padding:6px 0">아직 댓글이 없습니다</div>`;
+
+        box.innerHTML = `<div id="comment-list-${postId}">${html}</div>
           <div style="display:flex;gap:6px;margin-top:10px">
             <input id="comment-input-${postId}" class="input-field" placeholder="댓글 입력... (Enter 전송)"
               style="flex:1;padding:8px 10px;font-size:13px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-family:inherit;outline:none"
@@ -4654,6 +4679,51 @@
           </div>`;
       } catch(e) { box.innerHTML=`<div style="color:#ef4444;font-size:12px;padding:8px">댓글 로드 실패</div>`; }
     }
+
+    // 답글 입력창 토글 — 동일 포스트에서 하나만 열림
+    window.toggleReplyInput = function(postId, commentId, nickname) {
+      const isL = document.body.classList.contains("light-mode");
+      const txt=isL?'#374151':'#d1d5db', iBg=isL?'#f8fafc':'#0d0d1a', iB=isL?'#e2e8f0':'#374151';
+      // 이미 열려있는 답글창 닫기
+      const prev = _replyTarget[postId];
+      if (prev) {
+        const prevEl = document.getElementById('reply-input-'+prev);
+        if (prevEl) prevEl.style.display = 'none';
+        if (prev === commentId) { delete _replyTarget[postId]; return; }
+      }
+      _replyTarget[postId] = commentId;
+      const el = document.getElementById('reply-input-'+commentId);
+      if (!el) return;
+      el.style.display = 'block';
+      el.innerHTML = `
+        <div style="display:flex;gap:6px;margin-top:6px;padding-left:4px">
+          <input id="reply-input-field-${commentId}" class="input-field"
+            placeholder="@${escapeHtml(nickname)} 에게 답글..."
+            style="flex:1;padding:7px 10px;font-size:12px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-family:inherit;outline:none"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitReply('${postId}','${commentId}','${escapeHtml(nickname)}')}"/>
+          <button onclick="submitReply('${postId}','${commentId}','${escapeHtml(nickname)}')"
+            style="background:#1d4ed8;border:none;border-radius:8px;color:white;padding:0 12px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap">등록</button>
+          <button onclick="toggleReplyInput('${postId}','${commentId}','')"
+            style="background:none;border:1px solid ${iB};border-radius:8px;color:#6b7280;padding:0 8px;font-size:12px;cursor:pointer;font-family:inherit">✕</button>
+        </div>`;
+      setTimeout(() => document.getElementById('reply-input-field-'+commentId)?.focus(), 50);
+    };
+
+    // 답글 제출
+    window.submitReply = async function(postId, replyToId, replyToNickname) {
+      const inp = document.getElementById('reply-input-field-'+replyToId); if (!inp) return;
+      const content = inp.value.trim(); if (!content) return;
+      if (!appData.nickname) { openNicknameModal(); return; }
+      inp.disabled = true;
+      try {
+        await addDoc(collection(db,"posts",postId,"comments"), {
+          uid: currentUser.uid, nickname: appData.nickname, content,
+          time: Date.now(), replyTo: replyToId, replyToNickname
+        });
+        delete _replyTarget[postId];
+        await loadComments(postId);
+      } catch(e) { alert("답글 작성에 실패했습니다."); inp.disabled=false; }
+    };
 
     function renderCommunityTab() {
       const panel = document.getElementById("panel-community");
