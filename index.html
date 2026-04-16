@@ -4850,7 +4850,58 @@
             <div style="margin-top:6px">${approved.map(renderRow).join('')}</div>
           </details>`;
         }
+
+        // 명예의전당 현황 (수정/삭제/수동등록)
+        el.innerHTML += `<div style="margin-top:20px;border-top:1px solid ${isL?'#e2e8f0':'#1e293b'};padding-top:16px">
+          <div style="font-size:12px;color:${isL?'#b45309':'#fbbf24'};font-weight:600;margin-bottom:10px">🏆 명예의전당 현황</div>
+          <div id="hof-admin-list">로딩 중...</div>
+        </div>`;
+        await loadHofAdminList();
+
       } catch(e) { el.innerHTML=`<div style="color:#ef4444;font-size:12px">로드 실패: ${e.message}</div>`; }
+    };
+
+    // 명예의전당 현황 렌더 (관리자용)
+    window.loadHofAdminList = async function() {
+      const el = document.getElementById('hof-admin-list');
+      if (!el) return;
+      const isL = document.body.classList.contains('light-mode');
+      const itemBg = isL?'#fffbeb':'#1a1200', itemBorder = isL?'1px solid #fde68a':'1px solid #fbbf2433';
+      const txt = isL?'#374151':'#e2e8f0', sub = isL?'#b45309':'#fbbf24';
+      const iBg = isL?'#fff':'#0d0d1a', iB = isL?'#d1d5db':'#374151';
+      try {
+        const snap = await getDoc(doc(db,'config','hall_of_fame'));
+        const entries = snap.exists() ? [...(snap.data().entries||[])].sort((a,b)=>b.amount-a.amount) : [];
+        if (!entries.length) {
+          el.innerHTML = `<div style="color:#6b7280;font-size:12px;padding:6px 0">등록된 항목 없음</div>`;
+        } else {
+          el.innerHTML = entries.map((e,i)=>{
+            const r = donationRank(e.amount);
+            return `<div style="padding:8px 10px;background:${itemBg};border:${itemBorder};border-radius:10px;margin-bottom:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <span style="font-size:13px;font-weight:700;color:${txt}">${escapeHtml(e.nickname)}</span>
+                  <span style="font-size:11px;color:${r.color};background:${r.color}22;padding:1px 7px;border-radius:20px;margin-left:6px">${r.badge} ${r.label}</span>
+                  <span style="font-size:12px;font-weight:700;color:${sub};margin-left:6px">${e.amount.toLocaleString()}원</span>
+                </div>
+                <div style="display:flex;gap:5px">
+                  <button onclick="showHofEditForm(${i},'${e.nickname.replace(/'/g,"\\'")}',${e.amount})"
+                    style="padding:4px 10px;background:${isL?'#f3f4f6':'#1e293b'};border:1px solid ${isL?'#d1d5db':'#374151'};border-radius:7px;color:${txt};font-size:11px;cursor:pointer;font-family:inherit">✏️ 수정</button>
+                  <button onclick="deleteHofEntry(${i})"
+                    style="padding:4px 10px;background:#991b1b;border:none;border-radius:7px;color:#fca5a5;font-size:11px;cursor:pointer;font-family:inherit">🗑</button>
+                </div>
+              </div>
+              <div id="hof-edit-${i}"></div>
+            </div>`;
+          }).join('');
+        }
+        // 수동 등록 폼
+        el.innerHTML += `<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <input id="hof-manual-nick" placeholder="닉네임" style="flex:1;min-width:80px;padding:7px 10px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-size:12px;font-family:inherit;outline:none"/>
+          <input id="hof-manual-amt" type="number" placeholder="금액(원)" style="width:90px;padding:7px 10px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-size:12px;font-family:inherit;outline:none"/>
+          <button onclick="addHofManual()" style="padding:7px 14px;background:#d97706;border:none;border-radius:8px;color:white;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">+ 직접 등록</button>
+        </div>`;
+      } catch(e) { el.innerHTML=`<div style="color:#ef4444;font-size:12px">로드 실패</div>`; }
     };
 
     window.approveDonation = async function(reqId) {
@@ -4879,6 +4930,83 @@
       try {
         await updateDoc(doc(db,'donation_requests',reqId), { status:'rejected' });
         showToast('❌ 거절됨');
+        await loadAdminDonations();
+      } catch(e) { alert('오류: '+e.message); }
+    };
+
+    // 명예의전당 항목 삭제 (index 기반)
+    window.deleteHofEntry = async function(idx) {
+      if (!await customConfirm('명예의전당에서 이 항목을 삭제할까요?')) return;
+      try {
+        const hofRef = doc(db,'config','hall_of_fame');
+        const snap = await getDoc(hofRef);
+        if (!snap.exists()) return;
+        const entries = snap.data().entries || [];
+        entries.splice(idx, 1);
+        await setDoc(hofRef, { entries });
+        showToast('🗑 삭제됐습니다');
+        await loadAdminDonations();
+      } catch(e) { alert('오류: '+e.message); }
+    };
+
+    // 명예의전당 항목 수정 (인라인 편집창 표시)
+    window.showHofEditForm = function(idx, nickname, amount) {
+      const el = document.getElementById('hof-edit-'+idx);
+      if (!el) return;
+      const isL = document.body.classList.contains('light-mode');
+      const iBg = isL?'#fff':'#0d0d1a', iB = isL?'#d1d5db':'#374151', txt = isL?'#374151':'#e2e8f0';
+      el.innerHTML = `
+        <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap">
+          <input id="hof-edit-nick-${idx}" value="${escapeHtml(nickname)}" placeholder="닉네임"
+            style="flex:1;min-width:80px;padding:6px 10px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-size:12px;font-family:inherit;outline:none"/>
+          <input id="hof-edit-amt-${idx}" type="number" value="${amount}" placeholder="금액(원)"
+            style="width:90px;padding:6px 10px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-size:12px;font-family:inherit;outline:none"/>
+          <button onclick="saveHofEdit(${idx})"
+            style="padding:6px 12px;background:#1d4ed8;border:none;border-radius:8px;color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">저장</button>
+          <button onclick="document.getElementById('hof-edit-${idx}').innerHTML=''"
+            style="padding:6px 10px;background:none;border:1px solid ${iB};border-radius:8px;color:#6b7280;font-size:11px;cursor:pointer;font-family:inherit">취소</button>
+        </div>`;
+    };
+
+    // 명예의전당 항목 수정 저장
+    window.saveHofEdit = async function(idx) {
+      const nickEl = document.getElementById('hof-edit-nick-'+idx);
+      const amtEl  = document.getElementById('hof-edit-amt-'+idx);
+      const nickname = nickEl?.value?.trim();
+      const amount   = parseInt(amtEl?.value || '0', 10);
+      if (!nickname) { alert('닉네임을 입력하세요.'); return; }
+      if (!amount || amount < 1) { alert('금액을 입력하세요.'); return; }
+      try {
+        const hofRef = doc(db,'config','hall_of_fame');
+        const snap = await getDoc(hofRef);
+        if (!snap.exists()) return;
+        const entries = snap.data().entries || [];
+        entries[idx] = { ...entries[idx], nickname, amount };
+        await setDoc(hofRef, { entries });
+        showToast('✅ 수정됐습니다');
+        await loadAdminDonations();
+      } catch(e) { alert('오류: '+e.message); }
+    };
+
+    // 명예의전당 수동 등록 (관리자 직접)
+    window.addHofManual = async function() {
+      const nickEl = document.getElementById('hof-manual-nick');
+      const amtEl  = document.getElementById('hof-manual-amt');
+      const nickname = nickEl?.value?.trim();
+      const amount   = parseInt(amtEl?.value || '0', 10);
+      if (!nickname) { alert('닉네임을 입력하세요.'); return; }
+      if (!amount || amount < 1) { alert('금액을 입력하세요.'); return; }
+      try {
+        const hofRef = doc(db,'config','hall_of_fame');
+        const snap = await getDoc(hofRef);
+        const entry = { uid:'manual', nickname, amount, method:'manual', note:'관리자 직접 등록', time:Date.now(), approvedAt:Date.now() };
+        if (snap.exists()) {
+          await updateDoc(hofRef, { entries: arrayUnion(entry) });
+        } else {
+          await setDoc(hofRef, { entries:[entry] });
+        }
+        nickEl.value = ''; amtEl.value = '';
+        showToast('✅ 명예의전당에 등록됐습니다');
         await loadAdminDonations();
       } catch(e) { alert('오류: '+e.message); }
     };
