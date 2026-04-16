@@ -307,6 +307,9 @@
         }).join('');
       }
 
+      // 후원 신청 내역 로드
+      await loadAdminDonations();
+
       // 관리자 목록 렌더
       const adminList = document.getElementById("admin-admin-list");
       if (adminList) {
@@ -4725,6 +4728,157 @@
       } catch(e) { alert("답글 작성에 실패했습니다."); inp.disabled=false; }
     };
 
+    // ══════════════════════════════════════════════
+    // 명예의전당 & 후원 인증
+    // ══════════════════════════════════════════════
+    function donationRank(amount) {
+      if (amount >= 50000) return { badge:'👑', label:'레전드',  color:'#fbbf24' };
+      if (amount >= 30000) return { badge:'💎', label:'다이아',  color:'#60a5fa' };
+      if (amount >= 10000) return { badge:'🥇', label:'골드',    color:'#f59e0b' };
+      if (amount >= 5000)  return { badge:'🥈', label:'실버',    color:'#94a3b8' };
+      return                      { badge:'☕', label:'서포터',  color:'#a78bfa' };
+    }
+
+    // 후원 인증 폼 토글
+    window.openDonCertForm = function() {
+      const el = document.getElementById('don-cert-section');
+      if (!el) return;
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    };
+
+    // 후원 인증 제출
+    window.submitDonCert = async function() {
+      if (!currentUser) { alert('로그인이 필요합니다.'); return; }
+      if (!appData.nickname) { closeDonationModal(); openNicknameModal(); return; }
+      const amtEl = document.getElementById('don-cert-amount');
+      const methodEl = document.getElementById('don-cert-method');
+      const noteEl = document.getElementById('don-cert-note');
+      const amount = parseInt(amtEl?.value || '0', 10);
+      if (!amount || amount < 1000) { alert('1,000원 이상 금액을 입력하세요.'); return; }
+      const method = methodEl?.value || 'kakao';
+      const note = noteEl?.value?.trim() || '';
+      const btn = document.getElementById('don-cert-submit-btn');
+      if (btn) btn.disabled = true;
+      try {
+        await addDoc(collection(db,'donation_requests'), {
+          uid: currentUser.uid, nickname: appData.nickname,
+          amount, method, note, time: Date.now(), status: 'pending'
+        });
+        document.getElementById('don-cert-section').innerHTML =
+          `<div style="padding:16px;text-align:center;color:#4ade80;font-size:14px;font-weight:700">
+            ✅ 신청 완료!<br><span style="font-size:12px;font-weight:400;color:#6b7280">관리자 확인 후 명예의전당에 등록됩니다 🙏</span>
+          </div>`;
+      } catch(e) { alert('신청에 실패했습니다: ' + e.message); if (btn) btn.disabled = false; }
+    };
+
+    // 커뮤니티 — 명예의전당 렌더
+    async function loadHallOfFame() {
+      const el = document.getElementById('hall-of-fame-section');
+      if (!el) return;
+      const isL = document.body.classList.contains("light-mode");
+      try {
+        const snap = await getDoc(doc(db,'config','hall_of_fame'));
+        if (!snap.exists() || !(snap.data().entries?.length)) { el.style.display='none'; return; }
+        const entries = [...(snap.data().entries||[])].sort((a,b)=>b.amount-a.amount);
+        const cardBg = isL?'#fffbeb':'#1a1200', border = isL?'#fde68a':'#fbbf2433';
+        const sub = isL?'#b45309':'#fbbf24', rowBg = isL?'#fff8dc':'#ffffff0a';
+        const nameTxt = isL?'#374151':'#e2e8f0';
+        el.style.display = 'block';
+        el.innerHTML = `
+          <div style="background:${cardBg};border:1px solid ${border};border-radius:14px;padding:14px;margin-bottom:16px">
+            <div style="font-size:14px;font-weight:800;color:${sub};margin-bottom:10px">🏆 명예의전당</div>
+            <div style="display:flex;flex-direction:column;gap:5px">
+              ${entries.map((e,i)=>{
+                const r=donationRank(e.amount);
+                const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+                return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:${rowBg};border-radius:8px">
+                  <span style="font-size:15px;width:22px;text-align:center">${medal||r.badge}</span>
+                  <span style="font-size:13px;font-weight:700;color:${nameTxt};flex:1">${escapeHtml(e.nickname)}</span>
+                  <span style="font-size:11px;font-weight:700;color:${r.color};background:${r.color}22;padding:2px 8px;border-radius:20px">${r.label}</span>
+                  <span style="font-size:12px;font-weight:700;color:${sub}">${e.amount.toLocaleString()}원</span>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
+      } catch(e) { el.style.display='none'; }
+    }
+
+    // 관리자 — 후원 신청 내역 로드
+    window.loadAdminDonations = async function() {
+      const el = document.getElementById('admin-donation-list');
+      if (!el) return;
+      const isL = document.body.classList.contains("light-mode");
+      const itemBg = isL?'#f8fafc':'#1e293b', itemBorder = isL?'1px solid #e2e8f0':'none';
+      const METHOD = { kakao:'카카오페이', usdt_sol:'USDT/SOL', usdt_bsc:'USDT/BSC', usdt_trc20:'USDT/TRC20', usdt_apt:'USDT/APT' };
+      try {
+        const snap = await getDocs(query(collection(db,'donation_requests'), orderBy('time','desc')));
+        const all=[]; snap.forEach(d=>all.push({id:d.id,...d.data()}));
+        const pending  = all.filter(r=>r.status==='pending');
+        const approved = all.filter(r=>r.status==='approved');
+        const renderRow = r => {
+          const rank = donationRank(r.amount);
+          const dt = new Date(r.time).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+          return `<div style="padding:10px 12px;background:${itemBg};border:${itemBorder};border-radius:10px;margin-bottom:6px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap">
+                  <span style="font-size:13px;font-weight:700;color:${isL?'#374151':'#e2e8f0'}">${escapeHtml(r.nickname||'?')}</span>
+                  <span style="font-size:11px;color:${rank.color};background:${rank.color}22;padding:1px 7px;border-radius:20px">${rank.badge} ${rank.label}</span>
+                </div>
+                <div style="font-size:12px;color:${isL?'#64748b':'#94a3b8'}">💰 ${r.amount.toLocaleString()}원 · ${METHOD[r.method]||r.method} · ${dt}</div>
+                ${r.note?`<div style="font-size:11px;color:${isL?'#64748b':'#6b7280'};margin-top:3px">📝 ${escapeHtml(r.note)}</div>`:''}
+              </div>
+              ${r.status==='pending'
+                ?`<div style="display:flex;gap:5px;flex-shrink:0">
+                    <button onclick="approveDonation('${r.id}')" style="padding:5px 11px;background:#16a34a;border:none;border-radius:8px;color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">승인</button>
+                    <button onclick="rejectDonation('${r.id}')"  style="padding:5px 11px;background:#991b1b;border:none;border-radius:8px;color:#fca5a5;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">거절</button>
+                  </div>`
+                :`<span style="font-size:11px;font-weight:700;flex-shrink:0;color:${r.status==='approved'?'#4ade80':'#f87171'}">${r.status==='approved'?'✅ 승인':'❌ 거절'}</span>`}
+            </div>
+          </div>`;
+        };
+        el.innerHTML = pending.length
+          ? pending.map(renderRow).join('')
+          : `<div style="color:#4b5563;font-size:13px;padding:10px 0">대기 중인 후원 신청 없음</div>`;
+        if (approved.length) {
+          el.innerHTML += `<details style="margin-top:8px">
+            <summary style="font-size:11px;color:#6b7280;cursor:pointer;padding:4px 0">승인된 내역 ${approved.length}건 보기</summary>
+            <div style="margin-top:6px">${approved.map(renderRow).join('')}</div>
+          </details>`;
+        }
+      } catch(e) { el.innerHTML=`<div style="color:#ef4444;font-size:12px">로드 실패: ${e.message}</div>`; }
+    };
+
+    window.approveDonation = async function(reqId) {
+      if (!await customConfirm('이 후원을 승인하고 명예의전당에 등록할까요?')) return;
+      try {
+        const reqRef = doc(db,'donation_requests',reqId);
+        const reqSnap = await getDoc(reqRef);
+        if (!reqSnap.exists()) return;
+        const r = reqSnap.data();
+        const hofRef = doc(db,'config','hall_of_fame');
+        const hofSnap = await getDoc(hofRef);
+        const entry = { uid:r.uid, nickname:r.nickname, amount:r.amount, method:r.method, note:r.note||'', time:r.time, approvedAt:Date.now() };
+        if (hofSnap.exists()) {
+          await updateDoc(hofRef, { entries: arrayUnion(entry) });
+        } else {
+          await setDoc(hofRef, { entries:[entry] });
+        }
+        await updateDoc(reqRef, { status:'approved' });
+        showToast('✅ 승인 완료! 명예의전당에 등록됐습니다');
+        await loadAdminDonations();
+      } catch(e) { alert('오류: '+e.message); }
+    };
+
+    window.rejectDonation = async function(reqId) {
+      if (!await customConfirm('이 후원 신청을 거절할까요?')) return;
+      try {
+        await updateDoc(doc(db,'donation_requests',reqId), { status:'rejected' });
+        showToast('❌ 거절됨');
+        await loadAdminDonations();
+      } catch(e) { alert('오류: '+e.message); }
+    };
+
     function renderCommunityTab() {
       const panel = document.getElementById("panel-community");
       if (!panel) return;
@@ -4734,6 +4888,7 @@
       const txt=isL?'#1e293b':'#e2e8f0', iBg=isL?'#f8fafc':'#0d0d1a', iB=isL?'#e2e8f0':'#374151';
       panel.innerHTML=`
         <div style="padding:16px;max-width:640px;margin:0 auto">
+          <div id="hall-of-fame-section" style="display:none"></div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
             <div style="font-size:16px;font-weight:800;color:${txt}">💬 커뮤니티</div>
             <button onclick="openNicknameModal()" style="background:${isL?'#f1f5f9':'#1f2937'};border:1px solid ${border};border-radius:20px;color:${nick?'#60a5fa':'#f97316'};padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">
@@ -4758,6 +4913,7 @@
 
     window.loadCommunity = function() {
       renderCommunityTab();
+      loadHallOfFame(); // 명예의전당 비동기 로드
       if (communityUnsubscribe) communityUnsubscribe();
       try {
         const q = query(collection(db,"posts"), orderBy("time","desc"), limit(50));
@@ -7105,26 +7261,17 @@
     body.light-mode .stat-val { color: #1a1a2e !important; }
     /* 스크롤 과확장 시 html 배경 (라이트모드) */
     html:has(body.light-mode) { background: #f0f2f5; }
-    /* 후원 모달 — 라이트모드에서도 항상 다크 테마 유지 (ID 선택자로 전역 오버라이드 차단) */
-    body.light-mode #donation-modal { background: rgba(0,0,0,0.8) !important; }
-    body.light-mode #donation-box { background: #12121e !important; color: #e2e8f0 !important; }
-    body.light-mode #donation-box [style*="background:#12121e"] { background: #12121e !important; }
-    body.light-mode #donation-box [style*="background:#1e1a0a"] { background: #1e1a0a !important; }
-    body.light-mode #donation-box [style*="background:#1e293b"] { background: #1e293b !important; }
-    body.light-mode #donation-box [style*="background:#0d1117"] { background: #0d1117 !important; }
-    body.light-mode #donation-box [style*="background:#1a0e0e"] { background: #1a0e0e !important; }
-    body.light-mode #donation-box [style*="background:#1f2937"] { background: #1f2937 !important; }
-    body.light-mode #donation-box [style*="background:none"] { background: none !important; }
-    body.light-mode #donation-box [style*="color:#e2e8f0"] { color: #e2e8f0 !important; }
-    body.light-mode #donation-box [style*="color:#9ca3af"] { color: #9ca3af !important; }
-    body.light-mode #donation-box [style*="color:#6b7280"] { color: #6b7280 !important; }
-    body.light-mode #donation-box [style*="color:#fbbf24"] { color: #fbbf24 !important; }
-    body.light-mode #donation-box [style*="color:#d4a820"] { color: #d4a820 !important; }
-    body.light-mode #donation-box [style*="color:#fca5a5"] { color: #fca5a5 !important; }
-    body.light-mode #donation-box [style*="border:1px solid #374151"] { border-color: #374151 !important; }
-    body.light-mode #donation-box [style*="border:1px solid #fbbf24"] { border-color: #fbbf24 !important; }
-    body.light-mode #donation-box [style*="border-bottom:1px solid #1f2937"] { border-bottom-color: #1f2937 !important; }
-    body.light-mode #donation-box [style*="border-top:2px solid #fbbf24"] { border-top-color: #fbbf24 !important; }
+    /* 후원 모달 — 라이트모드 추가 색상 처리 (전역 미포함 색상) */
+    body.light-mode [style*="background:#1e1a0a"] { background: #fffbeb !important; }
+    body.light-mode [style*="background:#0d1117"] { background: #f8fafc !important; }
+    body.light-mode [style*="background:#1a0e0e"] { background: #fef2f2 !important; }
+    /* 후원 인증 폼 라이트모드 */
+    body.light-mode #don-cert-section { background: #f8fafc !important; border-color: #e2e8f0 !important; }
+    body.light-mode #don-cert-section [style*="color:#9ca3af"] { color: #64748b !important; }
+    body.light-mode #don-cert-section [style*="color:#6b7280"] { color: #64748b !important; }
+    body.light-mode #don-cert-amount,
+    body.light-mode #don-cert-method,
+    body.light-mode #don-cert-note { background: #ffffff !important; border-color: #d1d5db !important; color: #374151 !important; }
   </style>
 </head>
 <body>
@@ -7897,6 +8044,17 @@
       </div>
       <div style="font-size:11px;color:#4b5563;margin-top:8px">관리자는 자동으로 승인된 사용자로도 등록됩니다</div>
     </div>
+
+    <!-- 후원 신청 내역 -->
+    <div style="border-top:1px solid #1e293b;padding-top:20px;margin-top:4px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:12px;color:#fbbf24;font-weight:600;letter-spacing:0.5px">☕ 후원 신청 내역</div>
+        <button onclick="loadAdminDonations()" style="background:none;border:1px solid #374151;border-radius:8px;color:#6b7280;font-size:11px;padding:3px 10px;cursor:pointer;font-family:inherit">새로고침</button>
+      </div>
+      <div id="admin-donation-list">
+        <div style="color:#4b5563;font-size:13px;padding:10px 0">불러오는 중...</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -8141,6 +8299,51 @@
 
       <!-- 주의사항 -->
       <div id="don-notice" style="background:#1a0e0e;border:1px solid #f8717133;border-radius:10px;padding:12px 14px;font-size:11px;color:#fca5a5;line-height:1.7"></div>
+    </div>
+
+    <!-- 후원 인증 신청 -->
+    <div style="padding:0 20px 10px">
+      <button onclick="openDonCertForm()"
+        style="width:100%;padding:12px;background:none;border:1.5px dashed #fbbf2466;border-radius:12px;
+               color:#fbbf24;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+        🏆 후원 완료 후 인증하기 (명예의전당 등록)
+      </button>
+      <div id="don-cert-section" style="display:none;margin-top:10px;padding:14px;background:#1e293b;border:1px solid #374151;border-radius:12px">
+        <div style="font-size:12px;color:#9ca3af;margin-bottom:12px;line-height:1.6">
+          후원 금액을 입력하면 관리자 확인 후 커뮤니티 명예의전당에 닉네임이 표시됩니다.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">후원 금액 (원)</div>
+            <input id="don-cert-amount" type="number" min="1000" step="1000" placeholder="예: 10000"
+              style="width:100%;padding:9px 12px;background:#0d0d1a;border:1px solid #374151;border-radius:8px;
+                     color:#e2e8f0;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box"/>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">후원 방법</div>
+            <select id="don-cert-method"
+              style="width:100%;padding:9px 12px;background:#0d0d1a;border:1px solid #374151;border-radius:8px;
+                     color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+              <option value="kakao">💛 카카오페이</option>
+              <option value="usdt_sol">💵 USDT (SOL)</option>
+              <option value="usdt_bsc">💵 USDT (BSC)</option>
+              <option value="usdt_trc20">💵 USDT (TRC20)</option>
+              <option value="usdt_apt">💵 USDT (APT)</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">메모 (선택)</div>
+            <input id="don-cert-note" type="text" placeholder="응원 메시지 등 자유롭게"
+              style="width:100%;padding:9px 12px;background:#0d0d1a;border:1px solid #374151;border-radius:8px;
+                     color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box"/>
+          </div>
+          <button id="don-cert-submit-btn" onclick="submitDonCert()"
+            style="width:100%;padding:11px;background:#d97706;border:none;border-radius:10px;
+                   color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:2px">
+            🏆 인증 신청하기
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- 닫기 -->
