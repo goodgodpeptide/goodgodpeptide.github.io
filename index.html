@@ -4778,15 +4778,18 @@
       const isL = document.body.classList.contains("light-mode");
       try {
         const snap = await getDoc(doc(db,'config','hall_of_fame'));
-        if (!snap.exists() || !(snap.data().entries?.length)) { el.style.display='none'; return; }
-        const entries = [...(snap.data().entries||[])].sort((a,b)=>b.amount-a.amount);
+        const entries = snap.exists() ? [...(snap.data().entries||[])].sort((a,b)=>b.amount-a.amount) : [];
         const cardBg = isL?'#fffbeb':'#1a1200', border = isL?'#fde68a':'#fbbf2433';
         const sub = isL?'#b45309':'#fbbf24', rowBg = isL?'#fff8dc':'#ffffff0a';
-        const nameTxt = isL?'#374151':'#e2e8f0';
+        const nameTxt = isL?'#374151':'#e2e8f0', subTxt = isL?'#92400e':'#9ca3af';
         el.style.display = 'block';
         el.innerHTML = `
           <div style="background:${cardBg};border:1px solid ${border};border-radius:14px;padding:14px;margin-bottom:16px">
-            <div style="font-size:14px;font-weight:800;color:${sub};margin-bottom:10px">🏆 명예의전당</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div style="font-size:14px;font-weight:800;color:${sub}">🏆 명예의전당</div>
+              <button onclick="openDonationModal()" style="background:none;border:1px solid ${border};border-radius:20px;color:${sub};font-size:11px;padding:3px 10px;cursor:pointer;font-family:inherit;font-weight:600">☕ 후원하기</button>
+            </div>
+            ${entries.length ? `
             <div style="display:flex;flex-direction:column;gap:5px">
               ${entries.map((e,i)=>{
                 const r=donationRank(e.amount);
@@ -4798,7 +4801,8 @@
                   <span style="font-size:12px;font-weight:700;color:${sub}">${e.amount.toLocaleString()}원</span>
                 </div>`;
               }).join('')}
-            </div>
+            </div>` : `
+            <div style="text-align:center;padding:10px 0;font-size:12px;color:${subTxt}">아직 등록된 후원자가 없습니다 🙏<br>첫 번째 후원자가 되어보세요!</div>`}
           </div>`;
       } catch(e) { el.style.display='none'; }
     }
