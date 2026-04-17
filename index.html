@@ -6714,11 +6714,27 @@
 
       // 2. 키 파싱: [4자리숫자][MF] 패턴 → /10 = cm
       const heightMatch = bdata.match(/(\d{4})[MF]/);
+      const suggestEl = document.getElementById("ib-height-suggest");
       if (heightMatch) {
         const hVal = parseInt(heightMatch[1]) / 10;
         if (hVal >= 120 && hVal <= 220) {
-          filled.push(`키 ${hVal}cm (참고만)`);
+          const saved = parseFloat(appData.height) || 0;
+          if (!saved || Math.abs(saved - hVal) > 1) {
+            // 프로필 키 없거나 다르면 업데이트 제안 버튼 표시
+            if (suggestEl) {
+              suggestEl.style.display = "flex";
+              suggestEl.dataset.height = hVal;
+              suggestEl.querySelector("span").textContent =
+                saved ? `키 ${hVal}cm 감지됨 (현재 프로필: ${saved}cm)` : `키 ${hVal}cm 감지됨 (프로필 미설정)`;
+            }
+            filled.push(`키 ${hVal}cm 감지`);
+          } else {
+            if (suggestEl) suggestEl.style.display = "none";
+            filled.push(`키 ${hVal}cm ✓`);
+          }
         }
+      } else {
+        if (suggestEl) suggestEl.style.display = "none";
       }
 
       // 3. 결과 페이지 새탭 오픈
@@ -6764,38 +6780,114 @@
       renderInbodyPanel();
     };
 
+    // QR 파싱으로 감지된 키를 프로필에 적용
+    window.applyInbodyHeight = function() {
+      const el = document.getElementById("ib-height-suggest");
+      const h = parseFloat(el?.dataset.height);
+      if (!h) return;
+      appData.height = String(h);
+      scheduleSave();
+      if (el) el.style.display = "none";
+      showToast(`✅ 키 ${h}cm 프로필에 저장됨`);
+    };
+
+    // ── 체지방률 건강 상태 평가 (성별 반영) ─────────────
+    function ibodyBfpStatus(bfp, gender) {
+      if (!bfp) return null;
+      const male = (gender || '남성') !== '여성';
+      if (male) {
+        if (bfp < 6)  return { label:'매우 낮음', color:'#60a5fa' };
+        if (bfp < 20) return { label:'정상',      color:'#4ade80' };
+        if (bfp < 25) return { label:'주의',      color:'#fbbf24' };
+        return        { label:'비만',             color:'#f87171' };
+      } else {
+        if (bfp < 14) return { label:'매우 낮음', color:'#60a5fa' };
+        if (bfp < 28) return { label:'정상',      color:'#4ade80' };
+        if (bfp < 33) return { label:'주의',      color:'#fbbf24' };
+        return        { label:'비만',             color:'#f87171' };
+      }
+    }
+    // ── 내장지방 레벨 건강 상태 평가 ────────────────────
+    function ibodyVflStatus(vfl) {
+      if (!vfl) return null;
+      if (vfl < 10) return { label:'정상', color:'#4ade80' };
+      if (vfl < 15) return { label:'주의', color:'#fbbf24' };
+      return        { label:'위험', color:'#f87171' };
+    }
+    // ── BMI 건강 상태 평가 ───────────────────────────────
+    function ibodyBmiStatus(bmi) {
+      if (!bmi) return null;
+      if (bmi < 18.5) return { label:'저체중',   color:'#60a5fa' };
+      if (bmi < 23)   return { label:'정상',     color:'#4ade80' };
+      if (bmi < 25)   return { label:'과체중',   color:'#fbbf24' };
+      if (bmi < 30)   return { label:'비만',     color:'#f87171' };
+      return          { label:'고도비만',         color:'#ef4444' };
+    }
+
     window.renderInbodyPanel = function() {
       renderInbodyGraph();
       const c = document.getElementById("inbody-list");
       if (!c) return;
       const recs = [...(appData.inbodyRecords || [])].sort((a, b) => b.time - a.time);
       const isLight = document.body.classList.contains("light-mode");
-      const bg = isLight ? '#ffffff' : '#111827';
-      const border = isLight ? '#e2e8f0' : '#1f2937';
+      const bg      = isLight ? '#ffffff' : '#111827';
+      const border  = isLight ? '#e2e8f0' : '#1f2937';
       const textMain = isLight ? '#1a1a2e' : '#e2e8f0';
-      const textSub = isLight ? '#64748b' : '#6b7280';
+      const textSub  = isLight ? '#64748b' : '#6b7280';
       if (!recs.length) {
         c.innerHTML = `<div style="text-align:center;padding:32px;color:${textSub};font-size:13px">인바디 기록이 없습니다.<br>측정 후 결과를 추가하세요.</div>`;
         return;
       }
-      c.innerHTML = recs.map(r => {
-        const fields = [
-          r.weight ? { label: '체중', val: r.weight + 'kg', color: textMain } : null,
-          r.sm  ? { label: '골격근량', val: r.sm + 'kg',  color: '#60a5fa' } : null,
-          r.bfm ? { label: '체지방량', val: r.bfm + 'kg', color: '#f87171' } : null,
-          r.bfp ? { label: '체지방률', val: r.bfp + '%',  color: '#fbbf24' } : null,
-          r.vfl ? { label: '내장지방', val: 'Lv.' + r.vfl, color: r.vfl >= 10 ? '#f87171' : r.vfl >= 5 ? '#fbbf24' : '#4ade80' } : null,
-          r.bmr ? { label: 'BMR',     val: r.bmr + 'kcal', color: textMain } : null,
+      const gender = appData.gender || '남성';
+      const height = parseFloat(appData.height) || 0;
+
+      // 이전 기록 대비 delta HTML 생성 (reverseColor: true = 증가가 좋은 값)
+      function deltaHtml(cur, prev, unit, reverseColor) {
+        if (!cur || !prev) return '';
+        const diff = Math.round((cur - prev) * 10) / 10;
+        if (diff === 0) return '';
+        const up = diff > 0;
+        const color = reverseColor ? (up ? '#4ade80' : '#f87171') : (up ? '#f87171' : '#4ade80');
+        return `<span style="color:${color};font-size:10px"> ${up ? '▲' : '▼'}${Math.abs(diff)}${unit}</span>`;
+      }
+
+      c.innerHTML = recs.map((r, i) => {
+        const prev = recs[i + 1]; // 바로 이전 측정 (최신→오래된 순이므로 i+1이 이전)
+        const bmi = height ? Math.round(r.weight / Math.pow(height / 100, 2) * 10) / 10 : 0;
+
+        // 건강 상태 뱃지
+        const bfpSt = ibodyBfpStatus(r.bfp, gender);
+        const vflSt = ibodyVflStatus(r.vfl);
+        const bmiSt = bmi ? ibodyBmiStatus(bmi) : null;
+        function badge(st, label) {
+          if (!st) return '';
+          return `<span style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}55;padding:2px 7px;border-radius:4px;font-size:10px;white-space:nowrap">${label} ${st.label}</span>`;
+        }
+        const badges = [
+          badge(bfpSt, '체지방'),
+          badge(vflSt, '내장지방'),
+          bmiSt ? `<span style="background:${bmiSt.color}22;color:${bmiSt.color};border:1px solid ${bmiSt.color}55;padding:2px 7px;border-radius:4px;font-size:10px;white-space:nowrap">BMI ${bmi} ${bmiSt.label}</span>` : '',
         ].filter(Boolean);
+
+        const fields = [
+          r.weight ? { label:'체중',    val: r.weight+'kg',   extra: deltaHtml(r.weight, prev?.weight, 'kg', false), color: textMain } : null,
+          r.sm     ? { label:'골격근량', val: r.sm+'kg',       extra: deltaHtml(r.sm,  prev?.sm,  'kg', true),  color:'#60a5fa' } : null,
+          r.bfm    ? { label:'체지방량', val: r.bfm+'kg',      extra: deltaHtml(r.bfm, prev?.bfm, 'kg', false), color:'#f87171' } : null,
+          r.bfp    ? { label:'체지방률', val: r.bfp+'%',       extra: deltaHtml(r.bfp, prev?.bfp, '%',  false), color:'#fbbf24' } : null,
+          r.vfl    ? { label:'내장지방', val:'Lv.'+r.vfl,      extra: deltaHtml(r.vfl, prev?.vfl, '',   false), color: r.vfl >= 10 ? '#f87171' : r.vfl >= 5 ? '#fbbf24' : '#4ade80' } : null,
+          r.bmr    ? { label:'BMR',      val: r.bmr+'kcal',    extra: '',                                        color: textMain } : null,
+        ].filter(Boolean);
+
         return `<div style="background:${bg};border:1px solid ${border};border-radius:12px;padding:12px;margin-bottom:8px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:12px;font-weight:700;color:${textMain}">${msToKstInput(r.time).slice(0,10)}</span>
-        <button onclick="deleteInbody(${r.id})" style="background:transparent;border:none;color:#f87171;font-size:12px;cursor:pointer">🗑️</button>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px">
-        ${fields.map(f => `<div style="text-align:center"><div style="color:${textSub}">${f.label}</div><div style="font-weight:700;color:${f.color}">${f.val}</div></div>`).join('')}
-      </div>
-    </div>`;
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <span style="font-size:12px;font-weight:700;color:${textMain}">${msToKstInput(r.time).slice(0,10)}</span>
+    <button onclick="deleteInbody(${r.id})" style="background:transparent;border:none;color:#f87171;font-size:12px;cursor:pointer">🗑️</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:11px;margin-bottom:${badges.length?'8px':'0'}">
+    ${fields.map(f => `<div style="text-align:center"><div style="color:${textSub}">${f.label}</div><div style="font-weight:700;color:${f.color}">${f.val}${f.extra}</div></div>`).join('')}
+  </div>
+  ${badges.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
+</div>`;
       }).join('');
     };
 
@@ -6805,11 +6897,11 @@
       const recs = [...(appData.inbodyRecords || [])].sort((a, b) => a.time - b.time);
       const dpr = window.devicePixelRatio || 1;
       canvas.width = canvas.offsetWidth * dpr;
-      canvas.height = 150 * dpr;
-      canvas.style.height = "150px";
+      canvas.height = 170 * dpr;
+      canvas.style.height = "170px";
       const ctx = canvas.getContext("2d");
       ctx.scale(dpr, dpr);
-      const W = canvas.offsetWidth, H = 150;
+      const W = canvas.offsetWidth, H = 170;
       const isLight = document.body.classList.contains("light-mode");
       ctx.fillStyle = isLight ? "#f0f4f8" : "#080810";
       ctx.fillRect(0, 0, W, H);
@@ -6819,7 +6911,7 @@
         ctx.fillText("2개 이상의 기록이 있으면 추이 그래프가 표시됩니다", W / 2, H / 2);
         return;
       }
-      const PAD = { l: 42, r: 12, t: 20, b: 26 };
+      const PAD = { l: 42, r: 12, t: 22, b: 26 };
       const gW = W - PAD.l - PAD.r, gH = H - PAD.t - PAD.b;
       const tMin = recs[0].time, tMax = recs[recs.length - 1].time, tRange = tMax - tMin || 1;
       ctx.strokeStyle = isLight ? "#dde3ea" : "#1a1a2e"; ctx.lineWidth = 1;
@@ -6827,12 +6919,15 @@
         const y = PAD.t + (i / 4) * gH;
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
       }
-      function drawSeries(key, color, allRecs) {
+      // 시리즈 그리기 (showLabels:false면 Y축 숫자 생략, dashed:true면 점선)
+      function drawSeries(key, color, allRecs, opts = {}) {
         const pts = allRecs.filter(r => r[key] > 0);
         if (pts.length < 2) return;
         const vals = pts.map(r => r[key]);
         const vMin = Math.min(...vals) * 0.97, vMax = Math.max(...vals) * 1.03;
-        ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = opts.dashed ? 2 : 2.5;
+        ctx.setLineDash(opts.dashed ? [5, 3] : []);
         ctx.beginPath();
         pts.forEach((r, i) => {
           const x = PAD.l + ((r.time - tMin) / tRange) * gW;
@@ -6840,23 +6935,44 @@
           i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         });
         ctx.stroke();
+        ctx.setLineDash([]);
         pts.forEach(r => {
           const x = PAD.l + ((r.time - tMin) / tRange) * gW;
           const y = PAD.t + gH - ((r[key] - vMin) / (vMax - vMin || 1)) * gH;
-          ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = color;
+          ctx.beginPath(); ctx.arc(x, y, opts.dashed ? 3 : 3.5, 0, Math.PI * 2); ctx.fill();
         });
-        ctx.fillStyle = isLight ? "#6b7280" : "#4a5568"; ctx.font = "9px 'JetBrains Mono'"; ctx.textAlign = "right";
-        ctx.fillText(vMax.toFixed(1), PAD.l - 3, PAD.t + 4);
-        ctx.fillText(vMin.toFixed(1), PAD.l - 3, PAD.t + gH);
+        if (opts.showLabels !== false) {
+          ctx.fillStyle = isLight ? "#6b7280" : "#4a5568";
+          ctx.font = "9px 'JetBrains Mono'"; ctx.textAlign = "right";
+          ctx.fillText(vMax.toFixed(1), PAD.l - 3, PAD.t + 4);
+          ctx.fillText(vMin.toFixed(1), PAD.l - 3, PAD.t + gH);
+        }
       }
       drawSeries('sm',  '#60a5fa', recs);
       drawSeries('bfm', '#f87171', recs);
+      // 체지방률: 점선, Y축 레이블 생략 (다른 단위라 겹침 방지)
+      drawSeries('bfp', '#fbbf24', recs, { dashed: true, showLabels: false });
+      // 범례
       let lx = PAD.l + 4;
-      [['#60a5fa','골격근량'],['#f87171','체지방량']].forEach(([col, label]) => {
-        ctx.fillStyle = col; ctx.fillRect(lx, 8, 14, 3);
-        ctx.fillStyle = isLight ? '#475569' : '#9ca3af'; ctx.font = "9px 'Noto Sans KR'"; ctx.textAlign = "left";
+      const legendItems = [
+        ['#60a5fa', '골격근량', false],
+        ['#f87171', '체지방량', false],
+        ['#fbbf24', '체지방%',  true],
+      ];
+      legendItems.forEach(([col, label, dashed]) => {
+        if (dashed) {
+          ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 2;
+          ctx.setLineDash([4, 2]);
+          ctx.beginPath(); ctx.moveTo(lx, 10); ctx.lineTo(lx + 14, 10); ctx.stroke();
+          ctx.setLineDash([]); ctx.restore();
+        } else {
+          ctx.fillStyle = col; ctx.fillRect(lx, 7.5, 14, 3);
+        }
+        ctx.fillStyle = isLight ? '#475569' : '#9ca3af';
+        ctx.font = "9px 'Noto Sans KR'"; ctx.textAlign = "left";
         ctx.fillText(label, lx + 17, 13);
-        lx += 58;
+        lx += 54;
       });
       ctx.fillStyle = isLight ? "#6b7280" : "#4a5568"; ctx.font = "9px 'Noto Sans KR'"; ctx.textAlign = "center";
       [0, 0.5, 1].forEach(ratio => {
@@ -8412,6 +8528,12 @@
           style="background:#4f46e5;border:none;border-radius:8px;color:white;padding:0 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-family:inherit;font-weight:700">불러오기</button>
       </div>
       <div id="ib-parse-result" style="font-size:11px;margin-top:6px;min-height:14px;line-height:1.6"></div>
+      <!-- 키 프로필 업데이트 제안 (parseInbodyUrl에서 감지 시 표시) -->
+      <div id="ib-height-suggest" style="display:none;margin-top:6px;align-items:center;gap:8px;background:#1e3a5f33;border:1px solid #3b82f655;border-radius:8px;padding:6px 10px">
+        <span style="font-size:11px;color:#93c5fd;flex:1"></span>
+        <button onclick="applyInbodyHeight()"
+          style="background:#3b82f6;border:none;border-radius:6px;color:white;padding:3px 10px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">프로필 업데이트</button>
+      </div>
     </div>
     <div style="margin-bottom:10px"><label>측정일시</label>
       <input id="inbody-time" class="input-field" type="datetime-local" />
