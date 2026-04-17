@@ -82,9 +82,14 @@
     // ══════════════════════════════════════════════
     // Auth
     // ══════════════════════════════════════════════
-    // 재방문 시 로컬 캐시에서 즉시 auth 상태 복원 (Firebase 기본값이지만 명시 호출로 보장)
+    // 재방문 시 로컬 캐시에서 즉시 auth 상태 복원
     setPersistence(auth, browserLocalPersistence).catch(console.error);
-    getRedirectResult(auth).catch(console.error);
+    // iOS Redirect 결과 처리 — 리다이렉트 후 돌아왔을 때 로그인 완료 처리
+    getRedirectResult(auth).then(result => {
+      if (result?.user) console.log("redirect login ok:", result.user.email);
+    }).catch(e => {
+      console.error("redirect result error:", e);
+    });
 
     onAuthStateChanged(auth, async (user) => {
       currentUser = user;
@@ -181,6 +186,13 @@
       if (isInAppBrowser()) {
         // 인앱 브라우저에서는 Google OAuth 차단됨 → 외부 브라우저로 유도
         document.getElementById("inapp-notice").style.display = "flex";
+        return;
+      }
+      // iOS Safari / PWA standalone은 popup 완전 차단 → redirect 직접 사용
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (isIos || isStandalone) {
+        try { await signInWithRedirect(auth, provider); } catch(e) { console.error(e); }
         return;
       }
       try { await signInWithPopup(auth, provider); }
