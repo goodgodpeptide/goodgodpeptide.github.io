@@ -6854,9 +6854,16 @@
             `<span style="color:#4ade80">✅ 자동입력: ${filled.join(" · ")}</span><br>` +
             `<span style="color:#9ca3af;font-size:11px">${openUrl ? "결과 페이지가 열렸습니다. " : ""}나머지 수치를 보고 직접 입력하세요.</span>`;
         } else {
+          // 파싱 실패 시 원본 데이터 디버그 표시 (관리자가 포맷 분석용)
+          const debugSnip = escapeHtml(bdata.slice(0, 120)) + (bdata.length > 120 ? '…' : '');
           resultEl.innerHTML =
             `<span style="color:#fbbf24">⚠️ 날짜 인식 불가 — 직접 입력해 주세요</span><br>` +
-            `<span style="color:#9ca3af;font-size:11px">${openUrl ? "결과 페이지가 열렸습니다. " : ""}수치를 보고 입력하세요.</span>`;
+            `<span style="color:#9ca3af;font-size:11px">${openUrl ? "결과 페이지가 열렸습니다. " : ""}수치를 보고 입력하세요.</span>` +
+            `<details style="margin-top:4px"><summary style="color:#4b5563;font-size:10px;cursor:pointer">🔍 디버그 데이터 (개발자용)</summary>` +
+            `<div style="background:#0f172a;border-radius:6px;padding:6px 8px;margin-top:4px;word-break:break-all;font-size:9px;color:#64748b;font-family:monospace">${debugSnip}</div>` +
+            `<button onclick="navigator.clipboard.writeText(${JSON.stringify(bdata)}).then(()=>showToast('복사됨!'))" ` +
+            `style="margin-top:4px;background:#1e3a5f;border:none;border-radius:5px;color:#60a5fa;font-size:10px;padding:3px 8px;cursor:pointer;font-family:inherit">📋 전체 복사</button>` +
+            `</details>`;
         }
       }
     };
