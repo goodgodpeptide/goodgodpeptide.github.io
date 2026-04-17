@@ -5691,7 +5691,7 @@
         </div>
 
         <div style="padding:16px 20px 24px">
-          <button onclick="document.getElementById('enc-modal').remove();window._encTranslated=false;window._encOrigTexts={};"
+          <button onclick="document.getElementById('enc-modal').remove();window._encTranslated=false;window._encOrigTexts={};window._encViewMode='en';"
             style="width:100%;padding:14px;background:${C.closeBtn};border:1px solid ${C.closeBtnBdr};border-radius:12px;color:${C.closeBtnTxt};font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
             닫기
           </button>
@@ -5709,6 +5709,7 @@
       document.body.appendChild(modal);
       window._encTranslated = false;
       window._encOrigTexts = {};
+      window._encViewMode = 'en';
     };
 
     // ── 백과사전 모달 번역 토글 ────────────────────────────
@@ -5727,6 +5728,9 @@
       }
     }
 
+    // mode: 'ko' | 'en' | 'both'
+    window._encViewMode = 'en';
+
     window.encTranslateToggle = async function(peptideId) {
       const modal = document.getElementById('enc-modal');
       if (!modal) return;
@@ -5734,34 +5738,58 @@
       const els = modal.querySelectorAll('[data-enc-tr]');
       if (!els.length) { showToast('번역할 영문 텍스트가 없습니다'); return; }
 
-      // 원문 복원 모드
-      if (window._encTranslated) {
+      const pep = encyclopediaData?.peptides?.[peptideId];
+      const koMap = {
+        desc:      pep?.descriptionKo,
+        benefits:  pep?.keyBenefitsKo,
+        mechanism: pep?.mechanismKo,
+      };
+      const hasCachedKo = Object.values(koMap).some(v => v);
+
+      // 모드 순환: en → ko → both → en
+      const nextMode = { en: 'ko', ko: 'both', both: 'en' }[window._encViewMode] || 'ko';
+
+      if (nextMode === 'ko') {
+        // 한국어 단독 표시
+        if (btn) { btn.textContent = '⏳ ...'; btn.disabled = true; }
+        window._encOrigTexts = {};
+        for (const el of els) {
+          const key = el.dataset.encTr;
+          window._encOrigTexts[key] = el.textContent.trim();
+          const cached = koMap[key];
+          if (cached) {
+            el.textContent = cached;
+          } else {
+            const tr = await gtranslate(el.textContent.trim());
+            el.textContent = tr;
+          }
+        }
+        window._encViewMode = 'ko';
+        if (btn) { btn.textContent = '⇄ 동시 보기'; btn.disabled = false; }
+
+      } else if (nextMode === 'both') {
+        // 원문 + 번역 동시 표시
+        els.forEach(el => {
+          const key = el.dataset.encTr;
+          const orig = window._encOrigTexts[key] || '';
+          const ko   = el.textContent.trim();
+          if (orig && orig !== ko) {
+            el.innerHTML =
+              `<span style="color:#94a3b8;font-size:0.92em">${orig}</span>` +
+              `<br><span style="color:#e2e8f0;font-size:1em">${ko}</span>`;
+          }
+        });
+        window._encViewMode = 'both';
+        if (btn) btn.textContent = '📄 원문만';
+
+      } else {
+        // 원문 복원
         els.forEach(el => {
           const key = el.dataset.encTr;
           if (window._encOrigTexts[key]) el.textContent = window._encOrigTexts[key];
         });
-        window._encTranslated = false;
+        window._encViewMode = 'en';
         if (btn) btn.textContent = '🌐 한국어 번역';
-        return;
-      }
-
-      // 번역 모드
-      if (btn) { btn.textContent = '⏳ 번역 중...'; btn.disabled = true; }
-      window._encOrigTexts = {};
-
-      try {
-        for (const el of els) {
-          const key = el.dataset.encTr;
-          const orig = el.textContent.trim();
-          window._encOrigTexts[key] = orig;
-          const translated = await gtranslate(orig);
-          el.textContent = translated;
-        }
-        window._encTranslated = true;
-        if (btn) { btn.textContent = '📄 원문 보기'; btn.disabled = false; }
-      } catch(e) {
-        if (btn) { btn.textContent = '🌐 한국어 번역'; btn.disabled = false; }
-        showToast('번역 실패 — 인터넷 연결을 확인하세요');
       }
     };
 
@@ -8073,21 +8101,24 @@
     @keyframes authspin { to { transform: rotate(360deg); } }
 
     #login-screen {
-      display: none; flex-direction: column; align-items: center; justify-content: center;
-      min-height: 100vh; padding: 32px 20px; text-align: center;
-      background: radial-gradient(ellipse at 50% 20%, #1a1a3e 0%, #0a0a14 70%);
+      display: none; flex-direction: column; align-items: center; justify-content: flex-end;
+      min-height: 100vh; padding: 0 0 56px; text-align: center;
+      background: url('login_bg.png.jpg') center top / cover no-repeat;
+      position: relative;
     }
-    .login-logo { font-size: 60px; margin-bottom: 16px; animation: pulse 2.5s infinite; }
-    @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.07)} }
-    .login-title { font-size: 26px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; color: #f1f5f9; }
-    .login-sub { font-size: 14px; color: #94a3b8; margin-bottom: 48px; }
+    #login-screen::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.82) 100%);
+    }
+    #login-inner {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center; width: 100%; padding: 0 28px;
+    }
+    .login-logo { font-size: 48px; margin-bottom: 10px; }
+    .login-title { font-size: 28px; font-weight: 900; letter-spacing: -1px; margin-bottom: 6px; color: #ffffff; text-shadow: 0 2px 12px #0008; }
+    .login-sub { font-size: 14px; color: #e2e8f0cc; margin-bottom: 36px; text-shadow: 0 1px 6px #0006; }
     body.light-mode #auth-loading { background: #f0f4ff; }
     body.light-mode #auth-loading .spin { border-color: #e2e8f0; border-top-color: #2563eb; }
-    body.light-mode #login-screen {
-      background: radial-gradient(ellipse at 50% 20%, #dbeafe 0%, #f0f4ff 70%);
-    }
-    body.light-mode .login-title { color: #1e293b; }
-    body.light-mode .login-sub { color: #64748b; }
     .login-btn {
       display: flex; align-items: center; gap: 12px; padding: 14px 28px;
       background: #fff; border: none; border-radius: 14px; cursor: pointer;
@@ -8351,10 +8382,11 @@
 <div id="auth-loading"><div class="spin"></div></div>
 
 <div id="login-screen">
+  <div id="login-inner">
   <div class="login-logo">⚖️</div>
   <div class="login-title">체중관리 매니저</div>
   <div class="login-sub">클라우드 동기화 · 어디서든 접속</div>
-  <button class="login-btn" onclick="doLogin()">
+  <button class="login-btn" onclick="doLogin()" style="width:100%;max-width:320px;justify-content:center;margin-bottom:0">
     <svg width="22" height="22" viewBox="0 0 24 24">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
       <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -8392,6 +8424,7 @@
       닫기
     </button>
   </div>
+  </div><!-- login-inner -->
 </div>
 
 <!-- 승인 대기 화면 -->
