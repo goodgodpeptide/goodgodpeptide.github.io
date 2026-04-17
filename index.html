@@ -84,11 +84,22 @@
     // ══════════════════════════════════════════════
     // 재방문 시 로컬 캐시에서 즉시 auth 상태 복원
     setPersistence(auth, browserLocalPersistence).catch(console.error);
-    // iOS Redirect 결과 처리 — 리다이렉트 후 돌아왔을 때 로그인 완료 처리
+    // Redirect 결과 처리 — iOS PWA redirect 후 복귀 시 로그인 완료
     getRedirectResult(auth).then(result => {
       if (result?.user) console.log("redirect login ok:", result.user.email);
     }).catch(e => {
-      console.error("redirect result error:", e);
+      // redirect 결과 오류 시 사용자에게 재시도 안내
+      if (e.code && e.code !== 'auth/no-auth-event') {
+        console.error("redirect result error:", e.code);
+        const ls = document.getElementById("login-screen");
+        if (ls && ls.style.display !== 'none') {
+          const msg = document.createElement('div');
+          msg.style.cssText = 'position:relative;z-index:1;margin-top:12px;font-size:12px;color:#fbbf24;text-align:center;padding:0 20px';
+          msg.textContent = '로그인 중 문제가 발생했습니다. 다시 시도해주세요.';
+          document.getElementById('login-inner')?.appendChild(msg);
+          setTimeout(() => msg.remove(), 5000);
+        }
+      }
     });
 
     onAuthStateChanged(auth, async (user) => {
@@ -188,17 +199,23 @@
         document.getElementById("inapp-notice").style.display = "flex";
         return;
       }
-      // iOS Safari / PWA standalone은 popup 완전 차단 → redirect 직접 사용
-      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      if (isIos || isStandalone) {
-        try { await signInWithRedirect(auth, provider); } catch(e) { console.error(e); }
-        return;
-      }
+      // popup을 모든 환경에서 시도 — iOS16+ standalone에서도 동작
+      // (redirect는 iOS PWA에서 Safari로 열려 세션이 끊기는 문제 발생)
       try { await signInWithPopup(auth, provider); }
       catch(e) {
         if (e.code === "auth/popup-blocked" || e.code === "auth/cancelled-popup-request") {
-          try { await signInWithRedirect(auth, provider); } catch(e2) { console.error(e2); }
+          // popup 차단된 경우 안내 표시
+          const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+          if (isStandalone) {
+            const ls = document.getElementById("login-screen");
+            const msg = document.createElement('div');
+            msg.style.cssText = 'position:relative;z-index:1;margin-top:12px;font-size:12px;color:#fbbf24;text-align:center;padding:0 20px;line-height:1.6';
+            msg.textContent = 'Safari 브라우저에서 먼저 로그인한 뒤 다시 앱을 열어주세요.';
+            document.getElementById('login-inner')?.appendChild(msg);
+            setTimeout(() => msg.remove(), 8000);
+          } else {
+            try { await signInWithRedirect(auth, provider); } catch(e2) { console.error(e2); }
+          }
         } else { console.error(e); }
       }
     };
@@ -423,7 +440,7 @@
     };
 
     window.removeAdmin = async function(email) {
-      if (!confirm(`${email} 을 관리자에서 제거할까요?\n(사용자 승인 권한이 사라집니다)`)) return;
+      if (!await customConfirm(`${email} 을 관리자에서 제거할까요?\n(사용자 승인 권한이 사라집니다)`)) return;
       try {
         await updateDoc(ADMINS_DOC, { emails: arrayRemove(email) });
         await openAdminPanel();
@@ -536,7 +553,7 @@
 
     window.confirmRestore = async function() {
       if (!pendingRestoreData) return;
-      appData = { ...appData, ...pendingRestoreData };
+      appData = { ...appData, ...migrateData(pendingRestoreData) };
       scheduleSave();
       renderAll();
       document.getElementById("backup-modal").style.display = "none";
@@ -1533,7 +1550,7 @@
       scheduleSave();
       m.style.display = "none";
       renderSideEffectList();
-      alert("기록 완료");
+      showToast("✅ 부작용 기록 완료");
     };
 
     window.deleteSideEffect = (id) => {
@@ -5464,10 +5481,10 @@
                 </div>
               </div>
               <div id="${catId}" style="display:none;padding:0 14px 12px">
-                ${items.map(item => `
+                ${items.map((item,ii) => `
                   <div style="padding:10px 0;border-bottom:1px solid ${C.borderSub}">
-                    <div style="font-size:13px;font-weight:600;color:${C.accent};margin-bottom:4px">${item.title}</div>
-                    ${item.description ? `<div style="font-size:12px;color:${C.txtMuted};line-height:1.6">${item.description}</div>` : ''}
+                    <div data-enc-tr="rid_${ci}_${ii}_title" style="font-size:13px;font-weight:600;color:${C.accent};margin-bottom:4px">${item.title}</div>
+                    ${item.description ? `<div data-enc-tr="rid_${ci}_${ii}_desc" style="font-size:12px;color:${C.txtMuted};line-height:1.6">${item.description}</div>` : ''}
                   </div>`).join('')}
               </div>
             </div>`;
@@ -5504,7 +5521,7 @@
                 <span style="color:${C.txtMuted};font-size:11px">${pr.route}</span>
               </div>`).join('')}
           </div>
-          ${pep.protocolTiming ? `<div style="background:${C.note};border-left:3px solid ${C.noteBdr};padding:10px 12px;margin-top:8px;font-size:12px;color:${C.noteTxt};border-radius:0 6px 6px 0">${pep.protocolTiming}</div>` : ''}
+          ${pep.protocolTiming ? `<div data-enc-tr="protocolTiming" style="background:${C.note};border-left:3px solid ${C.noteBdr};padding:10px 12px;margin-top:8px;font-size:12px;color:${C.noteTxt};border-radius:0 6px 6px 0">${pep.protocolTiming}</div>` : ''}
         </div>` : '';
 
       // ── 상호작용 (아코디언) ──
@@ -5529,7 +5546,7 @@
                   ${hasDsc ? `<span id="${iid}_arrow" style="color:${C.txtFaint};font-size:16px">›</span>` : ''}
                 </div>
               </div>
-              ${hasDsc ? `<div id="${iid}" style="display:none;padding:10px 14px 12px;font-size:12px;color:${C.txtMuted};line-height:1.6;background:${C.bg}">${inter.description}</div>` : ''}
+              ${hasDsc ? `<div id="${iid}" data-enc-tr="inter_${ii}_desc" style="display:none;padding:10px 14px 12px;font-size:12px;color:${C.txtMuted};line-height:1.6;background:${C.bg}">${inter.description}</div>` : ''}
             </div>`;
           }).join('')}
         </div>` : '';
@@ -5555,17 +5572,17 @@
           </div>
           ${se.length ? `<div id="${mid}_tab_se">
             <ul style="margin:0;padding-left:16px;color:${C.txtMuted};font-size:13px;line-height:1.9">
-              ${se.map(s => `<li>${s}</li>`).join('')}
+              ${se.map((s,i) => `<li data-enc-tr="se_${i}">${s}</li>`).join('')}
             </ul>
           </div>` : ''}
           ${sn.length ? `<div id="${mid}_tab_sn" style="display:none">
             <ul style="margin:0;padding-left:16px;color:${C.txtMuted};font-size:13px;line-height:1.9">
-              ${sn.map(s => `<li>${s}</li>`).join('')}
+              ${sn.map((s,i) => `<li data-enc-tr="sn_${i}">${s}</li>`).join('')}
             </ul>
           </div>` : ''}
           ${ss.length ? `<div id="${mid}_tab_ss" style="display:none">
             <ul style="margin:0;padding-left:0;list-style:none;color:${C.txtMuted};font-size:13px">
-              ${ss.map(s => `<li style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid ${C.borderSub}"><span style="color:#f87171;flex-shrink:0">⛔</span><span style="line-height:1.5">${s}</span></li>`).join('')}
+              ${ss.map((s,i) => `<li style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid ${C.borderSub}"><span style="color:#f87171;flex-shrink:0">⛔</span><span data-enc-tr="ss_${i}" style="line-height:1.5">${s}</span></li>`).join('')}
             </ul>
           </div>` : ''}
         </div>` : '';
@@ -5575,10 +5592,10 @@
         <div class="enc-section">
           <div class="enc-section-title">⏱️ 무엇을 기대할까요?</div>
           <ul style="margin:0;padding-left:0;list-style:none">
-            ${pep.effectsTimeline.map(t => `
+            ${pep.effectsTimeline.map((t,i) => `
               <li style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid ${C.borderSub}">
                 <span style="color:#60a5fa;flex-shrink:0;margin-top:1px">●</span>
-                <span style="font-size:13px;color:${C.txtMuted};line-height:1.5">${t}</span>
+                <span data-enc-tr="tl_${i}" style="font-size:13px;color:${C.txtMuted};line-height:1.5">${t}</span>
               </li>`).join('')}
           </ul>
         </div>` : '';
@@ -5587,8 +5604,8 @@
       const qiHTML = (pep.qualityGood?.length || pep.qualityBad?.length) ? `
         <div class="enc-section">
           <div class="enc-section-title">✅ 품질 확인</div>
-          ${(pep.qualityGood||[]).map(g => `<div style="display:flex;gap:8px;padding:6px 0;font-size:12px"><span style="color:#4ade80;flex-shrink:0">✓</span><span style="color:${C.txtMuted}">${g}</span></div>`).join('')}
-          ${(pep.qualityBad ||[]).map(b => `<div style="display:flex;gap:8px;padding:6px 0;font-size:12px"><span style="color:#ef4444;flex-shrink:0">✗</span><span style="color:${C.txtMuted}">${b}</span></div>`).join('')}
+          ${(pep.qualityGood||[]).map((g,i) => `<div style="display:flex;gap:8px;padding:6px 0;font-size:12px"><span style="color:#4ade80;flex-shrink:0">✓</span><span data-enc-tr="qg_${i}" style="color:${C.txtMuted}">${g}</span></div>`).join('')}
+          ${(pep.qualityBad ||[]).map((b,i) => `<div style="display:flex;gap:8px;padding:6px 0;font-size:12px"><span style="color:#ef4444;flex-shrink:0">✗</span><span data-enc-tr="qb_${i}" style="color:${C.txtMuted}">${b}</span></div>`).join('')}
         </div>` : '';
 
       // ── 최신 연구 (참고문헌) ──
@@ -5596,14 +5613,14 @@
       const lrHTML = lr.length ? `
         <div class="enc-section">
           <div class="enc-section-title">📚 참고 연구</div>
-          ${lr.map(r => `
+          ${lr.map((r,ri) => `
             <div style="background:${C.researchCard};border:1px solid ${C.borderSub};border-radius:10px;padding:12px 14px;margin-bottom:8px">
-              <div style="font-size:13px;font-weight:600;color:${C.txt};margin-bottom:4px;line-height:1.4">${r.title}</div>
+              <div data-enc-tr="lr_${ri}_title" style="font-size:13px;font-weight:600;color:${C.txt};margin-bottom:4px;line-height:1.4">${r.title}</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">
                 ${r.date   ? `<span style="font-size:10px;color:${C.txtFaint};background:${C.bgDeep};padding:2px 7px;border-radius:4px">${r.date}</span>` : ''}
                 ${r.source ? `<span style="font-size:10px;color:${C.accent};background:${C.bgDeep};padding:2px 7px;border-radius:4px">${r.source}</span>` : ''}
               </div>
-              ${r.excerpt ? `<div style="font-size:12px;color:${C.txtMuted};line-height:1.5">${r.excerpt}</div>` : ''}
+              ${r.excerpt ? `<div data-enc-tr="lr_${ri}_excerpt" style="font-size:12px;color:${C.txtMuted};line-height:1.5">${r.excerpt}</div>` : ''}
               ${r.link    ? `<span onclick="window.open('${r.link}','_blank')" style="display:inline-block;margin-top:8px;font-size:12px;color:${C.accent};cursor:pointer;text-decoration:underline">연구 보기 →</span>` : ''}
             </div>`).join('')}
         </div>` : '';
@@ -5740,10 +5757,25 @@
 
       const pep = encyclopediaData?.peptides?.[peptideId];
       const koMap = {
-        desc:      pep?.descriptionKo,
-        benefits:  pep?.keyBenefitsKo,
-        mechanism: pep?.mechanismKo,
+        desc:           pep?.descriptionKo,
+        benefits:       pep?.keyBenefitsKo,
+        mechanism:      pep?.mechanismKo,
+        protocolTiming: pep?.protocolTimingKo,
       };
+      (pep?.sideEffectsKo    ||[]).forEach((v,i)=>{ koMap[`se_${i}`]=v; });
+      (pep?.safetyNotesKo    ||[]).forEach((v,i)=>{ koMap[`sn_${i}`]=v; });
+      (pep?.stopSignsKo      ||[]).forEach((v,i)=>{ koMap[`ss_${i}`]=v; });
+      (pep?.effectsTimelineKo||[]).forEach((v,i)=>{ koMap[`tl_${i}`]=v; });
+      (pep?.qualityGoodKo    ||[]).forEach((v,i)=>{ koMap[`qg_${i}`]=v; });
+      (pep?.qualityBadKo     ||[]).forEach((v,i)=>{ koMap[`qb_${i}`]=v; });
+      (pep?.interactionsKo   ||[]).forEach((v,i)=>{ if(v?.descriptionKo) koMap[`inter_${i}_desc`]=v.descriptionKo; });
+      (pep?.latestResearchKo ||[]).forEach((v,i)=>{ if(v?.titleKo) koMap[`lr_${i}_title`]=v.titleKo; if(v?.excerptKo) koMap[`lr_${i}_excerpt`]=v.excerptKo; });
+      const ridKo = pep?.researchIndicationsDetailedKo || {};
+      Object.entries(ridKo).forEach(([cat,items],ci)=>{
+        if(Array.isArray(items)) items.forEach((item,ii)=>{
+          if(item && typeof item==='object'){ if(item.titleKo) koMap[`rid_${ci}_${ii}_title`]=item.titleKo; if(item.descriptionKo) koMap[`rid_${ci}_${ii}_desc`]=item.descriptionKo; }
+        });
+      });
       const hasCachedKo = Object.values(koMap).some(v => v);
 
       // 모드 순환: en → ko → both → en
@@ -8383,7 +8415,6 @@
 
 <div id="login-screen">
   <div id="login-inner">
-  <div class="login-logo">⚖️</div>
   <div class="login-title">체중관리 매니저</div>
   <div class="login-sub">클라우드 동기화 · 어디서든 접속</div>
   <button class="login-btn" onclick="doLogin()" style="width:100%;max-width:320px;justify-content:center;margin-bottom:0">
