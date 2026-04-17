@@ -6733,7 +6733,9 @@
             const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
             if (code) {
-              // QR 감지 성공!
+              // QR 감지 성공 → 인터벌 즉시 중단 (페이지 중복 오픈 방지)
+              clearInterval(window._ibCamInterval);
+              window._ibCamInterval = null;
               statusEl.textContent = '✅ QR 인식 완료!';
               statusEl.style.color = '#4ade80';
               setTimeout(() => {
@@ -6798,27 +6800,34 @@
 
       const filled = [];
 
-      // 1. 날짜/시간 파싱: 14자리 연속숫자 YYYYMMDDHHMMSS
-      const dateMatch = bdata.match(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
-      if (dateMatch) {
-        const [, y, mo, d, h, mi] = dateMatch;
-        // 현실적인 연도 범위 체크 (2010~2035)
-        const yr = parseInt(y);
-        if (yr >= 2010 && yr <= 2035) {
-          document.getElementById("inbody-time").value = `${y}-${mo}-${d}T${h}:${mi}`;
-          filled.push("측정일시");
+      // 1. 날짜 파싱: matchAll로 전체 탐색 → 유효한 YYYYMMDDHHMMSS 첫 번째 채택
+      //    (디바이스 시리얼 번호 등 앞쪽 긴 숫자열을 오인하던 버그 수정)
+      let dateMatch = null;
+      for (const m of bdata.matchAll(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/g)) {
+        const yr = parseInt(m[1]), mo = parseInt(m[2]), dy = parseInt(m[3]);
+        const hr = parseInt(m[4]), mn = parseInt(m[5]);
+        if (yr >= 2010 && yr <= 2040 && mo >= 1 && mo <= 12 &&
+            dy >= 1 && dy <= 31 && hr <= 23 && mn <= 59) {
+          dateMatch = m;
+          break;
         }
       }
+      if (dateMatch) {
+        const [, y, mo, d, h, mi] = dateMatch;
+        document.getElementById("inbody-time").value = `${y}-${mo}-${d}T${h}:${mi}`;
+        filled.push("측정일시");
+      }
 
-      // 2. 키 파싱: [4자리숫자][MF] 패턴 → /10 = cm
-      const heightMatch = bdata.match(/(\d{4})[MF]/);
+      // 2. 키 파싱: !! 구분자 이후 첫 4자리(height) + 이어지는 숫자 + [MF] 패턴
+      //    (!! 앞쪽 시리얼 번호의 0160M 등을 오인하던 버그 수정)
+      const heightMatch = bdata.match(/!!(\d{4})\d*[MF]/) ||
+                          bdata.match(/[MF\s](\d{4})[MF]/);
       const suggestEl = document.getElementById("ib-height-suggest");
       if (heightMatch) {
         const hVal = parseInt(heightMatch[1]) / 10;
         if (hVal >= 120 && hVal <= 220) {
           const saved = parseFloat(appData.height) || 0;
           if (!saved || Math.abs(saved - hVal) > 1) {
-            // 프로필 키 없거나 다르면 업데이트 제안 버튼 표시
             if (suggestEl) {
               suggestEl.style.display = "flex";
               suggestEl.dataset.height = hVal;
@@ -6835,7 +6844,7 @@
         if (suggestEl) suggestEl.style.display = "none";
       }
 
-      // 3. 결과 페이지 새탭 오픈
+      // 3. 결과 페이지 새탭 오픈 (1회만)
       if (openUrl) window.open(openUrl, "_blank");
 
       // 결과 안내 표시
@@ -6846,8 +6855,8 @@
             `<span style="color:#9ca3af;font-size:11px">${openUrl ? "결과 페이지가 열렸습니다. " : ""}나머지 수치를 보고 직접 입력하세요.</span>`;
         } else {
           resultEl.innerHTML =
-            `<span style="color:#fbbf24">⚠️ 날짜 파싱 실패</span><br>` +
-            `<span style="color:#9ca3af;font-size:11px">${openUrl ? "결과 페이지가 열렸습니다. " : ""}모든 수치를 직접 입력하세요.</span>`;
+            `<span style="color:#fbbf24">⚠️ 날짜 인식 불가 — 직접 입력해 주세요</span><br>` +
+            `<span style="color:#9ca3af;font-size:11px">${openUrl ? "결과 페이지가 열렸습니다. " : ""}수치를 보고 입력하세요.</span>`;
         }
       }
     };
