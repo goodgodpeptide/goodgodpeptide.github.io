@@ -6670,7 +6670,72 @@
       ["ib-weight","ib-sm","ib-bfm","ib-bfp","ib-vfl","ib-bmr"].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = "";
       });
+      // URL 입력창 초기화
+      const urlInput = document.getElementById("ib-url-input");
+      if (urlInput) urlInput.value = "";
+      const parseResult = document.getElementById("ib-parse-result");
+      if (parseResult) parseResult.innerHTML = "";
       m.style.display = "flex";
+    };
+
+    // 인바디 QR URL 파싱 → 날짜 자동입력 + 결과 페이지 새탭 오픈
+    window.parseInbodyUrl = function() {
+      const urlInput = document.getElementById("ib-url-input");
+      const resultEl = document.getElementById("ib-parse-result");
+      if (!urlInput) return;
+      const rawVal = urlInput.value.trim();
+      if (!rawVal) { showToast("⚠️ URL을 먼저 붙여넣으세요"); return; }
+
+      // BData 추출 (URL 형식 또는 BData 원문 둘 다 허용)
+      let bdata = rawVal;
+      let openUrl = rawVal;
+      try {
+        const u = new URL(rawVal);
+        bdata = u.searchParams.get("BData") || rawVal;
+        openUrl = rawVal;
+      } catch(e) {
+        // 그냥 BData 문자열로 간주 (URL 아님 → 새탭 안 열기)
+        openUrl = null;
+      }
+
+      const filled = [];
+
+      // 1. 날짜/시간 파싱: 14자리 연속숫자 YYYYMMDDHHMMSS
+      const dateMatch = bdata.match(/(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/);
+      if (dateMatch) {
+        const [, y, mo, d, h, mi] = dateMatch;
+        // 현실적인 연도 범위 체크 (2010~2035)
+        const yr = parseInt(y);
+        if (yr >= 2010 && yr <= 2035) {
+          document.getElementById("inbody-time").value = `${y}-${mo}-${d}T${h}:${mi}`;
+          filled.push("측정일시");
+        }
+      }
+
+      // 2. 키 파싱: [4자리숫자][MF] 패턴 → /10 = cm
+      const heightMatch = bdata.match(/(\d{4})[MF]/);
+      if (heightMatch) {
+        const hVal = parseInt(heightMatch[1]) / 10;
+        if (hVal >= 120 && hVal <= 220) {
+          filled.push(`키 ${hVal}cm (참고만)`);
+        }
+      }
+
+      // 3. 결과 페이지 새탭 오픈
+      if (openUrl) window.open(openUrl, "_blank");
+
+      // 결과 안내 표시
+      if (resultEl) {
+        if (filled.length) {
+          resultEl.innerHTML =
+            `<span style="color:#4ade80">✅ 자동입력: ${filled.join(" · ")}</span><br>` +
+            `<span style="color:#9ca3af;font-size:11px">${openUrl ? "결과 페이지가 열렸습니다. " : ""}나머지 수치를 보고 직접 입력하세요.</span>`;
+        } else {
+          resultEl.innerHTML =
+            `<span style="color:#fbbf24">⚠️ 날짜 파싱 실패</span><br>` +
+            `<span style="color:#9ca3af;font-size:11px">${openUrl ? "결과 페이지가 열렸습니다. " : ""}모든 수치를 직접 입력하세요.</span>`;
+        }
+      }
     };
     window.closeInbodyModal = function() {
       document.getElementById("inbody-modal").style.display = "none";
@@ -7452,6 +7517,8 @@
     /* 후원 USDT 주의사항: 라이트모드에서 핑크 → 진한 빨간색 */
     body.light-mode #don-notice { color: #dc2626 !important; }
     body.light-mode #don-addr-text { color: #1e293b !important; }
+    /* 인바디 URL 붙여넣기 박스 라이트모드 */
+    body.light-mode [style*="background:#1a2035"] { background: #f1f5f9 !important; border-color: #cbd5e1 !important; }
     /* 후원 인증 폼 라이트모드 */
     body.light-mode #don-cert-section { background: #f8fafc !important; border-color: #e2e8f0 !important; }
     body.light-mode #don-cert-section [style*="color:#9ca3af"] { color: #64748b !important; }
@@ -8333,6 +8400,19 @@
 <div id="inbody-modal" class="modal-overlay" onclick="if(event.target===this)closeInbodyModal()">
   <div class="modal-box">
     <div class="modal-title">🏋️ 인바디 기록 추가</div>
+    <!-- 인바디 QR URL 붙여넣기 -->
+    <div style="margin-bottom:12px;padding:10px;background:#1a2035;border-radius:10px;border:1px dashed #374151">
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:6px">📋 인바디 QR URL 붙여넣기 <span style="color:#4b5563">(선택)</span></div>
+      <div style="display:flex;gap:6px">
+        <input id="ib-url-input" class="input-field" type="text"
+          placeholder="https://qrcode.inbody.com/?BData=..."
+          style="flex:1;font-size:11px;padding:7px 10px"
+          onkeydown="if(event.key==='Enter')parseInbodyUrl()" />
+        <button onclick="parseInbodyUrl()"
+          style="background:#4f46e5;border:none;border-radius:8px;color:white;padding:0 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-family:inherit;font-weight:700">불러오기</button>
+      </div>
+      <div id="ib-parse-result" style="font-size:11px;margin-top:6px;min-height:14px;line-height:1.6"></div>
+    </div>
     <div style="margin-bottom:10px"><label>측정일시</label>
       <input id="inbody-time" class="input-field" type="datetime-local" />
     </div>
