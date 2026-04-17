@@ -18,6 +18,8 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js" />
   <!-- QR 코드 생성 라이브러리 (후원 모달용) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- jsQR: 카메라/이미지에서 QR 코드 읽기 (인바디 스캔용) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -6662,6 +6664,102 @@
       if (tab === 'analysis') setTimeout(renderAnalysis, 50);
     };
 
+    // ── 인바디 QR 카메라 스캔 ────────────────────────────
+    window.openInbodyCamera = async function() {
+      // jsQR 로드 확인
+      if (typeof jsQR === 'undefined') {
+        showToast('⚠️ QR 스캐너 로딩 중입니다. 잠시 후 다시 시도하세요.');
+        return;
+      }
+      // 카메라 오버레이 생성
+      const overlay = document.createElement('div');
+      overlay.id = 'ib-cam-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:#000;z-index:20000;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:inherit';
+      overlay.innerHTML = `
+        <div style="width:100%;max-width:420px;padding:20px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <span style="color:#fff;font-size:16px;font-weight:700">📷 인바디 QR 스캔</span>
+            <button onclick="closeInbodyCamera()" style="background:none;border:none;color:#9ca3af;font-size:26px;cursor:pointer;line-height:1">✕</button>
+          </div>
+          <!-- 카메라 뷰 + 가이드 박스 -->
+          <div style="position:relative;width:100%;aspect-ratio:1;border-radius:14px;overflow:hidden;border:2px solid #3b82f6">
+            <video id="ib-cam-video" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block"></video>
+            <canvas id="ib-cam-canvas" style="display:none"></canvas>
+            <!-- 반투명 마스크 + 가이드 박스 -->
+            <div style="position:absolute;inset:0;pointer-events:none">
+              <svg width="100%" height="100%" style="position:absolute;inset:0">
+                <defs>
+                  <mask id="guide-mask">
+                    <rect width="100%" height="100%" fill="white"/>
+                    <rect x="20%" y="20%" width="60%" height="60%" rx="8" fill="black"/>
+                  </mask>
+                </defs>
+                <rect width="100%" height="100%" fill="rgba(0,0,0,0.5)" mask="url(#guide-mask)"/>
+                <rect x="20%" y="20%" width="60%" height="60%" rx="8" fill="none" stroke="#3b82f6" stroke-width="2"/>
+                <!-- 모서리 강조선 -->
+                <path d="M 20% 25% L 20% 20% L 25% 20%" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/>
+                <path d="M 75% 20% L 80% 20% L 80% 25%" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/>
+                <path d="M 20% 75% L 20% 80% L 25% 80%" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/>
+                <path d="M 75% 80% L 80% 80% L 80% 75%" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <div id="ib-cam-status" style="text-align:center;color:#9ca3af;font-size:13px;margin-top:14px;line-height:1.5">
+            인바디 결과지의 QR 코드를 가이드 박스 안에 맞춰주세요
+          </div>
+        </div>`;
+      document.body.appendChild(overlay);
+
+      const video = document.getElementById('ib-cam-video');
+      const canvas = document.getElementById('ib-cam-canvas');
+      const statusEl = document.getElementById('ib-cam-status');
+
+      try {
+        // 후면 카메라 우선 요청
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 1280 } }
+        });
+        video.srcObject = stream;
+        window._ibCamStream = stream;
+
+        video.addEventListener('loadedmetadata', () => {
+          canvas.width  = video.videoWidth;
+          canvas.height = video.videoHeight;
+
+          window._ibCamInterval = setInterval(() => {
+            if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+            if (code) {
+              // QR 감지 성공!
+              statusEl.textContent = '✅ QR 인식 완료!';
+              statusEl.style.color = '#4ade80';
+              setTimeout(() => {
+                closeInbodyCamera();
+                const input = document.getElementById('ib-url-input');
+                if (input) input.value = code.data;
+                parseInbodyUrl();
+              }, 400);
+            }
+          }, 200);
+        });
+      } catch (err) {
+        statusEl.innerHTML = `<span style="color:#f87171">카메라 접근 실패</span><br><span style="color:#6b7280;font-size:11px">${err.message}</span>`;
+      }
+    };
+
+    window.closeInbodyCamera = function() {
+      clearInterval(window._ibCamInterval);
+      window._ibCamInterval = null;
+      if (window._ibCamStream) {
+        window._ibCamStream.getTracks().forEach(t => t.stop());
+        window._ibCamStream = null;
+      }
+      document.getElementById('ib-cam-overlay')?.remove();
+    };
+
     // ── 인바디 기록 ─────────────────────────────────────
     window.openInbodyModal = function() {
       const m = document.getElementById("inbody-modal");
@@ -8518,14 +8616,25 @@
     <div class="modal-title">🏋️ 인바디 기록 추가</div>
     <!-- 인바디 QR URL 붙여넣기 -->
     <div style="margin-bottom:12px;padding:10px;background:#1a2035;border-radius:10px;border:1px dashed #374151">
-      <div style="font-size:12px;color:#9ca3af;margin-bottom:6px">📋 인바디 QR URL 붙여넣기 <span style="color:#4b5563">(선택)</span></div>
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:8px">📋 인바디 QR 자동입력 <span style="color:#4b5563">(선택)</span></div>
+      <!-- 카메라 스캔 버튼 (메인) -->
+      <button onclick="openInbodyCamera()"
+        style="width:100%;padding:10px;background:linear-gradient(135deg,#059669,#047857);border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;letter-spacing:0.3px">
+        📷 카메라로 QR 스캔
+      </button>
+      <!-- URL 직접 붙여넣기 (보조) -->
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+        <div style="flex:1;height:1px;background:#374151"></div>
+        <span style="color:#4b5563;font-size:10px">또는 URL 직접 입력</span>
+        <div style="flex:1;height:1px;background:#374151"></div>
+      </div>
       <div style="display:flex;gap:6px">
         <input id="ib-url-input" class="input-field" type="text"
           placeholder="https://qrcode.inbody.com/?BData=..."
           style="flex:1;font-size:11px;padding:7px 10px"
           onkeydown="if(event.key==='Enter')parseInbodyUrl()" />
         <button onclick="parseInbodyUrl()"
-          style="background:#4f46e5;border:none;border-radius:8px;color:white;padding:0 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-family:inherit;font-weight:700">불러오기</button>
+          style="background:#4f46e5;border:none;border-radius:8px;color:white;padding:0 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-family:inherit;font-weight:700">확인</button>
       </div>
       <div id="ib-parse-result" style="font-size:11px;margin-top:6px;min-height:14px;line-height:1.6"></div>
       <!-- 키 프로필 업데이트 제안 (parseInbodyUrl에서 감지 시 표시) -->
