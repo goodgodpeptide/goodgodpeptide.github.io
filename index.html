@@ -4594,6 +4594,14 @@
         el.innerHTML = `<div style="text-align:center;padding:40px 0;color:${sub};font-size:14px">아직 글이 없습니다.<br>첫 번째 글을 작성해보세요! 💊</div>`;
         return;
       }
+      // onSnapshot 재렌더 시 이미 로드된 댓글 DOM 보존 (입력 중인 텍스트 날아가는 버그 방지)
+      const savedComments = {};
+      posts.forEach(p => {
+        const existing = document.getElementById('comments-'+p.id);
+        if (existing && !existing.textContent.includes('로딩 중')) {
+          savedComments[p.id] = existing.innerHTML;
+        }
+      });
       el.innerHTML = posts.map(p => {
         const mine = p.uid === currentUser?.uid;
         const canDel = mine || currentUserIsAdmin;
@@ -4622,8 +4630,16 @@
           </div>
         </div>`;
       }).join('');
-      // 글 목록 렌더 완료 후 모든 댓글 병렬 로드
-      posts.forEach(p => loadComments(p.id));
+      // 글 목록 렌더 완료 후 댓글 처리
+      // 이미 로드됐던 것은 저장된 DOM 복원, 새 것만 Firestore에서 로드
+      posts.forEach(p => {
+        if (savedComments[p.id]) {
+          const box = document.getElementById('comments-'+p.id);
+          if (box) box.innerHTML = savedComments[p.id];
+        } else {
+          loadComments(p.id);
+        }
+      });
     }
 
     async function loadComments(postId) {
@@ -4829,7 +4845,7 @@
                   <span style="font-size:13px;font-weight:700;color:${isL?'#374151':'#e2e8f0'}">${escapeHtml(r.nickname||'?')}</span>
                   <span style="font-size:11px;color:${rank.color};background:${rank.color}22;padding:1px 7px;border-radius:20px">${rank.badge} ${rank.label}</span>
                 </div>
-                <div style="font-size:12px;color:${isL?'#64748b':'#94a3b8'}">💰 ${r.amount.toLocaleString()}원 · ${METHOD[r.method]||r.method} · ${dt}</div>
+                <div style="font-size:12px;color:${isL?'#64748b':'#94a3b8'}">💰 ${r.amount.toLocaleString()}원 · ${escapeHtml(METHOD[r.method]||r.method)} · ${dt}</div>
                 ${r.note?`<div style="font-size:11px;color:${isL?'#64748b':'#6b7280'};margin-top:3px">📝 ${escapeHtml(r.note)}</div>`:''}
               </div>
               ${r.status==='pending'
@@ -4999,6 +5015,11 @@
       try {
         const hofRef = doc(db,'config','hall_of_fame');
         const snap = await getDoc(hofRef);
+        const existing = snap.exists() ? (snap.data().entries || []) : [];
+        // 동일 닉네임 중복 체크
+        if (existing.some(e => e.nickname === nickname)) {
+          if (!await customConfirm(`'${nickname}' 닉네임이 이미 등록돼 있습니다. 그래도 추가할까요?`)) return;
+        }
         const entry = { uid:'manual', nickname, amount, method:'manual', note:'관리자 직접 등록', time:Date.now(), approvedAt:Date.now() };
         if (snap.exists()) {
           await updateDoc(hofRef, { entries: arrayUnion(entry) });
@@ -6944,27 +6965,26 @@
       const isL = document.body.classList.contains('light-mode');
       const box = document.getElementById('donation-box');
       if (!box) return;
-      const bg    = isL ? '#ffffff' : '#12121e';
-      const brd   = isL ? '#e2e8f0' : '#1f2937';
-      const txt   = isL ? '#374151' : '#e2e8f0';
-      const sub   = isL ? '#64748b' : '#9ca3af';
+      const bg  = isL ? '#ffffff' : '#12121e';
+      const brd = isL ? '#e2e8f0' : '#1f2937';
+      const sub = isL ? '#64748b' : '#9ca3af';
       // 모달 박스
       box.style.background = bg;
-      // sticky 헤더
-      const header = box.querySelector('[style*="position:sticky"]');
+      // sticky 헤더 (ID 기반)
+      const header = document.getElementById('don-modal-header');
       if (header) { header.style.background = bg; header.style.borderBottomColor = brd; }
-      // 닫기 ✕ 버튼
-      const closeX = box.querySelector('[onclick="closeDonationModal()"][style*="font-size:24px"]');
+      // 닫기 ✕ 버튼 (ID 기반)
+      const closeX = document.getElementById('don-modal-close-x');
       if (closeX) closeX.style.color = sub;
-      // 주소 박스 텍스트
+      // 주소 텍스트 (ID 기반)
       const addrBox = document.getElementById('don-addr-text');
       if (addrBox) addrBox.style.color = isL ? '#1e293b' : '#e2e8f0';
-      // 닫기 버튼 (하단)
-      const closeBtn = box.querySelector('[onclick="closeDonationModal()"][style*="font-size:15px"]');
+      // 닫기 버튼 하단 (ID 기반)
+      const closeBtn = document.getElementById('don-modal-close-btn');
       if (closeBtn) {
-        closeBtn.style.background = isL ? '#f3f4f6' : '#1f2937';
-        closeBtn.style.borderColor = brd;
-        closeBtn.style.color = sub;
+        closeBtn.style.background   = isL ? '#f3f4f6' : '#1f2937';
+        closeBtn.style.borderColor  = brd;
+        closeBtn.style.color        = sub;
       }
     }
 
@@ -8401,12 +8421,12 @@
   <div id="donation-box" style="background:#12121e;border-top:2px solid #fbbf24;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)">
 
     <!-- 헤더 -->
-    <div style="position:sticky;top:0;background:#12121e;padding:16px 20px 12px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;z-index:1">
+    <div id="don-modal-header" style="position:sticky;top:0;background:#12121e;padding:16px 20px 12px;border-bottom:1px solid #1f2937;display:flex;justify-content:space-between;align-items:center;z-index:1">
       <div>
         <div style="font-size:18px;font-weight:800;color:#fbbf24">☕ 후원하기</div>
         <div style="font-size:11px;color:#6b7280;margin-top:2px">개발에 힘이 됩니다 🙏</div>
       </div>
-      <button onclick="closeDonationModal()" style="background:none;border:none;color:#6b7280;font-size:24px;cursor:pointer;padding:0;line-height:1">✕</button>
+      <button id="don-modal-close-x" onclick="closeDonationModal()" style="background:none;border:none;color:#6b7280;font-size:24px;cursor:pointer;padding:0;line-height:1">✕</button>
     </div>
 
     <!-- 탭 -->
@@ -8521,7 +8541,7 @@
 
     <!-- 닫기 -->
     <div style="padding:0 20px 20px">
-      <button onclick="closeDonationModal()"
+      <button id="don-modal-close-btn" onclick="closeDonationModal()"
         style="width:100%;padding:14px;background:#1f2937;border:1px solid #374151;border-radius:12px;color:#9ca3af;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
         닫기
       </button>
