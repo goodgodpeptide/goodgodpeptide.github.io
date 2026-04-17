@@ -5370,6 +5370,9 @@
       if (!encyclopediaData) return;
       const pep = encyclopediaData.peptides[peptideId];
       if (!pep) return;
+      // 새 모달 열 때 번역 상태 초기화
+      window._encViewMode = 'en';
+      window._encOrigTexts = {};
 
       const isLight = document.body.classList.contains("light-mode");
       const C = isLight ? {
@@ -5412,16 +5415,16 @@
 
       // ── stat 카드 ──
       const statCards = [
-        { label:'일반 용량', value: pep.typicalDose || pep.quickStart?.dose || '—', sub: pep.frequency || '' },
-        { label:'투여 경로', value: routes, sub: pep.routeDetail || '' },
-        { label:'주기', value: pep.cycle || pep.quickStart?.cycleLength || '—', sub: '일반적 기간' },
-        { label:'저장', value: pep.storage || '—', sub: pep.quickStart?.storageNote || '' },
+        { label:'일반 용량', value: pep.typicalDose || pep.quickStart?.dose || '—', sub: pep.frequency || '', trVal: null, trSub: null },
+        { label:'투여 경로', value: routes, sub: pep.routeDetail || '', trVal: null, trSub: null },
+        { label:'주기', value: pep.cycle || pep.quickStart?.cycleLength || '—', sub: '일반적 기간', trVal: 'stat_cycle', trSub: null },
+        { label:'저장', value: pep.storage || '—', sub: pep.quickStart?.storageNote || '', trVal: null, trSub: null },
       ];
       const statsHTML = statCards.map(s => `
         <div style="background:${C.bgCard};border-radius:12px;padding:14px;flex:1;min-width:110px">
           <div style="font-size:11px;color:${C.txtFaint};margin-bottom:6px">${s.label}</div>
-          <div style="font-size:15px;font-weight:700;color:${C.txt};margin-bottom:2px;line-height:1.3">${s.value}</div>
-          <div style="font-size:10px;color:${C.txtMuted}">${s.sub}</div>
+          <div ${s.trVal?`data-enc-tr="${s.trVal}" `:''}style="font-size:15px;font-weight:700;color:${C.txt};margin-bottom:2px;line-height:1.3">${s.value}</div>
+          <div ${s.trSub?`data-enc-tr="${s.trSub}" `:''}style="font-size:10px;color:${C.txtMuted}">${s.sub}</div>
         </div>`).join('');
 
       // ── 약동학 ──
@@ -5430,9 +5433,9 @@
         <div class="enc-section">
           <div class="enc-section-title">📈 약동학</div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
-            ${pk.peak    ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:10px;color:${C.txtFaint}">피크</div><div style="font-weight:700;color:#60a5fa;font-size:13px">${pk.peak}</div></div>` : ''}
-            ${pk.halfLife? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:10px;color:${C.txtFaint}">반감기</div><div style="font-weight:700;color:#fbbf24;font-size:13px">${pk.halfLife}</div></div>` : ''}
-            ${pk.cleared ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:10px;color:${C.txtFaint}">소실</div><div style="font-weight:700;color:${C.txtMuted};font-size:13px">${pk.cleared}</div></div>` : ''}
+            ${pk.peak    ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:10px;color:${C.txtFaint}">피크</div><div data-enc-tr="pkPeak" style="font-weight:700;color:#60a5fa;font-size:13px">${pk.peak}</div></div>` : ''}
+            ${pk.halfLife? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:10px;color:${C.txtFaint}">반감기</div><div data-enc-tr="pkHalf" style="font-weight:700;color:#fbbf24;font-size:13px">${pk.halfLife}</div></div>` : ''}
+            ${pk.cleared ? `<div style="background:${C.bgCard};border-radius:8px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:10px;color:${C.txtFaint}">소실</div><div data-enc-tr="pkCleared" style="font-weight:700;color:${C.txtMuted};font-size:13px">${pk.cleared}</div></div>` : ''}
           </div>
         </div>` : '';
 
@@ -5539,7 +5542,7 @@
                    style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;${hasDsc?'cursor:pointer;':''}background:${C.accHdr};user-select:none">
                 <div style="display:flex;align-items:center;gap:8px">
                   <span style="width:8px;height:8px;border-radius:50%;background:${clr};display:inline-block;flex-shrink:0"></span>
-                  <span style="font-size:13px;color:${C.txtSub}">${inter.name}</span>
+                  <span data-enc-tr="inter_${ii}_name" style="font-size:13px;color:${C.txtSub}">${inter.name}</span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px">
                   <span style="font-size:11px;color:${clr};padding:2px 8px;background:${C.bgDeep};border-radius:20px">${lbl}</span>
@@ -5660,7 +5663,7 @@
           <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
             <div style="flex:1;min-width:0">
               <div style="font-size:22px;font-weight:800;color:${C.txt};margin-bottom:3px;line-height:1.2">${pep.nameEn}</div>
-              <div style="font-size:11px;color:${C.txtFaint};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pep.subtitle || ''}</div>
+              <div data-enc-tr="subtitle" style="font-size:11px;color:${C.txtFaint};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pep.subtitle || ''}</div>
             </div>
             <button onclick="document.getElementById('enc-modal').remove()"
               style="background:none;border:none;color:${C.txtMuted};font-size:24px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-left:12px">✕</button>
@@ -5761,6 +5764,7 @@
         benefits:       pep?.keyBenefitsKo,
         mechanism:      pep?.mechanismKo,
         protocolTiming: pep?.protocolTimingKo,
+        subtitle:       pep?.subtitleKo,
       };
       (pep?.sideEffectsKo    ||[]).forEach((v,i)=>{ koMap[`se_${i}`]=v; });
       (pep?.safetyNotesKo    ||[]).forEach((v,i)=>{ koMap[`sn_${i}`]=v; });
