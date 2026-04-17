@@ -1412,7 +1412,7 @@
     window.submitAddWeight = () => {
       const weight = parseFloat(document.getElementById("add-weight").value);
       const timeVal = document.getElementById("add-weight-time").value;
-      if (!weight || !timeVal) return;
+      if (!weight || weight <= 0 || !timeVal) return;
       appData.weightRecords = appData.weightRecords || [];
       if (_editWeightId) {
         const idx = appData.weightRecords.findIndex(r => r.id === _editWeightId);
@@ -1607,7 +1607,7 @@
       const todayStart = new Date();
       const kst = new Date(todayStart.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
       kst.setHours(0, 0, 0, 0);
-      const cutoff = kst.getTime() - 9 * 3600000; // KST → UTC
+      const cutoff = kst.getTime(); // kst.getTime()은 이미 KST 자정의 UTC ms값
       return (appData.waterLog || [])
         .filter(w => w.time >= cutoff)
         .reduce((sum, w) => sum + (w.ml || 0), 0);
@@ -6762,6 +6762,316 @@
       document.getElementById('ib-cam-overlay')?.remove();
     };
 
+    // ── 인바디 갤러리 QR (저장된 이미지에서 QR 인식) ────────
+    window.openInbodyImagePicker = function() {
+      if (typeof jsQR === 'undefined') { showToast('⚠️ QR 스캐너 로딩 중입니다.'); return; }
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const resultEl = document.getElementById('ib-parse-result');
+        if (resultEl) resultEl.innerHTML = '<span style="color:#9ca3af;font-size:11px">🔍 이미지 분석 중...</span>';
+        const reader = new FileReader();
+        // Bug fix: reader 실패 처리
+        reader.onerror = function() {
+          if (resultEl) resultEl.innerHTML = '<span style="color:#f87171">❌ 파일 읽기 실패</span>';
+        };
+        reader.onload = function(ev) {
+          const img = new Image();
+          // Bug fix: img 로드 실패 처리
+          img.onerror = function() {
+            if (resultEl) resultEl.innerHTML = '<span style="color:#f87171">❌ 이미지 로드 실패 — 지원 형식인지 확인하세요</span>';
+          };
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            // 정방향 + 반전 둘 다 시도
+            const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'attemptBoth' });
+            if (code) {
+              const urlInput = document.getElementById('ib-url-input');
+              if (urlInput) urlInput.value = code.data;
+              parseInbodyUrl();
+            } else {
+              if (resultEl) resultEl.innerHTML = '<span style="color:#fbbf24">⚠️ QR 인식 실패 — 더 선명하거나 QR만 나온 이미지를 사용하세요</span>';
+            }
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    };
+
+    // ── 인바디 결과지 사진 OCR (Tesseract.js 동적 로드) ──────
+    window.openInbodyPhotoPicker = function() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const resultEl = document.getElementById('ib-parse-result');
+
+        // Bug fix: 스크립트 로드 실패도 try/catch로 처리
+        try {
+          // Tesseract.js 동적 로드 (첫 실행 시만)
+          if (typeof Tesseract === 'undefined') {
+            if (resultEl) resultEl.innerHTML =
+              '<span style="color:#9ca3af;font-size:11px">⏳ OCR 엔진 로딩 중... (첫 실행 시 약 15MB 다운로드)</span>';
+            await new Promise((resolve, reject) => {
+              const s = document.createElement('script');
+              s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js';
+              s.onload = resolve; s.onerror = () => reject(new Error('Tesseract CDN 로드 실패. 인터넷 연결을 확인하세요.'));
+              document.head.appendChild(s);
+            });
+          }
+
+          if (resultEl) resultEl.innerHTML =
+            '<span style="color:#9ca3af;font-size:11px">🔍 텍스트 인식 중... 0%</span>';
+
+          const { data: { text } } = await Tesseract.recognize(file, 'kor+eng', {
+            logger: m => {
+              if (m.status === 'recognizing text' && resultEl) {
+                const pct = Math.round((m.progress || 0) * 100);
+                resultEl.innerHTML =
+                  `<span style="color:#9ca3af;font-size:11px">🔍 텍스트 인식 중... ${pct}%</span>`;
+              }
+            }
+          });
+          parseInbodyOcrText(text);
+        } catch(err) {
+          if (resultEl) resultEl.innerHTML =
+            `<span style="color:#f87171">❌ OCR 실패: ${err.message}</span>`;
+        }
+      };
+      input.click();
+    };
+
+    window.parseInbodyOcrText = function(rawText) {
+      const resultEl = document.getElementById('ib-parse-result');
+      const text = rawText;
+      const filled = [];
+
+      // 숫자 추출 헬퍼: 키워드 뒤 첫 번째 숫자
+      function extract(...patterns) {
+        for (const re of patterns) {
+          const m = text.match(re);
+          if (m) {
+            const v = parseFloat(m[1]);
+            if (!isNaN(v) && v > 0) return v;
+          }
+        }
+        return 0;
+      }
+      function setF(id, val, label) {
+        if (val > 0) {
+          const el = document.getElementById(id);
+          if (el) { el.value = val; filled.push(`${label} ${val}`); return true; }
+        }
+        return false;
+      }
+
+      // 날짜 파싱 (YYYY.MM.DD / YYYY-MM-DD / YYYY/MM/DD)
+      const dateM = text.match(/(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+      if (dateM) {
+        const yr = parseInt(dateM[1]);
+        if (yr >= 2010 && yr <= 2040) {
+          const mo = dateM[2].padStart(2,'0'), d = dateM[3].padStart(2,'0');
+          document.getElementById('inbody-time').value = `${dateM[1]}-${mo}-${d}T00:00`;
+          filled.push('측정일');
+        }
+      }
+
+      // 수치 추출 — 한글/영문 레이블 혼용, OCR 노이즈 대응
+      const weight = extract(
+        /체\s*중\s*[^\d]{0,20}([\d]+\.[\d]+)/,   // "체중 (Weight) 65.6" 등 긴 레이블 대응
+        /Weight\s*[^\d]{0,20}([\d]+\.[\d]+)/i
+      );
+      const sm = extract(
+        /골\s*격\s*근\s*량\s*[^\d]{0,10}([\d]+\.?[\d]*)/,
+        /Skeletal Muscle\s*[^\d]{0,10}([\d]+\.?[\d]*)/i,
+        /SMM\s*[^\d]{0,8}([\d]+\.?[\d]*)/i
+      );
+      const bfm = extract(
+        /체\s*지\s*방\s*량\s*[^\d]{0,10}([\d]+\.?[\d]*)/,
+        /Body Fat Mass\s*[^\d]{0,10}([\d]+\.?[\d]*)/i,
+        /BFM\s*[^\d]{0,8}([\d]+\.?[\d]*)/i
+      );
+      const bfp = extract(
+        /체\s*지\s*방\s*률\s*[^\d]{0,10}([\d]+\.?[\d]*)/,
+        /Percent Body Fat\s*[^\d]{0,10}([\d]+\.?[\d]*)/i,
+        /PBF\s*[^\d]{0,8}([\d]+\.?[\d]*)/i
+      );
+      const vfl = extract(
+        /내\s*장\s*지\s*방\s*(?:레\s*벨|등\s*급|수\s*준)?\s*[^\d]{0,10}([\d]+)/,
+        /Visceral Fat\s*(?:Level)?\s*[^\d]{0,10}([\d]+)/i
+      );
+      const bmr = extract(
+        /기\s*초\s*대\s*사\s*량\s*[^\d]{0,10}([\d]{3,5})/,
+        /BMR\s*[^\d]{0,10}([\d]{3,5})/i,
+        /Basal Metabolic Rate\s*[^\d]{0,10}([\d]{3,5})/i
+      );
+
+      setF('ib-weight', weight, '체중');
+      setF('ib-sm',     sm,     '골격근량');
+      setF('ib-bfm',    bfm,    '체지방량');
+      setF('ib-vfl',    vfl,    '내장지방레벨');
+      setF('ib-bmr',    bmr,    'BMR');
+
+      if (bfp > 0) {
+        setF('ib-bfp', bfp, '체지방률');
+      } else if (weight > 0 && bfm > 0) {
+        const calc = Math.round(bfm / weight * 1000) / 10;
+        setF('ib-bfp', calc, '체지방률(계산)');
+      }
+
+      if (resultEl) {
+        if (filled.length) {
+          resultEl.innerHTML =
+            `<span style="color:#4ade80">✅ OCR 자동입력: ${filled.join(' · ')}</span><br>` +
+            `<span style="color:#fbbf24;font-size:10px">⚠️ OCR은 100% 정확하지 않으니 값을 꼭 확인하세요</span>`;
+        } else {
+          // 인식은 됐지만 값 추출 실패 → 원문 보여주기
+          const snip = escapeHtml(rawText.slice(0, 300));
+          resultEl.innerHTML =
+            `<span style="color:#fbbf24">⚠️ 수치 추출 실패 — 결과지 전체가 잘 보이는 사진으로 다시 시도하세요</span>` +
+            `<details style="margin-top:4px"><summary style="color:#4b5563;font-size:10px;cursor:pointer">🔍 인식된 텍스트 (디버그)</summary>` +
+            `<div style="background:#0f172a;border-radius:6px;padding:6px;margin-top:4px;font-size:9px;color:#64748b;font-family:monospace;white-space:pre-wrap;word-break:break-all;max-height:120px;overflow-y:auto">${snip}</div></details>`;
+        }
+      }
+    };
+
+    // ── 인바디 CSV 파일 파싱 ─────────────────────────────
+    window.openInbodyCsvPicker = function() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.csv,text/csv';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const resultEl = document.getElementById('ib-parse-result');
+        // Bug fix: UTF-8 시도 후 한글 깨지면 EUC-KR 재시도
+        const tryRead = (encoding) => {
+          const reader = new FileReader();
+          reader.onerror = () => {
+            if (resultEl) resultEl.innerHTML = '<span style="color:#f87171">❌ 파일 읽기 실패</span>';
+          };
+          reader.onload = function(ev) {
+            const text = ev.target.result;
+            // 깨진 한글 감지: EUC-KR로 읽으면 나타나는 대표 패턴
+            const hasGarbled = /\ufffd/.test(text) || (/[\u00c0-\u00ff]{3,}/.test(text) && !/[가-힣]/.test(text));
+            if (encoding === 'utf-8' && hasGarbled) {
+              tryRead('euc-kr');  // 재시도
+            } else {
+              parseInbodyCsvText(text);
+            }
+          };
+          reader.readAsText(file, encoding);
+        };
+        tryRead('utf-8');
+      };
+      input.click();
+    };
+
+    window.parseInbodyCsvText = function(csvText) {
+      const resultEl = document.getElementById('ib-parse-result');
+      // BOM 제거 + 줄 분리
+      const lines = csvText.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+      if (lines.length < 2) {
+        if (resultEl) resultEl.innerHTML = '<span style="color:#fbbf24">⚠️ CSV 데이터가 비어있습니다</span>';
+        return;
+      }
+
+      // 헤더 파싱 (첫 행)
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+
+      // 마지막 행 = 가장 최근 측정 (또는 데이터 행이 1개면 그것)
+      const dataRow = lines[lines.length - 1].split(',').map(v => v.trim().replace(/"/g, ''));
+
+      // 컬럼 인덱스 찾기 (부분 문자열 매칭, 대소문자 무관)
+      function colIdx(...keywords) {
+        for (const kw of keywords) {
+          const idx = headers.findIndex(h => h.toLowerCase().includes(kw.toLowerCase()));
+          if (idx !== -1) return idx;
+        }
+        return -1;
+      }
+      function colVal(...keywords) {
+        const i = colIdx(...keywords);
+        return i !== -1 ? parseFloat(dataRow[i]) || 0 : 0;
+      }
+      function colStr(...keywords) {
+        const i = colIdx(...keywords);
+        return i !== -1 ? dataRow[i] : '';
+      }
+
+      const filled = [];
+
+      // 날짜 — 구분자 무관하게 숫자만 추출 (Bug fix: "2026. 04. 17" 한국 포맷 대응)
+      const dateStr = colStr('검사일', '측정일', 'date', 'Date');
+      if (dateStr) {
+        const digits = dateStr.replace(/[^\d]/g, '');
+        if (digits.length >= 8) {
+          const y = digits.slice(0,4), mo = digits.slice(4,6), d = digits.slice(6,8);
+          const yr = parseInt(y);
+          if (yr >= 2010 && yr <= 2040) {
+            document.getElementById('inbody-time').value = `${y}-${mo}-${d}T00:00`;
+            filled.push('측정일');
+          }
+        }
+      }
+
+      // 측정값 자동입력
+      function setF(id, val, label) {
+        if (val > 0) {
+          const el = document.getElementById(id);
+          if (el) { el.value = val; filled.push(label + ' ' + val); }
+        }
+      }
+
+      const weight = colVal('체중', 'Weight', 'weight');
+      const sm     = colVal('골격근량', '제지방', 'Muscle', 'SMM', 'LBM');
+      const bfm    = colVal('체지방량', 'Fat Mass', 'BFM');
+      const bfp    = colVal('체지방률', 'Fat%', 'PBF', 'BFP');
+      const vfl    = colVal('내장지방', 'Visceral', 'VFL');
+      const bmr    = colVal('기초대사량', 'BMR', 'Basal');
+
+      setF('ib-weight', weight, '체중');
+      setF('ib-sm',     sm,     '골격근량');
+      setF('ib-bfm',    bfm,    '체지방량');
+      setF('ib-vfl',    vfl,    '내장지방레벨');
+      setF('ib-bmr',    bmr,    '기초대사량');
+
+      // 체지방률: CSV에 있으면 그 값, 없으면 계산
+      if (bfp > 0) {
+        setF('ib-bfp', bfp, '체지방률');
+      } else if (weight > 0 && bfm > 0) {
+        const calcBfp = Math.round(bfm / weight * 1000) / 10;
+        setF('ib-bfp', calcBfp, '체지방률(계산)');
+      }
+
+      if (resultEl) {
+        if (filled.length) {
+          resultEl.innerHTML =
+            `<span style="color:#4ade80">✅ CSV 자동입력: ${filled.join(' · ')}</span><br>` +
+            `<span style="color:#9ca3af;font-size:11px">확인 후 저장하세요.</span>`;
+        } else {
+          // 컬럼 매핑 실패 → 헤더 목록 표시해서 GG가 포맷 알 수 있게
+          const debugHeaders = escapeHtml(headers.slice(0, 20).join(', '));
+          resultEl.innerHTML =
+            `<span style="color:#fbbf24">⚠️ CSV 컬럼 인식 실패</span><br>` +
+            `<details style="margin-top:4px"><summary style="color:#4b5563;font-size:10px;cursor:pointer">🔍 CSV 헤더 확인</summary>` +
+            `<div style="background:#0f172a;border-radius:6px;padding:6px 8px;margin-top:4px;font-size:9px;color:#64748b;font-family:monospace;word-break:break-all">${debugHeaders}</div></details>`;
+        }
+      }
+    };
+
     // ── 인바디 기록 ─────────────────────────────────────
     window.openInbodyModal = function() {
       const m = document.getElementById("inbody-modal");
@@ -6775,6 +7085,9 @@
       if (urlInput) urlInput.value = "";
       const parseResult = document.getElementById("ib-parse-result");
       if (parseResult) parseResult.innerHTML = "";
+      // 이전 QR 스캔에서 남은 키 제안 초기화
+      const suggestEl = document.getElementById("ib-height-suggest");
+      if (suggestEl) suggestEl.style.display = "none";
       m.style.display = "flex";
     };
 
@@ -6786,19 +7099,29 @@
       const rawVal = urlInput.value.trim();
       if (!rawVal) { showToast("⚠️ URL을 먼저 붙여넣으세요"); return; }
 
-      // BData 추출 (URL 형식 또는 BData 원문 둘 다 허용)
+      // BData 추출: IBData(InBody270) 또는 BData 파라미터 모두 지원
       let bdata = rawVal;
       let openUrl = rawVal;
       try {
         const u = new URL(rawVal);
-        bdata = u.searchParams.get("BData") || rawVal;
+        bdata = u.searchParams.get("BData") || u.searchParams.get("IBData") || rawVal;
         openUrl = rawVal;
       } catch(e) {
-        // 그냥 BData 문자열로 간주 (URL 아님 → 새탭 안 열기)
+        // URL 형식 아님 → BData 원문으로 간주 (새탭 안 열기)
         openUrl = null;
       }
 
       const filled = [];
+
+      // 헬퍼: 필드에 값 채우기
+      function setField(id, val) {
+        const el = document.getElementById(id);
+        if (el && val !== null && val !== undefined && !isNaN(val)) {
+          el.value = val;
+          return true;
+        }
+        return false;
+      }
 
       // 1. 날짜 파싱: matchAll로 전체 탐색 → 유효한 YYYYMMDDHHMMSS 첫 번째 채택
       //    (디바이스 시리얼 번호 등 앞쪽 긴 숫자열을 오인하던 버그 수정)
@@ -6818,33 +7141,77 @@
         filled.push("측정일시");
       }
 
-      // 2. 키 파싱: !! 구분자 이후 첫 4자리(height) + 이어지는 숫자 + [MF] 패턴
-      //    (!! 앞쪽 시리얼 번호의 0160M 등을 오인하던 버그 수정)
-      const heightMatch = bdata.match(/!!(\d{4})\d*[MF]/) ||
-                          bdata.match(/[MF\s](\d{4})[MF]/);
+      // 2. 키 파싱: !!!+ 구분자 이후 4자리(÷10=cm) + [MF] 패턴
+      //    (InBody270은 !!! 3중 구분자 사용 — 기존 !! 패턴 버그 수정)
+      const heightMatch = bdata.match(/\!{2,}(\d{4})\d*[MF]/);
       const suggestEl = document.getElementById("ib-height-suggest");
+      let heightCm = 0;
       if (heightMatch) {
-        const hVal = parseInt(heightMatch[1]) / 10;
-        if (hVal >= 120 && hVal <= 220) {
+        heightCm = parseInt(heightMatch[1]) / 10;
+        if (heightCm >= 120 && heightCm <= 220) {
           const saved = parseFloat(appData.height) || 0;
-          if (!saved || Math.abs(saved - hVal) > 1) {
+          if (!saved || Math.abs(saved - heightCm) > 1) {
             if (suggestEl) {
               suggestEl.style.display = "flex";
-              suggestEl.dataset.height = hVal;
+              suggestEl.dataset.height = heightCm;
               suggestEl.querySelector("span").textContent =
-                saved ? `키 ${hVal}cm 감지됨 (현재 프로필: ${saved}cm)` : `키 ${hVal}cm 감지됨 (프로필 미설정)`;
+                saved ? `키 ${heightCm}cm 감지됨 (현재 프로필: ${saved}cm)` : `키 ${heightCm}cm 감지됨 (프로필 미설정)`;
             }
-            filled.push(`키 ${hVal}cm 감지`);
+            filled.push(`키 ${heightCm}cm 감지`);
           } else {
             if (suggestEl) suggestEl.style.display = "none";
-            filled.push(`키 ${hVal}cm ✓`);
+            filled.push(`키 ${heightCm}cm ✓`);
           }
         }
       } else {
         if (suggestEl) suggestEl.style.display = "none";
       }
 
-      // 3. 결과 페이지 새탭 오픈 (1회만)
+      // 3. 측정값 파싱: 날짜 이후 연속 숫자를 4자리씩 그룹화
+      //    InBody270 확인된 필드 위치 (Python 실제 데이터 분석):
+      //      [6]  = 체지방량 BFM (÷10 kg)
+      //      [13] = 체중 Weight (÷10 kg)
+      //      [17] = 골격근량 SMM (÷10 kg)
+      if (dateMatch) {
+        const afterDate = bdata.slice(dateMatch.index + 14);
+        const mainDigits = afterDate.match(/^\d+/)?.[0] || '';
+        const grp = [];
+        for (let i = 0; i + 4 <= mainDigits.length; i += 4) {
+          grp.push(parseInt(mainDigits.slice(i, i + 4)));
+        }
+
+        let weight = 0, bfm = 0;
+
+        if (grp.length > 6) {
+          bfm = grp[6] / 10;
+          if (setField("ib-bfm", bfm)) filled.push(`체지방량 ${bfm}kg`);
+        }
+        if (grp.length > 13) {
+          weight = grp[13] / 10;
+          if (setField("ib-weight", weight)) filled.push(`체중 ${weight}kg`);
+        }
+        if (grp.length > 17) {
+          const sm = grp[17] / 10;
+          if (setField("ib-sm", sm)) filled.push(`골격근량 ${sm}kg`);
+        }
+
+        // 체지방률 자동 계산 (BFM ÷ 체중 × 100)
+        if (weight > 0 && bfm > 0) {
+          const bfp = Math.round(bfm / weight * 1000) / 10;
+          if (setField("ib-bfp", bfp)) filled.push(`체지방률 ${bfp}%`);
+        }
+      }
+
+      // 4. BMR: !0000!0000!0000 구분자 이후 첫 4자리
+      const secMatch = bdata.match(/!0{4}!0{4}!0{4}(\d+)/);
+      if (secMatch) {
+        const bmr = parseInt(secMatch[1].slice(0, 4));
+        if (bmr > 500 && bmr < 5000) {  // 합리적인 BMR 범위 검증
+          if (setField("ib-bmr", bmr)) filled.push(`BMR ${bmr}kcal`);
+        }
+      }
+
+      // 5. 결과 페이지 새탭 오픈 (1회만)
       if (openUrl) window.open(openUrl, "_blank");
 
       // 결과 안내 표시
@@ -6852,9 +7219,9 @@
         if (filled.length) {
           resultEl.innerHTML =
             `<span style="color:#4ade80">✅ 자동입력: ${filled.join(" · ")}</span><br>` +
-            `<span style="color:#9ca3af;font-size:11px">${openUrl ? "결과 페이지가 열렸습니다. " : ""}나머지 수치를 보고 직접 입력하세요.</span>`;
+            `<span style="color:#9ca3af;font-size:11px">${openUrl ? "결과 페이지가 열렸습니다. " : ""}나머지 수치를 보고 확인하세요.</span>`;
         } else {
-          // 파싱 실패 시 원본 데이터 디버그 표시 (관리자가 포맷 분석용)
+          // 파싱 실패 시 원본 데이터 디버그 표시 (포맷 분석용)
           const debugSnip = escapeHtml(bdata.slice(0, 120)) + (bdata.length > 120 ? '…' : '');
           resultEl.innerHTML =
             `<span style="color:#fbbf24">⚠️ 날짜 인식 불가 — 직접 입력해 주세요</span><br>` +
@@ -6873,7 +7240,7 @@
     window.submitInbody = function() {
       const t = document.getElementById("inbody-time").value;
       const weight = parseFloat(document.getElementById("ib-weight").value);
-      if (!t || !weight) { alert("날짜와 체중은 필수입니다"); return; }
+      if (!t || !weight || weight <= 0) { alert("날짜와 체중은 필수입니다"); return; }
       appData.inbodyRecords = appData.inbodyRecords || [];
       appData.inbodyRecords.push({
         id: Date.now(), time: kstInputToMs(t), weight,
@@ -7007,7 +7374,7 @@
 
     function renderInbodyGraph() {
       const canvas = document.getElementById("inbody-chart");
-      if (!canvas) return;
+      if (!canvas || !canvas.offsetWidth) return;  // 탭 숨김 상태 방어
       const recs = [...(appData.inbodyRecords || [])].sort((a, b) => a.time - b.time);
       const dpr = window.devicePixelRatio || 1;
       canvas.width = canvas.offsetWidth * dpr;
@@ -7063,9 +7430,8 @@
           ctx.fillText(vMin.toFixed(1), PAD.l - 3, PAD.t + gH);
         }
       }
-      drawSeries('sm',  '#60a5fa', recs);
-      drawSeries('bfm', '#f87171', recs);
-      // 체지방률: 점선, Y축 레이블 생략 (다른 단위라 겹침 방지)
+      drawSeries('sm',  '#60a5fa', recs);  // Y축 레이블: 첫 시리즈만 표시
+      drawSeries('bfm', '#f87171', recs, { showLabels: false });  // 덮어쓰기 방지
       drawSeries('bfp', '#fbbf24', recs, { dashed: true, showLabels: false });
       // 범례
       let lx = PAD.l + 4;
@@ -8615,16 +8981,30 @@
 
 <!-- 모달: 인바디 기록 추가 -->
 <div id="inbody-modal" class="modal-overlay" onclick="if(event.target===this)closeInbodyModal()">
-  <div class="modal-box">
+  <div class="modal-box" style="max-height:88vh;overflow-y:auto">
     <div class="modal-title">🏋️ 인바디 기록 추가</div>
     <!-- 인바디 QR URL 붙여넣기 -->
     <div style="margin-bottom:12px;padding:10px;background:#1a2035;border-radius:10px;border:1px dashed #374151">
-      <div style="font-size:12px;color:#9ca3af;margin-bottom:8px">📋 인바디 QR 자동입력 <span style="color:#4b5563">(선택)</span></div>
-      <!-- 카메라 스캔 버튼 (메인) -->
-      <button onclick="openInbodyCamera()"
-        style="width:100%;padding:10px;background:linear-gradient(135deg,#059669,#047857);border:none;border-radius:10px;color:white;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;letter-spacing:0.3px">
-        📷 카메라로 QR 스캔
-      </button>
+      <div style="font-size:12px;color:#9ca3af;margin-bottom:8px">⚡ 자동입력 <span style="color:#4b5563">(선택 — QR·사진·CSV 중 택1)</span></div>
+      <!-- 입력 방법 2x2 버튼 그리드 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+        <button onclick="openInbodyCamera()"
+          style="padding:9px 6px;background:linear-gradient(135deg,#059669,#047857);border:none;border-radius:10px;color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">
+          📷 카메라 QR
+        </button>
+        <button onclick="openInbodyImagePicker()"
+          style="padding:9px 6px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border:none;border-radius:10px;color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">
+          🖼️ 갤러리 QR
+        </button>
+        <button onclick="openInbodyPhotoPicker()"
+          style="padding:9px 6px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border:none;border-radius:10px;color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">
+          📸 결과지 사진
+        </button>
+        <button onclick="openInbodyCsvPicker()"
+          style="padding:9px 6px;background:#1f2937;border:1px solid #374151;border-radius:10px;color:#9ca3af;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">
+          📊 CSV 파일
+        </button>
+      </div>
       <!-- URL 직접 붙여넣기 (보조) -->
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
         <div style="flex:1;height:1px;background:#374151"></div>
