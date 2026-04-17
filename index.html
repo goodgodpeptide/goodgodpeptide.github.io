@@ -5627,13 +5627,27 @@
       box.style.cssText = `background:${C.bg};border-top:2px solid #3b82f6;border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom);color:${C.txt};font-family:inherit;`;
 
       box.innerHTML = `
-        <div style="position:sticky;top:0;background:${C.bgHdr};padding:16px 20px 12px;border-bottom:1px solid ${C.border};z-index:1;display:flex;justify-content:space-between;align-items:start">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:22px;font-weight:800;color:${C.txt};margin-bottom:3px;line-height:1.2">${pep.nameEn}</div>
-            <div style="font-size:11px;color:${C.txtFaint};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pep.subtitle || ''}</div>
+        <div style="position:sticky;top:0;background:${C.bgHdr};padding:16px 20px 12px;border-bottom:1px solid ${C.border};z-index:1">
+          <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:22px;font-weight:800;color:${C.txt};margin-bottom:3px;line-height:1.2">${pep.nameEn}</div>
+              <div style="font-size:11px;color:${C.txtFaint};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pep.subtitle || ''}</div>
+            </div>
+            <button onclick="document.getElementById('enc-modal').remove()"
+              style="background:none;border:none;color:${C.txtMuted};font-size:24px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-left:12px">✕</button>
           </div>
-          <button onclick="document.getElementById('enc-modal').remove()"
-            style="background:none;border:none;color:${C.txtMuted};font-size:24px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;margin-left:12px">✕</button>
+          <div style="display:flex;gap:8px">
+            <button id="enc-translate-btn" onclick="encTranslateToggle('${peptideId}')"
+              style="flex:1;padding:7px 0;background:${C.bgCard};border:1px solid ${C.border};border-radius:8px;
+                     color:${C.accent};font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">
+              🌐 한국어 번역
+            </button>
+            <button onclick="window.open(location.href,'_blank')"
+              style="flex:1;padding:7px 0;background:${C.bgCard};border:1px solid ${C.border};border-radius:8px;
+                     color:${C.txtSub};font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">
+              🔗 브라우저에서 열기
+            </button>
+          </div>
         </div>
 
         <div style="padding:16px 20px 0">
@@ -5648,9 +5662,9 @@
           ${pep.descriptionEn ? `
           <div class="enc-section">
             <div class="enc-section-title">📖 개요</div>
-            <p style="margin:0;color:${C.txtMuted};font-size:13px;line-height:1.7">${pep.descriptionEn}</p>
-            ${pep.keyBenefits ? `<div style="margin-top:10px;padding:10px;background:${C.bgCard};border-radius:8px;font-size:12px;color:${C.txtSub}"><strong style="color:${C.accent}">주요 이점:</strong> ${pep.keyBenefits}</div>` : ''}
-            ${pep.mechanism ? `<div style="margin-top:8px;padding:10px;background:${C.bgCard};border-radius:8px;font-size:12px;color:${C.txtSub}"><strong style="color:${C.accent}">작용 메커니즘:</strong> ${pep.mechanism}</div>` : ''}
+            <p data-enc-tr="desc" style="margin:0;color:${C.txtMuted};font-size:13px;line-height:1.7">${pep.descriptionEn}</p>
+            ${pep.keyBenefits ? `<div style="margin-top:10px;padding:10px;background:${C.bgCard};border-radius:8px;font-size:12px;color:${C.txtSub}"><strong style="color:${C.accent}">주요 이점:</strong> <span data-enc-tr="benefits">${pep.keyBenefits}</span></div>` : ''}
+            ${pep.mechanism ? `<div style="margin-top:8px;padding:10px;background:${C.bgCard};border-radius:8px;font-size:12px;color:${C.txtSub}"><strong style="color:${C.accent}">작용 메커니즘:</strong> <span data-enc-tr="mechanism">${pep.mechanism}</span></div>` : ''}
           </div>` : ''}
 
           ${pkHTML}
@@ -5665,7 +5679,7 @@
         </div>
 
         <div style="padding:16px 20px 24px">
-          <button onclick="document.getElementById('enc-modal').remove()"
+          <button onclick="document.getElementById('enc-modal').remove();window._encTranslated=false;window._encOrigTexts={};"
             style="width:100%;padding:14px;background:${C.closeBtn};border:1px solid ${C.closeBtnBdr};border-radius:12px;color:${C.closeBtnTxt};font-size:15px;font-weight:700;cursor:pointer;font-family:inherit">
             닫기
           </button>
@@ -5673,8 +5687,70 @@
 
       modal.id = 'enc-modal';
       modal.appendChild(box);
-      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+      modal.addEventListener('click', e => {
+        if (e.target === modal) {
+          modal.remove();
+          window._encTranslated = false;
+          window._encOrigTexts = {};
+        }
+      });
       document.body.appendChild(modal);
+      window._encTranslated = false;
+      window._encOrigTexts = {};
+    };
+
+    // ── 백과사전 모달 번역 토글 ────────────────────────────
+    window._encTranslated = false;
+    window._encOrigTexts  = {};
+
+    async function gtranslate(text) {
+      if (!text || !text.trim()) return text;
+      try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(text)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        return (data[0] || []).map(chunk => chunk[0] || '').join('');
+      } catch(e) {
+        return text;
+      }
+    }
+
+    window.encTranslateToggle = async function(peptideId) {
+      const modal = document.getElementById('enc-modal');
+      if (!modal) return;
+      const btn = document.getElementById('enc-translate-btn');
+      const els = modal.querySelectorAll('[data-enc-tr]');
+      if (!els.length) { showToast('번역할 영문 텍스트가 없습니다'); return; }
+
+      // 원문 복원 모드
+      if (window._encTranslated) {
+        els.forEach(el => {
+          const key = el.dataset.encTr;
+          if (window._encOrigTexts[key]) el.textContent = window._encOrigTexts[key];
+        });
+        window._encTranslated = false;
+        if (btn) btn.textContent = '🌐 한국어 번역';
+        return;
+      }
+
+      // 번역 모드
+      if (btn) { btn.textContent = '⏳ 번역 중...'; btn.disabled = true; }
+      window._encOrigTexts = {};
+
+      try {
+        for (const el of els) {
+          const key = el.dataset.encTr;
+          const orig = el.textContent.trim();
+          window._encOrigTexts[key] = orig;
+          const translated = await gtranslate(orig);
+          el.textContent = translated;
+        }
+        window._encTranslated = true;
+        if (btn) { btn.textContent = '📄 원문 보기'; btn.disabled = false; }
+      } catch(e) {
+        if (btn) { btn.textContent = '🌐 한국어 번역'; btn.disabled = false; }
+        showToast('번역 실패 — 인터넷 연결을 확인하세요');
+      }
     };
 
     // ══════════════════════════════════════════════
