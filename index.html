@@ -7251,7 +7251,7 @@
       const modal = document.getElementById('donation-modal');
       modal.style.display = 'flex';
       _applyDonationTheme();
-      switchDonTab('kakao');
+      switchDonTab('usdt');
       history.pushState({ modal: true }, '');
     };
 
@@ -7288,24 +7288,11 @@
     };
 
     window.switchDonTab = function(tab) {
-      const isKakao = tab === 'kakao';
-      document.getElementById('don-panel-kakao').style.display = isKakao ? 'block' : 'none';
-      document.getElementById('don-panel-usdt').style.display  = isKakao ? 'none'  : 'block';
-
-      const btnKakao = document.getElementById('don-tab-kakao');
-      const btnUsdt  = document.getElementById('don-tab-usdt');
-      const isLight  = document.body.classList.contains('light-mode');
-      const inactBg  = isLight ? '#f3f4f6' : 'none';
-      const inactClr = isLight ? '#6b7280' : '#6b7280';
-
-      if (isKakao) {
-        btnKakao.style.cssText += ';border-color:#fbbf24;background:#fbbf2422;color:#fbbf24';
-        btnUsdt.style.cssText  += `;border-color:${isLight?'#d1d5db':'#374151'};background:${inactBg};color:${inactClr}`;
-      } else {
-        btnUsdt.style.cssText  += ';border-color:#3b82f6;background:#3b82f622;color:#60a5fa';
-        btnKakao.style.cssText += `;border-color:${isLight?'#d1d5db':'#374151'};background:${inactBg};color:${inactClr}`;
-        switchDonNetwork(_donCurrentNet);
-      }
+      // 카카오페이 비활성화 (실명 노출 문제, 2026-04-17) — 항상 USDT 탭 표시
+      // const isKakao = tab === 'kakao';
+      // document.getElementById('don-panel-kakao').style.display = isKakao ? 'block' : 'none';
+      document.getElementById('don-panel-usdt').style.display = 'block';
+      switchDonNetwork(_donCurrentNet);
     };
 
     window.switchDonNetwork = function(net) {
@@ -8756,7 +8743,8 @@
       <button id="don-modal-close-x" onclick="closeDonationModal()" style="background:none;border:none;color:#6b7280;font-size:24px;cursor:pointer;padding:0;line-height:1">✕</button>
     </div>
 
-    <!-- 탭 -->
+    <!-- 탭 (카카오페이 실명 노출 문제로 비활성화 2026-04-17) -->
+    <!--
     <div style="display:flex;padding:12px 20px 0;gap:8px">
       <button id="don-tab-kakao" onclick="switchDonTab('kakao')"
         style="flex:1;padding:9px;border-radius:10px;border:1.5px solid #fbbf24;background:#fbbf2422;color:#fbbf24;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
@@ -8767,8 +8755,10 @@
         💵 USDT (코인)
       </button>
     </div>
+    -->
 
-    <!-- 카카오페이 탭 -->
+    <!-- 카카오페이 탭 — 실명 노출 문제로 비활성화 (2026-04-17) -->
+    <!--
     <div id="don-panel-kakao" style="padding:20px">
       <div style="text-align:center;margin-bottom:14px">
         <img src="kakao_qr.png" alt="카카오페이 QR"
@@ -8785,9 +8775,10 @@
         완전한 익명을 원하신다면 <span style="color:#60a5fa;font-weight:600">USDT 코인 탭</span>을 이용해주세요.
       </div>
     </div>
+    -->
 
-    <!-- USDT 탭 -->
-    <div id="don-panel-usdt" style="display:none;padding:20px">
+    <!-- USDT 탭 (현재 유일한 후원 수단) -->
+    <div id="don-panel-usdt" style="padding:20px">
 
       <!-- 네트워크 선택 버튼 -->
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
@@ -8844,7 +8835,7 @@
             <select id="don-cert-method"
               style="width:100%;padding:9px 12px;background:#0d0d1a;border:1px solid #374151;border-radius:8px;
                      color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
-              <option value="kakao">💛 카카오페이</option>
+              <!-- <option value="kakao">💛 카카오페이</option> -->
               <option value="usdt_sol">💵 USDT (SOL)</option>
               <option value="usdt_bsc">💵 USDT (BSC)</option>
               <option value="usdt_trc20">💵 USDT (TRC20)</option>
