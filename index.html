@@ -2087,6 +2087,11 @@
 
     // ── 복용 알림 푸시 ──────────────────────────────
     window.toggleNotification = async function() {
+      // iOS 구버전 등 Notification API 미지원 브라우저 방어
+      if (typeof Notification === "undefined") {
+        alert("이 브라우저는 알림을 지원하지 않습니다. (iOS 16.4+ PWA 필요)");
+        return;
+      }
       const btn = document.getElementById("s-notify-btn");
       if (Notification.permission === "granted" && appData.notifyEnabled) {
         appData.notifyEnabled = false;
@@ -2111,10 +2116,12 @@
     window.scheduleNotifications = function() {
       _notifyTimers.forEach(t => clearTimeout(t));
       _notifyTimers = [];
+      if (typeof Notification === "undefined") return;
       if (!appData.notifyEnabled || Notification.permission !== "granted") return;
 
       const nowKST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-      const todayStr = `${nowKST.getFullYear()}${String(nowKST.getMonth()+1).padStart(2,'0')}${String(nowKST.getDate()).padStart(2,'0')}`;
+      // shouldTakeOnDate는 'YYYY-MM-DD' 포맷 필요 (dateDiffDays/weekdays 계산에서 날짜 파싱 사용)
+      const todayStr = `${nowKST.getFullYear()}-${String(nowKST.getMonth()+1).padStart(2,'0')}-${String(nowKST.getDate()).padStart(2,'0')}`;
 
       const [hh, mm] = (appData.notifyTime || "09:00").split(":").map(Number);
       const notifyAt = new Date(nowKST);
@@ -2122,7 +2129,8 @@
       const delay = notifyAt - nowKST;
       if (delay < 0) return; // 오늘치 이미 지남
 
-      const dueDrugs = Object.keys(DRUG_CONFIG).filter(drug =>
+      // getActiveDrugs(): 사용자가 활성화한 약물만 (미설정 시 전체)
+      const dueDrugs = getActiveDrugs().filter(drug =>
         shouldTakeOnDate((appData.drugSchedules || {})[drug], todayStr)
       );
       if (!dueDrugs.length) return;
@@ -2142,10 +2150,12 @@
       const inp = document.getElementById("s-notify-time");
       if (inp && appData.notifyTime) inp.value = appData.notifyTime;
       if (!btn) return;
-      if (appData.notifyEnabled && Notification.permission === "granted") {
+      const notifSupported = typeof Notification !== "undefined";
+      if (notifSupported && appData.notifyEnabled && Notification.permission === "granted") {
         btn.textContent = "🔕 끄기"; btn.style.background = "#dc2626";
       } else {
         btn.textContent = "🔔 켜기"; btn.style.background = "#1d4ed8";
+        if (!notifSupported) btn.title = "이 브라우저는 알림을 지원하지 않습니다";
       }
     };
 
