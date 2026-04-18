@@ -2001,7 +2001,7 @@
                   style="width:24px;height:24px;border-radius:50%;flex-shrink:0;cursor:pointer;
                          border:2px solid ${done?"#4ade80":(isLight?"#d1d5db":"#374151")};
                          background:${done?"#4ade80":"transparent"};
-                         font-size:12px;font-weight:700;color:${isLight?"#fff":"#0a0a14"};line-height:1">
+                         font-size:12px;font-weight:700;color:${done?(isLight?"#0a0a14":"#0a0a14"):"transparent"};line-height:1">
                   ${done?"✓":""}
                 </button>
                 <div style="flex:1">
@@ -3649,7 +3649,8 @@
       }
 
       if (allRecs.length < 1) {
-        ctx.fillStyle = "#4a5568"; ctx.font = "14px 'Noto Sans KR'"; ctx.textAlign = "center";
+        const isLW0 = document.body.classList.contains("light-mode");
+        ctx.fillStyle = isLW0 ? "#94a3b8" : "#4a5568"; ctx.font = "14px 'Noto Sans KR'"; ctx.textAlign = "center";
         ctx.fillText(allRecs.length === 0 ? "기록이 없습니다" : "해당 기간 기록 없음", cW/2, cH/2); return;
       }
       if (allRecs.length < 2) {
@@ -3679,7 +3680,8 @@
       // 가시 범위 내 기록만 필터링
       allRecs = allRecs.filter(r => r.time >= fullMinT);
       if (allRecs.length < 2) {
-        ctx.fillStyle = "#4a5568"; ctx.font = "13px 'Noto Sans KR'"; ctx.textAlign = "center";
+        const isLW1 = document.body.classList.contains("light-mode");
+        ctx.fillStyle = isLW1 ? "#94a3b8" : "#4a5568"; ctx.font = "13px 'Noto Sans KR'"; ctx.textAlign = "center";
         ctx.fillText("해당 기간 기록 없음", cW/2, cH/2); return;
       }
       const weights = allRecs.map(r => r.weight);
@@ -3705,15 +3707,16 @@
         ctx.beginPath(); ctx.moveTo(x, PAD.t); ctx.lineTo(x, PAD.t + gH); ctx.stroke();
       }
       // 가로 그리드 + y축 레이블
+      const axisClr = isLightW ? "#94a3b8" : "#4a5568";
       for (let i = 0; i <= ySteps; i++) {
         const y = PAD.t + (i / ySteps) * gH;
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
-        ctx.fillStyle = "#4a5568"; ctx.font = "10px 'JetBrains Mono'"; ctx.textAlign = "right";
+        ctx.fillStyle = axisClr; ctx.font = "10px 'JetBrains Mono'"; ctx.textAlign = "right";
         ctx.fillText((maxW - (i / ySteps) * rangeW).toFixed(1), PAD.l - 5, y + 4);
       }
 
-      // x축 레이블 (KST 보정) - 그리드 개수에 맞춰
-      ctx.fillStyle = "#4a5568"; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
+      // x축 레이블
+      ctx.fillStyle = axisClr; ctx.font = "10px 'Noto Sans KR'"; ctx.textAlign = "center";
       for (let i = 0; i <= xGridCount; i++) {
         const f = i / xGridCount;
         const t = minT + f * rangeT;
