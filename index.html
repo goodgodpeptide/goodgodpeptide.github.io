@@ -3799,25 +3799,6 @@
             </div>`;
         } else if (targetRow) { targetRow.innerHTML = ""; }
 
-        // 최근 추세
-        const trendRow = el("stat-trend-row");
-        if (trendRow && recs.length >= 4) {
-          const last7 = recs.filter(r => r.time >= Date.now() - 7*86400000);
-          const prev7 = recs.filter(r => r.time >= Date.now() - 14*86400000 && r.time < Date.now() - 7*86400000);
-          if (last7.length && prev7.length) {
-            const avg7 = last7.reduce((s,r) => s+r.weight, 0) / last7.length;
-            const avgPrev = prev7.reduce((s,r) => s+r.weight, 0) / prev7.length;
-            const weekDiff = avg7 - avgPrev;
-            trendRow.innerHTML = `
-              <div style="display:flex;gap:8px;font-size:11px;color:#4a5568;align-items:center">
-                <span>주간 추세</span>
-                <span style="font-weight:700;color:${weekDiff<0?'#4ade80':'#f87171'};font-family:'JetBrains Mono'">${weekDiff>0?'+':''}${weekDiff.toFixed(2)}kg/주</span>
-                <span>·</span>
-                <span>이번주 평균 ${avg7.toFixed(1)}kg</span>
-              </div>`;
-          } else { trendRow.innerHTML = ""; }
-        } else if (trendRow) { trendRow.innerHTML = ""; }
-
         // 주간 변화 카드
         const trendRow = el("stat-trend-row");
         if (trendRow) {
