@@ -3599,40 +3599,6 @@
       ctx.lineTo(PAD.l, PAD.t + gH); ctx.closePath();
       ctx.fillStyle = grad; ctx.fill();
 
-      // 7일 이동평균선 (데이터 3개 이상일 때만)
-      if (allRecs.length >= 3) {
-        const maColor = isLightW ? "#2563eb" : "#93c5fd";
-        const maPoints = allRecs.map(r => {
-          const win7d = allRecs.filter(x => x.time >= r.time - 7*86400000 && x.time <= r.time);
-          const avg = win7d.reduce((s, x) => s + x.weight, 0) / win7d.length;
-          return { time: r.time, avg };
-        });
-        ctx.shadowBlur = 0; // 이전 그림자 효과 초기화
-        ctx.beginPath();
-        ctx.strokeStyle = maColor;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([6, 3]);
-        maPoints.forEach((p, i) => {
-          const x = PAD.l + ((p.time - minT) / rangeT) * gW;
-          const y = PAD.t + gH - ((p.avg - minW) / rangeW) * gH;
-          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        });
-        ctx.stroke();
-        ctx.setLineDash([]);
-        // 범례 배지
-        ctx.font = "bold 10px 'Noto Sans KR'";
-        ctx.textAlign = "right";
-        const labelText = "📊 7일 평균";
-        const lw = ctx.measureText(labelText).width;
-        const lx = PAD.l + gW - 4, ly = PAD.t + 14;
-        ctx.fillStyle = isLightW ? "#dbeafe" : "#1e3a5f";
-        ctx.beginPath();
-        ctx.roundRect(lx - lw - 8, ly - 11, lw + 12, 16, 4);
-        ctx.fill();
-        ctx.fillStyle = maColor;
-        ctx.fillText(labelText, lx, ly);
-      }
-
       // 실제 체중 선
       ctx.beginPath(); ctx.strokeStyle = "#4ade80"; ctx.lineWidth = 2.5;
       ctx.shadowColor = "#4ade80"; ctx.shadowBlur = 8;
