@@ -172,6 +172,7 @@
         updateNicknameAvatar();
         fetchFxRates(); // 초기 환율 로드 (비동기, UI 블로킹 없음)
         setTimeout(runWeeklyBackup, 3000); // 로그인 후 3초 뒤 주간 백업 체크 (UI 블로킹 없음)
+        setTimeout(scheduleNotifications, 1000); // 복용 알림 예약 (appData 로드 후)
       } else {
         document.getElementById("login-screen").style.display = "flex";
         document.getElementById("pending-screen").style.display = "none";
@@ -2080,7 +2081,72 @@
       appData.targetWeight = document.getElementById("s-target").value;
       appData.age = document.getElementById("s-age")?.value || appData.age;
       appData.activity = document.getElementById("s-activity")?.value || appData.activity || "1.55";
+      appData.notifyTime = document.getElementById("s-notify-time")?.value || appData.notifyTime || "09:00";
       scheduleSave(); renderAll();
+    };
+
+    // ── 복용 알림 푸시 ──────────────────────────────
+    window.toggleNotification = async function() {
+      const btn = document.getElementById("s-notify-btn");
+      if (Notification.permission === "granted" && appData.notifyEnabled) {
+        appData.notifyEnabled = false;
+        scheduleSave();
+        if (btn) { btn.textContent = "🔔 켜기"; btn.style.background = "#1d4ed8"; }
+        return;
+      }
+      let perm = Notification.permission;
+      if (perm === "default") perm = await Notification.requestPermission();
+      if (perm !== "granted") {
+        alert("알림 권한이 거부되었습니다. 브라우저 설정에서 알림을 허용해주세요.");
+        return;
+      }
+      appData.notifyEnabled = true;
+      appData.notifyTime = document.getElementById("s-notify-time")?.value || appData.notifyTime || "09:00";
+      scheduleSave();
+      if (btn) { btn.textContent = "🔕 끄기"; btn.style.background = "#dc2626"; }
+      scheduleNotifications();
+    };
+
+    let _notifyTimers = [];
+    window.scheduleNotifications = function() {
+      _notifyTimers.forEach(t => clearTimeout(t));
+      _notifyTimers = [];
+      if (!appData.notifyEnabled || Notification.permission !== "granted") return;
+
+      const nowKST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+      const todayStr = `${nowKST.getFullYear()}${String(nowKST.getMonth()+1).padStart(2,'0')}${String(nowKST.getDate()).padStart(2,'0')}`;
+
+      const [hh, mm] = (appData.notifyTime || "09:00").split(":").map(Number);
+      const notifyAt = new Date(nowKST);
+      notifyAt.setHours(hh, mm, 0, 0);
+      const delay = notifyAt - nowKST;
+      if (delay < 0) return; // 오늘치 이미 지남
+
+      const dueDrugs = Object.keys(DRUG_CONFIG).filter(drug =>
+        shouldTakeOnDate((appData.drugSchedules || {})[drug], todayStr)
+      );
+      if (!dueDrugs.length) return;
+
+      const t = setTimeout(() => {
+        dueDrugs.forEach(drug => {
+          try { new Notification("💊 복용 알림", { body: `${drug} 복용 시간입니다.`, icon: "/icon-192.png" }); }
+          catch(e) {}
+        });
+      }, delay);
+      _notifyTimers.push(t);
+    };
+
+    // 설정 탭 열릴 때 버튼/시간 필드 상태 동기화
+    window._syncNotifyBtn = function() {
+      const btn = document.getElementById("s-notify-btn");
+      const inp = document.getElementById("s-notify-time");
+      if (inp && appData.notifyTime) inp.value = appData.notifyTime;
+      if (!btn) return;
+      if (appData.notifyEnabled && Notification.permission === "granted") {
+        btn.textContent = "🔕 끄기"; btn.style.background = "#dc2626";
+      } else {
+        btn.textContent = "🔔 켜기"; btn.style.background = "#1d4ed8";
+      }
     };
 
     // ══════════════════════════════════════════════
@@ -5218,6 +5284,7 @@
       if (tab === "encyclopedia") setTimeout(loadEncyclopedia, 50);
       if (tab === "community") setTimeout(loadCommunity, 50);
       else if (communityUnsubscribe && tab !== "community") { communityUnsubscribe(); communityUnsubscribe = null; }
+      if (tab === "settings") setTimeout(_syncNotifyBtn, 50);
     };
 
     // ══════════════════════════════════════════════
@@ -5225,6 +5292,49 @@
     // ══════════════════════════════════════════════
     let encyclopediaData = null;
     let encFilterStatus = '';
+
+    const TAG_KO = {
+      'Aging':'항노화','Anti Aging':'항노화','Anti Inflammatory':'항염증','Anti Wrinkle':'주름 개선',
+      'Antioxidant Support':'항산화','Anxiety':'항불안','Appetite Control':'식욕 억제',
+      'Athletic Recovery':'운동 회복','Autoimmune':'자가면역','Body Composition':'체성분',
+      'Cardiovascular':'심혈관','Cellular':'세포 건강','Cognitive':'인지 기능',
+      'Detoxification':'해독','Diabetes':'당뇨','Endocrine':'내분비',
+      'Energy Metabolism':'에너지 대사','Exercise':'운동','Exercise Performance':'운동 퍼포먼스',
+      'Fat Loss':'지방 감소','Fat Metabolism':'지방 대사','Forehead Wrinkle Treatment':'이마 주름',
+      'Gastrointestinal':'소화기','Growth Hormone':'성장호르몬','Hair Growth':'모발 성장',
+      'Hormonal':'호르몬','Hormone Restoration':'호르몬 회복','Immune':'면역',
+      'Immune Function':'면역 기능','Immunity':'면역력','Inflammation':'염증',
+      'Inflammatory':'항염','Insulin Sensitivity':'인슐린 감수성','Joint':'관절',
+      'Joint Health':'관절 건강','Kidney Protection':'신장 보호','Liver Health':'간 건강',
+      'Longevity':'장수','Memory':'기억력','Metabolic':'대사','Metabolic Health':'대사 건강',
+      'Metabolism':'대사','Mitochondrial':'미토콘드리아','Mood':'기분',
+      'Muscle Growth':'근육 성장','Muscle Relaxation':'근육 이완','Muscle Repair':'근육 회복',
+      'Neurological':'신경계','Neurological Health':'신경 건강','Neurological Support':'신경 지원',
+      'Neuroplasticity':'신경 가소성','Neuroprotection':'신경 보호','Neuroprotective':'신경 보호',
+      'Post-Traumatic Stress Disorder':'PTSD','Prostate Health':'전립선 건강',
+      'Recovery':'회복','Reproductive':'생식','Sexual':'성 기능',
+      'Skin Health':'피부 건강','Skin Regeneration':'피부 재생','Sleep':'수면',
+      'Tissue Regeneration':'조직 재생','Tissue Repair':'조직 회복',
+      'Weight Loss':'체중 감량','Wound Healing':'상처 치유',
+      'Obstetric':'산과','Research':'연구','Off Label Research':'비허가 연구',
+    };
+
+    function encHighlight(text, q) {
+      if (!q || !text) return escapeHtml(text || '');
+      const safe = escapeHtml(text);
+      const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi');
+      return safe.replace(re, m => `<mark style="background:#fbbf2455;color:inherit;border-radius:2px">${m}</mark>`);
+    }
+
+    function getEncRecent() {
+      try { return JSON.parse(localStorage.getItem('enc_recent') || '[]'); } catch { return []; }
+    }
+    function addEncRecent(id) {
+      let recent = getEncRecent().filter(x => x !== id);
+      recent.unshift(id);
+      recent = recent.slice(0, 6);
+      try { localStorage.setItem('enc_recent', JSON.stringify(recent)); } catch {}
+    }
 
     window.loadEncyclopedia = async function() {
       try {
@@ -5294,7 +5404,9 @@
       }
 
       const isLightEnc = document.body.classList.contains("light-mode");
-      grid.innerHTML = list.map(p => {
+      const recent = getEncRecent();
+
+      function encCard(p, highlight) {
         const st = ENC_STATUS[p.researchStatus] || ENC_STATUS['Limited Research'];
         const routes = (p.routes||[]).join(' / ') || 'N/A';
         const cardBg = isLightEnc ? '#ffffff' : '#111827';
@@ -5305,11 +5417,14 @@
         const tagClr = isLightEnc ? '#475569' : '#94a3b8';
         const routeClr = isLightEnc ? '#2563eb' : '#60a5fa';
         const arrowClr = isLightEnc ? '#9ca3af' : '#374151';
+        const nameKo = encyclopediaData.peptides[p.id]?.nameKo || '';
         const tags = (p.tags||[]).slice(0,3).map(t =>
-          `<span style="padding:2px 7px;background:${tagBg};border-radius:4px;font-size:10px;color:${tagClr}">${t}</span>`
+          `<span style="padding:2px 7px;background:${tagBg};border-radius:4px;font-size:10px;color:${tagClr}">${TAG_KO[t]||t}</span>`
         ).join('');
         const abbr = p.nameEn.replace(/[^A-Z0-9]/g,'').slice(0,3) || p.nameEn.slice(0,3).toUpperCase();
         const doseStr = p.typicalDose ? `<span style="font-size:11px;color:#6b7280">${p.typicalDose}</span>` : '';
+        const nameHtml = highlight ? encHighlight(p.nameEn, q) : escapeHtml(p.nameEn);
+        const nameKoHtml = nameKo ? `<span style="font-size:11px;color:${tagClr};font-weight:500;margin-left:2px">${highlight ? encHighlight(nameKo, q) : escapeHtml(nameKo)}</span>` : '';
 
         return `<div onclick="openEncyclopediaModal('${p.id}')"
           style="background:${cardBg};border:1px solid ${cardBd};border-radius:12px;padding:14px 16px;
@@ -5320,8 +5435,9 @@
             ${abbr}
           </div>
           <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;flex-wrap:wrap">
-              <span style="font-weight:700;font-size:15px;color:${nameClr}">${p.nameEn}</span>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap">
+              <span style="font-weight:700;font-size:15px;color:${nameClr}">${nameHtml}</span>
+              ${nameKoHtml}
               <span style="padding:2px 8px;background:${st.bg};border-radius:20px;font-size:10px;color:${st.color};white-space:nowrap">
                 ${st.label}
               </span>
@@ -5337,7 +5453,20 @@
           </div>
           <div style="color:${arrowClr};font-size:18px;flex-shrink:0">›</div>
         </div>`;
-      }).join('');
+      }
+
+      // 최근 본 펩타이드 섹션
+      const recentValid = recent.filter(id => encyclopediaData.peptides[id] && list.find(p => p.id === id));
+      let recentHTML = '';
+      if (!q && !encFilterStatus && recentValid.length > 0) {
+        const recentLabel = isLightEnc ? '#374151' : '#94a3b8';
+        recentHTML = `<div style="font-size:11px;color:${recentLabel};font-weight:600;letter-spacing:0.5px;margin-bottom:8px;padding:0 2px">🕐 최근 본 펩타이드</div>
+          ${recentValid.map(id => encCard(list.find(p=>p.id===id), false)).join('')}
+          <div style="height:1px;background:${isLightEnc?'#e2e8f0':'#1f2937'};margin:12px 0 8px"></div>
+          <div style="font-size:11px;color:${recentLabel};font-weight:600;letter-spacing:0.5px;margin-bottom:8px;padding:0 2px">📋 전체 목록</div>`;
+      }
+
+      grid.innerHTML = recentHTML + list.map(p => encCard(p, !!q)).join('');
     };
 
     // 투약 카드에서 직접 백과사전 모달 열기 (탭 전환 없이)
@@ -5378,6 +5507,8 @@
       if (!encyclopediaData) return;
       const pep = encyclopediaData.peptides[peptideId];
       if (!pep) return;
+      // 최근 본 목록에 저장
+      addEncRecent(peptideId);
       // 새 모달 열 때 번역 상태 초기화
       window._encViewMode = 'en';
       window._encOrigTexts = {};
@@ -8885,6 +9016,12 @@
             <div><label>키 (cm)</label><input id="s-height" class="input-field" type="number" placeholder="170" oninput="saveSettings()" /></div>
             <div><label>나이</label><input id="s-age" class="input-field" type="number" placeholder="30" oninput="saveSettings()" /></div>
             <div><label>목표 체중 (kg)</label><input id="s-target" class="input-field" type="number" placeholder="65" oninput="saveSettings()" /></div>
+            <div><label>복용 알림 시간</label>
+              <div style="display:flex;gap:6px;align-items:center">
+                <input id="s-notify-time" class="input-field" type="time" value="09:00" oninput="saveSettings();scheduleNotifications()" style="flex:1" />
+                <button id="s-notify-btn" onclick="toggleNotification()" style="background:#1d4ed8;border:none;border-radius:8px;color:white;padding:6px 10px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">🔔 켜기</button>
+              </div>
+            </div>
             <div><label>활동 수준</label>
               <select id="s-activity" class="input-field" onchange="saveSettings()">
                 <option value="1.2">거의 안 움직임</option>
@@ -9618,8 +9755,31 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(e => console.error('SW 등록 실패:', e));
+        navigator.serviceWorker.register('/sw.js').then(reg => {
+          // 새 버전 감지 → 업데이트 배너 표시
+          reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            nw.addEventListener('statechange', () => {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                showSwUpdateBanner();
+              }
+            });
+          });
+        }).catch(e => console.error('SW 등록 실패:', e));
+
+        navigator.serviceWorker.addEventListener('message', e => {
+          if (e.data?.type === 'SW_UPDATED') showSwUpdateBanner();
+        });
       });
+    }
+
+    function showSwUpdateBanner() {
+      if (document.getElementById('sw-update-banner')) return;
+      const banner = document.createElement('div');
+      banner.id = 'sw-update-banner';
+      banner.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:#1d4ed8;color:white;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px #0008;display:flex;align-items:center;gap:12px;white-space:nowrap';
+      banner.innerHTML = `🔄 새 버전이 있습니다 <button onclick="location.reload()" style="background:white;color:#1d4ed8;border:none;border-radius:10px;padding:4px 12px;font-size:12px;font-weight:700;cursor:pointer">새로고침</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#93c5fd;font-size:18px;cursor:pointer;line-height:1">✕</button>`;
+      document.body.appendChild(banner);
     }
   </script>
 </body>
