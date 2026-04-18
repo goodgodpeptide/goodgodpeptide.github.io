@@ -5266,7 +5266,15 @@
       const statusOrder = ['Extensively Studied','Well Researched','Clinical Research','Emerging Research','Limited Research'];
 
       let list = encyclopediaData.index.filter(p => {
-        const nameMatch = !q || p.nameEn.toLowerCase().includes(q) || (p.subtitle||'').toLowerCase().includes(q) || (p.tags||[]).some(t=>t.toLowerCase().includes(q));
+        if (!q) return !encFilterStatus || p.researchStatus === encFilterStatus;
+        const full = encyclopediaData.peptides[p.id] || {};
+        const nameMatch = p.nameEn.toLowerCase().includes(q)
+          || (p.subtitle||'').toLowerCase().includes(q)
+          || (full.nameKo||'').includes(q)
+          || (full.subtitleKo||'').includes(q)
+          || (full.descriptionKo||'').slice(0,300).includes(q)
+          || (full.descriptionEn||'').toLowerCase().slice(0,300).includes(q)
+          || (p.tags||[]).some(t => t.toLowerCase().includes(q));
         const statusMatch = !encFilterStatus || p.researchStatus === encFilterStatus;
         return nameMatch && statusMatch;
       });
@@ -9607,5 +9615,12 @@
   </div>
 </div>
 
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(e => console.error('SW 등록 실패:', e));
+      });
+    }
+  </script>
 </body>
 </html>
