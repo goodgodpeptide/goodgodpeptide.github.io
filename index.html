@@ -7469,10 +7469,6 @@
         /Percent Body Fat\s*[^\d]{0,20}([\d]+\.?[\d]*)/i,
         /PBF\s*[^\d]{0,12}([\d]+\.?[\d]*)/i
       );
-      const vfl = extract(
-        /내\s*장\s*지\s*방\s*(?:레\s*벨|등\s*급|수\s*준)?\s*[^\d]{0,10}([\d]+)/,
-        /Visceral Fat\s*(?:Level)?\s*[^\d]{0,10}([\d]+)/i
-      );
       const bmr = extract(
         /기\s*초\s*대\s*사\s*량\s*[^\d]{0,10}([\d]{3,5})/,
         /BMR\s*[^\d]{0,10}([\d]{3,5})/i,
@@ -7482,7 +7478,7 @@
       setF('ib-weight', weight, '체중');
       setF('ib-sm',     sm,     '골격근량');
       setF('ib-bfm',    bfm,    '체지방량');
-      setF('ib-vfl',    vfl,    '내장지방레벨');
+      // 내장지방레벨: URL/QR 내 위치 미확인 → 자동입력 비활성화 (수동 입력만)
       setF('ib-bmr',    bmr,    'BMR');
 
       if (bfp > 0) {
