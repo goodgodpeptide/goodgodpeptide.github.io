@@ -2181,8 +2181,11 @@
     };
 
     let weightRangeDays = 0; // 0=전체
+    let weightZoom = { scale: 1, offsetX: 0 }; // 체중 그래프 줌/팬 상태
+    let _weightFullRange = 0, _weightMinT = 0;  // renderWeightGraph가 기록하는 범위값
     window.setWeightRange = (days) => {
       weightRangeDays = days;
+      weightZoom = { scale: 1, offsetX: 0 }; // 범위 변경 시 줌 초기화
       document.querySelectorAll(".wrange-btn").forEach(b => b.classList.remove("active"));
       document.querySelector(`.wrange-btn[data-days="${days}"]`)?.classList.add("active");
       renderWeightGraph();
@@ -3364,6 +3367,143 @@
     }
 
     // ══════════════════════════════════════════════
+    // 체중 그래프 터치/마우스 — 줌 + 팬 + 툴팁
+    // ══════════════════════════════════════════════
+    function initWeightGraphTouch() {
+      const canvas = document.getElementById("weight-chart");
+      if (!canvas || canvas._touchInit) return;
+      canvas._touchInit = true;
+      const PAD_L = 48, PAD_R = 16;
+
+      function getFullRange() {
+        return _weightFullRange > 0 ? _weightFullRange : 30 * 86400000;
+      }
+
+      let ts = { active: false, isPinch: false, startX: 0, lastX: 0,
+                 startOffset: 0, prevDist: 0, velocity: 0, lastTime: 0, isDrag: false };
+      let hideTimer = null;
+      const clearHide = () => { if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; } };
+
+      canvas.addEventListener("touchstart", e => {
+        e.preventDefault();
+        clearHide();
+        if (e.touches.length === 2) {
+          ts.isPinch = true;
+          ts.prevDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY);
+          weightTooltip.visible = false;
+          renderWeightGraph(); return;
+        }
+        if (e.touches.length === 1) {
+          const rect = canvas.getBoundingClientRect();
+          const x = e.touches[0].clientX - rect.left;
+          ts = { active: true, isPinch: false, startX: x, lastX: x,
+                 startOffset: weightZoom.offsetX, prevDist: 0,
+                 velocity: 0, lastTime: Date.now(), isDrag: false };
+          weightTooltip = { visible: true, x };
+          renderWeightGraph();
+        }
+      }, { passive: false });
+
+      canvas.addEventListener("touchmove", e => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const now = Date.now();
+        if (e.touches.length === 2 || ts.isPinch) {
+          if (e.touches.length < 2) return;
+          ts.isPinch = true;
+          weightTooltip.visible = false;
+          const t0 = e.touches[0], t1 = e.touches[1];
+          const dist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+          if (ts.prevDist > 0) {
+            const ratio = dist / ts.prevDist;
+            const newScale = Math.min(100, Math.max(1, weightZoom.scale * ratio));
+            const fullRange = getFullRange();
+            const graphW = canvas.offsetWidth - PAD_L - PAD_R;
+            const midPx = Math.max(0, Math.min(graphW,
+              (t0.clientX + t1.clientX) / 2 - rect.left - PAD_L));
+            const visRangeOld = fullRange / weightZoom.scale;
+            const pivotT = weightZoom.offsetX + (midPx / Math.max(graphW, 1)) * visRangeOld;
+            const visRangeNew = fullRange / newScale;
+            const newOff = pivotT - (midPx / Math.max(graphW, 1)) * visRangeNew;
+            weightZoom.scale = newScale;
+            weightZoom.offsetX = Math.max(0, Math.min(fullRange - visRangeNew, newOff));
+          }
+          ts.prevDist = dist;
+          renderWeightGraph(); return;
+        }
+        if (!ts.active || e.touches.length !== 1) return;
+        const x = e.touches[0].clientX - rect.left;
+        const dx = x - ts.lastX;
+        const dt = Math.max(1, now - ts.lastTime);
+        ts.velocity = dx / dt;
+        ts.lastTime = now;
+        if (Math.abs(ts.velocity) > 0.5 && !ts.isDrag) ts.isDrag = true;
+        if (ts.isDrag) {
+          weightTooltip.visible = false;
+          const fullRange = getFullRange();
+          const visRange = fullRange / weightZoom.scale;
+          const graphW = canvas.offsetWidth - PAD_L - PAD_R;
+          const msPerPx = visRange / Math.max(graphW, 1);
+          weightZoom.offsetX = Math.max(0, Math.min(fullRange - visRange,
+            ts.startOffset - (x - ts.startX) * msPerPx));
+        } else {
+          weightTooltip = { visible: true, x };
+        }
+        ts.lastX = x;
+        renderWeightGraph();
+      }, { passive: false });
+
+      canvas.addEventListener("touchend", e => {
+        if (ts.isDrag) {
+          weightTooltip.visible = false; renderWeightGraph();
+        } else if (weightTooltip.visible) {
+          clearHide();
+          hideTimer = setTimeout(() => { weightTooltip.visible = false; renderWeightGraph(); }, 1500);
+        }
+        ts.active = false; ts.isPinch = false;
+      }, { passive: false });
+
+      // PC 마우스
+      let md = false, mdStartX = 0, mdOff = 0, mdMoved = false;
+      canvas.addEventListener("mousedown", e => {
+        md = true; mdMoved = false;
+        mdStartX = e.offsetX; mdOff = weightZoom.offsetX;
+      });
+      canvas.addEventListener("mousemove", e => {
+        if (!md) {
+          weightTooltip = { visible: true, x: e.offsetX }; renderWeightGraph();
+        } else {
+          const dx = e.offsetX - mdStartX;
+          if (Math.abs(dx) > 3) {
+            mdMoved = true; weightTooltip.visible = false;
+            const fullRange = getFullRange();
+            const visRange = fullRange / weightZoom.scale;
+            const graphW = canvas.offsetWidth - PAD_L - PAD_R;
+            weightZoom.offsetX = Math.max(0, Math.min(fullRange - visRange,
+              mdOff - dx * (visRange / Math.max(graphW, 1))));
+            renderWeightGraph();
+          }
+        }
+      });
+      canvas.addEventListener("mouseup", () => { md = false; });
+      canvas.addEventListener("mouseleave", () => {
+        md = false; weightTooltip.visible = false; renderWeightGraph();
+      });
+      canvas.addEventListener("wheel", e => {
+        e.preventDefault();
+        const ratio = e.deltaY > 0 ? 1.25 : 0.8;
+        const newScale = Math.min(100, Math.max(1, weightZoom.scale * ratio));
+        const fullRange = getFullRange();
+        const visRangeNew = fullRange / newScale;
+        weightZoom.scale = newScale;
+        weightZoom.offsetX = Math.min(fullRange - visRangeNew, weightZoom.offsetX);
+        renderWeightGraph();
+      }, { passive: false });
+    }
+
+    // ══════════════════════════════════════════════
     // 투약 이력 차트 터치/마우스 (메인 그래프와 graphZoom 공유)
     // ══════════════════════════════════════════════
     function initDoseHistoryTouch() {
@@ -3520,16 +3660,24 @@
 
       const PAD = { l: 48, r: 16, t: 24, b: 34 };
       const gW = cW - PAD.l - PAD.r, gH = cH - PAD.t - PAD.b;
-      // 전체 뷰: X 시작 = 최초 투약일 (없으면 최초 체중 기록일)
+      // 전체 범위 계산
       const firstDrugTime = (appData.records && appData.records.length)
         ? Math.min(...appData.records.map(r => r.time)) : null;
       const defaultMinT = (firstDrugTime !== null)
-        ? Math.min(firstDrugTime, allRecs[0].time)  // 투약 전 체중 기록도 클리핑 방지
+        ? Math.min(firstDrugTime, allRecs[0].time)
         : allRecs[0].time;
-      const minT = weightRangeDays > 0 ? Date.now() - weightRangeDays * 86400000 : defaultMinT;
-      const maxT = Date.now();
-      // minT 이전 기록은 그래프 영역 밖 → 필터링 (음수 X 방지)
-      allRecs = allRecs.filter(r => r.time >= minT);
+      const fullMinT = weightRangeDays > 0 ? Date.now() - weightRangeDays * 86400000 : defaultMinT;
+      const fullMaxT = Date.now();
+      const fullRange = fullMaxT - fullMinT || 1;
+      // 줌/팬 범위값 저장 (터치 핸들러에서 사용)
+      _weightFullRange = fullRange;
+      _weightMinT = fullMinT;
+      // 줌 상태 적용
+      const visRange = fullRange / weightZoom.scale;
+      const minT = fullMinT + weightZoom.offsetX;
+      const maxT = minT + visRange;
+      // 가시 범위 내 기록만 필터링
+      allRecs = allRecs.filter(r => r.time >= fullMinT);
       if (allRecs.length < 2) {
         ctx.fillStyle = "#4a5568"; ctx.font = "13px 'Noto Sans KR'"; ctx.textAlign = "center";
         ctx.fillText("해당 기간 기록 없음", cW/2, cH/2); return;
@@ -3694,7 +3842,8 @@
           if (bx + bw > cW - 4) bx = tx - bw - 10;
           if (by + bh > PAD.t + gH) by = PAD.t + gH - bh - 4;
 
-          ctx.fillStyle = "#12122aee"; ctx.strokeStyle = "#374151"; ctx.lineWidth = 1;
+          ctx.fillStyle = isLightW ? "#f1f5f9ee" : "#12122aee";
+          ctx.strokeStyle = isLightW ? "#d1d5db" : "#374151"; ctx.lineWidth = 1;
           roundRect(ctx, bx, by, bw, bh, 8); ctx.fill(); ctx.stroke();
           lines.forEach((l, i) => {
             ctx.fillStyle = l.color;
@@ -3704,6 +3853,9 @@
           });
         }
       }
+      // 줌 초기화 버튼 표시/숨김
+      const zBtn = document.getElementById("weight-zoom-reset");
+      if (zBtn) zBtn.style.display = weightZoom.scale > 1 ? "inline-block" : "none";
     }
 
     function renderWeightStats() {
@@ -7975,68 +8127,7 @@
     }
 
     // ── 체중 그래프 터치/마우스 ───────────────────────────
-    function initWeightTouch() {
-      const canvas = document.getElementById("weight-chart");
-      if (!canvas || canvas._wTouchInit) return;
-      canvas._wTouchInit = true;
-
-      const PAD_L = 48, PAD_R = 16;
-      let wts = { active: false, isDrag: false, startX: 0, velocity: 0, lastX: 0, lastTime: 0 };
-      let wHideTimer = null;
-
-      function clearWTimer() { if (wHideTimer) { clearTimeout(wHideTimer); wHideTimer = null; } }
-
-      function setWT(x) {
-        weightTooltip = { visible: true, x };
-        renderWeightGraph();
-      }
-      function hideWT(delay = 0) {
-        clearWTimer();
-        if (delay > 0) {
-          wHideTimer = setTimeout(() => { weightTooltip.visible = false; renderWeightGraph(); }, delay);
-        } else {
-          weightTooltip.visible = false;
-          renderWeightGraph();
-        }
-      }
-
-      // 터치
-      canvas.addEventListener("touchstart", e => {
-        e.preventDefault();
-        clearWTimer();
-        if (e.touches.length !== 1) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = e.touches[0].clientX - rect.left;
-        wts = { active: true, isDrag: false, startX: x, lastX: x,
-                velocity: 0, lastTime: Date.now() };
-        setWT(x);
-      }, { passive: false });
-
-      canvas.addEventListener("touchmove", e => {
-        e.preventDefault();
-        if (!wts.active || e.touches.length !== 1) return;
-        const rect = canvas.getBoundingClientRect();
-        const x = e.touches[0].clientX - rect.left;
-        const now = Date.now();
-        const dt = Math.max(1, now - wts.lastTime);
-        wts.velocity = (x - wts.lastX) / dt;
-        wts.lastTime = now; wts.lastX = x;
-        // 체중 그래프는 드래그 없이 항상 툴팁 슬라이드
-        setWT(x);
-      }, { passive: false });
-
-      canvas.addEventListener("touchend", () => {
-        wts.active = false;
-        hideWT(1500);
-      }, { passive: false });
-
-      // 마우스 (PC)
-      canvas.addEventListener("mousemove", e => {
-        clearWTimer();
-        setWT(e.offsetX);
-      });
-      canvas.addEventListener("mouseleave", () => hideWT(0));
-    }
+    function initWeightTouch() { initWeightGraphTouch(); }
 
     // ══════════════════════════════════════════════
     // 후원 모달
@@ -9004,7 +9095,12 @@
         </div>
         <div class="chart-wrap">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div style="font-size:12px;color:#6b7280">📉 체중 변화 추이</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:12px;color:#6b7280">📉 체중 변화 추이</span>
+              <button id="weight-zoom-reset" onclick="weightZoom={scale:1,offsetX:0};renderWeightGraph()"
+                style="display:none;padding:2px 7px;background:#374151;border:none;border-radius:6px;
+                       color:#9ca3af;font-size:10px;cursor:pointer;font-family:inherit">🔄 초기화</button>
+            </div>
             <div style="display:flex;gap:4px">
               <button class="wrange-btn" data-days="7"   onclick="setWeightRange(7)">1주</button>
               <button class="wrange-btn" data-days="30"  onclick="setWeightRange(30)">1달</button>
