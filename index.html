@@ -7727,13 +7727,14 @@
         filled.push("측정일시");
       }
 
-      // 2. 키 파싱: !!!+ 구분자 이후 4자리(÷10=cm) + [MF] 패턴
-      //    (InBody270은 !!! 3중 구분자 사용 — 기존 !! 패턴 버그 수정)
-      const heightMatch = bdata.match(/\!{2,}(\d{4})\d*[MF]/);
+      // 2. 키·나이·성별 파싱: !!!{height4}{0}{age2}{0}{M/F} 형식 (6개 샘플 검증 완료)
+      const headerMatch = bdata.match(/!{2,}(\d{4})\d(\d{2})\d([MF])/);
       const suggestEl = document.getElementById("ib-height-suggest");
       let heightCm = 0;
-      if (heightMatch) {
-        heightCm = parseInt(heightMatch[1]) / 10;
+      if (headerMatch) {
+        heightCm = parseInt(headerMatch[1]) / 10;
+        const urlAge    = parseInt(headerMatch[2]);
+        const urlGender = headerMatch[3] === 'M' ? '남성' : '여성';
         if (heightCm >= 120 && heightCm <= 220) {
           const saved = parseFloat(appData.height) || 0;
           if (!saved || Math.abs(saved - heightCm) > 1) {
@@ -7749,15 +7750,18 @@
             filled.push(`키 ${heightCm}cm ✓`);
           }
         }
+        if (urlAge >= 10 && urlAge <= 100) filled.push(`${urlAge}세 ${urlGender}`);
       } else {
         if (suggestEl) suggestEl.style.display = "none";
       }
 
-      // 3. 측정값 파싱: 날짜 이후 연속 숫자를 4자리씩 그룹화
-      //    InBody270 확인된 필드 위치 (Python 실제 데이터 분석):
-      //      [6]  = 체지방량 BFM (÷10 kg)
-      //      [13] = 체중 Weight (÷10 kg)
-      //      [17] = 골격근량 SMM (÷10 kg)
+      // 3. 측정값 파싱: 날짜 이후 연속 숫자를 4자리씩 그룹화 + 고정 위치 직접 추출
+      //    6개 샘플 검증 완료된 InBody270 필드 위치 (afterDate 기준 char index):
+      //      grp[6]  = [24:28] 체지방량 BFM (÷10 kg)
+      //      grp[13] = [52:56] 체중 Weight (÷10 kg)
+      //      grp[17] = [68:72] 골격근량 SMM (÷10 kg)
+      //      [81:85] 비정렬 위치 → BMI (÷10) — InBody 표시값 직접 사용
+      //      [85:89] 비정렬 위치 → 체지방률 % (÷10) — InBody 표시값 직접 사용
       if (dateMatch) {
         const afterDate = bdata.slice(dateMatch.index + 14);
         const mainDigits = afterDate.match(/^\d+/)?.[0] || '';
@@ -7781,24 +7785,38 @@
           if (setField("ib-sm", sm)) filled.push(`골격근량 ${sm}kg`);
         }
 
-        // 체지방률 자동 계산 (BFM ÷ 체중 × 100)
-        if (weight > 0 && bfm > 0) {
+        // 체지방률·BMI: 비정렬 고정 위치에서 InBody 실제 표시값 직접 추출 (계산값보다 정확)
+        let bfpSet = false, bmiSet = false;
+        if (mainDigits.length >= 89) {
+          const directBfp = parseInt(mainDigits.slice(85, 89)) / 10;
+          const directBmi = parseInt(mainDigits.slice(81, 85)) / 10;
+          if (directBfp >= 0 && directBfp < 60) {
+            if (setField("ib-bfp", directBfp)) { filled.push(`체지방률 ${directBfp}%`); bfpSet = true; }
+          }
+          if (directBmi > 10 && directBmi < 60) {
+            if (setField("ib-bmi", directBmi)) { filled.push(`BMI ${directBmi}`); bmiSet = true; }
+          }
+        }
+        // 직접 추출 실패 시 계산값 폴백
+        if (!bfpSet && weight > 0 && bfm > 0) {
           const bfp = Math.round(bfm / weight * 1000) / 10;
           if (setField("ib-bfp", bfp)) filled.push(`체지방률 ${bfp}%`);
         }
-        // BMI 자동 계산 (체중 ÷ 키² — 프로필 키 또는 QR 키 사용)
-        const h4bmi = heightCm || (parseFloat(appData.height) || 0);
-        if (weight > 0 && h4bmi > 0) {
-          const calcBmi = Math.round(weight / Math.pow(h4bmi / 100, 2) * 10) / 10;
-          if (setField("ib-bmi", calcBmi)) filled.push(`BMI ${calcBmi}`);
+        if (!bmiSet) {
+          const h4bmi = heightCm || (parseFloat(appData.height) || 0);
+          if (weight > 0 && h4bmi > 0) {
+            const calcBmi = Math.round(weight / Math.pow(h4bmi / 100, 2) * 10) / 10;
+            if (setField("ib-bmi", calcBmi)) filled.push(`BMI ${calcBmi}`);
+          }
         }
       }
 
-      // 4. BMR: !0000!0000!0000 구분자 이후 첫 4자리
-      const secMatch = bdata.match(/!0{4}!0{4}!0{4}(\d+)/);
+      // 4. BMR: !0000 구분자 계열 이후 첫 번째 4자리 (500~5000 범위 검증)
+      //    !0000!0000!0000 형식(S1)과 !0000 단일 형식(S2~S6) 모두 대응
+      const secMatch = bdata.match(/(?:!0{4})+(\d+)/);
       if (secMatch) {
         const bmr = parseInt(secMatch[1].slice(0, 4));
-        if (bmr > 500 && bmr < 5000) {  // 합리적인 BMR 범위 검증
+        if (bmr > 500 && bmr < 5000) {
           if (setField("ib-bmr", bmr)) filled.push(`BMR ${bmr}kcal`);
         }
       }
