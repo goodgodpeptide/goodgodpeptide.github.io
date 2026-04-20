@@ -527,6 +527,19 @@ appData.costCalc.customConsumables = [
 - [ ] 백과사전 카드 약어 아이콘 개선 (현재 slug에서 자동 생성)
 - [ ] 운동 탭 추가 예정
 - [ ] Firestore 보안 규칙 업데이트 (posts, user_profiles 컬렉션 추가됨)
+- [ ] 내장지방레벨(VFL) QR URL 위치 확인 — 현재 자동입력 비활성화, 수동 입력만 (2026-04-20)
+- ✅ **인바디 QR 파싱 개선 (2026-04-20)** — 6개 실제 InBody270 샘플 Python 검증 완료
+  - BMI·체지방률: 계산값 대신 URL 고정위치 `mainDigits[81:85]` / `[85:89]`에서 InBody 실제 표시값 직접 추출 (비정렬 위치, InBody 자체 알고리즘값)
+  - 나이·성별: `headerMatch` 정규식 `!{2,}(\d{4})\d(\d{2})\d([MF])` 으로 자동 파싱 → 결과 안내에 "16세 남성" 표시
+  - BMR 버그 수정: 기존 `!0000!0000!0000` 전용 → `(?:!0{4})+` 로 완화 (샘플2~6 단일 `!0000` 형식 대응)
+  - 내장지방레벨 OCR 자동입력 비활성화 (VFL 위치 미확인으로 레벨5로 오입력되는 버그 방지)
+  - SW 캐시 v2→v3 bump
+- ✅ **체중 그래프 줌/팬 (2026-04-20)** — `initWeightGraphTouch()` 추가 (핀치 2손가락 / 드래그 / 휠 / 줌 초기화 버튼)
+- ✅ **라이트모드 완성도 개선 (2026-04-20)** — 영양제 패널 · 수분 트래커 · 체중 그래프 축 레이블 · 툴팁 · 체크마크 색상 분기
+- ✅ **주간 체중 변화 카드 (2026-04-20)** — `stat-trend-row` 7일 delta 표시 (renderWeightStats 내)
+- ✅ **복용 알림 푸시 (2026-04-20)** — `toggleNotification()` / `scheduleNotifications()` Notification API, 활성 약물 + 요일/주기 스케줄 반영
+- ✅ **SW 캐시 전략** — `CACHE_NAME` 버전 bump 필수 (v1→v2→v3), 배포 시 깨진 캐시 무효화 목적
+- ✅ **index.html SyntaxError 방어** — `const trendRow` 중복 선언 버그 (무한 로딩 원인) 수정
 - ✅ 백과사전 상호작용 뱃지 한국어 변환 (Synergistic→시너지, Compatible→호환, Monitor Combination→주의 필요, Avoid Combination→병용 금지)
 - ✅ 펩타이드 전량 typicalDose 보완 (32개 누락 → 전량 채움)
 - ✅ 펩타이드 전량 protocols 보완 (66개 누락 → 76개 전량 채움, 한국어)
