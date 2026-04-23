@@ -4841,7 +4841,26 @@
     let currentUserIsAdmin = false;
 
     function escapeHtml(s) {
-      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/`/g, '&#96;')
+        .replace(/\//g, '&#x2F;');
+    }
+    // JS 문자열 리터럴 내부에 안전하게 삽입하기 위한 이스케이프
+    // (onclick="fn('${escapeJsString(x)}')" 패턴 전용)
+    function escapeJsString(s) {
+      return String(s == null ? '' : s)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e');
     }
     function timeAgo(ms) {
       const d = Date.now() - ms;
