@@ -4903,6 +4903,15 @@
     window.saveNickname = async function() {
       const val = document.getElementById("nickname-input").value.trim();
       if (!val || val.length < 2 || val.length > 16) { alert("닉네임은 2~16자로 입력하세요."); return; }
+      // 보안: HTML/JS 특수문자·제어문자·이모지 거부 (Unicode 문자/숫자/공백/기본기호만 허용)
+      if (/[<>&'"`\/\\]/.test(val)) {
+        alert("닉네임에 특수문자(< > & ' \" ` / \\)는 사용할 수 없습니다.");
+        return;
+      }
+      if (!/^[\p{L}\p{N} _\-]{2,16}$/u.test(val)) {
+        alert("닉네임은 한글·영문·숫자·공백·_·- 만 사용 가능합니다. (이모지 불가)");
+        return;
+      }
       appData.nickname = val;
       // nickname 필드만 부분 업데이트 (전체 덮어쓰기 방지 — 데이터 손실 위험)
       if (currentUser) {
