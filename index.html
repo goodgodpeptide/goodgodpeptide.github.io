@@ -5018,7 +5018,7 @@
                   <span style="font-size:10px;color:${sub};margin-left:6px">${timeAgo(c.time)}</span>
                 </div>
                 <div style="display:flex;gap:4px;align-items:center">
-                  ${!isReply?`<button onclick="toggleReplyInput('${postId}','${c.id}','${escapeHtml(c.nickname||'익명')}')" style="background:none;border:none;color:${sub};cursor:pointer;font-size:11px;padding:2px 6px;font-family:inherit">↩ 답글</button>`:''}
+                  ${!isReply?`<button onclick="toggleReplyInput('${postId}','${c.id}','${escapeJsString(c.nickname||'익명')}')" style="background:none;border:none;color:${sub};cursor:pointer;font-size:11px;padding:2px 6px;font-family:inherit">↩ 답글</button>`:''}
                   ${canDel?`<button onclick="deleteComment('${postId}','${c.id}','${c.uid}')" style="background:none;border:none;color:${sub};cursor:pointer;font-size:11px;padding:2px 4px">🗑</button>`:''}
                 </div>
               </div>
@@ -5061,8 +5061,8 @@
           <input id="reply-input-field-${commentId}" class="input-field"
             placeholder="@${escapeHtml(nickname)} 에게 답글..."
             style="flex:1;padding:7px 10px;font-size:12px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-family:inherit;outline:none"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitReply('${postId}','${commentId}','${escapeHtml(nickname)}')}"/>
-          <button onclick="submitReply('${postId}','${commentId}','${escapeHtml(nickname)}')"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitReply('${postId}','${commentId}','${escapeJsString(nickname)}')}"/>
+          <button onclick="submitReply('${postId}','${commentId}','${escapeJsString(nickname)}')"
             style="background:#1d4ed8;border:none;border-radius:8px;color:white;padding:0 12px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap">등록</button>
           <button onclick="toggleReplyInput('${postId}','${commentId}','')"
             style="background:none;border:1px solid ${iB};border-radius:8px;color:#6b7280;padding:0 8px;font-size:12px;cursor:pointer;font-family:inherit">✕</button>
@@ -5243,7 +5243,7 @@
                   <span style="font-size:12px;font-weight:700;color:${sub};margin-left:6px">${e.amount.toLocaleString()}원</span>
                 </div>
                 <div style="display:flex;gap:5px">
-                  <button onclick="showHofEditForm(${i},'${e.nickname.replace(/'/g,"\\'")}',${e.amount})"
+                  <button onclick="showHofEditForm(${i},'${escapeJsString(e.nickname)}',${e.amount})"
                     style="padding:4px 10px;background:${isL?'#f3f4f6':'#1e293b'};border:1px solid ${isL?'#d1d5db':'#374151'};border-radius:7px;color:${txt};font-size:11px;cursor:pointer;font-family:inherit">✏️ 수정</button>
                   <button onclick="deleteHofEntry(${i})"
                     style="padding:4px 10px;background:#991b1b;border:none;border-radius:7px;color:#fca5a5;font-size:11px;cursor:pointer;font-family:inherit">🗑</button>
