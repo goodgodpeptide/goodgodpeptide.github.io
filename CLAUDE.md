@@ -322,7 +322,7 @@ let currentUserIsAdmin = false;   // auth listener에서 설정
 ```js
 {
   version: "3.0",
-  totalCount: 72,
+  totalCount: 76,
   index: [{ id, nameEn, nameKo, subtitle, routes, researchStatus, isApproved, tags, typicalDose, cycle }],
   peptides: {
     "slug-id": {
@@ -533,12 +533,12 @@ appData.costCalc.customConsumables = [
   - 나이·성별: `headerMatch` 정규식 `!{2,}(\d{4})\d(\d{2})\d([MF])` 으로 자동 파싱 → 결과 안내에 "16세 남성" 표시
   - BMR 버그 수정: 기존 `!0000!0000!0000` 전용 → `(?:!0{4})+` 로 완화 (샘플2~6 단일 `!0000` 형식 대응)
   - 내장지방레벨 OCR 자동입력 비활성화 (VFL 위치 미확인으로 레벨5로 오입력되는 버그 방지)
-  - SW 캐시 v2→v3 bump
+  - SW 캐시 v2→v3 bump (현재 sw.js: `peptide-app-v5`)
 - ✅ **체중 그래프 줌/팬 (2026-04-20)** — `initWeightGraphTouch()` 추가 (핀치 2손가락 / 드래그 / 휠 / 줌 초기화 버튼)
 - ✅ **라이트모드 완성도 개선 (2026-04-20)** — 영양제 패널 · 수분 트래커 · 체중 그래프 축 레이블 · 툴팁 · 체크마크 색상 분기
 - ✅ **주간 체중 변화 카드 (2026-04-20)** — `stat-trend-row` 7일 delta 표시 (renderWeightStats 내)
 - ✅ **복용 알림 푸시 (2026-04-20)** — `toggleNotification()` / `scheduleNotifications()` Notification API, 활성 약물 + 요일/주기 스케줄 반영
-- ✅ **SW 캐시 전략** — `CACHE_NAME` 버전 bump 필수 (v1→v2→v3), 배포 시 깨진 캐시 무효화 목적
+- ✅ **SW 캐시 전략** — `CACHE_NAME` 버전 bump 필수 (v1→v2→v3→v4→v5, 현재 v5), 배포 시 깨진 캐시 무효화 목적
 - ✅ **index.html SyntaxError 방어** — `const trendRow` 중복 선언 버그 (무한 로딩 원인) 수정
 - ✅ 백과사전 상호작용 뱃지 한국어 변환 (Synergistic→시너지, Compatible→호환, Monitor Combination→주의 필요, Avoid Combination→병용 금지)
 - ✅ 펩타이드 전량 typicalDose 보완 (32개 누락 → 전량 채움)
