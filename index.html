@@ -5583,17 +5583,22 @@
 
       const statusOrder = ['Extensively Studied','Well Researched','Clinical Research','Emerging Research','Limited Research'];
 
+      // 한글+영문 혼합 검색 지원: 공백/탭으로 분리한 토큰 모두가 어느 필드든 포함되면 hit (AND)
+      const tokens = q.split(/\s+/).filter(t => t.length > 0);
       let list = encyclopediaData.index.filter(p => {
-        if (!q) return !encFilterStatus || p.researchStatus === encFilterStatus;
-        const full = encyclopediaData.peptides[p.id] || {};
-        const nameMatch = p.nameEn.toLowerCase().includes(q)
-          || (p.subtitle||'').toLowerCase().includes(q)
-          || (full.nameKo||'').includes(q)
-          || (full.subtitleKo||'').includes(q)
-          || (full.descriptionKo||'').slice(0,300).includes(q)
-          || (full.descriptionEn||'').toLowerCase().slice(0,300).includes(q)
-          || (p.tags||[]).some(t => t.toLowerCase().includes(q));
         const statusMatch = !encFilterStatus || p.researchStatus === encFilterStatus;
+        if (tokens.length === 0) return statusMatch;
+        const full = encyclopediaData.peptides[p.id] || {};
+        const fields = [
+          p.nameEn.toLowerCase(),
+          (p.subtitle||'').toLowerCase(),
+          (full.nameKo||''),
+          (full.subtitleKo||''),
+          (full.descriptionKo||'').slice(0,300),
+          (full.descriptionEn||'').toLowerCase().slice(0,300),
+          (p.tags||[]).map(t => t.toLowerCase()).join(' '),
+        ];
+        const nameMatch = tokens.every(tok => fields.some(f => f.includes(tok)));
         return nameMatch && statusMatch;
       });
 
@@ -5759,6 +5764,12 @@
         recovery:'회복', endurance:'지구력', strength:'근력', hairGrowth:'모발 성장',
         pigmentation:'색소 침착', cardiac:'심장', antiCancer:'항암',
       };
+      // CAT_LABELS 미등록 키 fallback: camelCase → 공백 분리 + 첫 글자 대문자
+      function _catLabel(key) {
+        if (CAT_LABELS[key]) return CAT_LABELS[key];
+        const spaced = String(key || '').replace(/([a-z])([A-Z])/g, '$1 $2');
+        return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+      }
 
       // ── stat 카드 ──
       const statCards = [
@@ -5814,7 +5825,7 @@
             const items = riDet[cat] || [];
             if (!items.length) return '';
             const catId = mid + '_ri_' + ci;
-            const label = CAT_LABELS[cat] || cat;
+            const label = _catLabel(cat);
             const eff = getCatEff(cat);
             const effClr = effColors[eff] || null;
             const effLbl = effLabels[eff] || eff;
@@ -8375,19 +8386,22 @@
         return false;
       }
 
-      // 뒤로가기(popstate) 감지 → 모달 닫기
+      // 뒤로가기(popstate) 감지 → 모달 닫기 (재push 금지 — 이전엔 stale entry 누적 버그)
       window.addEventListener('popstate', function() {
-        if (!closeTopModal()) return; // 닫을 모달 없으면 일반 뒤로가기
-        // 모달을 닫았으므로 현재 상태 다시 push (연속 뒤로가기 방지)
-        history.pushState({ modal: true }, '');
+        closeTopModal();
       });
 
       // 모달이 열릴 때 history state push — modal-overlay + 특수 모달 공통 감시
+      // state.modal 가드: 이미 modal state에 있으면 중복 push 안 함 (동일 모달 reopen, attribute 재변경 시 stale 누적 방지)
+      function _safePushModalState() {
+        if (history.state && history.state.modal) return;
+        history.pushState({ modal: true }, '');
+      }
       function watchModal(el) {
         new MutationObserver(function(muts) {
           for (const m of muts) {
             if (m.type === 'attributes' && el.style.display === 'flex') {
-              history.pushState({ modal: true }, '');
+              _safePushModalState();
             }
           }
         }).observe(el, { attributes: true, attributeFilter: ['style'] });
@@ -8405,7 +8419,7 @@
         for (const m of mutations) {
           for (const node of m.addedNodes) {
             if (node.nodeType === 1 && DYNAMIC_MODAL_IDS.has(node.id)) {
-              history.pushState({ modal: true }, '');
+              _safePushModalState();
             }
           }
         }
@@ -8415,7 +8429,7 @@
       const _origOpenEnc = window.openEncyclopediaModal;
       if (_origOpenEnc) {
         window.openEncyclopediaModal = function(id) {
-          history.pushState({ modal: true }, '');
+          _safePushModalState();
           _origOpenEnc(id);
         };
       }
