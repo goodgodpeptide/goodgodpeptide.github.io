@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email in get(/databases/$(db)/documents/config/admins).data.emails;
+    }
+    function isApproved() {
+      return isSignedIn() &&
+        request.auth.token.email in get(/databases/$(db)/documents/config/approved_users).data.emails;
+    }
+
+    match /users/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+    match /user_profiles/{uid} {
+      allow read: if isApproved();
+      allow write: if isSignedIn() && request.auth.uid == uid;
+    }
+    match /backups/{uid}/{doc=**} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+    match /config/{doc} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /login_logs/{id} {
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isAdmin();
+    }
+    match /posts/{postId} {
+      allow read: if isApproved();
+      allow create: if isApproved() && request.resource.data.uid == request.auth.uid;
+      allow update: if isApproved() && (
+        (request.resource.data.uid == resource.data.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) &&
+         request.resource.data.likes.toSet().difference(resource.data.likes.toSet())
+           .hasOnly([request.auth.uid]) &&
+         resource.data.likes.toSet().difference(request.resource.data.likes.toSet())
+           .hasOnly([request.auth.uid]))
+        || isAdmin()
+      );
+      allow delete: if isApproved() && (resource.data.uid == request.auth.uid || isAdmin());
+      match /comments/{cid} {
+        allow read: if isApproved();
+        allow create: if isApproved() && request.resource.data.uid == request.auth.uid;
+        allow delete: if isApproved() && (resource.data.uid == request.auth.uid || isAdmin());
+      }
+    }
+    match /donation_requests/{id} {
+      allow create: if isApproved() && request.resource.data.uid == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow read, update: if isAdmin();
+    }
+    match /hall_of_fame/{doc} {
+      allow read: if isApproved();
+      allow write: if isAdmin();
+    }
+  }
+}

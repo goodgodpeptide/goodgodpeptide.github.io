@@ -3022,10 +3022,14 @@
       const dpr = window.devicePixelRatio || 1;
       const cW = canvas.offsetWidth;
       const cH = 90;
-      canvas.width = cW * dpr;
-      canvas.height = cH * dpr;
-      canvas.style.height = cH + "px";
-      ctx.scale(dpr, dpr);
+      // 백버퍼 가드: 사이즈 변화 없으면 재할당 스킵
+      const wantW = Math.round(cW * dpr), wantH = Math.round(cH * dpr);
+      if (canvas.width !== wantW || canvas.height !== wantH) {
+        canvas.width = wantW;
+        canvas.height = wantH;
+        canvas.style.height = cH + "px";
+        ctx.scale(dpr, dpr);
+      }
       ctx.clearRect(0, 0, cW, cH);
 
       // 빈 기록이면 "기록 없음" 표시 후 종료
@@ -3671,10 +3675,14 @@
       const dpr = window.devicePixelRatio || 1;
       const cW = canvas.offsetWidth;
       const cH = 220;
-      canvas.width = cW * dpr;
-      canvas.height = cH * dpr;
-      canvas.style.height = cH + "px";
-      ctx.scale(dpr, dpr);
+      // 백버퍼 가드: 사이즈 변화 없으면 재할당 스킵
+      const wantW = Math.round(cW * dpr), wantH = Math.round(cH * dpr);
+      if (canvas.width !== wantW || canvas.height !== wantH) {
+        canvas.width = wantW;
+        canvas.height = wantH;
+        canvas.style.height = cH + "px";
+        ctx.scale(dpr, dpr);
+      }
       ctx.clearRect(0, 0, cW, cH);
 
       let allRecs = (appData.weightRecords || []).sort((a, b) => a.time - b.time);
