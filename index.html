@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
   <title>체중관리 매니저</title>
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a14" />
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
@@ -738,6 +738,15 @@
           drug: DRUG_NAME_MIGRATION[r.drug] || r.drug
         }));
       });
+      // inventory, reconVials 배열의 drug 필드 마이그레이션
+      ["inventory", "reconVials"].forEach(key => {
+        if (!data[key]) return;
+        data[key].forEach(item => {
+          if (item.drug && DRUG_NAME_MIGRATION[item.drug]) {
+            item.drug = DRUG_NAME_MIGRATION[item.drug];
+          }
+        });
+      });
       // drugCycle 키 마이그레이션
       if (data.drugCycle) {
         const migrated = {};
@@ -839,7 +848,7 @@
         const lastAt = metaSnap.exists() ? (metaSnap.data().lastBackupAt?.toMillis?.() || 0) : 0;
         const sevenDays = 7 * 24 * 60 * 60 * 1000;
         if (Date.now() - lastAt < sevenDays) return; // 7일 안 지났으면 스킵
-        const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const dateStr = kstNow().slice(0, 10); // YYYY-MM-DD (KST 기준)
         await setDoc(doc(db, "backups", currentUser.uid, "snapshots", dateStr), {
           data: appData, savedAt: serverTimestamp()
         });
@@ -1699,10 +1708,9 @@
     }
 
     function getTodayWater() {
-      const todayStart = new Date();
-      const kst = new Date(todayStart.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-      kst.setHours(0, 0, 0, 0);
-      const cutoff = kst.getTime(); // kst.getTime()은 이미 KST 자정의 UTC ms값
+      // KST 기준 오늘 자정의 UTC ms — 디바이스 timezone 무관
+      const kstYMD = kstNow().slice(0, 10); // "YYYY-MM-DD" (KST)
+      const cutoff = kstInputToMs(`${kstYMD}T00:00`);
       return (appData.waterLog || [])
         .filter(w => w.time >= cutoff)
         .reduce((sum, w) => sum + (w.ml || 0), 0);
@@ -2139,14 +2147,15 @@
       if (typeof Notification === "undefined") return;
       if (!appData.notifyEnabled || Notification.permission !== "granted") return;
 
-      const nowKST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
-      // shouldTakeOnDate는 'YYYY-MM-DD' 포맷 필요 (dateDiffDays/weekdays 계산에서 날짜 파싱 사용)
-      const todayStr = `${nowKST.getFullYear()}-${String(nowKST.getMonth()+1).padStart(2,'0')}-${String(nowKST.getDate()).padStart(2,'0')}`;
+      // KST 기준 오늘 날짜 (디바이스 timezone 무관)
+      const todayStr = kstNow().slice(0, 10); // "YYYY-MM-DD"
 
       const [hh, mm] = (appData.notifyTime || "09:00").split(":").map(Number);
-      const notifyAt = new Date(nowKST);
-      notifyAt.setHours(hh, mm, 0, 0);
-      const delay = notifyAt - nowKST;
+      const hhStr = String(hh).padStart(2,'0');
+      const mmStr = String(mm).padStart(2,'0');
+      // KST 알림시각 → UTC ms 산술 (디바이스 timezone 무관)
+      const notifyAtMs = kstInputToMs(`${todayStr}T${hhStr}:${mmStr}`);
+      const delay = notifyAtMs - Date.now();
       if (delay < 0) return; // 오늘치 이미 지남
 
       // getActiveDrugs(): 사용자가 활성화한 약물만 (미설정 시 전체)
