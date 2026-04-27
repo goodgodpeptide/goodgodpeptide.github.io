@@ -8102,11 +8102,15 @@
       if (!canvas || !canvas.offsetWidth) return;  // 탭 숨김 상태 방어
       const recs = [...(appData.inbodyRecords || [])].sort((a, b) => a.time - b.time);
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = canvas.offsetWidth * dpr;
-      canvas.height = 170 * dpr;
-      canvas.style.height = "170px";
+      // 백버퍼 가드: 사이즈 변화 없으면 재할당 스킵
+      const wantW = Math.round(canvas.offsetWidth * dpr), wantH = Math.round(170 * dpr);
       const ctx = canvas.getContext("2d");
-      ctx.scale(dpr, dpr);
+      if (canvas.width !== wantW || canvas.height !== wantH) {
+        canvas.width = wantW;
+        canvas.height = wantH;
+        canvas.style.height = "170px";
+        ctx.scale(dpr, dpr);
+      }
       const W = canvas.offsetWidth, H = 170;
       const isLight = document.body.classList.contains("light-mode");
       ctx.fillStyle = isLight ? "#f0f4f8" : "#080810";
