@@ -20,6 +20,26 @@ STATUS_WORDS = [
 
 ROUTE_WORDS = ['OralInjectable', 'InjectableOral', 'Oral', 'Injectable', 'Topical', 'Intranasal']
 
+# 약어 보존 사전 (lowercase → 표시용)
+# slug-title 폴백 시 약어가 소문자로 망가지는 것 방지
+ABBR_MAP = {
+    'mots': 'MOTS', 'cjc': 'CJC', 'ghk': 'GHK', 'bpc': 'BPC', 'tb': 'TB',
+    'kpv': 'KPV', 'nad': 'NAD', 'igf': 'IGF', 'mgf': 'MGF', 'ipa': 'IPA',
+    'dac': 'DAC', 'ss': 'SS', 'ghrp': 'GHRP', 'peg': 'PEG', 'ala': 'ALA',
+    'egf': 'EGF', 'fgf': 'FGF', 'klow': 'KLOW', 'pnc': 'PNC', 'll': 'LL',
+    'bac': 'BAC', 'aod': 'AOD', 'ahk': 'AHK', 'p21': 'P21', 'ara': 'ARA',
+}
+
+
+def restore_abbr(name: str) -> str:
+    """slug-title 폴백 결과에서 약어를 대문자로 복원."""
+    parts = name.split(' ')
+    out = []
+    for w in parts:
+        key = w.lower()
+        out.append(ABBR_MAP.get(key, w))
+    return ' '.join(out)
+
 
 def clean(s):
     if not s:
@@ -63,8 +83,8 @@ def extract_name_subtitle(main_content, peptide_id):
     # | 위치
     pipe_idx = clean_header.find('|')
     if pipe_idx < 0:
-        # | 없으면 이름만 반환
-        name = peptide_id.replace('-', ' ').title()
+        # | 없으면 이름만 반환 — 약어 보존 적용
+        name = restore_abbr(peptide_id.replace('-', ' ').title())
         return name, ''
 
     before_pipe = clean_header[:pipe_idx].strip()
@@ -84,8 +104,8 @@ def extract_name_subtitle(main_content, peptide_id):
                 subtitle_prefix = before_pipe[name_m.end() + len(paren_m.group(0)):].strip()
         subtitle = (subtitle_prefix + ' | ' + after_pipe).strip(' | ')
     else:
-        # fallback: slug title case
-        name = peptide_id.replace('-', ' ').title()
+        # fallback: slug title case + 약어 보존
+        name = restore_abbr(peptide_id.replace('-', ' ').title())
         subtitle = clean_header
 
     return clean(name), clean(subtitle)
@@ -98,7 +118,8 @@ def parse_peptide(content, peptide_id):
     # ── 1. 이름 & 부제목 ───────────────────────────────────
     p['nameEn'], p['subtitle'] = extract_name_subtitle(main, peptide_id)
     if not p['nameEn'] or len(p['nameEn']) < 2:
-        p['nameEn'] = peptide_id.replace('-', ' ').title()
+        # 최종 폴백 — 약어 보존
+        p['nameEn'] = restore_abbr(peptide_id.replace('-', ' ').title())
     p['nameKo'] = ''
 
     # ── 2. 연구 상태 & 승인 여부 ───────────────────────────
