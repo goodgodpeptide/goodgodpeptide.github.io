@@ -1,11 +1,11 @@
-const CACHE_NAME = 'peptide-app-v5';
+const CACHE_NAME = 'peptide-app-v6';
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/peptides_v3.json',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  './',
+  './index.html',
+  './peptides_v3.json',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
 ];
 
 self.addEventListener('install', e => {

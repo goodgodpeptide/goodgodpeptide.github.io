@@ -4,8 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>체중관리 매니저</title>
-  <meta name="theme-color" content="#0a0a14" />
-  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a14" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+  <link rel="manifest" href="./manifest.json" />
+  <!-- iOS PWA 설치 메타 (홈화면 추가 시 풀스크린·아이콘·타이틀) -->
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="펩타이드 매니저" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <!-- DNS/TCP 미리 연결 — 폰트·Firebase CDN 첫 로딩 대기 시간 단축 -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,10 +23,10 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js" />
-  <!-- QR 코드 생성 라이브러리 (후원 모달용) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- jsQR: 카메라/이미지에서 QR 코드 읽기 (인바디 스캔용) -->
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <!-- QR 코드 생성 라이브러리 (후원 모달용) — defer로 파서 비차단 -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- jsQR: 카메라/이미지에서 QR 코드 읽기 (인바디 스캔용) — defer로 파서 비차단 -->
+  <script defer src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -374,6 +381,8 @@
     };
 
     window.approveUser = async function(email) {
+      // 클라이언트 가드: 관리자 권한 없으면 즉시 차단 (Firestore Rules가 최종 방어선)
+      if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       try {
         const snap = await getDoc(APPROVED_DOC);
         if (snap.exists()) {
@@ -386,6 +395,8 @@
     };
 
     window.revokeUser = async function(email) {
+      // 클라이언트 가드: 관리자 권한 없으면 즉시 차단
+      if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       if (!await customConfirm(`${email} 의 접근을 취소할까요?`)) return;
       try {
         await updateDoc(APPROVED_DOC, { emails: arrayRemove(email) });
@@ -396,6 +407,8 @@
     };
 
     window.rejectUser = async function(email) {
+      // 클라이언트 가드: 관리자만 거절 가능
+      if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       if (!await customConfirm(`${email} 을 거절할까요?\n(재로그인하면 다시 대기 목록에 표시됩니다)`)) return;
       try {
         // setDoc + merge:true — 이메일의 점(.)이 updateDoc에서 중첩경로로 해석되는 버그 방지
@@ -418,6 +431,8 @@
     }
 
     window.addAdmin = async function() {
+      // 클라이언트 가드: 관리자 권한 없으면 즉시 차단
+      if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       const input = document.getElementById("new-admin-input");
       const email = input.value.trim().toLowerCase();
       if (!email || !email.includes("@")) { alert("유효한 이메일을 입력하세요."); return; }
@@ -441,6 +456,8 @@
     };
 
     window.removeAdmin = async function(email) {
+      // 클라이언트 가드: 관리자 권한 없으면 즉시 차단
+      if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       if (!await customConfirm(`${email} 을 관리자에서 제거할까요?\n(사용자 승인 권한이 사라집니다)`)) return;
       try {
         await updateDoc(ADMINS_DOC, { emails: arrayRemove(email) });
@@ -503,6 +520,8 @@
     window.restoreFromUid = async function() {
       const uid = document.getElementById("recover-uid-input").value.trim();
       if (!uid) return;
+      // 보안 가드: 본인 UID만 복구 허용 (타인 UID 조회 차단 — Firestore Rules가 최종 방어선)
+      if (uid !== auth.currentUser?.uid) { alert('본인 데이터만 복구 가능합니다'); return; }
       try {
         const snap = await getDoc(doc(db, "users", uid));
         if (!snap.exists()) { alert("해당 UID의 데이터가 없습니다."); return; }
@@ -2283,12 +2302,21 @@
 
     // ── 실시간 농도 업데이트 ────────────────────────
     let liveConcentrationTimer = null;
+    let _liveTickCount = 0;            // 5초마다 그래프 재렌더 throttle용 카운터
+    let _liveVisHookBound = false;     // visibilitychange 핸들러 중복 등록 방지 가드
 
     function startLiveUpdate() {
       if (liveConcentrationTimer) return; // 이미 실행 중
       const panel = document.getElementById("panel-peptide");
       if (!panel || panel.style.display === "none") return;
       liveConcentrationTimer = setInterval(_tickLiveUpdate, 1000);
+      // 백그라운드 탭 복귀 시 즉시 1회 갱신 + 핸들러는 한 번만 등록
+      if (!_liveVisHookBound) {
+        document.addEventListener('visibilitychange', () => {
+          if (!document.hidden && liveConcentrationTimer) _tickLiveUpdate();
+        });
+        _liveVisHookBound = true;
+      }
     }
 
     function stopLiveUpdate() {
@@ -2296,6 +2324,8 @@
     }
 
     function _tickLiveUpdate() {
+      // 백그라운드 탭(보이지 않을 때)은 배터리 절감을 위해 모든 작업 스킵
+      if (document.hidden) return;
       const panel = document.getElementById("panel-peptide");
       if (!panel || panel.style.display === "none") { stopLiveUpdate(); return; }
       const now = Date.now();
@@ -2338,7 +2368,10 @@
           ddayEl.style.cssText = `background:${ddayColor}22;border:1px solid ${ddayColor}55;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${ddayColor};display:${ddayText?'':'none'}`;
         }
       });
-      renderPeptideGraph();
+      // 그래프 재렌더는 5초에 1번만 (DPR×2 캔버스 + STEPS=400 재계산은 비싸기 때문)
+      // 농도/D-day/진행바 같은 DOM 텍스트 갱신은 매초 그대로 유지
+      _liveTickCount = (_liveTickCount + 1) % 5;
+      if (_liveTickCount === 0) renderPeptideGraph();
     }
 
     // 약별 마지막 입력 용량 기억
@@ -2609,10 +2642,14 @@
       const dpr = window.devicePixelRatio || 1;
       const cW = canvas.offsetWidth;
       const cH = 260;
-      canvas.width = cW * dpr;
-      canvas.height = cH * dpr;
-      canvas.style.height = cH + "px";
-      ctx.scale(dpr, dpr);
+      // 백버퍼 가드: 사이즈 변화 없으면 재할당 스킵 (메모리 churn + 레이아웃 무효화 방지)
+      const wantW = Math.round(cW * dpr), wantH = Math.round(cH * dpr);
+      if (canvas.width !== wantW || canvas.height !== wantH) {
+        canvas.width = wantW;
+        canvas.height = wantH;
+        canvas.style.height = cH + "px";
+        ctx.scale(dpr, dpr);
+      }
       ctx.clearRect(0, 0, cW, cH);
 
       const records = appData.records || [];
@@ -5272,6 +5309,8 @@
     };
 
     window.approveDonation = async function(reqId) {
+      // 클라이언트 가드: 관리자만 후원 승인+명예의전당 등록 가능
+      if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       if (!await customConfirm('이 후원을 승인하고 명예의전당에 등록할까요?')) return;
       try {
         const reqRef = doc(db,'donation_requests',reqId);
@@ -5293,6 +5332,8 @@
     };
 
     window.rejectDonation = async function(reqId) {
+      // 클라이언트 가드: 관리자만 후원 거절 가능
+      if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       if (!await customConfirm('이 후원 신청을 거절할까요?')) return;
       try {
         await updateDoc(doc(db,'donation_requests',reqId), { status:'rejected' });
@@ -5303,6 +5344,8 @@
 
     // 명예의전당 항목 삭제 (index 기반)
     window.deleteHofEntry = async function(idx) {
+      // 클라이언트 가드: 관리자만 명예의전당 항목 삭제 가능
+      if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       if (!await customConfirm('명예의전당에서 이 항목을 삭제할까요?')) return;
       try {
         const hofRef = doc(db,'config','hall_of_fame');
@@ -5337,6 +5380,8 @@
 
     // 명예의전당 항목 수정 저장
     window.saveHofEdit = async function(idx) {
+      // 클라이언트 가드: 관리자만 명예의전당 수정 가능
+      if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       const nickEl = document.getElementById('hof-edit-nick-'+idx);
       const amtEl  = document.getElementById('hof-edit-amt-'+idx);
       const nickname = nickEl?.value?.trim();
@@ -5357,6 +5402,8 @@
 
     // 명예의전당 수동 등록 (관리자 직접)
     window.addHofManual = async function() {
+      // 클라이언트 가드: 관리자만 명예의전당 수동 등록 가능
+      if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       const nickEl = document.getElementById('hof-manual-nick');
       const amtEl  = document.getElementById('hof-manual-amt');
       const nickname = nickEl?.value?.trim();
@@ -9937,7 +9984,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then(reg => {
+        navigator.serviceWorker.register('./sw.js').then(reg => {
           // 새 버전 감지 → 업데이트 배너 표시
           reg.addEventListener('updatefound', () => {
             const nw = reg.installing;
