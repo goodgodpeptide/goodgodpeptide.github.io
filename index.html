@@ -2708,18 +2708,20 @@
         fullMinTime = now - graphRangeHours * 3600000;
         fullMaxTime = now;
       } else {
-        // 전체 범위: 최초 기록 ~ 약물이 거의 소실되는 시점 (5×반감기)
+        // 전체 범위: 최초 기록 ~ 그래프에서 곡선이 0에 도달하는 시점 (7×반감기 = 잔류 0.8%)
         const firstRec = Math.min(...records.map(r => r.time));
         fullMinTime = firstRec - 2 * 86400000; // 첫 투약 2일 전부터
-        // 약물별 마지막 투약 + 5×반감기 중 최대값
-        let clearanceTime = 0;
+        // 약물별 마지막 투약 + 7×반감기 중 최대값 (그래프 표시용)
+        let graphEndTime = 0;
+        let clearanceTime = 0; // 수용체리셋 마커용 (5×반감기)
         Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
           const drugRecs = records.filter(r => r.drug === drug);
           if (!drugRecs.length) return;
           const lastDrugTime = Math.max(...drugRecs.map(r => r.time));
           clearanceTime = Math.max(clearanceTime, lastDrugTime + cfg.halfLifeDays * 5 * 86400000);
+          graphEndTime  = Math.max(graphEndTime,  lastDrugTime + cfg.halfLifeDays * 7 * 86400000);
         });
-        fullMaxTime = Math.max(now, clearanceTime || now + 35 * 86400000) + 7 * 86400000; // 소실 후 7일 여유
+        fullMaxTime = Math.max(now, graphEndTime || now + 49 * 86400000);
       }
       const fullRange = fullMaxTime - fullMinTime;
       // 터치핸들러(getFullRange)와 공유 — 반드시 renderPeptideGraph와 동일한 값 유지
