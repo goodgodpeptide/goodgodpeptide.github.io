@@ -5314,23 +5314,43 @@
       el.style.display = el.style.display === 'none' ? 'block' : 'none';
     };
 
+    // 후원 금액 KRW 환산 힌트
+    window.updateDonKrwHint = function() {
+      const hint = document.getElementById('don-krw-hint');
+      if (!hint) return;
+      const cur = document.getElementById('don-cert-currency')?.value || 'KRW';
+      const amt = parseFloat(document.getElementById('don-cert-amount')?.value || '0');
+      if (!amt) { hint.textContent = ''; return; }
+      if (cur === 'KRW') { hint.textContent = `₩${Math.round(amt).toLocaleString('ko-KR')}`; return; }
+      if (!fxRates) { hint.textContent = '환율 로딩 중...'; return; }
+      const krw = toKRW(amt, cur);
+      hint.textContent = `≈ ₩${Math.round(krw).toLocaleString('ko-KR')} (실시간 환율)`;
+    };
+
     // 후원 인증 제출
     window.submitDonCert = async function() {
       if (!currentUser) { alert('로그인이 필요합니다.'); return; }
       if (!appData.nickname) { closeDonationModal(); openNicknameModal(); return; }
       const amtEl = document.getElementById('don-cert-amount');
+      const curEl = document.getElementById('don-cert-currency');
       const methodEl = document.getElementById('don-cert-method');
       const noteEl = document.getElementById('don-cert-note');
-      const amount = parseInt(amtEl?.value || '0', 10);
-      if (!amount || amount < 1000) { alert('1,000원 이상 금액을 입력하세요.'); return; }
-      const method = methodEl?.value || 'kakao';
+      const amtRaw = parseFloat(amtEl?.value || '0');
+      const currency = curEl?.value || 'KRW';
+      // KRW로 변환 (명예의전당 등급 기준)
+      const amountKRW = currency === 'KRW' ? Math.round(amtRaw) : Math.round(toKRW(amtRaw, currency));
+      if (!amtRaw || amountKRW < 1000) { alert('1,000원 이상(또는 동일 가치의 외화) 금액을 입력하세요.'); return; }
+      const amount = amountKRW; // Firestore 저장값은 항상 KRW 기준
+      const method = methodEl?.value || 'usdt_sol';
       const note = noteEl?.value?.trim() || '';
       const btn = document.getElementById('don-cert-submit-btn');
       if (btn) btn.disabled = true;
       try {
         await addDoc(collection(db,'donation_requests'), {
           uid: currentUser.uid, nickname: appData.nickname,
-          amount, method, note, time: Date.now(), status: 'pending'
+          amount,                          // KRW 환산값 (등급 기준)
+          amountRaw: amtRaw, currency,     // 원본 입력값 + 통화
+          method, note, time: Date.now(), status: 'pending'
         });
         document.getElementById('don-cert-section').innerHTML =
           `<div style="padding:16px;text-align:center;color:#4ade80;font-size:14px;font-weight:700">
@@ -8939,8 +8959,10 @@
     body.light-mode #don-cert-section [style*="color:#9ca3af"] { color: #64748b !important; }
     body.light-mode #don-cert-section [style*="color:#6b7280"] { color: #64748b !important; }
     body.light-mode #don-cert-amount,
+    body.light-mode #don-cert-currency,
     body.light-mode #don-cert-method,
     body.light-mode #don-cert-note { background: #ffffff !important; border-color: #d1d5db !important; color: #374151 !important; }
+    body.light-mode #don-krw-hint { color: #7c3aed !important; }
   </style>
 </head>
 <body>
@@ -10108,10 +10130,21 @@
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <div>
-            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">후원 금액 (원)</div>
-            <input id="don-cert-amount" type="number" min="1000" step="1000" placeholder="예: 10000"
-              style="width:100%;padding:9px 12px;background:#0d0d1a;border:1px solid #374151;border-radius:8px;
-                     color:#e2e8f0;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box"/>
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">후원 금액</div>
+            <div style="display:grid;grid-template-columns:80px 1fr;gap:6px;align-items:center">
+              <select id="don-cert-currency" onchange="updateDonKrwHint()"
+                style="padding:9px 8px;background:#0d0d1a;border:1px solid #374151;border-radius:8px;
+                       color:#e2e8f0;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box">
+                <option value="KRW">🇰🇷 KRW</option>
+                <option value="USD">🇺🇸 USD</option>
+                <option value="USDT" selected>🪙 USDT</option>
+              </select>
+              <input id="don-cert-amount" type="number" min="0" step="0.01" placeholder="예: 10"
+                oninput="updateDonKrwHint()"
+                style="width:100%;padding:9px 12px;background:#0d0d1a;border:1px solid #374151;border-radius:8px;
+                       color:#e2e8f0;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box"/>
+            </div>
+            <div id="don-krw-hint" style="font-size:11px;color:#a78bfa;margin-top:4px;min-height:16px"></div>
           </div>
           <div>
             <div style="font-size:11px;color:#6b7280;margin-bottom:4px">후원 방법</div>
