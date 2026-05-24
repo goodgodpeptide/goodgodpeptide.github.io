@@ -4238,14 +4238,15 @@
     // ══════════════════════════════════════════════
     // 비용 계산기 (실시간 환율)
     // ══════════════════════════════════════════════
-    let fxRates = null; // { KRW, JPY, CNY, INR } (기준: 1 USD)
+    let fxRates = null; // { KRW, JPY, CNY, INR, USDT } (기준: 1 USD)
     let fxLastFetched = 0;
     const FX_CURRENCIES = [
-      { code:'KRW', symbol:'₩', name:'원화', flag:'🇰🇷' },
-      { code:'USD', symbol:'$', name:'달러', flag:'🇺🇸' },
-      { code:'JPY', symbol:'¥', name:'엔화', flag:'🇯🇵' },
-      { code:'CNY', symbol:'¥', name:'위안화', flag:'🇨🇳' },
-      { code:'INR', symbol:'₹', name:'루피', flag:'🇮🇳' },
+      { code:'KRW',  symbol:'₩', name:'원화',  flag:'🇰🇷' },
+      { code:'USD',  symbol:'$', name:'달러',  flag:'🇺🇸' },
+      { code:'USDT', symbol:'₮', name:'USDT',  flag:'🪙'  },
+      { code:'JPY',  symbol:'¥', name:'엔화',  flag:'🇯🇵' },
+      { code:'CNY',  symbol:'¥', name:'위안화', flag:'🇨🇳' },
+      { code:'INR',  symbol:'₹', name:'루피',  flag:'🇮🇳' },
     ];
 
     async function fetchFxRates(force = false) {
@@ -4256,7 +4257,7 @@
       try {
         const res = await fetch("https://api.frankfurter.app/latest?from=USD&to=KRW,JPY,CNY,INR");
         const data = await res.json();
-        fxRates = { USD: 1, ...data.rates };
+        fxRates = { USD: 1, ...data.rates, USDT: 1 }; // USDT ≈ USD 페그
         fxLastFetched = now;
         const d = new Date(data.date);
         if (statusEl) statusEl.textContent = `ECB 기준 ${d.toLocaleDateString('ko-KR')} · 자동갱신 1h`;
@@ -4393,11 +4394,15 @@
       const lblClr = isLight ? '#374151' : '#94a3b8';
       const valClr = isLight ? '#111827' : '#e2e8f0';
 
-      const currencyRows = FX_CURRENCIES.map(c => `
-        <div style="display:flex;justify-content:space-between;padding:5px 10px;border-radius:6px;margin-bottom:3px;background:${c.code==='KRW'?'#60a5fa11':rowBg}">
-          <span style="font-size:11px;color:${lblClr}">${c.flag} ${c.name}</span>
-          <span style="font-size:12px;font-weight:700;color:${c.code==='KRW'?'#60a5fa':valClr};font-family:'JetBrains Mono'">${formatCurrency(totalPerInj, c.code)}</span>
-        </div>`).join('');
+      // 입력 통화가 KRW가 아니면 [입력통화 + KRW] 쌍을 상단에 강조, 나머지는 아래 접힘
+      const highlightCodes = purchaseCurrency === 'KRW' ? ['KRW'] : [purchaseCurrency, 'KRW'];
+      const currencyRows = FX_CURRENCIES.map(c => {
+        const isHighlight = highlightCodes.includes(c.code);
+        return `<div style="display:flex;justify-content:space-between;padding:${isHighlight?'7px':'5px'} 10px;border-radius:6px;margin-bottom:3px;background:${isHighlight?(c.code==='KRW'?'#60a5fa18':'#a78bfa18'):rowBg};${isHighlight?'border:1px solid '+(c.code==='KRW'?'#60a5fa33':'#a78bfa33'):''}">
+          <span style="font-size:11px;color:${isHighlight?(c.code==='KRW'?'#60a5fa':'#a78bfa'):lblClr}">${c.flag} ${c.name}</span>
+          <span style="font-size:${isHighlight?'13':'12'}px;font-weight:700;color:${isHighlight?(c.code==='KRW'?'#60a5fa':'#a78bfaee'):valClr};font-family:'JetBrains Mono'">${formatCurrency(totalPerInj, c.code)}</span>
+        </div>`;
+      }).join('');
 
       resultEl.innerHTML = `
         <div style="background:${isLight?'#f1f5f9':'#0a0a14'};border-radius:10px;padding:12px;margin-top:8px">
@@ -9198,6 +9203,7 @@
               <select id="cost-currency" class="input-field" style="width:100%" onchange="calcCost();saveCostSettings()">
                 <option value="KRW">🇰🇷 KRW</option>
                 <option value="USD" selected>🇺🇸 USD</option>
+                <option value="USDT">🪙 USDT</option>
                 <option value="JPY">🇯🇵 JPY</option>
                 <option value="CNY">🇨🇳 CNY</option>
                 <option value="INR">🇮🇳 INR</option>
