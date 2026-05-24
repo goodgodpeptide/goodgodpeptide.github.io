@@ -4254,18 +4254,39 @@
       if (!force && fxRates && now - fxLastFetched < 3600000) return; // 1시간 캐시
       const statusEl = document.getElementById("fx-status");
       if (statusEl) statusEl.textContent = "환율 불러오는 중...";
+      let loaded = false;
+      // 1순위: open.er-api.com (실시간, 무료)
       try {
-        const res = await fetch("https://api.frankfurter.app/latest?from=USD&to=KRW,JPY,CNY,INR");
+        const res = await fetch("https://open.er-api.com/v6/latest/USD");
         const data = await res.json();
-        fxRates = { USD: 1, ...data.rates, USDT: 1 }; // USDT ≈ USD 페그
-        fxLastFetched = now;
-        const d = new Date(data.date);
-        if (statusEl) statusEl.textContent = `ECB 기준 ${d.toLocaleDateString('ko-KR')} · 자동갱신 1h`;
-        renderFxBar();
-        calcCost();
-      } catch(e) {
-        if (statusEl) statusEl.textContent = "환율 로드 실패 (오프라인?)";
+        if (data.result === "success" && data.rates?.KRW) {
+          fxRates = { USD: 1, ...data.rates, USDT: 1 };
+          fxLastFetched = now;
+          const d = new Date(data.time_last_update_utc);
+          if (statusEl) statusEl.textContent = `실시간 기준 ${d.toLocaleDateString('ko-KR')} · 자동갱신 1h`;
+          loaded = true;
+        }
+      } catch(_) {}
+      // 2순위: frankfurter.dev (ECB 기준, 영업일 1회)
+      if (!loaded) {
+        try {
+          const res = await fetch("https://api.frankfurter.dev/v1/latest?from=USD&to=KRW,JPY,CNY,INR");
+          const data = await res.json();
+          if (data.rates?.KRW) {
+            fxRates = { USD: 1, ...data.rates, USDT: 1 };
+            fxLastFetched = now;
+            const d = new Date(data.date);
+            if (statusEl) statusEl.textContent = `ECB 기준 ${d.toLocaleDateString('ko-KR')} · 자동갱신 1h`;
+            loaded = true;
+          }
+        } catch(_) {}
       }
+      if (!loaded) {
+        if (statusEl) statusEl.textContent = "환율 로드 실패 (오프라인?)";
+        return;
+      }
+      renderFxBar();
+      calcCost();
     }
 
     function renderFxBar() {
