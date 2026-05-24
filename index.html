@@ -2376,6 +2376,22 @@
           ddayEl.textContent = ddayText;
           ddayEl.style.cssText = `background:${ddayColor}22;border:1px solid ${ddayColor}55;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${ddayColor};display:${ddayText?'':'none'}`;
         }
+        // 소실 예상 뱃지 실시간 갱신
+        const clrEl = document.getElementById("live-clearance-" + cfg.short);
+        if (clrEl && lastRec) {
+          const lastDrugTime = Math.max(...(appData.records||[]).filter(r=>r.drug===drug).map(r=>r.time));
+          const ct = lastDrugTime + cfg.halfLifeDays * 5 * 86400000;
+          const KST = 9 * 3600000;
+          if (ct > now) {
+            const daysLeft = Math.ceil((ct - now) / 86400000);
+            const kd = new Date(ct + KST);
+            clrEl.textContent = `소실 ${kd.getUTCMonth()+1}/${kd.getUTCDate()} (${daysLeft}일 후)`;
+            clrEl.style.color = "#a78bfa";
+          } else {
+            clrEl.textContent = "소실 완료";
+            clrEl.style.color = "#6b7280";
+          }
+        }
       });
       // 그래프 재렌더는 5초에 1번만 (DPR×2 캔버스 + STEPS=400 재계산은 비싸기 때문)
       // 농도/D-day/진행바 같은 DOM 텍스트 갱신은 매초 그대로 유지
@@ -2423,6 +2439,22 @@
 
         const pct = lastDose > 0 ? Math.min(100, Math.round(rem / lastDose * 100)) : 0;
         const siteNext = getNextSuggested();
+
+        // 소실 예상 시점 계산 (5×반감기)
+        const KST_CARD = 9 * 3600000;
+        let clearanceBadge = "";
+        if (lastRec) {
+          const lastDrugTime = Math.max(...(appData.records||[]).filter(r=>r.drug===drug).map(r=>r.time));
+          const ct = lastDrugTime + cfg.halfLifeDays * 5 * 86400000;
+          if (ct > now) {
+            const daysLeft = Math.ceil((ct - now) / 86400000);
+            const kd = new Date(ct + KST_CARD);
+            const dateStr = `${kd.getUTCMonth()+1}/${kd.getUTCDate()}`;
+            clearanceBadge = `<span id="live-clearance-${cfg.short}" style="font-size:10px;color:#a78bfa;background:#a78bfa11;border:1px solid #a78bfa33;border-radius:12px;padding:2px 8px;white-space:nowrap">소실 ${dateStr} (${daysLeft}일 후)</span>`;
+          } else {
+            clearanceBadge = `<span id="live-clearance-${cfg.short}" style="font-size:10px;color:#6b7280;background:#6b728011;border:1px solid #6b728033;border-radius:12px;padding:2px 8px;white-space:nowrap">소실 완료</span>`;
+          }
+        }
 
         const t = isLight ? {
           name:    "#1a1a2e",
@@ -2486,9 +2518,12 @@
           </div>
 
           <!-- 잔류 진행바 -->
-          <div style="height:4px;background:${t.barBg};border-radius:2px;overflow:hidden;margin-bottom:10px">
+          <div style="height:4px;background:${t.barBg};border-radius:2px;overflow:hidden;margin-bottom:6px">
             <div id="live-bar-${cfg.short}" style="height:100%;width:${pct}%;background:linear-gradient(90deg,${cfg.color}66,${cfg.color});border-radius:2px;transition:width .6s"></div>
           </div>
+
+          <!-- 소실 예상 뱃지 -->
+          <div style="margin-bottom:10px">${clearanceBadge}</div>
 
           <!-- 원터치 투약 버튼 -->
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
@@ -2690,6 +2725,17 @@
       // 터치핸들러(getFullRange)와 공유 — 반드시 renderPeptideGraph와 동일한 값 유지
       _graphFullRange = fullRange;
       _graphFullMinTime = fullMinTime;
+
+      // 약물별 소실 예상 시점 (5×반감기 ≈ 잔류량 3% 이하)
+      const drugClearanceTimes = {};
+      let totalClearanceTime = 0;
+      Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+        const dr = records.filter(r => r.drug === drug);
+        if (!dr.length) return;
+        const ct = Math.max(...dr.map(r => r.time)) + cfg.halfLifeDays * 5 * 86400000;
+        drugClearanceTimes[drug] = ct;
+        if (ct > totalClearanceTime) totalClearanceTime = ct;
+      });
 
       const visRange = fullRange / graphZoom.scale;
       const visMinTime = fullMinTime + graphZoom.offsetX;
@@ -2922,6 +2968,65 @@
         ctx.lineTo(nx + 5, PAD.t + gH + 10);
         ctx.closePath(); ctx.fill();
       });
+
+      // ── 체내 소실 예상 수직선 (약물별 5×반감기) ──────────────────
+      {
+        const KST = 9 * 3600000;
+        const activeDrugsClearance = Object.entries(drugClearanceTimes)
+          .filter(([drug]) => graphDrugFilter === "전체" || DRUG_CONFIG[drug]?.short === graphDrugFilter)
+          .filter(([, ct]) => ct > now); // 이미 소실된 약물은 제외
+
+        // 약물이 2개 이상이면 개별 선 표시 (단일 약물은 리셋 선 하나만)
+        if (activeDrugsClearance.length > 1) {
+          activeDrugsClearance.forEach(([drug, ct]) => {
+            const cfg = DRUG_CONFIG[drug];
+            if (!cfg) return;
+            const cx = PAD.l + ((ct - visMinTime) / visRange) * gW;
+            if (cx < PAD.l || cx > PAD.l + gW) return;
+            // 점선 (약물 색상, 연하게)
+            ctx.strokeStyle = cfg.color + "66"; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
+            ctx.beginPath(); ctx.moveTo(cx, PAD.t + 36); ctx.lineTo(cx, PAD.t + gH); ctx.stroke();
+            ctx.setLineDash([]);
+            // 하단 다이아몬드 마커
+            ctx.fillStyle = cfg.color + "88";
+            ctx.beginPath();
+            ctx.moveTo(cx, PAD.t + gH + 2); ctx.lineTo(cx - 4, PAD.t + gH + 8);
+            ctx.lineTo(cx, PAD.t + gH + 14); ctx.lineTo(cx + 4, PAD.t + gH + 8);
+            ctx.closePath(); ctx.fill();
+          });
+        }
+
+        // 전체 소실(수용체 리셋) 선 — 모든 약물 소실 시점 중 최대값
+        if (totalClearanceTime > now) {
+          const tcx = PAD.l + ((totalClearanceTime - visMinTime) / visRange) * gW;
+          if (tcx >= PAD.l && tcx <= PAD.l + gW) {
+            const kd = new Date(totalClearanceTime + KST);
+            const dateStr = `${kd.getUTCMonth()+1}/${kd.getUTCDate()}`;
+            const daysLeft = Math.ceil((totalClearanceTime - now) / 86400000);
+            // 수직선 (보라색, 굵게)
+            ctx.strokeStyle = "#a78bfaaa"; ctx.lineWidth = 2; ctx.setLineDash([4, 4]);
+            ctx.beginPath(); ctx.moveTo(tcx, PAD.t); ctx.lineTo(tcx, PAD.t + gH); ctx.stroke();
+            ctx.setLineDash([]);
+            // 상단 레이블
+            const isRight = tcx > cW - 80;
+            ctx.textAlign = isRight ? "right" : "center";
+            const anchor = isRight ? tcx - 5 : tcx;
+            ctx.fillStyle = "#a78bfa";
+            ctx.font = "bold 10px 'Noto Sans KR'";
+            ctx.fillText("수용체 리셋", anchor, PAD.t + 12);
+            ctx.font = "9px 'JetBrains Mono'";
+            ctx.fillStyle = "#a78bfacc";
+            ctx.fillText(`${dateStr} (${daysLeft}일 후)`, anchor, PAD.t + 23);
+            // 하단 원형 마커
+            ctx.fillStyle = "#a78bfa";
+            ctx.beginPath(); ctx.arc(tcx, PAD.t + gH + 8, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "#080810";
+            ctx.font = "bold 7px 'JetBrains Mono'";
+            ctx.textAlign = "center";
+            ctx.fillText("R", tcx, PAD.t + gH + 11);
+          }
+        }
+      }
 
       // 범례
       let lx = PAD.l + 4;
