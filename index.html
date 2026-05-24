@@ -2719,7 +2719,7 @@
           const lastDrugTime = Math.max(...drugRecs.map(r => r.time));
           clearanceTime = Math.max(clearanceTime, lastDrugTime + cfg.halfLifeDays * 5 * 86400000);
         });
-        fullMaxTime = Math.max(now, clearanceTime || now + 35 * 86400000);
+        fullMaxTime = Math.max(now, clearanceTime || now + 35 * 86400000) + 7 * 86400000; // 소실 후 7일 여유
       }
       const fullRange = fullMaxTime - fullMinTime;
       // 터치핸들러(getFullRange)와 공유 — 반드시 renderPeptideGraph와 동일한 값 유지
@@ -2816,7 +2816,7 @@
         ctx.fillText(label, x, cH - 5);
       }
 
-      // x축 오늘 날짜 강조 레이블
+      // x축 오늘 날짜 강조 레이블 (배경박스 없이 굵은 텍스트만)
       const nowXLabel = PAD.l + ((now - visMinTime) / visRange) * gW;
       if (nowXLabel >= PAD.l && nowXLabel <= PAD.l + gW) {
         const nd = new Date(now + 9 * 3600000); // KST
@@ -2824,12 +2824,8 @@
         if (visRange <= 2 * 3600000) nowLabel = `${nd.getUTCHours()}:${String(nd.getUTCMinutes()).padStart(2,'0')}`;
         else if (visRange <= 48 * 3600000) nowLabel = `${nd.getUTCMonth()+1}/${nd.getUTCDate()} ${nd.getUTCHours()}시`;
         else nowLabel = `${nd.getUTCMonth()+1}/${nd.getUTCDate()}`;
-        ctx.font = "bold 10px 'Noto Sans KR'";
-        const lw = ctx.measureText(nowLabel).width + 10;
-        // 배경박스 (기존 레이블 겹침 처리)
-        ctx.fillStyle = isLight ? "#f0f4f8ee" : "#080810ee";
-        ctx.fillRect(nowXLabel - lw/2, cH - 17, lw, 14);
-        ctx.fillStyle = isLight ? "#1e293b" : "#ffffffdd";
+        ctx.font = "bold 11px 'Noto Sans KR'";
+        ctx.fillStyle = isLight ? "#1e293b" : "#ffffffee";
         ctx.textAlign = "center";
         ctx.fillText(nowLabel, nowXLabel, cH - 5);
       }
