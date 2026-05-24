@@ -5476,7 +5476,7 @@
                   <span style="font-size:12px;font-weight:700;color:${sub};margin-left:6px">${e.amount.toLocaleString()}원</span>
                 </div>
                 <div style="display:flex;gap:5px">
-                  <button onclick="showHofEditForm(${i},'${escapeJsString(e.nickname)}',${e.amount})"
+                  <button onclick="showHofEditForm(${i},'${escapeJsString(e.nickname)}',${e.amount},'${escapeJsString(e.note||'')}')"
                     style="padding:4px 10px;background:${isL?'#f3f4f6':'#1e293b'};border:1px solid ${isL?'#d1d5db':'#374151'};border-radius:7px;color:${txt};font-size:11px;cursor:pointer;font-family:inherit">✏️ 수정</button>
                   <button onclick="deleteHofEntry(${i})"
                     style="padding:4px 10px;background:#991b1b;border:none;border-radius:7px;color:#fca5a5;font-size:11px;cursor:pointer;font-family:inherit">🗑</button>
@@ -5547,21 +5547,25 @@
     };
 
     // 명예의전당 항목 수정 (인라인 편집창 표시)
-    window.showHofEditForm = function(idx, nickname, amount) {
+    window.showHofEditForm = function(idx, nickname, amount, note) {
       const el = document.getElementById('hof-edit-'+idx);
       if (!el) return;
       const isL = document.body.classList.contains('light-mode');
       const iBg = isL?'#fff':'#0d0d1a', iB = isL?'#d1d5db':'#374151', txt = isL?'#374151':'#e2e8f0';
       el.innerHTML = `
-        <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap">
-          <input id="hof-edit-nick-${idx}" value="${escapeHtml(nickname)}" placeholder="닉네임"
-            style="flex:1;min-width:80px;padding:6px 10px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-size:12px;font-family:inherit;outline:none"/>
-          <input id="hof-edit-amt-${idx}" type="number" value="${amount}" placeholder="금액(원)"
-            style="width:90px;padding:6px 10px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-size:12px;font-family:inherit;outline:none"/>
-          <button onclick="saveHofEdit(${idx})"
-            style="padding:6px 12px;background:#1d4ed8;border:none;border-radius:8px;color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">저장</button>
-          <button onclick="document.getElementById('hof-edit-${idx}').innerHTML=''"
-            style="padding:6px 10px;background:none;border:1px solid ${iB};border-radius:8px;color:#6b7280;font-size:11px;cursor:pointer;font-family:inherit">취소</button>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <input id="hof-edit-nick-${idx}" value="${escapeHtml(nickname)}" placeholder="닉네임"
+              style="flex:1;min-width:80px;padding:6px 10px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-size:12px;font-family:inherit;outline:none"/>
+            <input id="hof-edit-amt-${idx}" type="number" value="${amount}" placeholder="금액(원)"
+              style="width:90px;padding:6px 10px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-size:12px;font-family:inherit;outline:none"/>
+            <button onclick="saveHofEdit(${idx})"
+              style="padding:6px 12px;background:#1d4ed8;border:none;border-radius:8px;color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">저장</button>
+            <button onclick="document.getElementById('hof-edit-${idx}').innerHTML=''"
+              style="padding:6px 10px;background:none;border:1px solid ${iB};border-radius:8px;color:#6b7280;font-size:11px;cursor:pointer;font-family:inherit">취소</button>
+          </div>
+          <textarea id="hof-edit-note-${idx}" placeholder="응원 메시지 (선택)" rows="2"
+            style="width:100%;box-sizing:border-box;padding:6px 10px;background:${iBg};border:1px solid ${iB};border-radius:8px;color:${txt};font-size:12px;font-family:inherit;outline:none;resize:vertical">${escapeHtml(note||'')}</textarea>
         </div>`;
     };
 
@@ -5571,8 +5575,10 @@
       if (!currentUserIsAdmin) { alert('관리자 권한이 필요합니다'); return; }
       const nickEl = document.getElementById('hof-edit-nick-'+idx);
       const amtEl  = document.getElementById('hof-edit-amt-'+idx);
+      const noteEl = document.getElementById('hof-edit-note-'+idx);
       const nickname = nickEl?.value?.trim();
       const amount   = parseInt(amtEl?.value || '0', 10);
+      const note     = noteEl?.value?.trim() || '';
       if (!nickname) { alert('닉네임을 입력하세요.'); return; }
       if (!amount || amount < 1) { alert('금액을 입력하세요.'); return; }
       try {
@@ -5580,7 +5586,7 @@
         const snap = await getDoc(hofRef);
         if (!snap.exists()) return;
         const entries = snap.data().entries || [];
-        entries[idx] = { ...entries[idx], nickname, amount };
+        entries[idx] = { ...entries[idx], nickname, amount, note };
         await setDoc(hofRef, { entries });
         showToast('✅ 수정됐습니다');
         await loadAdminDonations();
