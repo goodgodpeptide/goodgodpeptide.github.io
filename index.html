@@ -2992,19 +2992,35 @@
           .filter(([drug]) => graphDrugFilter === "전체" || DRUG_CONFIG[drug]?.short === graphDrugFilter)
           .filter(([, ct]) => ct > now); // 이미 소실된 약물은 제외
 
-        // 약물이 2개 이상이면 개별 선 표시 (단일 약물은 리셋 선 하나만)
+        // 약물이 2개 이상이면 개별 선 + 날짜 레이블 표시 (단일 약물은 리셋 선 하나만)
         if (activeDrugsClearance.length > 1) {
-          activeDrugsClearance.forEach(([drug, ct]) => {
+          // ct 오름차순 정렬 → 겹침 방지 Y 오프셋 일관성 확보
+          const sorted = [...activeDrugsClearance].sort(([, a], [, b]) => a - b);
+          sorted.forEach(([drug, ct], labelIdx) => {
             const cfg = DRUG_CONFIG[drug];
             if (!cfg) return;
             const cx = PAD.l + ((ct - visMinTime) / visRange) * gW;
             if (cx < PAD.l || cx > PAD.l + gW) return;
-            // 점선 (약물 색상, 연하게)
-            ctx.strokeStyle = cfg.color + "66"; ctx.lineWidth = 1; ctx.setLineDash([2, 5]);
-            ctx.beginPath(); ctx.moveTo(cx, PAD.t + 36); ctx.lineTo(cx, PAD.t + gH); ctx.stroke();
+            // 점선 (약물 색상)
+            ctx.strokeStyle = cfg.color + "99"; ctx.lineWidth = 1.5; ctx.setLineDash([2, 5]);
+            ctx.beginPath(); ctx.moveTo(cx, PAD.t); ctx.lineTo(cx, PAD.t + gH); ctx.stroke();
             ctx.setLineDash([]);
+            // 상단 레이블 (Y오프셋으로 겹침 방지: 총 리셋 레이블 아래 36px부터 22px 간격)
+            const kd = new Date(ct + KST);
+            const dateStr = `${kd.getUTCMonth()+1}/${kd.getUTCDate()}`;
+            const daysLeft = Math.ceil((ct - now) / 86400000);
+            const baseY = PAD.t + 36 + labelIdx * 22;
+            const isRight = cx > cW - 80;
+            ctx.textAlign = isRight ? "right" : "left";
+            const anchor = isRight ? cx - 5 : cx + 4;
+            ctx.fillStyle = cfg.color;
+            ctx.font = "bold 9px 'Noto Sans KR'";
+            ctx.fillText(`${cfg.short} 소실`, anchor, baseY);
+            ctx.font = "8px 'JetBrains Mono'";
+            ctx.fillStyle = cfg.color + "bb";
+            ctx.fillText(`${dateStr}(${daysLeft}일)`, anchor, baseY + 10);
             // 하단 다이아몬드 마커
-            ctx.fillStyle = cfg.color + "88";
+            ctx.fillStyle = cfg.color;
             ctx.beginPath();
             ctx.moveTo(cx, PAD.t + gH + 2); ctx.lineTo(cx - 4, PAD.t + gH + 8);
             ctx.lineTo(cx, PAD.t + gH + 14); ctx.lineTo(cx + 4, PAD.t + gH + 8);
