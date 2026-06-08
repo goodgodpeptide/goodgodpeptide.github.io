@@ -4254,7 +4254,7 @@
         hint.style.color = "#fbbf24";
         return;
       }
-      const conc = (vialMg * 1000) / waterMl;  // mcg/ml
+      const conc = vialMg / waterMl;             // mg/ml
       const volume = doseMg / conc;              // ml
       const units = volume * 100;                // U
       hint.style.color = "#60a5fa";
@@ -4290,7 +4290,7 @@
         hint.style.color = "#fbbf24";
         return;
       }
-      const conc = (vialMg * 1000) / waterMl;
+      const conc = vialMg / waterMl;
       const volume = doseMg / conc;
       const units = volume * 100;
       hint.style.color = "#4ade80";
@@ -4343,14 +4343,14 @@
       const water = parseFloat(document.getElementById("c-water").value);
       const dose = parseFloat(document.getElementById("c-dose").value);
       if (!vial||!water||!dose) return;
-      const conc = (vial * 1000) / water;
-      const volume = dose / conc;
-      const units = volume * 100;
-      const injPerVial = (vial * 1000) / dose;
+      const conc = vial / water;             // mg/ml
+      const volume = dose / conc;            // ml
+      const units = volume * 100;            // U (1ml=100U)
+      const injPerVial = vial / dose;
       document.getElementById("calc-result").innerHTML = `
         <div class="result-card">
-          <div class="result-row"><span>농도</span><span>${conc.toFixed(0)} mcg/ml</span></div>
-          <div class="result-row"><span>1회 투여량</span><span>${(volume*1000).toFixed(0)} μL</span></div>
+          <div class="result-row"><span>농도</span><span>${(conc*1000).toFixed(0)} mcg/ml</span></div>
+          <div class="result-row"><span>1회 투여량</span><span>${(volume*1000).toFixed(1)} μL</span></div>
           <div class="result-row"><span>인슐린 단위</span><span>${units.toFixed(1)} U</span></div>
           <div class="result-row" style="border:none"><span>바이알당 횟수</span><span>${injPerVial.toFixed(0)}회</span></div>
         </div>`;
