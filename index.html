@@ -4258,7 +4258,9 @@
       const volume = doseMg / conc;              // ml
       const units = volume * 100;                // U
       hint.style.color = "#60a5fa";
-      hint.textContent = `≈ ${units.toFixed(1)} U (클릭) · ${(volume*1000).toFixed(0)} μL — ${src}`;
+      const unitStr = units >= 0.1 ? units.toFixed(1) : units.toFixed(3);
+      const ulStr = (volume*1000) >= 1 ? (volume*1000).toFixed(1) : (volume*1000).toFixed(2);
+      hint.textContent = `≈ ${unitStr} U (클릭) · ${ulStr} μL — ${src}`;
     };
 
     // 투약 카드 Unit 힌트 (메인 화면 원터치 투약 입력창용)
@@ -4292,7 +4294,9 @@
       const volume = doseMg / conc;
       const units = volume * 100;
       hint.style.color = "#4ade80";
-      hint.textContent = `≈ ${units.toFixed(1)} U (클릭) · ${(volume*1000).toFixed(0)} μL — ${src}`;
+      const unitStr = units >= 0.1 ? units.toFixed(1) : units.toFixed(3);
+      const ulStr = (volume*1000) >= 1 ? (volume*1000).toFixed(1) : (volume*1000).toFixed(2);
+      hint.textContent = `≈ ${unitStr} U (클릭) · ${ulStr} μL — ${src}`;
     };
 
     window.openAddModal = (prefillDrug) => {
