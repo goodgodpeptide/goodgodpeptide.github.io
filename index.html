@@ -1772,9 +1772,9 @@
     };
     const TIMING_ICONS = {
       "아침":"🌅", "점심":"☀️", "저녁":"🌆", "자기전":"🌙",
-      "아침식전":"🌅前", "아침식후":"🌅後",
-      "점심식전":"☀️前", "점심식후":"☀️後",
-      "저녁식전":"🌆前", "저녁식후":"🌆後"
+      "아침식전":"🌅↑", "아침식후":"🌅↓",
+      "점심식전":"☀️↑", "점심식후":"☀️↓",
+      "저녁식전":"🌆↑", "저녁식후":"🌆↓"
     };
     // 앞 4개: 기존 호환 시간대 / 뒤 6개: 식전·식후 세분화
     const ALL_TIMINGS = ["아침", "점심", "저녁", "자기전", "아침식전", "아침식후", "점심식전", "점심식후", "저녁식전", "저녁식후"];
@@ -1981,15 +1981,31 @@
       renderSupplementPanel();
     };
 
-    // 영양제 시간대 토글 (아침/점심/저녁/자기전)
+    // 영양제 시간대 토글 (아침/점심/저녁/자기전 — 식전/식후 상호 배타)
     window.toggleSupplTiming = (id, timing) => {
       appData.supplements = getSupplements();
       const sup = appData.supplements.find(s => s.id === id);
       if (!sup) return;
       sup.timing = sup.timing || [];
       const idx = sup.timing.indexOf(timing);
-      if (idx >= 0) sup.timing.splice(idx, 1);
-      else sup.timing.push(timing);
+      if (idx >= 0) {
+        sup.timing.splice(idx, 1);
+      } else {
+        sup.timing.push(timing);
+        // 식전/식후 선택 시 기본 타이밍 제거 (중복 그룹 방지)
+        const BASE_TO_SUB = { "아침":["아침식전","아침식후"], "점심":["점심식전","점심식후"], "저녁":["저녁식전","저녁식후"] };
+        const SUB_TO_BASE = { "아침식전":"아침","아침식후":"아침","점심식전":"점심","점심식후":"점심","저녁식전":"저녁","저녁식후":"저녁" };
+        if (SUB_TO_BASE[timing]) {
+          // 식전/식후 추가 → 기본 타이밍 제거
+          const base = SUB_TO_BASE[timing];
+          sup.timing = sup.timing.filter(t => t !== base);
+        } else if (BASE_TO_SUB[timing]) {
+          // 기본 타이밍 추가 → 식전/식후 제거
+          BASE_TO_SUB[timing].forEach(sub => {
+            sup.timing = sup.timing.filter(t => t !== sub);
+          });
+        }
+      }
       if (!sup.timing.length) sup.timing.push("아침"); // 최소 1개
       scheduleSave();
       renderSupplementPanel();
@@ -4212,7 +4228,12 @@
       const drug = document.getElementById("add-drug")?.value;
       const doseMg = parseFloat(document.getElementById("add-dose")?.value);
       hint.textContent = "";
-      if (!drug || !doseMg || doseMg <= 0) return;
+      if (!drug) return;
+      if (!doseMg || doseMg <= 0) {
+        hint.textContent = "💉 용량 입력 시 Unit(클릭) 자동 계산";
+        hint.style.color = "#6b7280";
+        return;
+      }
 
       let vialMg = 0, waterMl = 0, src = "";
       // ① 조제기록에서 해당 약물 최신 기록
