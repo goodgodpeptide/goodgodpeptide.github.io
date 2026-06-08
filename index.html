@@ -7451,7 +7451,7 @@
                 </button>
                 <span style="font-size:13px;color:${done?'#4ade80':'#e2e8f0'}">${s.name}</span>
               </div>
-              <span style="font-size:11px;color:#4a5568">${s.times?.[timing]||TIMING_DEFAULT_TIMES[timing]||''}</span>
+              <span style="font-size:11px;color:${done?'#4ade80':'#4a5568'}">${done && typeof s.taken?.[dateKey+"_"+timing] === 'string' ? s.taken[dateKey+"_"+timing]+' 복용' : (s.times?.[timing]||TIMING_DEFAULT_TIMES[timing]||'')}</span>
             </div>`;
           }).join('')}
         </div>`;
@@ -7466,7 +7466,13 @@
       sup.taken = sup.taken || {};
       const key = dateKey + "_" + timing;
       const wasDone = !!sup.taken[key];
-      sup.taken[key] = !wasDone;
+      if (!wasDone && dateKey === getTodayKey()) {
+        const now = new Date();
+        const kst = new Date(now.toLocaleString("en-US", {timeZone:"Asia/Seoul"}));
+        sup.taken[key] = String(kst.getHours()).padStart(2,'0') + ':' + String(kst.getMinutes()).padStart(2,'0');
+      } else {
+        sup.taken[key] = !wasDone;
+      }
       updateSuppStock(sup, !wasDone);
       scheduleSave();
       renderCalSuppModal(dateKey);
