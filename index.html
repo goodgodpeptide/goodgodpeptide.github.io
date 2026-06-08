@@ -4205,6 +4205,7 @@
     // 모달 헬퍼
     // ══════════════════════════════════════════════
     // 투약 모달 — 조제기록 연동 Unit(클릭) 실시간 힌트
+    // 우선순위: ① reconVials 최신 조제기록 → ② 계산기 탭(c-vial/c-water) 폴백
     window.updateDoseUnitHint = function() {
       const hint = document.getElementById("dose-unit-hint");
       if (!hint) return;
@@ -4212,17 +4213,31 @@
       const doseMg = parseFloat(document.getElementById("add-dose")?.value);
       hint.textContent = "";
       if (!drug || !doseMg || doseMg <= 0) return;
-      // 해당 약물의 최신 조제기록 조회
+
+      let vialMg = 0, waterMl = 0, src = "";
+      // ① 조제기록에서 해당 약물 최신 기록
       const vials = (appData.reconVials || [])
         .filter(v => v.drug === drug)
         .sort((a, b) => b.reconDate - a.reconDate);
-      if (!vials.length) return;
-      const v = vials[0];
-      if (!v.vialMg || !v.waterMl) return;
-      const conc = (v.vialMg * 1000) / v.waterMl;  // mcg/ml
-      const volume = doseMg / conc;                  // ml
-      const units = volume * 100;                    // U (인슐린 시린지 기준 1ml=100U)
-      hint.textContent = `≈ ${units.toFixed(1)} U (클릭) · ${(volume*1000).toFixed(0)} μL — 조제: ${v.vialMg}mg/${v.waterMl}ml`;
+      if (vials.length && vials[0].vialMg && vials[0].waterMl) {
+        vialMg = vials[0].vialMg; waterMl = vials[0].waterMl;
+        src = `조제기록 ${vialMg}mg/${waterMl}ml`;
+      } else {
+        // ② 계산기 탭 현재 값 폴백
+        vialMg = parseFloat(document.getElementById("c-vial")?.value) || 0;
+        waterMl = parseFloat(document.getElementById("c-water")?.value) || 0;
+        src = vialMg && waterMl ? `계산기 탭 ${vialMg}mg/${waterMl}ml` : "";
+      }
+      if (!vialMg || !waterMl) {
+        hint.textContent = "💡 조제기록 탭에서 바이알·주사용수 입력 후 계산 가능";
+        hint.style.color = "#9ca3af";
+        return;
+      }
+      const conc = (vialMg * 1000) / waterMl;  // mcg/ml
+      const volume = doseMg / conc;              // ml
+      const units = volume * 100;                // U
+      hint.style.color = "#60a5fa";
+      hint.textContent = `≈ ${units.toFixed(1)} U (클릭) · ${(volume*1000).toFixed(0)} μL — ${src}`;
     };
 
     window.openAddModal = (prefillDrug) => {
