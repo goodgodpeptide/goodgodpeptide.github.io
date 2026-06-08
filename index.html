@@ -4228,8 +4228,7 @@
       const drug = document.getElementById("add-drug")?.value;
       const doseMg = parseFloat(document.getElementById("add-dose")?.value);
       hint.textContent = "";
-      if (!drug) return;
-      if (!doseMg || doseMg <= 0) {
+      if (!drug || !doseMg || doseMg <= 0) {
         hint.textContent = "💉 용량 입력 시 Unit(클릭) 자동 계산";
         hint.style.color = "#6b7280";
         return;
