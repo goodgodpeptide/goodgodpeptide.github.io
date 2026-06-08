@@ -4280,7 +4280,7 @@
       };
       sel.dispatchEvent(new Event("change"));
       document.getElementById("add-modal").style.display = "flex";
-      setTimeout(() => { renderSiteSelector(); renderRouteSelector(sel.value); }, 50);
+      setTimeout(() => { renderSiteSelector(); renderRouteSelector(sel.value); updateDoseUnitHint(); }, 50);
     };
     window.closeAddModal = () => {
       _editRecordId = null;
@@ -7345,7 +7345,7 @@
         };
       }
       document.getElementById("add-modal").style.display = "flex";
-      setTimeout(() => { renderSiteSelector(); if (sel) renderRouteSelector(sel.value); }, 50);
+      setTimeout(() => { renderSiteSelector(); if (sel) renderRouteSelector(sel.value); updateDoseUnitHint(); }, 50);
     };
 
     window.calAddWeight = () => {
