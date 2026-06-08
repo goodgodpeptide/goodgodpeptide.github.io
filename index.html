@@ -10073,9 +10073,12 @@
         <!-- openAddModal()에서 DRUG_CONFIG 기반 동적 생성 -->
       </select>
     </div>
-    <div style="margin-bottom:10px"><label>용량 (mg)</label>
+    <div style="margin-bottom:10px">
+      <label style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span>용량 (mg)</span>
+        <span id="dose-unit-hint" style="font-size:11px;font-weight:600;color:#60a5fa;background:#1e3a5f;border-radius:6px;padding:2px 8px;max-width:60%;text-align:right">💉 Unit 자동계산</span>
+      </label>
       <input id="add-dose" class="input-field" type="number" step="0.1" placeholder="예: 2.5" oninput="updateDoseUnitHint()" />
-      <div id="dose-unit-hint" style="font-size:13px;font-weight:600;color:#60a5fa;margin-top:6px;padding:6px 10px;background:#1e3a5f;border-radius:8px;min-height:32px;line-height:1.5;display:flex;align-items:center">💉 용량 입력 시 Unit(클릭) 자동 계산</div>
     </div>
     <div style="margin-bottom:10px"><label>날짜 / 시간 (한국시간)</label>
       <input id="add-time" class="input-field" type="datetime-local" />
