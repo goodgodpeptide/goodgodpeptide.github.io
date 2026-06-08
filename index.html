@@ -1813,7 +1813,13 @@
       sup.taken = sup.taken || {};
       const key = getTodayKey() + "_" + timing;
       const wasDone = !!sup.taken[key];
-      sup.taken[key] = !wasDone;
+      if (!wasDone) {
+        const now = new Date();
+        const kst = new Date(now.toLocaleString("en-US", {timeZone:"Asia/Seoul"}));
+        sup.taken[key] = String(kst.getHours()).padStart(2,'0') + ':' + String(kst.getMinutes()).padStart(2,'0');
+      } else {
+        sup.taken[key] = false;
+      }
       updateSuppStock(sup, !wasDone);
       scheduleSave();
       renderSupplementPanel();
@@ -1831,10 +1837,10 @@
       return { '아침': '🌅', '점심': '☀️', '저녁': '🌙', '자기전': '🌛' }[timing] || '⏰';
     }
 
-    let _suppModalTimes = []; // 영양제 추가 모달 임시 시간 목록
+    let _suppModalTimings = []; // 영양제 추가 모달 선택 타이밍
 
     window.openAddSuppModal = function() {
-      _suppModalTimes = ['08:00']; // 기본 아침
+      _suppModalTimings = ['아침']; // 기본 아침
       const isLight = document.body.classList.contains("light-mode");
       const inputStyle = `width:100%;padding:10px;background:${isLight?'#f8fafc':'#1e293b'};border:1px solid ${isLight?'#e2e8f0':'#374151'};border-radius:8px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-size:13px;font-family:inherit;box-sizing:border-box;outline:none;`;
       const modalHtml = `
@@ -1849,11 +1855,8 @@
               <input id="modal-supp-name" type="text" placeholder="예: 오메가3, 비타민D" style="${inputStyle}" />
             </div>
             <div style="margin-bottom:12px">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                <div style="font-size:11px;color:#6b7280">복용 시간 <span style="color:#4a5568">(시간 입력 → 아침/점심/저녁/자기전 자동 분류)</span></div>
-                <button onclick="addSuppTime()" style="background:none;border:1px solid #a78bfa;border-radius:8px;color:#a78bfa;font-size:11px;cursor:pointer;padding:2px 8px;font-family:inherit">+ 시간 추가</button>
-              </div>
-              <div id="supp-time-list"></div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:8px">복용 시간대 선택 <span style="color:#4a5568">(복수 선택 가능)</span></div>
+              <div id="supp-timing-btns"></div>
             </div>
             <div style="display:flex;gap:8px;margin-top:4px">
               <button onclick="document.getElementById('add-supp-modal').remove()" style="flex:1;padding:12px;background:${isLight?'#f3f4f6':'#374151'};border:none;border-radius:10px;color:#9ca3af;font-size:13px;cursor:pointer;font-family:inherit">취소</button>
@@ -1862,45 +1865,51 @@
           </div>
         </div>`;
       document.body.insertAdjacentHTML('beforeend', modalHtml);
-      renderSuppTimeList();
+      renderSuppModalTimings();
     };
 
-    function renderSuppTimeList() {
-      const c = document.getElementById('supp-time-list');
+    function renderSuppModalTimings() {
+      const c = document.getElementById('supp-timing-btns');
       if (!c) return;
-      const isLight = document.body.classList.contains("light-mode");
-      c.innerHTML = _suppModalTimes.map((t, i) => {
-        const timing = timeToTiming(t);
-        return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-          <input type="time" value="${t}" oninput="updateSuppTime(${i},this.value)"
-            style="flex:1;padding:8px;background:${isLight?'#f8fafc':'#1e293b'};border:1px solid ${isLight?'#e2e8f0':'#374151'};border-radius:8px;color:${isLight?'#1a1a2e':'#f1f5f9'};font-size:13px;font-family:inherit;outline:none" />
-          <span style="font-size:12px;background:#a78bfa22;border:1px solid #a78bfa55;border-radius:8px;padding:3px 8px;color:#a78bfa;white-space:nowrap">${timingToEmoji(timing)} ${timing}</span>
-          ${_suppModalTimes.length > 1 ? `<button onclick="removeSuppTime(${i})" style="background:none;border:none;color:#6b7280;font-size:16px;cursor:pointer;padding:0">✕</button>` : ''}
-        </div>`;
-      }).join('');
+      const groups = [
+        ["아침", "점심", "저녁", "자기전"],
+        ["아침식전", "아침식후", "점심식전", "점심식후", "저녁식전", "저녁식후"]
+      ];
+      c.innerHTML = groups.map(group =>
+        `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px">${
+          group.map(t => {
+            const on = _suppModalTimings.includes(t);
+            return `<button onclick="toggleSuppModalTiming('${t}')"
+              style="padding:5px 10px;border-radius:20px;font-size:12px;cursor:pointer;font-family:inherit;
+                     border:1px solid ${on?'#7c3aed':'#374151'};
+                     background:${on?'#5b21b6':'transparent'};
+                     color:${on?'white':'#9ca3af'}">
+              ${TIMING_ICONS[t]}${t}
+            </button>`;
+          }).join('')
+        }</div>`
+      ).join('');
     }
 
-    window.addSuppTime = function() {
-      _suppModalTimes.push('20:00');
-      renderSuppTimeList();
-    };
-    window.removeSuppTime = function(i) {
-      _suppModalTimes.splice(i, 1);
-      renderSuppTimeList();
-    };
-    window.updateSuppTime = function(i, val) {
-      _suppModalTimes[i] = val;
-      renderSuppTimeList();
+    window.toggleSuppModalTiming = function(t) {
+      const idx = _suppModalTimings.indexOf(t);
+      if (idx >= 0) {
+        if (_suppModalTimings.length > 1) _suppModalTimings.splice(idx, 1);
+      } else {
+        _suppModalTimings.push(t);
+        const BASE_TO_SUB = {"아침":["아침식전","아침식후"],"점심":["점심식전","점심식후"],"저녁":["저녁식전","저녁식후"]};
+        const SUB_TO_BASE = {"아침식전":"아침","아침식후":"아침","점심식전":"점심","점심식후":"점심","저녁식전":"저녁","저녁식후":"저녁"};
+        if (SUB_TO_BASE[t]) _suppModalTimings = _suppModalTimings.filter(x => x !== SUB_TO_BASE[t]);
+        else if (BASE_TO_SUB[t]) BASE_TO_SUB[t].forEach(sub => { _suppModalTimings = _suppModalTimings.filter(x => x !== sub); });
+      }
+      renderSuppModalTimings();
     };
 
     window.submitAddSupp = function() {
       const name = document.getElementById('modal-supp-name')?.value?.trim();
       if (!name) { showToast('⚠️ 영양제 이름을 입력하세요'); return; }
-      // 시간 → 타이밍 변환 (중복 제거)
-      const timingSet = new Set(_suppModalTimes.map(t => timeToTiming(t)));
-      const timing = [...timingSet];
+      const timing = [..._suppModalTimings];
       const times = {};
-      _suppModalTimes.forEach(t => { times[timeToTiming(t)] = t; });
       appData.supplements = getSupplements();
       appData.supplements.push({ id: 's_' + Date.now(), name, timing, times, taken: {} });
       scheduleSave();
@@ -2061,7 +2070,7 @@
                 <div style="flex:1">
                   <div style="font-size:13px;color:${done?"#4ade80":(isLight?"#1a1a2e":"#e2e8f0")};
                               ${done?"text-decoration:line-through;opacity:.65":""}">
-                    ${s.name}
+                    ${s.name}${done && typeof s.taken[today+"_"+timing] === 'string' ? `<span style="font-size:10px;font-weight:400;margin-left:5px;opacity:.8">${s.taken[today+"_"+timing]}</span>` : ''}
                   </div>
                   ${(() => {
                     const sched = (appData.suppSchedules || {})[s.id];
