@@ -2747,19 +2747,32 @@
         fullMaxTime = now;
       } else {
         // 전체 범위: 최초 기록 ~ 그래프에서 곡선이 0에 도달하는 시점 (7×반감기 = 잔류 0.8%)
-        const firstRec = Math.min(...records.map(r => r.time));
-        fullMinTime = firstRec - 2 * 86400000; // 첫 투약 2일 전부터
-        // 약물별 마지막 투약 + 7×반감기 중 최대값 (그래프 표시용)
-        let graphEndTime = 0;
-        let clearanceTime = 0; // 수용체리셋 마커용 (5×반감기)
-        Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
-          const drugRecs = records.filter(r => r.drug === drug);
-          if (!drugRecs.length) return;
-          const lastDrugTime = Math.max(...drugRecs.map(r => r.time));
-          clearanceTime = Math.max(clearanceTime, lastDrugTime + cfg.halfLifeDays * 5 * 86400000);
-          graphEndTime  = Math.max(graphEndTime,  lastDrugTime + cfg.halfLifeDays * 7 * 86400000);
-        });
-        fullMaxTime = Math.max(now, graphEndTime || now + 49 * 86400000);
+        // 약물 필터가 활성화된 경우 해당 약물 기록만으로 시간 범위 계산
+        const scopedRecs = (graphDrugFilter !== "전체")
+          ? records.filter(r => DRUG_CONFIG[r.drug]?.short === graphDrugFilter)
+          : records;
+        if (!scopedRecs.length) { fullMinTime = now - 86400000; fullMaxTime = now + 86400000; }
+        else {
+          const firstRec = Math.min(...scopedRecs.map(r => r.time));
+          let graphEndTime = 0;
+          let clearanceTime = 0; // 수용체리셋 마커용 (5×반감기)
+          Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+            // 필터 활성 시 해당 약물만 시간축 계산에 포함
+            if (graphDrugFilter !== "전체" && cfg.short !== graphDrugFilter) return;
+            const drugRecs = records.filter(r => r.drug === drug);
+            if (!drugRecs.length) return;
+            const lastDrugTime = Math.max(...drugRecs.map(r => r.time));
+            clearanceTime = Math.max(clearanceTime, lastDrugTime + cfg.halfLifeDays * 5 * 86400000);
+            graphEndTime  = Math.max(graphEndTime,  lastDrugTime + cfg.halfLifeDays * 7 * 86400000);
+          });
+          // 단기 약물(반감기 <1일) 필터 시 앞쪽 버퍼를 반감기 기준으로 축소
+          const filterCfg = Object.values(DRUG_CONFIG).find(c => c.short === graphDrugFilter);
+          const bufferMs = filterCfg
+            ? Math.min(2 * 86400000, filterCfg.halfLifeDays * 2 * 86400000)
+            : 2 * 86400000;
+          fullMinTime = firstRec - bufferMs;
+          fullMaxTime = Math.max(now, graphEndTime || now + 49 * 86400000);
+        }
       }
       const fullRange = fullMaxTime - fullMinTime;
       // 터치핸들러(getFullRange)와 공유 — 반드시 renderPeptideGraph와 동일한 값 유지
