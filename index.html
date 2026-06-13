@@ -4893,13 +4893,17 @@
         .filter(([drug]) => activeDrugs.includes(drug) || true)
         .map(([drug, v]) => {
           const cfg = DRUG_CONFIG[drug] || {};
-          // 투약 기록에서 자동 계산 (reconDate 이후 실제 기록 수)
+          // 투약 기록에서 실제 사용 mg 합산 → 잔량 계산
+          // (횟수 카운트가 아닌 r.dose 실제값 합산 — 용량 변경 시에도 정확)
           const totalInj = v.vialMg > 0 && v.doseMg > 0 ? Math.floor(v.vialMg / v.doseMg) : 0;
-          const injDone = (appData.records || []).filter(r =>
+          const recsAfterRecon = (appData.records || []).filter(r =>
             r.drug === drug && r.time >= v.reconDate && !r.isOverride
-          ).length + (v.injOffset || 0);
-          const remaining = Math.max(0, totalInj - injDone);
-          const pct = totalInj > 0 ? Math.round(remaining / totalInj * 100) : 0;
+          );
+          const actualUsedMg = recsAfterRecon.reduce((sum, r) => sum + (r.dose || 0), 0)
+            + (v.injOffset || 0) * v.doseMg;
+          const remainingMg = Math.max(0, v.vialMg - actualUsedMg);
+          const remaining = v.doseMg > 0 ? Math.floor(remainingMg / v.doseMg) : 0;
+          const pct = v.vialMg > 0 ? Math.round(remainingMg / v.vialMg * 100) : 0;
           const intervalDays = getDoseCycle(drug);
           const reconDateStr = kstDateStr(v.reconDate);
           const isShortHalf = cfg.halfLifeDays < 0.1;
@@ -4933,7 +4937,7 @@
                   <div style="height:100%;width:${pct}%;background:${cfg.color||'#60a5fa'};border-radius:3px;transition:width .4s"></div>
                 </div>
               </div>
-              <div style="font-size:12px;font-weight:700;color:${valClr};min-width:60px;text-align:right">${remaining}/${totalInj}회</div>
+              <div style="font-size:12px;font-weight:700;color:${valClr};min-width:60px;text-align:right">${remaining}/${totalInj}회<span style="font-size:10px;color:#6b7280;font-weight:400;margin-left:4px">(${remainingMg.toFixed(2)}mg)</span></div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center">
               <div style="font-size:11px;color:#6b7280">${exhaustLabel}</div>
