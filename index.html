@@ -4904,6 +4904,9 @@
           const remainingMg = Math.max(0, v.vialMg - actualUsedMg);
           const remaining = v.doseMg > 0 ? Math.floor(remainingMg / v.doseMg) : 0;
           const pct = v.vialMg > 0 ? Math.round(remainingMg / v.vialMg * 100) : 0;
+          // 클릭수 계산 (인슐린 주사기: 1클릭=0.01ml=1unit)
+          const mgPerClick = v.waterMl > 0 ? (v.vialMg / v.waterMl) * 0.01 : 0;
+          const remainingClicks = mgPerClick > 0 ? Math.floor(remainingMg / mgPerClick) : 0;
           const intervalDays = getDoseCycle(drug);
           const reconDateStr = kstDateStr(v.reconDate);
           const isShortHalf = cfg.halfLifeDays < 0.1;
@@ -4937,7 +4940,7 @@
                   <div style="height:100%;width:${pct}%;background:${cfg.color||'#60a5fa'};border-radius:3px;transition:width .4s"></div>
                 </div>
               </div>
-              <div style="font-size:12px;font-weight:700;color:${valClr};min-width:60px;text-align:right">${remaining}/${totalInj}회<span style="font-size:10px;color:#6b7280;font-weight:400;margin-left:4px">(${remainingMg.toFixed(2)}mg)</span></div>
+              <div style="font-size:12px;font-weight:700;color:${valClr};min-width:60px;text-align:right">${remaining}/${totalInj}회<span style="font-size:10px;color:#6b7280;font-weight:400;margin-left:4px">(${remainingMg.toFixed(2)}mg${remainingClicks > 0 ? ' · ' + remainingClicks + '클릭' : ''})</span></div>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center">
               <div style="font-size:11px;color:#6b7280">${exhaustLabel}</div>
