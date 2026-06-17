@@ -2406,28 +2406,32 @@
       const avgC = ssPoints.length ? ssPoints.reduce((s, p) => s + p.c, 0) / ssPoints.length : 0;
 
       const fmt = v => v < 0.01 ? v.toFixed(4) : v < 1 ? v.toFixed(3) : v < 10 ? v.toFixed(2) : v.toFixed(1);
+      const isLight = document.body.classList.contains('light-mode');
       const statsEl = document.getElementById('sim-stats');
       if (statsEl) {
         statsEl.style.display = '';
+        const S = isLight
+          ? { maxBg:'#f0fdf4', maxBd:'#bbf7d0', maxC2:'#166534', avgBg:'#fffbeb', avgBd:'#fde68a', avgC2:'#92400e', minBg:'#faf5ff', minBd:'#e9d5ff', minC2:'#6d28d9', sub:'#6b7280' }
+          : { maxBg:'#0d1f12', maxBd:'#166534', maxC2:'#4ade80', avgBg:'#1a130a', avgBd:'#92400e', avgC2:'#fbbf24', minBg:'#100a1f', minBd:'#4c1d95', minC2:'#a78bfa', sub:'#4b5563' };
         statsEl.innerHTML = `
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
-            <div style="background:#0d1f12;border:1px solid #166534;border-radius:8px;padding:8px;text-align:center">
-              <div style="font-size:9px;color:#4ade80;margin-bottom:2px">↑ Cmax 피크</div>
-              <div style="font-size:15px;font-weight:700;color:#4ade80;font-family:monospace">${fmt(maxC)}</div>
-              <div style="font-size:9px;color:#6b7280">mg 상당</div>
+            <div style="background:${S.maxBg};border:1px solid ${S.maxBd};border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:9px;color:${S.maxC2};margin-bottom:2px">↑ Cmax 피크</div>
+              <div style="font-size:15px;font-weight:700;color:${S.maxC2};font-family:monospace">${fmt(maxC)}</div>
+              <div style="font-size:9px;color:${S.sub}">mg 상당</div>
             </div>
-            <div style="background:#1a130a;border:1px solid #92400e;border-radius:8px;padding:8px;text-align:center">
-              <div style="font-size:9px;color:#fbbf24;margin-bottom:2px">~ Cavg 평균</div>
-              <div style="font-size:15px;font-weight:700;color:#fbbf24;font-family:monospace">${fmt(avgC)}</div>
-              <div style="font-size:9px;color:#6b7280">mg 상당</div>
+            <div style="background:${S.avgBg};border:1px solid ${S.avgBd};border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:9px;color:${S.avgC2};margin-bottom:2px">~ Cavg 평균</div>
+              <div style="font-size:15px;font-weight:700;color:${S.avgC2};font-family:monospace">${fmt(avgC)}</div>
+              <div style="font-size:9px;color:${S.sub}">mg 상당</div>
             </div>
-            <div style="background:#100a1f;border:1px solid #4c1d95;border-radius:8px;padding:8px;text-align:center">
-              <div style="font-size:9px;color:#a78bfa;margin-bottom:2px">↓ Cmin 트로프</div>
-              <div style="font-size:15px;font-weight:700;color:#a78bfa;font-family:monospace">${fmt(minC)}</div>
-              <div style="font-size:9px;color:#6b7280">mg 상당</div>
+            <div style="background:${S.minBg};border:1px solid ${S.minBd};border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:9px;color:${S.minC2};margin-bottom:2px">↓ Cmin 트로프</div>
+              <div style="font-size:15px;font-weight:700;color:${S.minC2};font-family:monospace">${fmt(minC)}</div>
+              <div style="font-size:9px;color:${S.sub}">mg 상당</div>
             </div>
           </div>
-          <div style="font-size:9px;color:#4b5563;text-align:center;margin-bottom:6px">정상상태 기준 (후반 ${Math.round(totalDays - ssStart)}일) · ${cfg.note}</div>`;
+          <div style="font-size:9px;color:${S.sub};text-align:center;margin-bottom:6px">정상상태 기준 (후반 ${Math.round(totalDays - ssStart)}일) · ${cfg.note}</div>`;
       }
       _renderSimGraph(points, { maxC, minC, avgC, cfg, doseTimes, totalDays });
     };
@@ -2435,6 +2439,7 @@
     function _renderSimGraph(points, { maxC, minC, avgC, cfg, doseTimes, totalDays }) {
       const canvas = document.getElementById('sim-canvas');
       if (!canvas) return;
+      const isLight = document.body.classList.contains('light-mode');
       const dpr = window.devicePixelRatio || 1;
       const W = canvas.offsetWidth || 320;
       const H = 160;
@@ -2447,24 +2452,30 @@
       const gH = H - PAD.t - PAD.b;
       const yMax = maxC > 0 ? maxC * 1.15 : 1;
 
+      // 라이트/다크 색상 팔레트
+      const BG   = isLight ? '#f8fafc' : '#080810';
+      const GRID = isLight ? '#e2e8f0' : '#1e293b';
+      const LBL  = isLight ? '#374151' : '#374151';
+      const XLBL = isLight ? '#6b7280' : '#4b5563';
+
       ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = '#080810'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
 
       const tx = t => PAD.l + (t / totalDays) * gW;
       const ty = v => PAD.t + gH - Math.max(0, Math.min(1, v / yMax)) * gH;
 
       // Y 격자 + 레이블
-      ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
+      ctx.strokeStyle = GRID; ctx.lineWidth = 1;
       const fmt = v => v < 0.01 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : v.toFixed(1);
       for (let i = 0; i <= 4; i++) {
         const y = PAD.t + (i / 4) * gH;
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
-        ctx.fillStyle = '#374151'; ctx.font = '8px monospace'; ctx.textAlign = 'right';
+        ctx.fillStyle = LBL; ctx.font = '8px monospace'; ctx.textAlign = 'right';
         ctx.fillText(fmt(yMax * (1 - i / 4)), PAD.l - 3, y + 3);
       }
 
       // 투약 수직선 (점선)
-      ctx.strokeStyle = cfg.color + '44'; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+      ctx.strokeStyle = cfg.color + (isLight ? '55' : '44'); ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
       doseTimes.filter(d => d <= totalDays).forEach(d => {
         ctx.beginPath(); ctx.moveTo(tx(d), PAD.t); ctx.lineTo(tx(d), PAD.t + gH); ctx.stroke();
       });
@@ -2473,14 +2484,14 @@
       // Cavg 수평 점선
       if (avgC > 0 && avgC < yMax) {
         const yA = ty(avgC);
-        ctx.strokeStyle = '#fbbf2466'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = isLight ? '#d97706aa' : '#fbbf2466'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
         ctx.beginPath(); ctx.moveTo(PAD.l, yA); ctx.lineTo(PAD.l + gW, yA); ctx.stroke();
         ctx.setLineDash([]);
       }
 
       // 채우기 그라디언트
       const grad = ctx.createLinearGradient(0, PAD.t, 0, PAD.t + gH);
-      grad.addColorStop(0, cfg.color + '50'); grad.addColorStop(1, cfg.color + '06');
+      grad.addColorStop(0, cfg.color + (isLight ? '40' : '50')); grad.addColorStop(1, cfg.color + '06');
       ctx.beginPath();
       points.forEach((p, i) => { i ? ctx.lineTo(tx(p.t), ty(p.c)) : ctx.moveTo(tx(p.t), ty(p.c)); });
       ctx.lineTo(tx(totalDays), ty(0)); ctx.lineTo(tx(0), ty(0)); ctx.closePath();
@@ -2492,20 +2503,23 @@
       ctx.stroke();
 
       // X축 주 레이블
-      ctx.fillStyle = '#4b5563'; ctx.font = '8px monospace'; ctx.textAlign = 'center';
+      ctx.fillStyle = XLBL; ctx.font = '8px monospace'; ctx.textAlign = 'center';
       for (let w = 0; w * 7 <= totalDays; w++) {
         ctx.fillText(`${w}W`, tx(w * 7), PAD.t + gH + 12);
       }
 
-      // Cmax/Cmin 레이블 오른쪽에
+      // Cmax/Cmin 레이블
       if (maxC > 0) {
         const xLbl = PAD.l + gW * 0.72;
-        ctx.fillStyle = '#4ade80'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'left';
+        const CX_MAX = isLight ? '#166534' : '#4ade80';
+        const CX_MIN = isLight ? '#6d28d9' : '#a78bfa';
+        const CX_AVG = isLight ? '#92400e' : '#fbbf24';
+        ctx.fillStyle = CX_MAX; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'left';
         ctx.fillText(`↑${fmt(maxC)}`, xLbl, ty(maxC) - 2);
-        ctx.fillStyle = '#a78bfa';
+        ctx.fillStyle = CX_MIN;
         ctx.fillText(`↓${fmt(minC)}`, xLbl, ty(minC) + 9);
         if (avgC > 0 && Math.abs(ty(avgC) - ty(maxC)) > 12 && Math.abs(ty(avgC) - ty(minC)) > 8) {
-          ctx.fillStyle = '#fbbf24';
+          ctx.fillStyle = CX_AVG;
           ctx.fillText(`~${fmt(avgC)}`, xLbl, ty(avgC) + 4);
         }
       }
@@ -9287,6 +9301,7 @@
     body.light-mode .result-row span:last-child { color: #1a1a2e; }
     body.light-mode #toast { background: #374151 !important; color: #f9fafb !important; }
     body.light-mode .quick-btns .qbtn { background: #f3f4f6; color: #6b7280; }
+    body.light-mode #sim-canvas { background: #f8fafc !important; }
     #settings-menu button:hover { background: #ffffff18 !important; }
     body.light-mode #settings-menu { background: #ffffff !important; border-color: #e2e8f0 !important; box-shadow: 0 8px 24px #0002 !important; }
     body.light-mode #settings-menu button { color: #1f2937 !important; border-color: #e5e7eb !important; background: transparent !important; }
