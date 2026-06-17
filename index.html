@@ -2525,19 +2525,30 @@
       }
     }
 
-    // ── 시뮬레이션 표 (비교표 + 일자별) ─────────────────────────
+    // ── 시뮬레이션 표 (히트맵 비교표 + 일자별) ─────────────────
     function _ssStats(dose, intervalDays, cfg) {
-      // 정상상태 Cmax/Cmin: 20주기 누적 합산 (빠른 수치 계산)
+      // 정상상태 Cmax/Cmin/Cavg: 15주기 누적 + 30포인트 사다리꼴 적분
       const ke = Math.LN2 / (cfg.halfLifeDays * 24);
       const ka = computeKa(ke, cfg.tmaxHours);
       const tmax_h = Math.abs(ka - ke) < 1e-8 ? cfg.tmaxHours : Math.log(ka / ke) / (ka - ke);
       const τH = intervalDays * 24;
+      const N = 15;
       let cmax = 0, cmin = 0;
-      for (let n = 0; n < 20; n++) {
+      for (let n = 0; n < N; n++) {
         cmax += pkConcentration(dose, tmax_h + n * τH, cfg);
         cmin += pkConcentration(dose, τH * (n + 1), cfg);
       }
-      return { cmax, cmin };
+      // Cavg = 구간 평균 (사다리꼴 적분)
+      const SAMP = 30;
+      let sum = 0;
+      for (let s = 0; s <= SAMP; s++) {
+        const t_h = (s / SAMP) * τH;
+        let c = 0;
+        for (let n = 0; n < N; n++) c += pkConcentration(dose, t_h + n * τH, cfg);
+        sum += (s === 0 || s === SAMP) ? c * 0.5 : c;
+      }
+      const cavg = sum / SAMP;
+      return { cmax, cmin, cavg };
     }
 
     window.toggleSimTable = function() {
@@ -2561,49 +2572,98 @@
     };
 
     function renderSimTable() {
-      const drug = document.getElementById('sim-drug')?.value;
-      const curDose = parseFloat(document.getElementById('sim-dose')?.value) || 0;
-      const curInt  = parseFloat(document.getElementById('sim-interval')?.value) || 7;
-      const cfg = DRUG_CONFIG[drug];
-      const wrap = document.getElementById('sim-table-wrap');
+      const drug   = document.getElementById('sim-drug')?.value;
+      const curInt = parseFloat(document.getElementById('sim-interval')?.value) || 7;
+      const cfg    = DRUG_CONFIG[drug];
+      const wrap   = document.getElementById('sim-table-wrap');
       if (!cfg || !wrap) return;
       const isLight = document.body.classList.contains('light-mode');
 
-      const doses = cfg.doseSteps || [curDose];
-      // 반감기 기준 합리적 주기 범위
-      const hl = cfg.halfLifeDays;
-      const candidates = [0.5,1,2,3,5,7,10,14,21,28];
-      const intervals = candidates.filter(d => d >= Math.max(0.5, hl*0.2) && d <= Math.min(30, hl*5));
-      if (!intervals.length) intervals.push(curInt);
+      const doses = (cfg.doseSteps || []).slice(); // 행 그룹 = 용량
+      if (!doses.length) return;
 
-      const fmt = v => v < 0.01 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : v.toFixed(1);
-      const thBg = isLight ? '#f3f4f6' : '#1e293b';
-      const thC  = isLight ? '#374151' : '#9ca3af';
-      const tdBg = isLight ? '#ffffff' : '#0d0d1a';
-      const hlBg = isLight ? '#eff6ff' : '#1e3a5f';
-      const bd   = isLight ? '#e2e8f0' : '#1f2937';
-      const cmaxC= isLight ? '#166534' : '#4ade80';
-      const cminC= isLight ? '#6d28d9' : '#a78bfa';
+      // 열 = 주기(일): 1일부터 반감기 × 4 까지 (최대 14)
+      const maxP = Math.min(14, Math.max(7, Math.ceil(cfg.halfLifeDays * 3)));
+      const periods = Array.from({length: maxP}, (_, i) => i + 1);
 
-      let h = `<div style="font-size:10px;color:${isLight?'#6b7280':'#4b5563'};margin-bottom:6px">`;
-      h += `↑Cmax / ↓Cmin (mg 상당) · 정상상태 기준 · <span style="background:${hlBg};padding:1px 4px;border-radius:3px">파란셀</span> = 현재 선택</div>`;
-      h += `<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace">`;
-      h += `<tr><th style="background:${thBg};color:${thC};padding:4px 6px;border:1px solid ${bd};white-space:nowrap">주기↓ 용량→</th>`;
-      doses.forEach(d => { h += `<th style="background:${thBg};color:${thC};padding:4px 6px;border:1px solid ${bd};text-align:center">${d}mg</th>`; });
-      h += '</tr>';
-      intervals.forEach(iv => {
-        h += '<tr>';
-        const ivLabel = iv < 1 ? `${iv*24}시간` : `${iv}일`;
-        h += `<td style="background:${thBg};color:${thC};padding:4px 6px;border:1px solid ${bd};font-weight:700;white-space:nowrap">${ivLabel}</td>`;
-        doses.forEach(dose => {
-          const sel = Math.abs(dose - curDose) < 0.01 && Math.abs(iv - curInt) < 0.1;
-          const { cmax, cmin } = _ssStats(dose, iv, cfg);
-          h += `<td style="background:${sel?hlBg:tdBg};padding:4px 6px;border:1px solid ${bd};text-align:center;${sel?'font-weight:700':''}">`;
-          h += `<span style="color:${cmaxC}">↑${fmt(cmax)}</span><br><span style="color:${cminC}">↓${fmt(cmin)}</span></td>`;
+      // 전체 데이터 계산
+      const data = {};
+      let gMax = 0, gMin = Infinity;
+      doses.forEach(dose => {
+        data[dose] = {};
+        periods.forEach(p => {
+          const s = _ssStats(dose, p, cfg);
+          data[dose][p] = s;
+          if (s.cavg > gMax) gMax = s.cavg;
+          if (s.cavg < gMin) gMin = s.cavg;
         });
-        h += '</tr>';
       });
-      h += '</table></div>';
+
+      // 히트맵 색상 (avg 행 전용): high→red, mid→yellow, low→green
+      function heatBg(v) {
+        const t = gMax > gMin ? (v - gMin) / (gMax - gMin) : 0;
+        if (isLight) return t > 0.66 ? '#fecaca' : t > 0.33 ? '#fef08a' : '#bbf7d0';
+        return          t > 0.66 ? '#4a1010' : t > 0.33 ? '#3d2e00' : '#0d2a1a';
+      }
+      function heatTc(v) {
+        const t = gMax > gMin ? (v - gMin) / (gMax - gMin) : 0;
+        if (isLight) return t > 0.66 ? '#991b1b' : t > 0.33 ? '#78350f' : '#166534';
+        return          t > 0.66 ? '#fca5a5' : t > 0.33 ? '#fde68a' : '#86efac';
+      }
+
+      const thBg  = isLight ? '#f3f4f6' : '#1e293b';
+      const thC   = isLight ? '#374151' : '#9ca3af';
+      const rowBg = isLight ? '#ffffff' : '#0d0d1a';
+      const altBg = isLight ? '#f9fafb' : '#111827';
+      const selBg = isLight ? '#eff6ff' : '#1e3a5f';
+      const bd    = isLight ? '#e2e8f0' : '#1f2937';
+      const bdThk = isLight ? '#9ca3af' : '#374151';
+      const maxC  = isLight ? '#166534' : '#4ade80';
+      const minC  = isLight ? '#6d28d9' : '#a78bfa';
+      const avgC  = isLight ? '#92400e' : '#fbbf24';
+      const fmt   = v => v < 0.1 ? v.toFixed(2) : v.toFixed(2);
+
+      let h = `<div style="font-size:10px;color:${isLight?'#6b7280':'#4b5563'};margin-bottom:5px">`;
+      h += `용량(mg) × 주기(일) · avg 배경 = 체내 농도 높낮이 (빨강↑ 초록↓)</div>`;
+      h += `<div style="overflow-x:auto"><table style="border-collapse:collapse;font-size:9px;font-family:monospace;white-space:nowrap">`;
+
+      // 헤더 행
+      h += `<thead><tr>`;
+      h += `<th style="background:${thBg};color:${thC};padding:3px 6px;border:1px solid ${bd}" rowspan="2">mg</th>`;
+      h += `<th style="background:${thBg};color:${thC};padding:3px 4px;border:1px solid ${bd}" rowspan="2"> </th>`;
+      h += `<th style="background:${thBg};color:${thC};padding:2px 5px;border:1px solid ${bd};text-align:center" colspan="${periods.length}">period (일)</th>`;
+      h += `</tr><tr>`;
+      periods.forEach(p => {
+        const sel = Math.abs(p - curInt) < 0.1;
+        h += `<th style="background:${sel ? selBg : thBg};color:${sel ? (isLight?'#1d4ed8':'#60a5fa') : thC};padding:3px 5px;border:1px solid ${bd};text-align:center;min-width:34px${sel?';font-weight:700':''}">${p}</th>`;
+      });
+      h += `</tr></thead><tbody>`;
+
+      // 데이터 행 (dose 그룹 × max/avg/min)
+      doses.forEach((dose, di) => {
+        const groupBorder = di > 0 ? `border-top:2px solid ${bdThk};` : '';
+        ['max','avg','min'].forEach((rt, ri) => {
+          h += '<tr>';
+          if (ri === 0) {
+            h += `<td rowspan="3" style="background:${thBg};color:${thC};padding:3px 6px;border:1px solid ${bd};font-weight:700;text-align:center;vertical-align:middle;${groupBorder}">${dose}</td>`;
+          }
+          const lbl   = rt === 'max' ? '↑max' : rt === 'avg' ? '~avg' : '↓min';
+          const lblC  = rt === 'max' ? maxC : rt === 'avg' ? avgC : minC;
+          h += `<td style="background:${altBg};color:${lblC};padding:3px 4px;border:1px solid ${bd};${groupBorder && ri===0 ? groupBorder : ''}font-weight:${rt==='avg'?700:400}">${lbl}</td>`;
+          periods.forEach(p => {
+            const { cmax, cmin, cavg } = data[dose][p];
+            const val = rt === 'max' ? cmax : rt === 'avg' ? cavg : cmin;
+            const sel = Math.abs(p - curInt) < 0.1;
+            const bg  = rt === 'avg' ? heatBg(cavg) : (sel ? selBg : (ri === 2 ? altBg : rowBg));
+            const tc  = rt === 'avg' ? heatTc(cavg) : (isLight ? '#374151' : '#9ca3af');
+            const bTop = (groupBorder && ri === 0) ? groupBorder : '';
+            h += `<td style="background:${bg};color:${tc};padding:3px 5px;border:1px solid ${bd};${bTop}text-align:right;font-weight:${rt==='avg'&&sel?700:400}">${fmt(val)}</td>`;
+          });
+          h += '</tr>';
+        });
+      });
+
+      h += '</tbody></table></div>';
       wrap.innerHTML = h;
     }
 
