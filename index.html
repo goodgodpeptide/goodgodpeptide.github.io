@@ -4363,12 +4363,13 @@
     window.calcPeptide = () => {
       const vial = parseFloat(document.getElementById("c-vial").value);
       const water = parseFloat(document.getElementById("c-water").value);
-      const dose = parseFloat(document.getElementById("c-dose").value);
+      const dose = parseFloat(document.getElementById("c-dose").value);  // mcg
       if (!vial||!water||!dose) return;
+      const dose_mg = dose / 1000;           // mcg → mg
       const conc = vial / water;             // mg/ml
-      const volume = dose / conc;            // ml
+      const volume = dose_mg / conc;         // ml
       const units = volume * 100;            // U (1ml=100U)
-      const injPerVial = vial / dose;
+      const injPerVial = vial / dose_mg;
       document.getElementById("calc-result").innerHTML = `
         <div class="result-card">
           <div class="result-row"><span>농도</span><span>${(conc*1000).toFixed(0)} mcg/ml</span></div>
