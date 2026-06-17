@@ -2525,6 +2525,140 @@
       }
     }
 
+    // ── 시뮬레이션 표 (비교표 + 일자별) ─────────────────────────
+    function _ssStats(dose, intervalDays, cfg) {
+      // 정상상태 Cmax/Cmin: 20주기 누적 합산 (빠른 수치 계산)
+      const ke = Math.LN2 / (cfg.halfLifeDays * 24);
+      const ka = computeKa(ke, cfg.tmaxHours);
+      const tmax_h = Math.abs(ka - ke) < 1e-8 ? cfg.tmaxHours : Math.log(ka / ke) / (ka - ke);
+      const τH = intervalDays * 24;
+      let cmax = 0, cmin = 0;
+      for (let n = 0; n < 20; n++) {
+        cmax += pkConcentration(dose, tmax_h + n * τH, cfg);
+        cmin += pkConcentration(dose, τH * (n + 1), cfg);
+      }
+      return { cmax, cmin };
+    }
+
+    window.toggleSimTable = function() {
+      const wrap = document.getElementById('sim-table-wrap');
+      const btn  = document.getElementById('sim-table-btn');
+      if (!wrap) return;
+      const open = wrap.style.display !== 'none';
+      wrap.style.display = open ? 'none' : '';
+      if (btn) btn.textContent = open ? '📋 용량·주기 비교표' : '📋 비교표 닫기';
+      if (!open) renderSimTable();
+    };
+
+    window.toggleSimDaily = function() {
+      const wrap = document.getElementById('sim-daily-wrap');
+      const btn  = document.getElementById('sim-daily-btn');
+      if (!wrap) return;
+      const open = wrap.style.display !== 'none';
+      wrap.style.display = open ? 'none' : '';
+      if (btn) btn.textContent = open ? '📅 일자별 수치표' : '📅 일자별 닫기';
+      if (!open) renderSimDaily();
+    };
+
+    function renderSimTable() {
+      const drug = document.getElementById('sim-drug')?.value;
+      const curDose = parseFloat(document.getElementById('sim-dose')?.value) || 0;
+      const curInt  = parseFloat(document.getElementById('sim-interval')?.value) || 7;
+      const cfg = DRUG_CONFIG[drug];
+      const wrap = document.getElementById('sim-table-wrap');
+      if (!cfg || !wrap) return;
+      const isLight = document.body.classList.contains('light-mode');
+
+      const doses = cfg.doseSteps || [curDose];
+      // 반감기 기준 합리적 주기 범위
+      const hl = cfg.halfLifeDays;
+      const candidates = [0.5,1,2,3,5,7,10,14,21,28];
+      const intervals = candidates.filter(d => d >= Math.max(0.5, hl*0.2) && d <= Math.min(30, hl*5));
+      if (!intervals.length) intervals.push(curInt);
+
+      const fmt = v => v < 0.01 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : v.toFixed(1);
+      const thBg = isLight ? '#f3f4f6' : '#1e293b';
+      const thC  = isLight ? '#374151' : '#9ca3af';
+      const tdBg = isLight ? '#ffffff' : '#0d0d1a';
+      const hlBg = isLight ? '#eff6ff' : '#1e3a5f';
+      const bd   = isLight ? '#e2e8f0' : '#1f2937';
+      const cmaxC= isLight ? '#166534' : '#4ade80';
+      const cminC= isLight ? '#6d28d9' : '#a78bfa';
+
+      let h = `<div style="font-size:10px;color:${isLight?'#6b7280':'#4b5563'};margin-bottom:6px">`;
+      h += `↑Cmax / ↓Cmin (mg 상당) · 정상상태 기준 · <span style="background:${hlBg};padding:1px 4px;border-radius:3px">파란셀</span> = 현재 선택</div>`;
+      h += `<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace">`;
+      h += `<tr><th style="background:${thBg};color:${thC};padding:4px 6px;border:1px solid ${bd};white-space:nowrap">주기↓ 용량→</th>`;
+      doses.forEach(d => { h += `<th style="background:${thBg};color:${thC};padding:4px 6px;border:1px solid ${bd};text-align:center">${d}mg</th>`; });
+      h += '</tr>';
+      intervals.forEach(iv => {
+        h += '<tr>';
+        const ivLabel = iv < 1 ? `${iv*24}시간` : `${iv}일`;
+        h += `<td style="background:${thBg};color:${thC};padding:4px 6px;border:1px solid ${bd};font-weight:700;white-space:nowrap">${ivLabel}</td>`;
+        doses.forEach(dose => {
+          const sel = Math.abs(dose - curDose) < 0.01 && Math.abs(iv - curInt) < 0.1;
+          const { cmax, cmin } = _ssStats(dose, iv, cfg);
+          h += `<td style="background:${sel?hlBg:tdBg};padding:4px 6px;border:1px solid ${bd};text-align:center;${sel?'font-weight:700':''}">`;
+          h += `<span style="color:${cmaxC}">↑${fmt(cmax)}</span><br><span style="color:${cminC}">↓${fmt(cmin)}</span></td>`;
+        });
+        h += '</tr>';
+      });
+      h += '</table></div>';
+      wrap.innerHTML = h;
+    }
+
+    function renderSimDaily() {
+      const drug     = document.getElementById('sim-drug')?.value;
+      const dose     = parseFloat(document.getElementById('sim-dose')?.value);
+      const interval = parseFloat(document.getElementById('sim-interval')?.value);
+      const cfg = DRUG_CONFIG[drug];
+      const wrap = document.getElementById('sim-daily-wrap');
+      if (!cfg || !dose || !interval || !wrap) return;
+      const isLight = document.body.classList.contains('light-mode');
+
+      const totalDays = _simDurWeeks * 7;
+      const totalCycles = Math.ceil(totalDays / interval) + 1;
+      const doseTimes = Array.from({length: totalCycles}, (_, i) => i * interval);
+
+      const fmt = v => v < 0.01 ? v.toFixed(4) : v < 1 ? v.toFixed(3) : v < 10 ? v.toFixed(2) : v.toFixed(1);
+      const thBg = isLight ? '#f3f4f6' : '#1e293b';
+      const thC  = isLight ? '#374151' : '#9ca3af';
+      const tdBg = isLight ? '#ffffff' : '#0d0d1a';
+      const injBg= isLight ? '#eff6ff' : '#0f1f3a';
+      const bd   = isLight ? '#e2e8f0' : '#1f2937';
+      const concC= isLight ? '#1d4ed8' : '#60a5fa';
+
+      // 0.5일 단위로 샘플링
+      const step = interval >= 7 ? 1 : (interval >= 2 ? 0.5 : 0.25);
+      const rows = [];
+      for (let t = 0; t <= totalDays + 0.01; t = Math.round((t + step) * 100) / 100) {
+        const isInj = doseTimes.some(d => Math.abs(d - t) < step * 0.45);
+        let conc = 0;
+        doseTimes.forEach(d => { if (d <= t + 0.001) conc += pkConcentration(dose, (t - d) * 24, cfg); });
+        rows.push({ t, conc, isInj });
+      }
+
+      let h = `<div style="font-size:10px;color:${isLight?'#6b7280':'#4b5563'};margin-bottom:6px">💉 = 투약일 · 단위: mg 상당</div>`;
+      h += `<div style="overflow-x:auto;max-height:260px;overflow-y:auto">`;
+      h += `<table style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace">`;
+      h += `<tr>`;
+      h += `<th style="background:${thBg};color:${thC};padding:4px 8px;border:1px solid ${bd};position:sticky;top:0">일자</th>`;
+      h += `<th style="background:${thBg};color:${thC};padding:4px 8px;border:1px solid ${bd};position:sticky;top:0">체내 농도</th>`;
+      h += `<th style="background:${thBg};color:${thC};padding:4px 8px;border:1px solid ${bd};position:sticky;top:0">비고</th>`;
+      h += '</tr>';
+      rows.forEach(({ t, conc, isInj }) => {
+        const bg = isInj ? injBg : tdBg;
+        const dayLabel = t === 0 ? '0일 (시작)' : t % 1 === 0 ? `${t}일차` : `${t}일차`;
+        h += `<tr>`;
+        h += `<td style="background:${bg};padding:4px 8px;border:1px solid ${bd};white-space:nowrap">${dayLabel}</td>`;
+        h += `<td style="background:${bg};padding:4px 8px;border:1px solid ${bd};color:${concC};font-weight:${isInj?700:400};text-align:right">${fmt(conc)}</td>`;
+        h += `<td style="background:${bg};padding:4px 8px;border:1px solid ${bd};color:${isLight?'#92400e':'#fbbf24'}">${isInj ? `💉 +${dose}mg` : ''}</td>`;
+        h += '</tr>';
+      });
+      h += '</table></div>';
+      wrap.innerHTML = h;
+    }
+
     function renderActiveDrugToggles() {
       const c = document.getElementById("active-drug-toggles");
       if (!c) return;
@@ -9627,6 +9761,13 @@
           <div id="sim-stats" style="display:none"></div>
           <canvas id="sim-canvas" style="width:100%;display:block;border-radius:8px;background:#080810"></canvas>
           <div style="font-size:9px;color:#374151;text-align:center;margin-top:4px">점선 = 투약 시점 · 노란 점선 = 평균농도</div>
+
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <button id="sim-table-btn" class="qbtn" onclick="toggleSimTable()" style="flex:1">📋 용량·주기 비교표</button>
+            <button id="sim-daily-btn" class="qbtn" onclick="toggleSimDaily()" style="flex:1">📅 일자별 수치표</button>
+          </div>
+          <div id="sim-table-wrap" style="display:none;margin-top:8px"></div>
+          <div id="sim-daily-wrap" style="display:none;margin-top:8px"></div>
         </div>
       </div>
 
