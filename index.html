@@ -4392,9 +4392,10 @@
     window.calcPeptide = () => {
       const vial = parseFloat(document.getElementById("c-vial").value);
       const water = parseFloat(document.getElementById("c-water").value);
-      const dose = parseFloat(document.getElementById("c-dose").value);  // mcg
+      const dose = parseFloat(document.getElementById("c-dose").value);
+      const doseUnit = document.getElementById("c-dose-unit")?.value || 'mcg';
       if (!vial||!water||!dose) return;
-      const dose_mg = dose / 1000;           // mcg → mg
+      const dose_mg = doseUnit === 'mg' ? dose : dose / 1000; // 항상 mg 기준으로 계산
       const conc = vial / water;             // mg/ml
       const volume = dose_mg / conc;         // ml
       const units = volume * 100;            // U (1ml=100U)
@@ -4406,8 +4407,32 @@
           <div class="result-row"><span>인슐린 단위</span><span>${units.toFixed(1)} U</span></div>
           <div class="result-row" style="border:none"><span>바이알당 횟수</span><span>${injPerVial.toFixed(0)}회</span></div>
         </div>`;
-      // 비용 계산기 연동: 바이알당 횟수 업데이트
       calcCost();
+    };
+
+    // 투여량 단위 전환 (mcg ↔ mg): 기존 입력값 변환 + 빠른 버튼 갱신
+    window.updateDoseUnit = function() {
+      const unit = document.getElementById('c-dose-unit')?.value || 'mcg';
+      const qbtns = document.getElementById('c-dose-qbtns');
+      const input = document.getElementById('c-dose');
+      const prevUnit = window._prevDoseUnit || 'mcg';
+      // 기존 값 단위 변환
+      const curVal = parseFloat(input?.value);
+      if (curVal && input) {
+        if (prevUnit === 'mcg' && unit === 'mg') input.value = (curVal / 1000).toString();
+        else if (prevUnit === 'mg' && unit === 'mcg') input.value = (curVal * 1000).toString();
+      }
+      window._prevDoseUnit = unit;
+      // 빠른 버튼 갱신
+      if (qbtns) {
+        const btns = unit === 'mg'
+          ? [[0.1,'0.1'],[0.25,'0.25'],[0.5,'0.5'],[1,'1'],[2,'2']]
+          : [[250,'250'],[500,'500'],[1000,'1000'],[2000,'2000'],[4000,'4000']];
+        qbtns.innerHTML = btns.map(([v,l]) =>
+          `<button class="qbtn" onclick="setQuickVal('c-dose','${v}')">${l}</button>`
+        ).join('');
+      }
+      calcPeptide();
     };
 
     // ══════════════════════════════════════════════
@@ -4528,10 +4553,12 @@
       const swabAmt = parseFloat(document.getElementById("cost-swab")?.value) || 0;
       const swabCurrency = document.getElementById("cost-swab-currency")?.value || "KRW";
       const swabQty = parseFloat(document.getElementById("cost-swab-qty")?.value) || 1;
-      // 바이알 정보 (조제계산에서 가져오기)
+      // 바이알 정보 (조제계산에서 가져오기, 단위 반영)
       const vial = parseFloat(document.getElementById("c-vial")?.value) || 0;
       const dose = parseFloat(document.getElementById("c-dose")?.value) || 0;
-      const injPerVial = (vial > 0 && dose > 0) ? Math.floor((vial * 1000) / dose) : 0;
+      const doseUnitC = document.getElementById("c-dose-unit")?.value || 'mcg';
+      const dose_mgC = doseUnitC === 'mg' ? dose : dose / 1000;
+      const injPerVial = (vial > 0 && dose_mgC > 0) ? Math.floor(vial / dose_mgC) : 0;
 
       const resultEl = document.getElementById("cost-result");
       if (!resultEl) return;
@@ -9420,15 +9447,22 @@
           <input id="c-water" class="input-field" type="number" placeholder="직접 입력" />
         </div>
         <div class="card" style="margin-bottom:12px;background:#0d0d1a">
-          <div class="section-title">1회 투여량 (mcg)</div>
-          <div class="quick-btns">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div class="section-title" style="margin-bottom:0">1회 투여량</div>
+            <select id="c-dose-unit" onchange="updateDoseUnit()"
+              style="background:#1e293b;border:1px solid #374151;border-radius:6px;color:#e2e8f0;font-size:12px;font-weight:700;padding:4px 10px;cursor:pointer;font-family:inherit">
+              <option value="mcg">mcg</option>
+              <option value="mg">mg</option>
+            </select>
+          </div>
+          <div class="quick-btns" id="c-dose-qbtns">
             <button class="qbtn" onclick="setQuickVal('c-dose','250')">250</button>
             <button class="qbtn" onclick="setQuickVal('c-dose','500')">500</button>
             <button class="qbtn" onclick="setQuickVal('c-dose','1000')">1000</button>
             <button class="qbtn" onclick="setQuickVal('c-dose','2000')">2000</button>
             <button class="qbtn" onclick="setQuickVal('c-dose','4000')">4000</button>
           </div>
-          <input id="c-dose" class="input-field" type="number" placeholder="직접 입력" />
+          <input id="c-dose" class="input-field" type="number" step="any" placeholder="직접 입력" />
         </div>
         <button class="big-btn blue" onclick="calcPeptide()" style="margin-bottom:14px">계산하기</button>
         <div id="calc-result"></div>
