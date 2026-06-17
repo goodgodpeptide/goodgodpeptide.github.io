@@ -177,6 +177,7 @@
         loadCostSettings();
         renderAll();
         restoreSectionCollapseStates();
+        initSimPanel();
         updateNicknameAvatar();
         fetchFxRates(); // 초기 환율 로드 (비동기, UI 블로킹 없음)
         setTimeout(runWeeklyBackup, 3000); // 로그인 후 3초 뒤 주간 백업 체크 (UI 블로킹 없음)
@@ -2315,6 +2316,7 @@
     };
     function restoreSectionCollapseStates() {
       [
+        { c: 'drug-sec-sim',       a: 'drug-sec-sim-arrow',       k: 'sec_sim'       },
         { c: 'drug-sec-recon',     a: 'drug-sec-recon-arrow',     k: 'sec_recon'     },
         { c: 'drug-sec-inventory', a: 'drug-sec-inventory-arrow', k: 'sec_inventory' },
         { c: 'drug-sec-calc',      a: 'drug-sec-calc-arrow',      k: 'sec_calc'      },
@@ -2329,6 +2331,184 @@
           }
         } catch(_) {}
       });
+    }
+
+    // ── 체내농도 시뮬레이션 ──────────────────────────────────
+    let _simDurWeeks = 8;
+
+    window.setSimDur = function(weeks, btn) {
+      _simDurWeeks = weeks;
+      document.querySelectorAll('.sim-dur-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      runSimulation();
+    };
+
+    window.onSimDrugChange = function() {
+      const drug = document.getElementById('sim-drug')?.value;
+      const cfg = DRUG_CONFIG[drug];
+      if (cfg) {
+        const mid = Math.floor((cfg.doseSteps || []).length / 2);
+        const defDose = (cfg.doseSteps || [])[mid] || '';
+        document.getElementById('sim-dose').value = defDose;
+        document.getElementById('sim-interval').value = cfg.defaultDoseDays || 7;
+      }
+      runSimulation();
+    };
+
+    function initSimPanel() {
+      const sel = document.getElementById('sim-drug');
+      if (!sel) return;
+      if (sel.options.length === 0) {
+        Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+          const opt = document.createElement('option');
+          opt.value = drug; opt.textContent = `${cfg.emoji} ${cfg.short}`;
+          sel.appendChild(opt);
+        });
+      }
+      const active = (appData.activeDrugs || []);
+      const defDrug = active.length ? active[0] : Object.keys(DRUG_CONFIG)[0];
+      sel.value = defDrug;
+      const cfg = DRUG_CONFIG[defDrug];
+      if (cfg) {
+        const mid = Math.floor((cfg.doseSteps || []).length / 2);
+        document.getElementById('sim-dose').value = (cfg.doseSteps || [])[mid] || '';
+        document.getElementById('sim-interval').value = cfg.defaultDoseDays || 7;
+      }
+      runSimulation();
+    }
+
+    window.runSimulation = function() {
+      const drug = document.getElementById('sim-drug')?.value;
+      const dose = parseFloat(document.getElementById('sim-dose')?.value);
+      const interval = parseFloat(document.getElementById('sim-interval')?.value);
+      if (!drug || !dose || !interval || interval < 0.5) return;
+      const cfg = DRUG_CONFIG[drug];
+      if (!cfg) return;
+
+      const totalDays = _simDurWeeks * 7;
+      const totalCycles = Math.ceil(totalDays / interval) + 1;
+      const STEPS = 400;
+      const doseTimes = Array.from({length: totalCycles}, (_, i) => i * interval);
+
+      const points = [];
+      for (let i = 0; i <= STEPS; i++) {
+        const tDay = (i / STEPS) * totalDays;
+        let conc = 0;
+        doseTimes.forEach(d => { if (d <= tDay) conc += pkConcentration(dose, (tDay - d) * 24, cfg); });
+        points.push({ t: tDay, c: conc });
+      }
+
+      // 정상상태: 후반 50% 또는 마지막 2주기 중 늦은 쪽
+      const ssStart = Math.max(totalDays * 0.5, (totalCycles - 2) * interval);
+      const ssPoints = points.filter(p => p.t >= ssStart);
+      const maxC = ssPoints.length ? Math.max(...ssPoints.map(p => p.c)) : 0;
+      const minC = ssPoints.length ? Math.min(...ssPoints.map(p => p.c)) : 0;
+      const avgC = ssPoints.length ? ssPoints.reduce((s, p) => s + p.c, 0) / ssPoints.length : 0;
+
+      const fmt = v => v < 0.01 ? v.toFixed(4) : v < 1 ? v.toFixed(3) : v < 10 ? v.toFixed(2) : v.toFixed(1);
+      const statsEl = document.getElementById('sim-stats');
+      if (statsEl) {
+        statsEl.style.display = '';
+        statsEl.innerHTML = `
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+            <div style="background:#0d1f12;border:1px solid #166534;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:9px;color:#4ade80;margin-bottom:2px">↑ Cmax 피크</div>
+              <div style="font-size:15px;font-weight:700;color:#4ade80;font-family:monospace">${fmt(maxC)}</div>
+              <div style="font-size:9px;color:#6b7280">mg 상당</div>
+            </div>
+            <div style="background:#1a130a;border:1px solid #92400e;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:9px;color:#fbbf24;margin-bottom:2px">~ Cavg 평균</div>
+              <div style="font-size:15px;font-weight:700;color:#fbbf24;font-family:monospace">${fmt(avgC)}</div>
+              <div style="font-size:9px;color:#6b7280">mg 상당</div>
+            </div>
+            <div style="background:#100a1f;border:1px solid #4c1d95;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:9px;color:#a78bfa;margin-bottom:2px">↓ Cmin 트로프</div>
+              <div style="font-size:15px;font-weight:700;color:#a78bfa;font-family:monospace">${fmt(minC)}</div>
+              <div style="font-size:9px;color:#6b7280">mg 상당</div>
+            </div>
+          </div>
+          <div style="font-size:9px;color:#4b5563;text-align:center;margin-bottom:6px">정상상태 기준 (후반 ${Math.round(totalDays - ssStart)}일) · ${cfg.note}</div>`;
+      }
+      _renderSimGraph(points, { maxC, minC, avgC, cfg, doseTimes, totalDays });
+    };
+
+    function _renderSimGraph(points, { maxC, minC, avgC, cfg, doseTimes, totalDays }) {
+      const canvas = document.getElementById('sim-canvas');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const W = canvas.offsetWidth || 320;
+      const H = 160;
+      canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.height = H + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const PAD = { t: 16, r: 8, b: 26, l: 40 };
+      const gW = W - PAD.l - PAD.r;
+      const gH = H - PAD.t - PAD.b;
+      const yMax = maxC > 0 ? maxC * 1.15 : 1;
+
+      ctx.clearRect(0, 0, W, H);
+      ctx.fillStyle = '#080810'; ctx.fillRect(0, 0, W, H);
+
+      const tx = t => PAD.l + (t / totalDays) * gW;
+      const ty = v => PAD.t + gH - Math.max(0, Math.min(1, v / yMax)) * gH;
+
+      // Y 격자 + 레이블
+      ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1;
+      const fmt = v => v < 0.01 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : v.toFixed(1);
+      for (let i = 0; i <= 4; i++) {
+        const y = PAD.t + (i / 4) * gH;
+        ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
+        ctx.fillStyle = '#374151'; ctx.font = '8px monospace'; ctx.textAlign = 'right';
+        ctx.fillText(fmt(yMax * (1 - i / 4)), PAD.l - 3, y + 3);
+      }
+
+      // 투약 수직선 (점선)
+      ctx.strokeStyle = cfg.color + '44'; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+      doseTimes.filter(d => d <= totalDays).forEach(d => {
+        ctx.beginPath(); ctx.moveTo(tx(d), PAD.t); ctx.lineTo(tx(d), PAD.t + gH); ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      // Cavg 수평 점선
+      if (avgC > 0 && avgC < yMax) {
+        const yA = ty(avgC);
+        ctx.strokeStyle = '#fbbf2466'; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
+        ctx.beginPath(); ctx.moveTo(PAD.l, yA); ctx.lineTo(PAD.l + gW, yA); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 채우기 그라디언트
+      const grad = ctx.createLinearGradient(0, PAD.t, 0, PAD.t + gH);
+      grad.addColorStop(0, cfg.color + '50'); grad.addColorStop(1, cfg.color + '06');
+      ctx.beginPath();
+      points.forEach((p, i) => { i ? ctx.lineTo(tx(p.t), ty(p.c)) : ctx.moveTo(tx(p.t), ty(p.c)); });
+      ctx.lineTo(tx(totalDays), ty(0)); ctx.lineTo(tx(0), ty(0)); ctx.closePath();
+      ctx.fillStyle = grad; ctx.fill();
+
+      // 농도 곡선
+      ctx.beginPath(); ctx.strokeStyle = cfg.color; ctx.lineWidth = 2;
+      points.forEach((p, i) => { i ? ctx.lineTo(tx(p.t), ty(p.c)) : ctx.moveTo(tx(p.t), ty(p.c)); });
+      ctx.stroke();
+
+      // X축 주 레이블
+      ctx.fillStyle = '#4b5563'; ctx.font = '8px monospace'; ctx.textAlign = 'center';
+      for (let w = 0; w * 7 <= totalDays; w++) {
+        ctx.fillText(`${w}W`, tx(w * 7), PAD.t + gH + 12);
+      }
+
+      // Cmax/Cmin 레이블 오른쪽에
+      if (maxC > 0) {
+        const xLbl = PAD.l + gW * 0.72;
+        ctx.fillStyle = '#4ade80'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'left';
+        ctx.fillText(`↑${fmt(maxC)}`, xLbl, ty(maxC) - 2);
+        ctx.fillStyle = '#a78bfa';
+        ctx.fillText(`↓${fmt(minC)}`, xLbl, ty(minC) + 9);
+        if (avgC > 0 && Math.abs(ty(avgC) - ty(maxC)) > 12 && Math.abs(ty(avgC) - ty(minC)) > 8) {
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillText(`~${fmt(avgC)}`, xLbl, ty(avgC) + 4);
+        }
+      }
     }
 
     function renderActiveDrugToggles() {
@@ -9391,6 +9571,49 @@
         <input type="hidden" id="peptide-filter" value="전체" />
       </div>
       <div id="peptide-list"></div>
+
+      <!-- 📊 체내농도 시뮬레이션 -->
+      <div class="card" style="margin-top:4px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <button onclick="toggleSection('drug-sec-sim','drug-sec-sim-arrow','sec_sim')" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;flex:1;min-width:0;text-align:left">
+            <div class="section-title" style="margin-bottom:0">📊 체내농도 시뮬레이션</div>
+            <span id="drug-sec-sim-arrow" style="font-size:10px;color:#6b7280;transition:transform .2s;flex-shrink:0">▼</span>
+          </button>
+        </div>
+        <div id="drug-sec-sim">
+          <div style="font-size:11px;color:#4b5563;margin-bottom:10px">약물·용량·주기 입력 → 체내 농도 예상 곡선 + Cmax / Cavg / Cmin</div>
+
+          <div style="margin-bottom:8px">
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">약물 선택</div>
+            <select id="sim-drug" class="input-field" style="width:100%" onchange="onSimDrugChange()"></select>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:4px">1회 용량 (mg)</div>
+              <input id="sim-dose" class="input-field" type="number" step="any" min="0" placeholder="예: 5" oninput="runSimulation()" />
+            </div>
+            <div>
+              <div style="font-size:11px;color:#6b7280;margin-bottom:4px">투약 주기 (일)</div>
+              <input id="sim-interval" class="input-field" type="number" step="0.5" min="0.5" placeholder="예: 7" oninput="runSimulation()" />
+            </div>
+          </div>
+
+          <div style="margin-bottom:10px">
+            <div style="font-size:11px;color:#6b7280;margin-bottom:4px">시뮬레이션 기간</div>
+            <div style="display:flex;gap:6px">
+              <button class="qbtn sim-dur-btn" onclick="setSimDur(4,this)">4주</button>
+              <button class="qbtn sim-dur-btn active" onclick="setSimDur(8,this)">8주</button>
+              <button class="qbtn sim-dur-btn" onclick="setSimDur(12,this)">12주</button>
+              <button class="qbtn sim-dur-btn" onclick="setSimDur(24,this)">24주</button>
+            </div>
+          </div>
+
+          <div id="sim-stats" style="display:none"></div>
+          <canvas id="sim-canvas" style="width:100%;display:block;border-radius:8px;background:#080810"></canvas>
+          <div style="font-size:9px;color:#374151;text-align:center;margin-top:4px">점선 = 투약 시점 · 노란 점선 = 평균농도</div>
+        </div>
+      </div>
 
       <!-- 🧪 조제 재고 -->
       <div class="card" style="margin-top:4px;margin-bottom:12px">
