@@ -176,6 +176,7 @@
         await loadData();
         loadCostSettings();
         renderAll();
+        restoreSectionCollapseStates();
         updateNicknameAvatar();
         fetchFxRates(); // 초기 환율 로드 (비동기, UI 블로킹 없음)
         setTimeout(runWeeklyBackup, 3000); // 로그인 후 3초 뒤 주간 백업 체크 (UI 블로킹 없음)
@@ -2301,6 +2302,34 @@
       if (panel) panel.style.display = drugListExpanded ? 'flex' : 'none';
       if (arrow) arrow.textContent = drugListExpanded ? '▲' : '▼';
     };
+
+    // ── 하단 섹션 접기/펼치기 (조제재고·약재고·조제계산·비용계산기) ──
+    window.toggleSection = function(contentId, arrowId, storageKey) {
+      const el = document.getElementById(contentId);
+      const arrow = arrowId ? document.getElementById(arrowId) : null;
+      if (!el) return;
+      const isOpen = el.style.display !== 'none';
+      el.style.display = isOpen ? 'none' : '';
+      if (arrow) arrow.style.transform = isOpen ? 'rotate(-90deg)' : '';
+      try { localStorage.setItem(storageKey, isOpen ? '0' : '1'); } catch(_) {}
+    };
+    function restoreSectionCollapseStates() {
+      [
+        { c: 'drug-sec-recon',     a: 'drug-sec-recon-arrow',     k: 'sec_recon'     },
+        { c: 'drug-sec-inventory', a: 'drug-sec-inventory-arrow', k: 'sec_inventory' },
+        { c: 'drug-sec-calc',      a: 'drug-sec-calc-arrow',      k: 'sec_calc'      },
+        { c: 'drug-sec-cost',      a: 'drug-sec-cost-arrow',      k: 'sec_cost'      },
+      ].forEach(({ c, a, k }) => {
+        try {
+          if (localStorage.getItem(k) === '0') {
+            const el = document.getElementById(c);
+            const ar = document.getElementById(a);
+            if (el) el.style.display = 'none';
+            if (ar) ar.style.transform = 'rotate(-90deg)';
+          }
+        } catch(_) {}
+      });
+    }
 
     function renderActiveDrugToggles() {
       const c = document.getElementById("active-drug-toggles");
@@ -9339,24 +9368,38 @@
       <!-- 🧪 조제 재고 -->
       <div class="card" style="margin-top:4px;margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div class="section-title" style="margin-bottom:0">🧪 조제 재고</div>
+          <button onclick="toggleSection('drug-sec-recon','drug-sec-recon-arrow','sec_recon')" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;flex:1;min-width:0;text-align:left">
+            <div class="section-title" style="margin-bottom:0">🧪 조제 재고</div>
+            <span id="drug-sec-recon-arrow" style="font-size:10px;color:#6b7280;transition:transform .2s;flex-shrink:0">▼</span>
+          </button>
           <button onclick="openReconModal()" style="background:none;border:none;color:#60a5fa;font-size:12px;cursor:pointer;padding:2px 6px">+ 새 조제</button>
         </div>
-        <div id="recon-section"></div>
+        <div id="drug-sec-recon">
+          <div id="recon-section"></div>
+        </div>
       </div>
 
       <!-- 📦 약 재고 -->
       <div class="card" style="margin-top:4px;margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div class="section-title" style="margin-bottom:0">📦 약 재고</div>
+          <button onclick="toggleSection('drug-sec-inventory','drug-sec-inventory-arrow','sec_inventory')" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;flex:1;min-width:0;text-align:left">
+            <div class="section-title" style="margin-bottom:0">📦 약 재고</div>
+            <span id="drug-sec-inventory-arrow" style="font-size:10px;color:#6b7280;transition:transform .2s;flex-shrink:0">▼</span>
+          </button>
           <button onclick="openInventoryModal()" style="background:none;border:none;color:#fbbf24;font-size:12px;cursor:pointer;padding:2px 6px">+ 재고 추가</button>
         </div>
-        <div id="inventory-section"></div>
+        <div id="drug-sec-inventory">
+          <div id="inventory-section"></div>
+        </div>
       </div>
 
       <!-- 조제 계산 -->
       <div class="card" style="margin-top:4px;margin-bottom:12px">
-        <div class="section-title" style="margin-bottom:4px">🧪 조제 계산</div>
+        <button onclick="toggleSection('drug-sec-calc','drug-sec-calc-arrow','sec_calc')" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;width:100%;text-align:left;margin-bottom:4px">
+          <div class="section-title" style="margin-bottom:0">🧪 조제 계산</div>
+          <span id="drug-sec-calc-arrow" style="font-size:10px;color:#6b7280;transition:transform .2s;margin-left:4px">▼</span>
+        </button>
+        <div id="drug-sec-calc">
         <div style="font-size:11px;color:#4a5568;margin-bottom:12px">바이알 용량 · BAC Water · 1회 투여량으로 주사 농도 계산</div>
         <div class="card" style="margin-bottom:10px;background:#0d0d1a">
           <div class="section-title">바이알 용량 (mg)</div>
@@ -9389,14 +9432,19 @@
         </div>
         <button class="big-btn blue" onclick="calcPeptide()" style="margin-bottom:14px">계산하기</button>
         <div id="calc-result"></div>
+        </div><!-- /drug-sec-calc -->
       </div>
 
       <!-- 💰 비용 계산기 -->
       <div class="card" style="margin-top:4px;margin-bottom:12px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <div class="section-title" style="margin-bottom:0">💰 비용 계산기</div>
+          <button onclick="toggleSection('drug-sec-cost','drug-sec-cost-arrow','sec_cost')" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;flex:1;min-width:0;text-align:left">
+            <div class="section-title" style="margin-bottom:0">💰 비용 계산기</div>
+            <span id="drug-sec-cost-arrow" style="font-size:10px;color:#6b7280;transition:transform .2s;flex-shrink:0">▼</span>
+          </button>
           <button onclick="fetchFxRates(true)" style="background:none;border:none;font-size:12px;color:#60a5fa;cursor:pointer;padding:2px 6px">🔄 환율갱신</button>
         </div>
+        <div id="drug-sec-cost">
         <div id="fx-status" style="font-size:10px;color:#4a5568;margin-bottom:6px">환율 로딩 전</div>
         <div id="fx-rates-bar" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:8px;background:#0d0d1a;border-radius:8px;min-height:28px"></div>
 
@@ -9536,6 +9584,7 @@
         </div>
 
         <div id="cost-result"><div style="font-size:12px;color:#4a5568;text-align:center;padding:10px">구매 가격을 입력하세요</div></div>
+        </div><!-- /drug-sec-cost -->
       </div>
     </div>
 
