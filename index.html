@@ -2389,6 +2389,7 @@
         }
       }
       runSimulation();
+      requestAnimationFrame(() => runAddDoseSim());
     }
 
     window.runSimulation = function() {
@@ -2450,16 +2451,20 @@
       _renderSimGraph(points, { maxC, minC, avgC, cfg, doseTimes, totalDays });
     };
 
-    function _renderSimGraph(points, { maxC, minC, avgC, cfg, doseTimes, totalDays }) {
+    let _simState = null, _addSimState = null;
+
+    function _renderSimGraph(points, { maxC, minC, avgC, cfg, doseTimes, totalDays }, touchCssX) {
       const canvas = document.getElementById('sim-canvas');
       if (!canvas) return;
       const isLight = document.body.classList.contains('light-mode');
       const dpr = window.devicePixelRatio || 1;
       const W = canvas.offsetWidth || 320;
       const H = 160;
-      canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.height = H + 'px';
+      if (touchCssX === undefined) {
+        canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.height = H + 'px';
+      }
       const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       const PAD = { t: 16, r: 8, b: 26, l: 40 };
       const gW = W - PAD.l - PAD.r;
@@ -2537,6 +2542,61 @@
           ctx.fillText(`~${fmt(avgC)}`, xLbl, ty(avgC) + 4);
         }
       }
+
+      if (touchCssX !== undefined) {
+        const gx = touchCssX - PAD.l;
+        if (gx >= 0 && gx <= gW) {
+          const tVal = (gx / gW) * totalDays;
+          const pt = points.reduce((a, b) => Math.abs(b.t - tVal) < Math.abs(a.t - tVal) ? b : a);
+          const xPx = tx(pt.t); const yPx = ty(pt.c);
+          ctx.save();
+          ctx.strokeStyle = isLight ? '#00000055' : '#ffffff44'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+          ctx.beginPath(); ctx.moveTo(xPx, PAD.t); ctx.lineTo(xPx, PAD.t + gH); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = cfg.color; ctx.beginPath(); ctx.arc(xPx, yPx, 3.5, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#ffffff88'; ctx.lineWidth = 1; ctx.stroke();
+          const hTotal = pt.t * 24;
+          const tLabel = hTotal < 24 ? `+${hTotal.toFixed(1)}h` : `+${pt.t.toFixed(1)}d`;
+          const bw = 76, bh = 28;
+          const isRight = xPx > W * 0.5;
+          const boxX = isRight ? (PAD.l + 4) : (W - bw - 4);
+          const boxY = PAD.t + 2;
+          ctx.fillStyle = isLight ? 'rgba(255,255,255,0.92)' : 'rgba(8,8,20,0.88)';
+          ctx.strokeStyle = isLight ? '#e2e8f0' : '#374151'; ctx.lineWidth = 0.5;
+          ctx.beginPath(); ctx.rect(boxX, boxY, bw, bh); ctx.fill(); ctx.stroke();
+          ctx.font = '8px monospace'; ctx.textAlign = 'left';
+          ctx.fillStyle = isLight ? '#6b7280' : '#9ca3af';
+          ctx.fillText(tLabel, boxX + 5, boxY + 11);
+          ctx.fillStyle = cfg.color; ctx.font = 'bold 9px monospace';
+          ctx.fillText(`${cfg.emoji || '💉'} ${fmt(pt.c)}`, boxX + 5, boxY + 23);
+          ctx.restore();
+        }
+      } else {
+        _simState = { points, maxC, minC, avgC, cfg, doseTimes, totalDays };
+        _attachSimTouch(canvas);
+      }
+    }
+
+    function _attachSimTouch(canvas) {
+      if (canvas._simTH) {
+        canvas.removeEventListener('touchmove', canvas._simTH);
+        canvas.removeEventListener('mousemove', canvas._simTH);
+        canvas.removeEventListener('touchend', canvas._simTC);
+        canvas.removeEventListener('mouseleave', canvas._simTC);
+      }
+      const onMove = (e) => {
+        const s = _simState; if (!s) return;
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const cssX = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+        _renderSimGraph(s.points, s, cssX);
+      };
+      const onEnd = () => { const s = _simState; if (s) _renderSimGraph(s.points, s); };
+      canvas._simTH = onMove; canvas._simTC = onEnd;
+      canvas.addEventListener('touchmove', onMove, { passive: false });
+      canvas.addEventListener('mousemove', onMove);
+      canvas.addEventListener('touchend', onEnd);
+      canvas.addEventListener('mouseleave', onEnd);
     }
 
     // ── 추가투여 미리보기 ────────────────────────────────────
@@ -2556,8 +2616,9 @@
         }
 
         const drug = addSel?.value || '';
-        const extraDose = parseFloat(document.getElementById('add-sim-dose')?.value || '0');
-        if (!drug || !extraDose || extraDose <= 0) return;
+        if (!drug) return;
+        const extraDose = parseFloat(document.getElementById('add-sim-dose')?.value || '0') || 0;
+        const hasExtraDose = extraDose > 0;
         const cfg = DRUG_CONFIG[drug];
         if (!cfg) { if (statsEl) { statsEl.style.display = ''; statsEl.innerHTML = `<div style="color:#f87171;padding:8px">약물 설정 없음 (key: ${drug})</div>`; } return; }
 
@@ -2570,41 +2631,44 @@
           const hrs = (i / STEPS) * HOURS;
           const tFuture = now + hrs * 3600000;
           const existing = calcConcentrationAt(drug, tFuture);
-          const added = pkConcentration(extraDose, hrs, cfg);
+          const added = hasExtraDose ? pkConcentration(extraDose, hrs, cfg) : 0;
           points.push({ hrs, existing, total: existing + added });
         }
 
-        const currentConc = points[0].existing;
         const cmaxPt = points.reduce((a, b) => b.total > a.total ? b : a);
         const cmax = cmaxPt.total;
         const fmt = v => v < 0.01 ? v.toFixed(4) : v < 1 ? v.toFixed(3) : v < 10 ? v.toFixed(2) : v.toFixed(1);
-
         const isLight = document.body.classList.contains('light-mode');
         const sub = isLight ? '#6b7280' : '#4b5563';
+
         if (statsEl) {
-          statsEl.style.display = '';
-          statsEl.innerHTML = `
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
-              <div style="background:${isLight?'#eff6ff':'#0d1220'};border:1px solid ${isLight?'#bfdbfe':'#2563eb'};border-radius:8px;padding:8px;text-align:center">
-                <div style="font-size:9px;color:#60a5fa;margin-bottom:2px">지금 체내 잔류</div>
-                <div style="font-size:15px;font-weight:700;color:#60a5fa;font-family:monospace">${fmt(currentConc)}</div>
-                <div style="font-size:9px;color:${sub}">mg 상당</div>
+          if (hasExtraDose) {
+            const currentConc = points[0].existing;
+            statsEl.style.display = '';
+            statsEl.innerHTML = `
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+                <div style="background:${isLight?'#eff6ff':'#0d1220'};border:1px solid ${isLight?'#bfdbfe':'#2563eb'};border-radius:8px;padding:8px;text-align:center">
+                  <div style="font-size:9px;color:#60a5fa;margin-bottom:2px">지금 체내 잔류</div>
+                  <div style="font-size:15px;font-weight:700;color:#60a5fa;font-family:monospace">${fmt(currentConc)}</div>
+                  <div style="font-size:9px;color:${sub}">mg 상당</div>
+                </div>
+                <div style="background:${isLight?'#f0fdf4':'#0d1f12'};border:1px solid ${isLight?'#bbf7d0':'#16a34a'};border-radius:8px;padding:8px;text-align:center">
+                  <div style="font-size:9px;color:#4ade80;margin-bottom:2px">투여 후 Cmax</div>
+                  <div style="font-size:15px;font-weight:700;color:#4ade80;font-family:monospace">${fmt(cmax)}</div>
+                  <div style="font-size:9px;color:${sub}">mg 상당</div>
+                </div>
+                <div style="background:${isLight?'#fffbeb':'#1a0f0a'};border:1px solid ${isLight?'#fde68a':'#d97706'};border-radius:8px;padding:8px;text-align:center">
+                  <div style="font-size:9px;color:#fbbf24;margin-bottom:2px">피크 시점</div>
+                  <div style="font-size:15px;font-weight:700;color:#fbbf24;font-family:monospace">+${cmaxPt.hrs.toFixed(1)}h</div>
+                  <div style="font-size:9px;color:${sub}">투여 후</div>
+                </div>
               </div>
-              <div style="background:${isLight?'#f0fdf4':'#0d1f12'};border:1px solid ${isLight?'#bbf7d0':'#16a34a'};border-radius:8px;padding:8px;text-align:center">
-                <div style="font-size:9px;color:#4ade80;margin-bottom:2px">투여 후 Cmax</div>
-                <div style="font-size:15px;font-weight:700;color:#4ade80;font-family:monospace">${fmt(cmax)}</div>
-                <div style="font-size:9px;color:${sub}">mg 상당</div>
-              </div>
-              <div style="background:${isLight?'#fffbeb':'#1a0f0a'};border:1px solid ${isLight?'#fde68a':'#d97706'};border-radius:8px;padding:8px;text-align:center">
-                <div style="font-size:9px;color:#fbbf24;margin-bottom:2px">피크 시점</div>
-                <div style="font-size:15px;font-weight:700;color:#fbbf24;font-family:monospace">+${cmaxPt.hrs.toFixed(1)}h</div>
-                <div style="font-size:9px;color:${sub}">투여 후</div>
-              </div>
-            </div>
-            <div style="font-size:9px;color:${sub};text-align:center;margin-bottom:6px">${cfg.short} · ${cfg.note}</div>`;
+              <div style="font-size:9px;color:${sub};text-align:center;margin-bottom:6px">${cfg.short} · ${cfg.note}</div>`;
+          } else {
+            statsEl.style.display = 'none';
+          }
         }
-        // canvas 크기가 확정된 다음 프레임에서 렌더링
-        requestAnimationFrame(() => _renderAddDoseGraph(points, { cmax, cmaxPt, cfg }));
+        requestAnimationFrame(() => _renderAddDoseGraph(points, { cmax, cmaxPt, cfg, hasExtraDose }));
       } catch(e) {
         if (statsEl) {
           statsEl.style.display = '';
@@ -2613,20 +2677,21 @@
       }
     };
 
-    function _renderAddDoseGraph(points, { cmax, cmaxPt, cfg }) {
+    function _renderAddDoseGraph(points, { cmax, cmaxPt, cfg, hasExtraDose }, touchCssX) {
       const canvas = document.getElementById('add-sim-canvas');
       if (!canvas) return;
       const isLight = document.body.classList.contains('light-mode');
       const dpr = window.devicePixelRatio || 1;
-      // offsetWidth가 0이면 부모 요소 또는 화면 기준으로 폴백
       const W = canvas.offsetWidth || canvas.parentElement?.offsetWidth || window.innerWidth - 48 || 320;
       const H = 160;
-      canvas.width = Math.round(W * dpr);
-      canvas.height = Math.round(H * dpr);
-      canvas.style.width = W + 'px';
-      canvas.style.height = H + 'px';
+      if (touchCssX === undefined) {
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+      }
       const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
       ctx.fillStyle = isLight ? '#f8fafc' : '#080810';
       ctx.fillRect(0, 0, W, H);
@@ -2635,11 +2700,11 @@
       const gW = W - PAD_L - PAD_R;
       const gH = H - PAD_T - PAD_B;
       const HOURS = 72;
-      const maxY = Math.max(cmax * 1.2, 0.001);
+      const existMax = points.reduce((m, p) => Math.max(m, p.existing), 0);
+      const maxY = Math.max((hasExtraDose ? cmax : existMax) * 1.2, 0.001);
       const xOf = hrs => PAD_L + (hrs / HOURS) * gW;
       const yOf = c => PAD_T + gH - Math.min(c / maxY, 1) * gH;
 
-      // 격자
       ctx.strokeStyle = isLight ? '#e2e8f0' : '#1f2937';
       ctx.lineWidth = 0.5;
       [0, 0.5, 1].forEach(r => {
@@ -2647,44 +2712,106 @@
         ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(PAD_L + gW, y); ctx.stroke();
       });
 
-      // x축 레이블
       ctx.fillStyle = isLight ? '#6b7280' : '#4b5563';
-      ctx.font = `${9}px sans-serif`; ctx.textAlign = 'center';
+      ctx.font = `9px sans-serif`; ctx.textAlign = 'center';
       [0, 24, 48, 72].forEach(h => {
         ctx.fillText(h === 0 ? '지금' : `+${h}h`, xOf(h), H - PAD_B + 13);
       });
 
-      // y축 레이블
       ctx.textAlign = 'right';
       [0.5, 1].forEach(r => {
         const v = maxY * r;
         ctx.fillText(v < 1 ? v.toFixed(2) : v.toFixed(1), PAD_L - 3, yOf(v) + 3);
       });
 
-      // 기존 농도 (파란 선)
       ctx.beginPath(); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
       points.forEach((p, i) => { i === 0 ? ctx.moveTo(xOf(p.hrs), yOf(p.existing)) : ctx.lineTo(xOf(p.hrs), yOf(p.existing)); });
       ctx.stroke();
 
-      // 합산 농도 (초록 선)
-      ctx.beginPath(); ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2; ctx.setLineDash([]);
-      points.forEach((p, i) => { i === 0 ? ctx.moveTo(xOf(p.hrs), yOf(p.total)) : ctx.lineTo(xOf(p.hrs), yOf(p.total)); });
-      ctx.stroke();
+      if (hasExtraDose) {
+        ctx.beginPath(); ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2; ctx.setLineDash([]);
+        points.forEach((p, i) => { i === 0 ? ctx.moveTo(xOf(p.hrs), yOf(p.total)) : ctx.lineTo(xOf(p.hrs), yOf(p.total)); });
+        ctx.stroke();
 
-      // Cmax 수직 점선
-      ctx.setLineDash([3, 3]); ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1;
-      const xCmax = xOf(cmaxPt.hrs);
-      ctx.beginPath(); ctx.moveTo(xCmax, PAD_T); ctx.lineTo(xCmax, PAD_T + gH); ctx.stroke();
-      ctx.setLineDash([]);
+        ctx.setLineDash([3, 3]); ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1;
+        const xCmax = xOf(cmaxPt.hrs);
+        ctx.beginPath(); ctx.moveTo(xCmax, PAD_T); ctx.lineTo(xCmax, PAD_T + gH); ctx.stroke();
+        ctx.setLineDash([]);
 
-      // 범례
-      ctx.font = `9px sans-serif`; ctx.textAlign = 'left';
-      [[PAD_L + 4, '#3b82f6', '현재 농도'], [PAD_L + 72, '#22c55e', '추가 후']].forEach(([x, color, label]) => {
-        ctx.fillStyle = color;
-        ctx.fillRect(x, PAD_T + 3, 12, 2);
+        ctx.font = `9px sans-serif`; ctx.textAlign = 'left';
+        [[PAD_L + 4, '#3b82f6', '현재 농도'], [PAD_L + 72, '#22c55e', '추가 후']].forEach(([x, color, label]) => {
+          ctx.fillStyle = color;
+          ctx.fillRect(x, PAD_T + 3, 12, 2);
+          ctx.fillStyle = isLight ? '#6b7280' : '#9ca3af';
+          ctx.fillText(label, x + 14, PAD_T + 8);
+        });
+      } else {
+        ctx.font = `9px sans-serif`; ctx.textAlign = 'left';
+        ctx.fillStyle = '#3b82f6'; ctx.fillRect(PAD_L + 4, PAD_T + 3, 12, 2);
         ctx.fillStyle = isLight ? '#6b7280' : '#9ca3af';
-        ctx.fillText(label, x + 14, PAD_T + 8);
-      });
+        ctx.fillText('현재 체내 농도 (예측)', PAD_L + 18, PAD_T + 8);
+      }
+
+      if (touchCssX !== undefined) {
+        const gx = touchCssX - PAD_L;
+        if (gx >= 0 && gx <= gW) {
+          const hrsVal = (gx / gW) * HOURS;
+          const pt = points.reduce((a, b) => Math.abs(b.hrs - hrsVal) < Math.abs(a.hrs - hrsVal) ? b : a);
+          const xPx = xOf(pt.hrs);
+          ctx.save();
+          ctx.strokeStyle = isLight ? '#00000055' : '#ffffff44'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+          ctx.beginPath(); ctx.moveTo(xPx, PAD_T); ctx.lineTo(xPx, PAD_T + gH); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(xPx, yOf(pt.existing), 3, 0, Math.PI * 2); ctx.fill();
+          if (hasExtraDose) {
+            ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(xPx, yOf(pt.total), 3.5, 0, Math.PI * 2); ctx.fill();
+          }
+          const fmtV = v => v < 0.01 ? v.toFixed(4) : v < 1 ? v.toFixed(3) : v < 10 ? v.toFixed(2) : v.toFixed(1);
+          const tLabel = `+${pt.hrs.toFixed(0)}h`;
+          const bw = hasExtraDose ? 90 : 82; const bh = hasExtraDose ? 38 : 28;
+          const isRight = xPx > W * 0.5;
+          const boxX = isRight ? (PAD_L + 4) : (W - bw - 4);
+          const boxY = PAD_T + 2;
+          ctx.fillStyle = isLight ? 'rgba(255,255,255,0.92)' : 'rgba(8,8,20,0.88)';
+          ctx.strokeStyle = isLight ? '#e2e8f0' : '#374151'; ctx.lineWidth = 0.5;
+          ctx.beginPath(); ctx.rect(boxX, boxY, bw, bh); ctx.fill(); ctx.stroke();
+          ctx.font = '8px monospace'; ctx.textAlign = 'left';
+          ctx.fillStyle = isLight ? '#6b7280' : '#9ca3af';
+          ctx.fillText(tLabel, boxX + 5, boxY + 11);
+          ctx.fillStyle = '#3b82f6';
+          ctx.fillText(`현재 ${fmtV(pt.existing)}`, boxX + 5, boxY + 22);
+          if (hasExtraDose) {
+            ctx.fillStyle = '#22c55e';
+            ctx.fillText(`합산 ${fmtV(pt.total)}`, boxX + 5, boxY + 33);
+          }
+          ctx.restore();
+        }
+      } else {
+        _addSimState = { points, cmax, cmaxPt, cfg, hasExtraDose };
+        _attachAddSimTouch(canvas);
+      }
+    }
+
+    function _attachAddSimTouch(canvas) {
+      if (canvas._addTH) {
+        canvas.removeEventListener('touchmove', canvas._addTH);
+        canvas.removeEventListener('mousemove', canvas._addTH);
+        canvas.removeEventListener('touchend', canvas._addTC);
+        canvas.removeEventListener('mouseleave', canvas._addTC);
+      }
+      const onMove = (e) => {
+        const s = _addSimState; if (!s) return;
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const cssX = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+        _renderAddDoseGraph(s.points, s, cssX);
+      };
+      const onEnd = () => { const s = _addSimState; if (s) _renderAddDoseGraph(s.points, s); };
+      canvas._addTH = onMove; canvas._addTC = onEnd;
+      canvas.addEventListener('touchmove', onMove, { passive: false });
+      canvas.addEventListener('mousemove', onMove);
+      canvas.addEventListener('touchend', onEnd);
+      canvas.addEventListener('mouseleave', onEnd);
     }
 
     // ── 시뮬레이션 표 (히트맵 비교표 + 일자별) ─────────────────
