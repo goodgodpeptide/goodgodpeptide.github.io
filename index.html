@@ -2541,56 +2541,76 @@
 
     // ── 추가투여 미리보기 ────────────────────────────────────
     window.runAddDoseSim = function() {
-      const drug = document.getElementById('add-sim-drug')?.value;
-      const extraDose = parseFloat(document.getElementById('add-sim-dose')?.value || '0');
-      if (!drug || !extraDose || extraDose <= 0) return;
-      const cfg = DRUG_CONFIG[drug];
-      if (!cfg) return;
-
-      const now = Date.now();
-      const HOURS = 72;
-      const STEPS = 300;
-
-      const points = [];
-      for (let i = 0; i <= STEPS; i++) {
-        const hrs = (i / STEPS) * HOURS;
-        const tFuture = now + hrs * 3600000;
-        const existing = calcConcentrationAt(drug, tFuture);
-        const added = pkConcentration(extraDose, hrs, cfg);
-        points.push({ hrs, existing, total: existing + added });
-      }
-
-      const currentConc = points[0].existing;
-      const cmaxPt = points.reduce((a, b) => b.total > a.total ? b : a);
-      const cmax = cmaxPt.total;
-      const fmt = v => v < 0.01 ? v.toFixed(4) : v < 1 ? v.toFixed(3) : v < 10 ? v.toFixed(2) : v.toFixed(1);
-
-      const isLight = document.body.classList.contains('light-mode');
-      const sub = isLight ? '#6b7280' : '#4b5563';
       const statsEl = document.getElementById('add-sim-stats');
-      if (statsEl) {
-        statsEl.style.display = '';
-        statsEl.innerHTML = `
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
-            <div style="background:${isLight?'#eff6ff':'#0d1220'};border:1px solid ${isLight?'#bfdbfe':'#2563eb'};border-radius:8px;padding:8px;text-align:center">
-              <div style="font-size:9px;color:#60a5fa;margin-bottom:2px">지금 체내 잔류</div>
-              <div style="font-size:15px;font-weight:700;color:#60a5fa;font-family:monospace">${fmt(currentConc)}</div>
-              <div style="font-size:9px;color:${sub}">mg 상당</div>
+      try {
+        // add-sim-drug 옵션이 비어있으면 직접 채우기
+        const addSel = document.getElementById('add-sim-drug');
+        if (addSel && addSel.options.length === 0) {
+          Object.entries(DRUG_CONFIG).forEach(([d, c]) => {
+            const o = document.createElement('option');
+            o.value = d; o.textContent = `${c.emoji} ${c.short}`;
+            addSel.appendChild(o);
+          });
+          const defD = (appData.activeDrugs || [])[0] || Object.keys(DRUG_CONFIG)[0];
+          addSel.value = defD;
+        }
+
+        const drug = addSel?.value || '';
+        const extraDose = parseFloat(document.getElementById('add-sim-dose')?.value || '0');
+        if (!drug || !extraDose || extraDose <= 0) return;
+        const cfg = DRUG_CONFIG[drug];
+        if (!cfg) { if (statsEl) { statsEl.style.display = ''; statsEl.innerHTML = `<div style="color:#f87171;padding:8px">약물 설정 없음 (key: ${drug})</div>`; } return; }
+
+        const now = Date.now();
+        const HOURS = 72;
+        const STEPS = 300;
+
+        const points = [];
+        for (let i = 0; i <= STEPS; i++) {
+          const hrs = (i / STEPS) * HOURS;
+          const tFuture = now + hrs * 3600000;
+          const existing = calcConcentrationAt(drug, tFuture);
+          const added = pkConcentration(extraDose, hrs, cfg);
+          points.push({ hrs, existing, total: existing + added });
+        }
+
+        const currentConc = points[0].existing;
+        const cmaxPt = points.reduce((a, b) => b.total > a.total ? b : a);
+        const cmax = cmaxPt.total;
+        const fmt = v => v < 0.01 ? v.toFixed(4) : v < 1 ? v.toFixed(3) : v < 10 ? v.toFixed(2) : v.toFixed(1);
+
+        const isLight = document.body.classList.contains('light-mode');
+        const sub = isLight ? '#6b7280' : '#4b5563';
+        if (statsEl) {
+          statsEl.style.display = '';
+          statsEl.innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+              <div style="background:${isLight?'#eff6ff':'#0d1220'};border:1px solid ${isLight?'#bfdbfe':'#2563eb'};border-radius:8px;padding:8px;text-align:center">
+                <div style="font-size:9px;color:#60a5fa;margin-bottom:2px">지금 체내 잔류</div>
+                <div style="font-size:15px;font-weight:700;color:#60a5fa;font-family:monospace">${fmt(currentConc)}</div>
+                <div style="font-size:9px;color:${sub}">mg 상당</div>
+              </div>
+              <div style="background:${isLight?'#f0fdf4':'#0d1f12'};border:1px solid ${isLight?'#bbf7d0':'#16a34a'};border-radius:8px;padding:8px;text-align:center">
+                <div style="font-size:9px;color:#4ade80;margin-bottom:2px">투여 후 Cmax</div>
+                <div style="font-size:15px;font-weight:700;color:#4ade80;font-family:monospace">${fmt(cmax)}</div>
+                <div style="font-size:9px;color:${sub}">mg 상당</div>
+              </div>
+              <div style="background:${isLight?'#fffbeb':'#1a0f0a'};border:1px solid ${isLight?'#fde68a':'#d97706'};border-radius:8px;padding:8px;text-align:center">
+                <div style="font-size:9px;color:#fbbf24;margin-bottom:2px">피크 시점</div>
+                <div style="font-size:15px;font-weight:700;color:#fbbf24;font-family:monospace">+${cmaxPt.hrs.toFixed(1)}h</div>
+                <div style="font-size:9px;color:${sub}">투여 후</div>
+              </div>
             </div>
-            <div style="background:${isLight?'#f0fdf4':'#0d1f12'};border:1px solid ${isLight?'#bbf7d0':'#16a34a'};border-radius:8px;padding:8px;text-align:center">
-              <div style="font-size:9px;color:#4ade80;margin-bottom:2px">투여 후 Cmax</div>
-              <div style="font-size:15px;font-weight:700;color:#4ade80;font-family:monospace">${fmt(cmax)}</div>
-              <div style="font-size:9px;color:${sub}">mg 상당</div>
-            </div>
-            <div style="background:${isLight?'#fffbeb':'#1a0f0a'};border:1px solid ${isLight?'#fde68a':'#d97706'};border-radius:8px;padding:8px;text-align:center">
-              <div style="font-size:9px;color:#fbbf24;margin-bottom:2px">피크 시점</div>
-              <div style="font-size:15px;font-weight:700;color:#fbbf24;font-family:monospace">+${cmaxPt.hrs.toFixed(1)}h</div>
-              <div style="font-size:9px;color:${sub}">투여 후</div>
-            </div>
-          </div>
-          <div style="font-size:9px;color:${sub};text-align:center;margin-bottom:6px">${cfg.short} · ${cfg.note}</div>`;
+            <div style="font-size:9px;color:${sub};text-align:center;margin-bottom:6px">${cfg.short} · ${cfg.note}</div>`;
+        }
+        // canvas 크기가 확정된 다음 프레임에서 렌더링
+        requestAnimationFrame(() => _renderAddDoseGraph(points, { cmax, cmaxPt, cfg }));
+      } catch(e) {
+        if (statsEl) {
+          statsEl.style.display = '';
+          statsEl.innerHTML = `<div style="color:#f87171;font-size:11px;padding:8px;background:#1a0505;border-radius:6px">⚠️ 에러: ${e.message}</div>`;
+        }
       }
-      _renderAddDoseGraph(points, { cmax, cmaxPt, cfg });
     };
 
     function _renderAddDoseGraph(points, { cmax, cmaxPt, cfg }) {
@@ -2598,9 +2618,13 @@
       if (!canvas) return;
       const isLight = document.body.classList.contains('light-mode');
       const dpr = window.devicePixelRatio || 1;
-      const W = canvas.offsetWidth || 320;
-      const H = 140;
-      canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.height = H + 'px';
+      // offsetWidth가 0이면 부모 요소 또는 화면 기준으로 폴백
+      const W = canvas.offsetWidth || canvas.parentElement?.offsetWidth || window.innerWidth - 48 || 320;
+      const H = 160;
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
       const ctx = canvas.getContext('2d');
       ctx.scale(dpr, dpr);
 
