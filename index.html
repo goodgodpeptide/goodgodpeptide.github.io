@@ -2374,6 +2374,20 @@
         document.getElementById('sim-dose').value = (cfg.doseSteps || [])[mid] || '';
         document.getElementById('sim-interval').value = cfg.defaultDoseDays || 7;
       }
+      // 추가투여 미리보기 약물 셀렉트 초기화
+      const addSel = document.getElementById('add-sim-drug');
+      if (addSel && addSel.options.length === 0) {
+        Object.entries(DRUG_CONFIG).forEach(([drug, cfg]) => {
+          const opt = document.createElement('option');
+          opt.value = drug; opt.textContent = `${cfg.emoji} ${cfg.short}`;
+          addSel.appendChild(opt);
+        });
+        addSel.value = defDrug;
+        if (cfg) {
+          const mid = Math.floor((cfg.doseSteps || []).length / 2);
+          document.getElementById('add-sim-dose').value = (cfg.doseSteps || [])[mid] || '';
+        }
+      }
       runSimulation();
     }
 
@@ -2523,6 +2537,130 @@
           ctx.fillText(`~${fmt(avgC)}`, xLbl, ty(avgC) + 4);
         }
       }
+    }
+
+    // ── 추가투여 미리보기 ────────────────────────────────────
+    window.runAddDoseSim = function() {
+      const drug = document.getElementById('add-sim-drug')?.value;
+      const extraDose = parseFloat(document.getElementById('add-sim-dose')?.value || '0');
+      if (!drug || !extraDose || extraDose <= 0) return;
+      const cfg = DRUG_CONFIG[drug];
+      if (!cfg) return;
+
+      const now = Date.now();
+      const HOURS = 72;
+      const STEPS = 300;
+
+      const points = [];
+      for (let i = 0; i <= STEPS; i++) {
+        const hrs = (i / STEPS) * HOURS;
+        const tFuture = now + hrs * 3600000;
+        const existing = calcConcentrationAt(drug, tFuture);
+        const added = pkConcentration(extraDose, hrs, cfg);
+        points.push({ hrs, existing, total: existing + added });
+      }
+
+      const currentConc = points[0].existing;
+      const cmaxPt = points.reduce((a, b) => b.total > a.total ? b : a);
+      const cmax = cmaxPt.total;
+      const fmt = v => v < 0.01 ? v.toFixed(4) : v < 1 ? v.toFixed(3) : v < 10 ? v.toFixed(2) : v.toFixed(1);
+
+      const isLight = document.body.classList.contains('light-mode');
+      const sub = isLight ? '#6b7280' : '#4b5563';
+      const statsEl = document.getElementById('add-sim-stats');
+      if (statsEl) {
+        statsEl.style.display = '';
+        statsEl.innerHTML = `
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+            <div style="background:${isLight?'#eff6ff':'#0d1220'};border:1px solid ${isLight?'#bfdbfe':'#2563eb'};border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:9px;color:#60a5fa;margin-bottom:2px">지금 체내 잔류</div>
+              <div style="font-size:15px;font-weight:700;color:#60a5fa;font-family:monospace">${fmt(currentConc)}</div>
+              <div style="font-size:9px;color:${sub}">mg 상당</div>
+            </div>
+            <div style="background:${isLight?'#f0fdf4':'#0d1f12'};border:1px solid ${isLight?'#bbf7d0':'#16a34a'};border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:9px;color:#4ade80;margin-bottom:2px">투여 후 Cmax</div>
+              <div style="font-size:15px;font-weight:700;color:#4ade80;font-family:monospace">${fmt(cmax)}</div>
+              <div style="font-size:9px;color:${sub}">mg 상당</div>
+            </div>
+            <div style="background:${isLight?'#fffbeb':'#1a0f0a'};border:1px solid ${isLight?'#fde68a':'#d97706'};border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:9px;color:#fbbf24;margin-bottom:2px">피크 시점</div>
+              <div style="font-size:15px;font-weight:700;color:#fbbf24;font-family:monospace">+${cmaxPt.hrs.toFixed(1)}h</div>
+              <div style="font-size:9px;color:${sub}">투여 후</div>
+            </div>
+          </div>
+          <div style="font-size:9px;color:${sub};text-align:center;margin-bottom:6px">${cfg.short} · ${cfg.note}</div>`;
+      }
+      _renderAddDoseGraph(points, { cmax, cmaxPt, cfg });
+    };
+
+    function _renderAddDoseGraph(points, { cmax, cmaxPt, cfg }) {
+      const canvas = document.getElementById('add-sim-canvas');
+      if (!canvas) return;
+      const isLight = document.body.classList.contains('light-mode');
+      const dpr = window.devicePixelRatio || 1;
+      const W = canvas.offsetWidth || 320;
+      const H = 140;
+      canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.height = H + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      ctx.fillStyle = isLight ? '#f8fafc' : '#080810';
+      ctx.fillRect(0, 0, W, H);
+
+      const PAD_L = 42, PAD_R = 10, PAD_T = 14, PAD_B = 24;
+      const gW = W - PAD_L - PAD_R;
+      const gH = H - PAD_T - PAD_B;
+      const HOURS = 72;
+      const maxY = Math.max(cmax * 1.2, 0.001);
+      const xOf = hrs => PAD_L + (hrs / HOURS) * gW;
+      const yOf = c => PAD_T + gH - Math.min(c / maxY, 1) * gH;
+
+      // 격자
+      ctx.strokeStyle = isLight ? '#e2e8f0' : '#1f2937';
+      ctx.lineWidth = 0.5;
+      [0, 0.5, 1].forEach(r => {
+        const y = PAD_T + gH * (1 - r);
+        ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(PAD_L + gW, y); ctx.stroke();
+      });
+
+      // x축 레이블
+      ctx.fillStyle = isLight ? '#6b7280' : '#4b5563';
+      ctx.font = `${9}px sans-serif`; ctx.textAlign = 'center';
+      [0, 24, 48, 72].forEach(h => {
+        ctx.fillText(h === 0 ? '지금' : `+${h}h`, xOf(h), H - PAD_B + 13);
+      });
+
+      // y축 레이블
+      ctx.textAlign = 'right';
+      [0.5, 1].forEach(r => {
+        const v = maxY * r;
+        ctx.fillText(v < 1 ? v.toFixed(2) : v.toFixed(1), PAD_L - 3, yOf(v) + 3);
+      });
+
+      // 기존 농도 (파란 선)
+      ctx.beginPath(); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+      points.forEach((p, i) => { i === 0 ? ctx.moveTo(xOf(p.hrs), yOf(p.existing)) : ctx.lineTo(xOf(p.hrs), yOf(p.existing)); });
+      ctx.stroke();
+
+      // 합산 농도 (초록 선)
+      ctx.beginPath(); ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2; ctx.setLineDash([]);
+      points.forEach((p, i) => { i === 0 ? ctx.moveTo(xOf(p.hrs), yOf(p.total)) : ctx.lineTo(xOf(p.hrs), yOf(p.total)); });
+      ctx.stroke();
+
+      // Cmax 수직 점선
+      ctx.setLineDash([3, 3]); ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1;
+      const xCmax = xOf(cmaxPt.hrs);
+      ctx.beginPath(); ctx.moveTo(xCmax, PAD_T); ctx.lineTo(xCmax, PAD_T + gH); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // 범례
+      ctx.font = `9px sans-serif`; ctx.textAlign = 'left';
+      [[PAD_L + 4, '#3b82f6', '현재 농도'], [PAD_L + 72, '#22c55e', '추가 후']].forEach(([x, color, label]) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(x, PAD_T + 3, 12, 2);
+        ctx.fillStyle = isLight ? '#6b7280' : '#9ca3af';
+        ctx.fillText(label, x + 14, PAD_T + 8);
+      });
     }
 
     // ── 시뮬레이션 표 (히트맵 비교표 + 일자별) ─────────────────
@@ -9830,6 +9968,25 @@
           </div>
           <div id="sim-table-wrap" style="display:none;margin-top:8px"></div>
           <div id="sim-daily-wrap" style="display:none;margin-top:8px"></div>
+
+          <!-- 📍 추가투여 미리보기 -->
+          <div style="border-top:1px solid #1f2937;margin-top:14px;padding-top:12px">
+            <div style="font-size:12px;font-weight:600;color:#a78bfa;margin-bottom:6px">📍 추가투여 미리보기</div>
+            <div style="font-size:11px;color:#4b5563;margin-bottom:8px">지금 X mg 더 맞으면 → 72시간 예상 농도 변화</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">약물</div>
+                <select id="add-sim-drug" class="input-field" style="width:100%" onchange="runAddDoseSim()"></select>
+              </div>
+              <div>
+                <div style="font-size:11px;color:#6b7280;margin-bottom:4px">추가 투여량 (mg)</div>
+                <input id="add-sim-dose" class="input-field" type="number" step="any" min="0" placeholder="예: 5" oninput="runAddDoseSim()" />
+              </div>
+            </div>
+            <div id="add-sim-stats" style="display:none"></div>
+            <canvas id="add-sim-canvas" style="width:100%;display:block;border-radius:8px;background:#080810"></canvas>
+            <div style="font-size:9px;color:#374151;text-align:center;margin-top:4px">파란선 = 현재 이력 기반 농도 · 초록선 = 추가 투여 후 합산 · 노란 점선 = Cmax</div>
+          </div>
         </div>
       </div>
 
