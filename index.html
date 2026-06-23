@@ -2485,7 +2485,7 @@
 
       // Y 격자 + 레이블
       ctx.strokeStyle = GRID; ctx.lineWidth = 1;
-      const fmt = v => v < 0.01 ? v.toFixed(3) : v < 1 ? v.toFixed(2) : v.toFixed(1);
+      const fmt = v => v < 0.0001 ? v.toFixed(5) : v.toFixed(3);
       for (let i = 0; i <= 4; i++) {
         const y = PAD.t + (i / 4) * gH;
         ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(PAD.l + gW, y); ctx.stroke();
@@ -2637,7 +2637,7 @@
 
         const cmaxPt = points.reduce((a, b) => b.total > a.total ? b : a);
         const cmax = cmaxPt.total;
-        const fmt = v => v < 0.01 ? v.toFixed(4) : v < 1 ? v.toFixed(3) : v < 10 ? v.toFixed(2) : v.toFixed(1);
+        const fmt = v => v < 0.0001 ? v.toFixed(5) : v.toFixed(3);
         const isLight = document.body.classList.contains('light-mode');
         const sub = isLight ? '#6b7280' : '#4b5563';
 
@@ -2707,7 +2707,7 @@
 
       ctx.strokeStyle = isLight ? '#e2e8f0' : '#1f2937';
       ctx.lineWidth = 0.5;
-      [0, 0.5, 1].forEach(r => {
+      [0, 0.25, 0.5, 0.75, 1].forEach(r => {
         const y = PAD_T + gH * (1 - r);
         ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(PAD_L + gW, y); ctx.stroke();
       });
@@ -2718,10 +2718,10 @@
         ctx.fillText(h === 0 ? '지금' : `+${h}h`, xOf(h), H - PAD_B + 13);
       });
 
-      ctx.textAlign = 'right';
-      [0.5, 1].forEach(r => {
+      ctx.font = `8px monospace`; ctx.textAlign = 'right';
+      [0.25, 0.5, 0.75, 1].forEach(r => {
         const v = maxY * r;
-        ctx.fillText(v < 1 ? v.toFixed(2) : v.toFixed(1), PAD_L - 3, yOf(v) + 3);
+        ctx.fillText(v < 0.0001 ? v.toFixed(5) : v.toFixed(3), PAD_L - 3, yOf(v) + 3);
       });
 
       ctx.beginPath(); ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
@@ -2766,7 +2766,7 @@
           if (hasExtraDose) {
             ctx.fillStyle = '#22c55e'; ctx.beginPath(); ctx.arc(xPx, yOf(pt.total), 3.5, 0, Math.PI * 2); ctx.fill();
           }
-          const fmtV = v => v < 0.01 ? v.toFixed(4) : v < 1 ? v.toFixed(3) : v < 10 ? v.toFixed(2) : v.toFixed(1);
+          const fmtV = v => v < 0.0001 ? v.toFixed(5) : v.toFixed(3);
           const tLabel = `+${pt.hrs.toFixed(0)}h`;
           const bw = hasExtraDose ? 90 : 82; const bh = hasExtraDose ? 38 : 28;
           const isRight = xPx > W * 0.5;
