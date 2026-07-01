@@ -470,6 +470,42 @@
     // ── 백업 / 복원 ────────────────────────────────────────
     let pendingRestoreData = null;
 
+    // ── 앱 공유 / 추천 ──────────────────────────
+    window.openShareModal = function() {
+      const m = document.getElementById('share-modal');
+      if (m) m.style.display = 'flex';
+    };
+    window.copyShareLink = async function() {
+      const url = 'https://goodgodpeptide.github.io';
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast('🔗 링크가 복사되었어요!');
+      } catch(e) {
+        const inp = document.getElementById('share-url-input');
+        if (inp) { inp.select(); try { document.execCommand('copy'); } catch(_){} }
+        showToast('🔗 링크가 복사되었어요!');
+      }
+    };
+    window.nativeShare = async function() {
+      const shareData = { title: '체중관리 매니저', text: '펩타이드·체중·영양제를 한 곳에서 관리하는 무료 앱', url: 'https://goodgodpeptide.github.io' };
+      if (navigator.share) {
+        try { await navigator.share(shareData); } catch(e) {}
+      } else {
+        copyShareLink();
+      }
+    };
+    window.shareTo = function(platform) {
+      const rawUrl = 'https://goodgodpeptide.github.io';
+      const url = encodeURIComponent(rawUrl);
+      const text = encodeURIComponent('펩타이드·체중 관리 무료 앱 — 체중관리 매니저');
+      let shareUrl = '';
+      if (platform === 'x') shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+      else if (platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+      else if (platform === 'telegram') shareUrl = `https://t.me/share/url?url=${url}&text=${text}`;
+      else if (platform === 'kakao') { copyShareLink(); showToast('링크 복사됨 — 카톡에 붙여넣기 하세요'); return; }
+      if (shareUrl) window.open(shareUrl, '_blank', 'noopener,width=600,height=520');
+    };
+
     window.openBackupModal = function() {
       pendingRestoreData = null;
       document.getElementById("backup-restore-warning").style.display = "none";
@@ -9976,6 +10012,12 @@
                    text-align:left;cursor:pointer;font-family:inherit">
             📲 앱으로 설치
           </button>
+          <button onclick="closeSettingsMenu();openShareModal()"
+            style="width:100%;padding:12px 16px;background:none;border:none;
+                   border-bottom:1px solid #374151;color:#a78bfa;font-size:13px;
+                   text-align:left;cursor:pointer;font-family:inherit">
+            🔗 공유 / 추천하기
+          </button>
           <button onclick="closeSettingsMenu();openBackupModal()"
             style="width:100%;padding:12px 16px;background:none;border:none;
                    border-bottom:1px solid #374151;color:#e2e8f0;font-size:13px;
@@ -10608,6 +10650,33 @@
 </div>
 
 <!-- 백업/복원 모달 -->
+<!-- 공유 / 추천 모달 -->
+<div id="share-modal" class="modal-overlay" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-title">🔗 앱 공유하기</div>
+    <p style="font-size:12.5px;color:#94a3b8;line-height:1.65;margin:-8px 0 14px">
+      펩타이드·체중·영양제를 한 곳에서 관리하는 무료 앱이에요.<br>친구나 커뮤니티에 추천해보세요!
+    </p>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <input id="share-url-input" class="input-field" readonly value="https://goodgodpeptide.github.io"
+        onclick="this.select()"
+        style="flex:1;min-width:0;padding:10px 12px;border-radius:10px;font-size:12px;font-family:'JetBrains Mono',monospace" />
+      <button onclick="copyShareLink()"
+        style="flex-shrink:0;padding:10px 14px;background:#7c3aed;border:none;border-radius:10px;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">📋 복사</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+      <button onclick="shareTo('kakao')" style="padding:10px 4px;background:#fee500;border:none;border-radius:10px;color:#191600;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.5">💬<br>카톡</button>
+      <button onclick="shareTo('x')" style="padding:10px 4px;background:#000;border:none;border-radius:10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.5">𝕏<br>X</button>
+      <button onclick="shareTo('facebook')" style="padding:10px 4px;background:#1877f2;border:none;border-radius:10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.5">f<br>페북</button>
+      <button onclick="shareTo('telegram')" style="padding:10px 4px;background:#0088cc;border:none;border-radius:10px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;line-height:1.5">✈️<br>텔레그램</button>
+    </div>
+    <div class="modal-actions">
+      <button onclick="nativeShare()" style="flex:1;padding:12px;background:#a78bfa;border:none;border-radius:10px;color:#1a1a2e;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">📤 공유하기</button>
+      <button onclick="document.getElementById('share-modal').style.display='none'" style="padding:12px 18px;background:#374151;border:none;border-radius:10px;color:#e2e8f0;font-size:14px;cursor:pointer;font-family:inherit">닫기</button>
+    </div>
+  </div>
+</div>
+
 <div id="backup-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-end">
   <div style="background:#0f172a;border-top:2px solid #60a5fa;border-radius:20px 20px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:24px 20px 36px;color:#f1f5f9;font-family:inherit;-webkit-overflow-scrolling:touch">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
