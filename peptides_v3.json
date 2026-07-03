@@ -1,7 +1,7 @@
 {
   "version": "3.0",
-  "lastUpdated": "2026-07-03T22:45:36.942932",
-  "totalCount": 81,
+  "lastUpdated": "2026-07-04T01:58:53.173851",
+  "totalCount": 110,
   "index": [
     {
       "id": "5-amino-1mq",
@@ -1456,6 +1456,521 @@
       ],
       "typicalDose": "",
       "cycle": "4-8 weeks"
+    },
+    {
+      "id": "ecnoglutide",
+      "nameEn": "Ecnoglutide (XW003)",
+      "nameKo": "에크노글루타이드",
+      "subtitle": "cAMP-biased GLP-1 Agonist | Weight Loss (China Approved)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "typicalDose": "1.2-2.4mg",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "amycretin",
+      "nameEn": "Amycretin",
+      "nameKo": "아미크레틴",
+      "subtitle": "GLP-1 + Amylin Dual Agonist | Weight Loss (Oral & Injectable)",
+      "routes": [
+        "Injectable",
+        "Oral"
+      ],
+      "researchStatus": "Extensively Studied",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "typicalDose": "시험 용량 (증량)",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "vk2735",
+      "nameEn": "VK2735",
+      "nameKo": "VK2735",
+      "subtitle": "GLP-1/GIP Dual Agonist | Weight Loss (Oral & Injectable)",
+      "routes": [
+        "Injectable",
+        "Oral"
+      ],
+      "researchStatus": "Extensively Studied",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "typicalDose": "시험 용량",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "maridebart-cafraglutide",
+      "nameEn": "Maridebart Cafraglutide (MariTide)",
+      "nameKo": "마리디바트 카프라글루타이드",
+      "subtitle": "GLP-1 Agonist / GIPR Antagonist Antibody-Peptide | Monthly Weight Loss",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Extensively Studied",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "typicalDose": "시험 용량",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "petrelintide",
+      "nameEn": "Petrelintide (ZP8396)",
+      "nameKo": "페트렐린타이드",
+      "subtitle": "Long-acting Amylin Analog | Weight Loss (Lean-mass sparing)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism"
+      ],
+      "typicalDose": "시험 용량",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "met-097i",
+      "nameEn": "MET-097i (PF-3944)",
+      "nameKo": "멧-097i",
+      "subtitle": "Ultra-long-acting GLP-1 Agonist | Monthly Weight Loss",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "typicalDose": "시험 용량",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "pemvidutide",
+      "nameEn": "Pemvidutide (ALT-801)",
+      "nameKo": "펨비두타이드",
+      "subtitle": "GLP-1/Glucagon Dual Agonist | Weight Loss & MASH",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Liver"
+      ],
+      "typicalDose": "시험 용량",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "enicepatide",
+      "nameEn": "Enicepatide (CT-388)",
+      "nameKo": "에니세파타이드",
+      "subtitle": "GLP-1/GIP Dual Agonist | Weight Loss",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "typicalDose": "시험 용량",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "zovaglutide",
+      "nameEn": "Zovaglutide (ZT-002)",
+      "nameKo": "조바글루타이드",
+      "subtitle": "Extended-half-life GLP-1 Agonist | Monthly Weight Loss",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "typicalDose": "160mg",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "aleniglipron",
+      "nameEn": "Aleniglipron (GSBR-1290)",
+      "nameKo": "알레니글리프론",
+      "subtitle": "Oral Small-molecule GLP-1 Agonist | Weight Loss",
+      "routes": [
+        "Oral"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism"
+      ],
+      "typicalDose": "시험 용량",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "gubamy",
+      "nameEn": "GUBamy (GUB014295)",
+      "nameKo": "굽아미",
+      "subtitle": "Dual Amylin/Calcitonin Receptor Agonist | Weight Loss (Early)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism"
+      ],
+      "typicalDose": "시험 용량",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "ribupatide",
+      "nameEn": "Ribupatide (HRS9531)",
+      "nameKo": "리부파타이드",
+      "subtitle": "GLP-1/GIP Dual Agonist | Weight Loss (China Phase 3)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "typicalDose": "시험 용량",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "ghrp-2",
+      "nameEn": "GHRP-2 (Pralmorelin)",
+      "nameKo": "프랄모렐린 (GHRP-2)",
+      "subtitle": "GH Secretagogue (Ghrelin Mimetic) | GH Release, Diagnostic",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "tags": [
+        "Growth Hormone",
+        "Recovery",
+        "Muscle"
+      ],
+      "typicalDose": "100-300mcg (연구)",
+      "cycle": "사이클 사용"
+    },
+    {
+      "id": "ghrp-1",
+      "nameEn": "GHRP-1",
+      "nameKo": "GHRP-1",
+      "subtitle": "GH Secretagogue (Synthetic Heptapeptide) | GH Release (Research)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "Growth Hormone",
+        "Recovery"
+      ],
+      "typicalDose": "연구용",
+      "cycle": "사이클 사용"
+    },
+    {
+      "id": "macimorelin",
+      "nameEn": "Macimorelin (Macrilen)",
+      "nameKo": "마시모렐린",
+      "subtitle": "Oral Ghrelin Receptor Agonist | GH-deficiency Diagnostic (FDA)",
+      "routes": [
+        "Oral"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "tags": [
+        "Growth Hormone",
+        "Diagnostic"
+      ],
+      "typicalDose": "0.5mg/kg (진단 단회)",
+      "cycle": "진단용"
+    },
+    {
+      "id": "anamorelin",
+      "nameEn": "Anamorelin (Adlumiz)",
+      "nameKo": "아나모렐린",
+      "subtitle": "Oral Ghrelin Agonist | Cancer Cachexia, Lean Mass (Japan Approved)",
+      "routes": [
+        "Oral"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "tags": [
+        "Muscle",
+        "Growth Hormone",
+        "Appetite"
+      ],
+      "typicalDose": "100mg",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "capromorelin",
+      "nameEn": "Capromorelin (Entyce)",
+      "nameKo": "카프로모렐린",
+      "subtitle": "Ghrelin Agonist | Appetite & GH (Approved Veterinary)",
+      "routes": [
+        "Oral"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "tags": [
+        "Appetite",
+        "Growth Hormone",
+        "Muscle"
+      ],
+      "typicalDose": "3mg/kg (수의)",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "relamorelin",
+      "nameEn": "Relamorelin (RM-131)",
+      "nameKo": "렐라모렐린",
+      "subtitle": "Ghrelin Analog | Gastric Motility & GH (Phase 2b)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "Growth Hormone",
+        "Gut",
+        "Recovery"
+      ],
+      "typicalDose": "10-100mcg (임상)",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "igf-1-des",
+      "nameEn": "IGF-1 DES (des(1-3)IGF-1)",
+      "nameKo": "IGF-1 DES",
+      "subtitle": "Truncated IGF-1 Analog | Local Muscle Anabolic (Research)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "tags": [
+        "Muscle",
+        "Recovery"
+      ],
+      "typicalDose": "20-50mcg (국소, 연구)",
+      "cycle": "사이클 사용"
+    },
+    {
+      "id": "humanin",
+      "nameEn": "Humanin",
+      "nameKo": "휴머닌",
+      "subtitle": "Mitochondrial-derived Peptide | Cytoprotection & Metabolism (Research)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "Longevity",
+        "Metabolism",
+        "Muscle"
+      ],
+      "typicalDose": "연구용",
+      "cycle": "사이클 사용"
+    },
+    {
+      "id": "pentadeca-arginate",
+      "nameEn": "Pentadeca Arginate (PDA)",
+      "nameKo": "펜타데카 아르기네이트",
+      "subtitle": "BPC-157 Variant (Arginine Salt) | Tissue Healing (Emerging)",
+      "routes": [
+        "Injectable",
+        "Oral"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "Recovery",
+        "Gut",
+        "Healing"
+      ],
+      "typicalDose": "250-750mcg (국소) / 500mcg 경구",
+      "cycle": "4-8주"
+    },
+    {
+      "id": "matrixyl",
+      "nameEn": "Matrixyl (Palmitoyl Pentapeptide-4)",
+      "nameKo": "마트릭실",
+      "subtitle": "Cosmetic Signal Peptide | Collagen, Anti-wrinkle (Topical)",
+      "routes": [
+        "Topical"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "Skin",
+        "Anti-aging",
+        "Cosmetic"
+      ],
+      "typicalDose": "4% 도포",
+      "cycle": "지속 사용"
+    },
+    {
+      "id": "argireline",
+      "nameEn": "Argireline (Acetyl Hexapeptide-8)",
+      "nameKo": "아르지렐린",
+      "subtitle": "Cosmetic 'Topical Botox' | Expression-line Relaxation (Topical)",
+      "routes": [
+        "Topical"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "Skin",
+        "Anti-aging",
+        "Cosmetic"
+      ],
+      "typicalDose": "10% 도포",
+      "cycle": "지속 사용"
+    },
+    {
+      "id": "syn-ake",
+      "nameEn": "Syn-Ake (Dipeptide Diaminobutyroyl Benzylamide Diacetate)",
+      "nameKo": "신-에이크",
+      "subtitle": "Cosmetic Snake-venom-mimetic | Anti-wrinkle (Topical)",
+      "routes": [
+        "Topical"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "Skin",
+        "Anti-aging",
+        "Cosmetic"
+      ],
+      "typicalDose": "4% 도포",
+      "cycle": "지속 사용"
+    },
+    {
+      "id": "pdrn",
+      "nameEn": "PDRN (Polydeoxyribonucleotide)",
+      "nameKo": "PDRN (폴리데옥시리보뉴클레오타이드)",
+      "subtitle": "Salmon-DNA Regenerative | Skin Booster & Wound Healing (Approved)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "tags": [
+        "Skin",
+        "Anti-aging",
+        "Healing"
+      ],
+      "typicalDose": "시술 용량",
+      "cycle": "시술 코스"
+    },
+    {
+      "id": "vilon",
+      "nameEn": "Vilon (Lys-Glu)",
+      "nameKo": "빌론",
+      "subtitle": "Khavinson Dipeptide Bioregulator | Immune & Aging (Research)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "tags": [
+        "Longevity",
+        "Immune"
+      ],
+      "typicalDose": "연구용",
+      "cycle": "코스 사용"
+    },
+    {
+      "id": "davunetide",
+      "nameEn": "Davunetide (NAP)",
+      "nameKo": "다부네타이드",
+      "subtitle": "ADNP-derived Neuroprotective Peptide | Microtubule Stability (Research)",
+      "routes": [
+        "Nasal"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "Nootropic",
+        "Neuroprotection"
+      ],
+      "typicalDose": "임상 용량(비강)",
+      "cycle": "연구"
+    },
+    {
+      "id": "gonadorelin",
+      "nameEn": "Gonadorelin (GnRH)",
+      "nameKo": "고나도렐린",
+      "subtitle": "GnRH Decapeptide | HPG-axis, Fertility & TRT-adjunct (Approved)",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "tags": [
+        "Hormone",
+        "Fertility"
+      ],
+      "typicalDose": "50-100mcg (TRT 병용)",
+      "cycle": "지속 요법"
+    },
+    {
+      "id": "larazotide",
+      "nameEn": "Larazotide Acetate",
+      "nameKo": "라라조타이드",
+      "subtitle": "Tight-junction Regulator | Gut Permeability / Celiac (Oral)",
+      "routes": [
+        "Oral"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "Gut",
+        "Immune"
+      ],
+      "typicalDose": "임상 용량(경구)",
+      "cycle": "지속"
     }
   ],
   "peptides": {
@@ -40009,6 +40524,2691 @@
         "cartalax"
       ],
       "researchIndicationsDetailedKo": {}
+    },
+    "ecnoglutide": {
+      "id": "ecnoglutide",
+      "nameEn": "Ecnoglutide (XW003)",
+      "subtitle": "cAMP-biased GLP-1 Agonist | Weight Loss (China Approved)",
+      "nameKo": "에크노글루타이드",
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "1.2-2.4mg",
+      "frequency": "주 1회",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Ecnoglutide (XW003) is a novel cAMP-biased GLP-1 receptor agonist by Sciwind Biosciences, the first of its kind. It was approved by China's NMPA (March 2026) for chronic weight management. A 48-week trial showed up to 15.4% weight loss, with 92.8% of participants achieving at least 5% reduction.",
+      "keyBenefits": "Once-weekly injection with strong weight loss and cAMP-biased signaling that may improve tolerability.",
+      "mechanism": "Selectively activates cAMP signaling downstream of the GLP-1 receptor, driving appetite suppression and improved glucose control.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "약 7일 (주1회)",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "Diabetes",
+          "effectiveness": "Moderate",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 용량",
+          "dose": "1.2 / 1.8 / 2.4mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Diarrhea",
+        "Decreased appetite",
+        "Injection site reaction"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "sourceUrl": "https://www.prnewswire.com/news-releases/sciwind-biosciences-announces-ecnoglutide-injection-approved-by-chinas-national-medical-products-administration-nmpa-for-chronic-weight-management-302706442.html",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "semaglutide",
+        "orforglipron",
+        "retatrutide"
+      ],
+      "safetyNotes": [
+        "Approved in China (NMPA, Mar 2026); not FDA-approved as of 2026",
+        "GLP-1 class GI side effects, dose-dependent"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "에크노글루타이드(XW003)는 사이윈드가 개발한 세계 최초의 cAMP-편향 GLP-1 수용체 작용제입니다. 2026년 3월 중국 NMPA로부터 만성 체중관리 적응증으로 승인받았습니다. 48주 임상에서 최대 15.4% 체중 감소, 참가자의 92.8%가 5% 이상 감량을 달성했습니다.",
+      "keyBenefitsKo": "주 1회 주사로 강력한 체중 감소를 제공하며, cAMP 신호 편향 설계로 내약성 개선 가능성이 있습니다.",
+      "mechanismKo": "GLP-1 수용체 하류의 cAMP 신호를 선택적으로 활성화하여 식욕 억제와 혈당 조절을 유도합니다.",
+      "subtitleKo": "cAMP-편향 GLP-1 작용제 | 체중 감소 (중국 승인)",
+      "safetyNotesKo": [
+        "중국 NMPA 승인(2026.3), 2026년 기준 FDA 미승인",
+        "GLP-1 계열 위장 부작용(용량 의존적)"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "설사",
+        "식욕 감소",
+        "주사 부위 반응",
+        "⚠️ 증량 초기 위장 부작용 흔함"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "amycretin": {
+      "id": "amycretin",
+      "nameEn": "Amycretin",
+      "subtitle": "GLP-1 + Amylin Dual Agonist | Weight Loss (Oral & Injectable)",
+      "nameKo": "아미크레틴",
+      "researchStatus": "Extensively Studied",
+      "isApproved": false,
+      "routes": [
+        "Injectable",
+        "Oral"
+      ],
+      "typicalDose": "시험 용량 (증량)",
+      "frequency": "주 1회(피하) / 1일 1회(경구)",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Amycretin is a Novo Nordisk unimolecular GLP-1 and amylin receptor dual agonist, developed in both oral and subcutaneous forms. It advanced toward Phase 3 in 2026. In early (1b/2a) trials the subcutaneous form produced up to 24.3% weight loss at 36 weeks.",
+      "keyBenefits": "Combines GLP-1 and amylin pathways for potentially class-leading weight loss, with an oral option in development.",
+      "mechanism": "Simultaneously activates the GLP-1 receptor (appetite suppression) and the amylin receptor (satiety, slowed gastric emptying).",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Most Effective",
+          "level": 4
+        },
+        {
+          "name": "Diabetes",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 시험 용량",
+          "dose": "증량 프로토콜",
+          "frequency": "주 1회(피하)/1일1회(경구)",
+          "route": "피하주사 또는 경구"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Diarrhea",
+        "Decreased appetite"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "sourceUrl": "https://www.patientcareonline.com/view/novo-s-glp-1-amylin-dual-agonist-amycretin-to-enter-late-stage-trials-for-obesity",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "semaglutide",
+        "cagrilintide",
+        "petrelintide"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 3 (2026), not approved",
+        "GLP-1/amylin GI side effects expected"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "아미크레틴은 노보노디스크가 개발한 단일분자 GLP-1·아밀린 수용체 이중작용제로, 경구와 피하 두 제형으로 개발 중입니다. 2026년 3상에 진입했습니다. 초기(1b/2a) 임상에서 피하 제형이 36주차에 최대 24.3% 체중 감소를 보였습니다.",
+      "keyBenefitsKo": "GLP-1과 아밀린 경로를 동시에 자극해 계열 최고 수준의 감량 가능성을 보이며, 경구 제형도 개발 중입니다.",
+      "mechanismKo": "GLP-1 수용체(식욕 억제)와 아밀린 수용체(포만감·위 배출 지연)를 동시에 활성화합니다.",
+      "subtitleKo": "GLP-1 + 아밀린 이중작용제 | 체중 감소 (경구·주사)",
+      "safetyNotesKo": [
+        "연구용 - 3상(2026), 미승인",
+        "GLP-1·아밀린 위장 부작용 예상"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "설사",
+        "식욕 감소",
+        "⚠️ 임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "vk2735": {
+      "id": "vk2735",
+      "nameEn": "VK2735",
+      "subtitle": "GLP-1/GIP Dual Agonist | Weight Loss (Oral & Injectable)",
+      "nameKo": "VK2735",
+      "researchStatus": "Extensively Studied",
+      "isApproved": false,
+      "routes": [
+        "Injectable",
+        "Oral"
+      ],
+      "typicalDose": "시험 용량",
+      "frequency": "주 1회(피하) / 1일 1회(경구)",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "VK2735 is a dual GLP-1/GIP receptor agonist by Viking Therapeutics, developed in subcutaneous (Phase 3 VANQUISH) and oral (advancing to Phase 3) forms. The oral form showed up to 12.2% weight loss at 13 weeks in the Phase 2 VENTURE-Oral study.",
+      "keyBenefits": "Tirzepatide-like dual mechanism with a promising oral formulation for weight loss.",
+      "mechanism": "Co-activates GLP-1 and GIP receptors to suppress appetite and improve insulin sensitivity.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "Diabetes",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 시험 용량",
+          "dose": "증량 프로토콜",
+          "frequency": "주 1회(피하)/1일1회(경구)",
+          "route": "피하주사 또는 경구"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Diarrhea",
+        "Decreased appetite"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "sourceUrl": "https://ir.vikingtherapeutics.com/2026-01-12-Viking-Therapeutics-Announces-Publication-of-Results-from-Phase-2-VENTURE-Trial-of-Dual-GLP-1-GIP-Receptor-Agonist-VK2735-in-the-Journal-Obesity",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "tirzepatide",
+        "orforglipron",
+        "semaglutide"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 3, not approved",
+        "Dual-agonist GI side effects"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "VK2735는 바이킹 테라퓨틱스의 GLP-1/GIP 이중 수용체 작용제로, 피하(3상 VANQUISH)와 경구(3상 진입) 두 제형으로 개발 중입니다. 경구 제형은 2상 VENTURE-Oral에서 13주차에 최대 12.2% 체중 감소를 보였습니다.",
+      "keyBenefitsKo": "티르제파타이드와 유사한 이중 기전이며, 유망한 경구 제형으로 체중 감소를 노립니다.",
+      "mechanismKo": "GLP-1과 GIP 수용체를 함께 활성화하여 식욕을 억제하고 인슐린 감수성을 개선합니다.",
+      "subtitleKo": "GLP-1/GIP 이중작용제 | 체중 감소 (경구·주사)",
+      "safetyNotesKo": [
+        "연구용 - 3상, 미승인",
+        "이중작용제 위장 부작용"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "설사",
+        "식욕 감소",
+        "⚠️ 임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "maridebart-cafraglutide": {
+      "id": "maridebart-cafraglutide",
+      "nameEn": "Maridebart Cafraglutide (MariTide)",
+      "subtitle": "GLP-1 Agonist / GIPR Antagonist Antibody-Peptide | Monthly Weight Loss",
+      "nameKo": "마리디바트 카프라글루타이드",
+      "researchStatus": "Extensively Studied",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "시험 용량",
+      "frequency": "월 1회",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Maridebart cafraglutide (MariTide, AMG 133) is an Amgen peptide-antibody conjugate that activates the GLP-1 receptor while antagonizing the GIP receptor. Its ~21-day half-life enables monthly dosing. A Phase 2 trial (52 weeks) showed roughly 16-20% weight loss.",
+      "keyBenefits": "Monthly injection (vs weekly) thanks to a long half-life, with substantial weight loss in Phase 2.",
+      "mechanism": "GLP-1 receptor agonism plus GIP receptor antagonism via an antibody-peptide conjugate with an extended half-life.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "약 21일",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Most Effective",
+          "level": 4
+        },
+        {
+          "name": "Diabetes",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 시험 용량",
+          "dose": "증량 프로토콜",
+          "frequency": "월 1회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Diarrhea",
+        "Injection site reaction"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "sourceUrl": "https://www.nejm.org/doi/full/10.1056/NEJMoa2504214",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "tirzepatide",
+        "retatrutide",
+        "semaglutide"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 3, not approved",
+        "GI side effects reported in Phase 2"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "마리디바트 카프라글루타이드(마리티드, AMG 133)는 암젠의 펩타이드-항체 접합체로, GLP-1 수용체를 활성화하는 동시에 GIP 수용체를 길항합니다. 반감기가 약 21일로 월 1회 투여가 가능합니다. 2상(52주)에서 약 16~20% 체중 감소를 보였습니다.",
+      "keyBenefitsKo": "긴 반감기 덕분에 (주 1회가 아닌) 월 1회 주사가 가능하며, 2상에서 상당한 체중 감소를 보였습니다.",
+      "mechanismKo": "항체-펩타이드 접합체로 GLP-1 수용체는 작용, GIP 수용체는 길항하며 반감기가 깁니다.",
+      "subtitleKo": "GLP-1 작용 / GIPR 길항 항체-펩타이드 접합체 | 월 1회 체중 감소",
+      "safetyNotesKo": [
+        "연구용 - 3상, 미승인",
+        "2상에서 위장 부작용 보고됨"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "설사",
+        "주사 부위 반응",
+        "⚠️ 임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "petrelintide": {
+      "id": "petrelintide",
+      "nameEn": "Petrelintide (ZP8396)",
+      "subtitle": "Long-acting Amylin Analog | Weight Loss (Lean-mass sparing)",
+      "nameKo": "페트렐린타이드",
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "시험 용량",
+      "frequency": "주 1회",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Petrelintide (ZP8396) is a long-acting amylin analog from Zealand Pharma, partnered with Roche. It is advancing to Phase 3 (H2 2026), both as monotherapy and in combination with enicepatide. Amylin analogs are noted for satiety-driven weight loss with relative preservation of lean mass.",
+      "keyBenefits": "Amylin-based weight loss with a favorable lean-mass profile; once-weekly dosing.",
+      "mechanism": "Activates amylin receptors in the brain to enhance satiety and slow gastric emptying.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 시험 용량",
+          "dose": "증량 프로토콜",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Decreased appetite",
+        "Injection site reaction"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism"
+      ],
+      "sourceUrl": "https://www.globenewswire.com/news-release/2026/04/29/3284133/0/en/zealand-pharma-and-roche-to-advance-petrelintide-an-amylin-analog-to-phase-3-trials-for-chronic-weight-management.html",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "cagrilintide",
+        "amycretin",
+        "enicepatide"
+      ],
+      "safetyNotes": [
+        "Investigational - entering Phase 3 (2026), not approved"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "페트렐린타이드(ZP8396)는 질랜드파마가 개발하고 로슈와 협력 중인 장기지속 아밀린 유사체입니다. 단독요법과 에니세파타이드 병용으로 2026년 하반기 3상에 진입합니다. 아밀린 유사체는 포만감 기반 감량과 상대적 제지방 보존이 특징입니다.",
+      "keyBenefitsKo": "아밀린 기반 감량으로 제지방 보존에 유리하며 주 1회 투여합니다.",
+      "mechanismKo": "뇌의 아밀린 수용체를 활성화하여 포만감을 높이고 위 배출을 늦춥니다.",
+      "subtitleKo": "장기지속 아밀린 유사체 | 체중 감소 (제지방 보존형)",
+      "safetyNotesKo": [
+        "연구용 - 2026 3상 개시, 미승인"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "식욕 감소",
+        "주사 부위 반응",
+        "⚠️ 임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "met-097i": {
+      "id": "met-097i",
+      "nameEn": "MET-097i (PF-3944)",
+      "subtitle": "Ultra-long-acting GLP-1 Agonist | Monthly Weight Loss",
+      "nameKo": "멧-097i",
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "시험 용량",
+      "frequency": "월 1회(유지)",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "MET-097i (PF-3944) is an ultra-long-acting GLP-1 receptor agonist originally from Metsera, acquired by Pfizer. It is designed for monthly maintenance dosing. A Phase 2b study (28 weeks) reported placebo-adjusted weight loss of roughly 10-12%.",
+      "keyBenefits": "Potential monthly-dosing GLP-1 for improved convenience and adherence.",
+      "mechanism": "Activates the GLP-1 receptor with an extended duration enabling infrequent dosing.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "초장시간(월1회 유지)",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "Diabetes",
+          "effectiveness": "Moderate",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 시험 용량",
+          "dose": "증량 후 월1회 유지",
+          "frequency": "월 1회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Diarrhea",
+        "Decreased appetite"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "sourceUrl": "https://www.pfizer.com/news/press-release/press-release-detail/pfizers-ultra-long-acting-injectable-glp-1-ra-shows-robust",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "semaglutide",
+        "ecnoglutide",
+        "zovaglutide"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 3 planned, not approved"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "멧-097i(PF-3944)는 멧세라가 개발하고 화이자가 인수한 초장시간형 GLP-1 수용체 작용제입니다. 월 1회 유지 투여를 목표로 설계되었습니다. 2b상(28주)에서 위약 보정 약 10~12% 체중 감소를 보고했습니다.",
+      "keyBenefitsKo": "월 1회 투여 가능성으로 편의성과 순응도를 높이는 GLP-1입니다.",
+      "mechanismKo": "GLP-1 수용체를 활성화하되 작용시간이 길어 투여 간격을 늘립니다.",
+      "subtitleKo": "초장시간형 GLP-1 작용제 | 월 1회 체중 감소",
+      "safetyNotesKo": [
+        "연구용 - 3상 예정, 미승인"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "설사",
+        "식욕 감소",
+        "⚠️ 임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "pemvidutide": {
+      "id": "pemvidutide",
+      "nameEn": "Pemvidutide (ALT-801)",
+      "subtitle": "GLP-1/Glucagon Dual Agonist | Weight Loss & MASH",
+      "nameKo": "펨비두타이드",
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "시험 용량",
+      "frequency": "주 1회",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Pemvidutide (ALT-801) is an Altimmune GLP-1/glucagon dual receptor agonist in Phase 2b-to-3 development. A Phase 2b trial showed 15.6% weight loss, and in MASH studies achieved 59.1% disease resolution. The glucagon component is noted for effects on body composition, lipids, and liver fat.",
+      "keyBenefits": "Dual GLP-1/glucagon action targeting weight loss plus liver fat and lipid improvements.",
+      "mechanism": "Co-activates GLP-1 (appetite) and glucagon (energy expenditure, hepatic fat oxidation) receptors.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "MASH/Liver",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 시험 용량",
+          "dose": "증량 프로토콜",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Diarrhea",
+        "Increased heart rate (glucagon)"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Liver"
+      ],
+      "sourceUrl": "https://www.peptideprotocolwiki.com/peptides/categories/anti-obesity",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "survodutide",
+        "retatrutide",
+        "semaglutide"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 2b/3, not approved",
+        "Glucagon component may raise heart rate"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "펨비두타이드(ALT-801)는 알티뮨의 GLP-1/글루카곤 이중 수용체 작용제로 2b→3상 단계입니다. 2b상에서 15.6% 체중 감소, MASH 연구에서 59.1% 질환 해소를 달성했습니다. 글루카곤 성분은 체성분·지질·간지방에 대한 효과가 특징입니다.",
+      "keyBenefitsKo": "GLP-1/글루카곤 이중 작용으로 체중 감소와 함께 간지방·지질 개선을 노립니다.",
+      "mechanismKo": "GLP-1(식욕)과 글루카곤(에너지 소비·간지방 산화) 수용체를 함께 활성화합니다.",
+      "subtitleKo": "GLP-1/글루카곤 이중작용제 | 체중 감소·MASH",
+      "safetyNotesKo": [
+        "연구용 - 2b/3상, 미승인",
+        "글루카곤 성분으로 심박수 상승 가능"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "설사",
+        "심박수 증가(글루카곤 작용)",
+        "⚠️ 임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "enicepatide": {
+      "id": "enicepatide",
+      "nameEn": "Enicepatide (CT-388)",
+      "subtitle": "GLP-1/GIP Dual Agonist | Weight Loss",
+      "nameKo": "에니세파타이드",
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "시험 용량",
+      "frequency": "주 1회",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Enicepatide (CT-388) is a Roche GLP-1/GIP dual receptor agonist in Phase 2 development, including a combination program with the amylin analog petrelintide. It is a once-weekly injectable being evaluated for chronic weight management.",
+      "keyBenefits": "Dual incretin agonist with a combination pathway alongside amylin therapy.",
+      "mechanism": "Co-activates GLP-1 and GIP receptors to reduce appetite and improve glucose handling.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "Diabetes",
+          "effectiveness": "Moderate",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 시험 용량",
+          "dose": "증량 프로토콜",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Diarrhea",
+        "Decreased appetite"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "sourceUrl": "https://www.peptideprotocolwiki.com/peptides/categories/anti-obesity",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "petrelintide",
+        "tirzepatide",
+        "amycretin"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 2, not approved"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "에니세파타이드(CT-388)는 로슈의 GLP-1/GIP 이중 수용체 작용제로 2상 단계이며, 아밀린 유사체 페트렐린타이드와의 병용 프로그램도 진행 중입니다. 주 1회 피하주사로 만성 체중관리를 평가 중입니다.",
+      "keyBenefitsKo": "이중 인크레틴 작용제로, 아밀린 요법과의 병용 경로도 함께 개발됩니다.",
+      "mechanismKo": "GLP-1과 GIP 수용체를 함께 활성화하여 식욕을 줄이고 혈당 처리를 개선합니다.",
+      "subtitleKo": "GLP-1/GIP 이중작용제 | 체중 감소",
+      "safetyNotesKo": [
+        "연구용 - 2상, 미승인"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "설사",
+        "식욕 감소",
+        "⚠️ 임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "zovaglutide": {
+      "id": "zovaglutide",
+      "nameEn": "Zovaglutide (ZT-002)",
+      "subtitle": "Extended-half-life GLP-1 Agonist | Monthly Weight Loss",
+      "nameKo": "조바글루타이드",
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "160mg",
+      "frequency": "월 1회",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Zovaglutide (ZT-002) is an extended-half-life GLP-1 receptor agonist from QL Biopharm designed for monthly dosing. A Phase 2 study met its endpoints, reporting 13.8% weight loss at 24 weeks with a 160mg monthly dose.",
+      "keyBenefits": "Monthly GLP-1 dosing with meaningful Phase 2 weight loss.",
+      "mechanism": "Activates the GLP-1 receptor with a prolonged half-life supporting monthly administration.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "장기(월1회)",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "Diabetes",
+          "effectiveness": "Moderate",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "2상 용량",
+          "dose": "160mg",
+          "frequency": "월 1회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Diarrhea",
+        "Decreased appetite"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "sourceUrl": "https://www.prnewswire.com/news-releases/ql-biopharm-reports-phase-2-results-of-a-monthly-dose-study-evaluating-zovaglutide-a-novel-extended-half-life-glp-1-receptor-agonist-at-easd-2025-302558945.html",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "met-097i",
+        "semaglutide",
+        "ecnoglutide"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 2, not approved"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "조바글루타이드(ZT-002)는 QL바이오팜의 반감기 연장 GLP-1 수용체 작용제로 월 1회 투여를 목표로 합니다. 2상에서 목표를 충족했으며, 160mg 월 1회 투여로 24주차 13.8% 체중 감소를 보고했습니다.",
+      "keyBenefitsKo": "월 1회 GLP-1 투여로 2상에서 의미 있는 체중 감소를 보였습니다.",
+      "mechanismKo": "반감기가 길어 월 1회 투여가 가능한 GLP-1 수용체 작용제입니다.",
+      "subtitleKo": "반감기 연장 GLP-1 작용제 | 월 1회 체중 감소",
+      "safetyNotesKo": [
+        "연구용 - 2상, 미승인"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "설사",
+        "식욕 감소",
+        "⚠️ 임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "aleniglipron": {
+      "id": "aleniglipron",
+      "nameEn": "Aleniglipron (GSBR-1290)",
+      "subtitle": "Oral Small-molecule GLP-1 Agonist | Weight Loss",
+      "nameKo": "알레니글리프론",
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "routes": [
+        "Oral"
+      ],
+      "typicalDose": "시험 용량",
+      "frequency": "1일 1회",
+      "cycle": "지속 요법",
+      "storage": "실온 (건조·차광)",
+      "routeDetail": "",
+      "descriptionEn": "Aleniglipron (GSBR-1290) is an oral small-molecule GLP-1 receptor agonist (biased agonist) from Structure Therapeutics, in the same oral class as orforglipron. It completed Phase 2 (ACCESS II) and is advancing to Phase 3. Note: it is a small molecule rather than a true peptide, but is included for category consistency with other oral metabolic agents in this encyclopedia.",
+      "keyBenefits": "Oral daily GLP-1 agonist, avoiding injections for weight management.",
+      "mechanism": "Small-molecule biased agonism of the GLP-1 receptor to suppress appetite.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 시험 용량",
+          "dose": "증량 프로토콜",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Diarrhea",
+        "Decreased appetite"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism"
+      ],
+      "sourceUrl": "https://ir.structuretx.com/news-releases/news-release-details/structure-therapeutics-reports-positive-topline-data-phase-2",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "orforglipron",
+        "tesofensine",
+        "semaglutide"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 3, not approved",
+        "Small molecule (not a peptide)"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "알레니글리프론(GSBR-1290)은 스트럭처 테라퓨틱스의 경구 소분자 GLP-1 수용체 작용제(편향 작용제)로, 오포글리프론과 같은 경구 계열입니다. 2상(ACCESS II)을 마치고 3상에 진입합니다. 참고: 엄밀히는 펩타이드가 아닌 소분자이나, 본 백과사전의 다른 경구 대사 약물과 계열 일관성을 위해 포함했습니다.",
+      "keyBenefitsKo": "경구 1일 1회 GLP-1 작용제로 주사 없이 체중관리를 목표로 합니다.",
+      "mechanismKo": "GLP-1 수용체에 대한 소분자 편향 작용으로 식욕을 억제합니다.",
+      "subtitleKo": "경구 소분자 GLP-1 작용제 | 체중 감소",
+      "safetyNotesKo": [
+        "연구용 - 3상, 미승인",
+        "소분자(펩타이드 아님)"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "설사",
+        "식욕 감소",
+        "⚠️ 소분자·임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "gubamy": {
+      "id": "gubamy",
+      "nameEn": "GUBamy (GUB014295)",
+      "subtitle": "Dual Amylin/Calcitonin Receptor Agonist | Weight Loss (Early)",
+      "nameKo": "굽아미",
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "시험 용량",
+      "frequency": "주 1회",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "GUBamy (GUB014295) is a dual amylin and calcitonin receptor agonist (DACRA) from Gubra, in early Phase 1/2 development for obesity. Clinical data are limited at this stage.",
+      "keyBenefits": "Early-stage amylin/calcitonin dual agonist for satiety-based weight loss.",
+      "mechanism": "Activates both amylin and calcitonin receptors to promote satiety.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Under Study",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "초기 임상 용량",
+          "dose": "미확립",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Injection site reaction"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism"
+      ],
+      "sourceUrl": "https://www.peptideprotocolwiki.com/peptides/categories/anti-obesity",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "cagrilintide",
+        "petrelintide"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 1/2, limited data, not approved"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "굽아미(GUB014295)는 구브라의 이중 아밀린·칼시토닌 수용체 작용제(DACRA)로, 비만 대상 초기 1/2상 단계입니다. 현 단계에서 임상 데이터는 제한적입니다.",
+      "keyBenefitsKo": "포만감 기반 감량을 노리는 초기 단계 아밀린/칼시토닌 이중작용제입니다.",
+      "mechanismKo": "아밀린과 칼시토닌 수용체를 모두 활성화하여 포만감을 유도합니다.",
+      "subtitleKo": "이중 아밀린/칼시토닌 수용체 작용제 | 체중 감소 (초기)",
+      "safetyNotesKo": [
+        "연구용 - 1/2상, 데이터 제한, 미승인"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "주사 부위 반응",
+        "⚠️ 초기 임상(1/2상)·데이터 제한"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "ribupatide": {
+      "id": "ribupatide",
+      "nameEn": "Ribupatide (HRS9531)",
+      "subtitle": "GLP-1/GIP Dual Agonist | Weight Loss (China Phase 3)",
+      "nameKo": "리부파타이드",
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "시험 용량",
+      "frequency": "주 1회",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Ribupatide (HRS9531) is a GLP-1/GIP dual receptor agonist from Hengrui (Kailera), in Phase 3 development in China for weight management. It is a once-weekly injectable.",
+      "keyBenefits": "Tirzepatide-class dual agonist advancing in China.",
+      "mechanism": "Co-activates GLP-1 and GIP receptors for appetite suppression and glucose control.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Weight Loss",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "Diabetes",
+          "effectiveness": "Moderate",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 시험 용량",
+          "dose": "증량 프로토콜",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nausea",
+        "Vomiting",
+        "Diarrhea",
+        "Decreased appetite"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Weight Loss",
+        "Metabolism",
+        "Diabetes"
+      ],
+      "sourceUrl": "https://www.peptideprotocolwiki.com/peptides/categories/anti-obesity",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "tirzepatide",
+        "vk2735",
+        "enicepatide"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 3 (China), not approved"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "리부파타이드(HRS9531)는 헝루이(카일레라)의 GLP-1/GIP 이중 수용체 작용제로, 중국에서 체중관리 3상 단계입니다. 주 1회 피하주사입니다.",
+      "keyBenefitsKo": "티르제파타이드 계열 이중작용제로 중국에서 개발이 진행 중입니다.",
+      "mechanismKo": "GLP-1과 GIP 수용체를 함께 활성화하여 식욕 억제와 혈당 조절을 유도합니다.",
+      "subtitleKo": "GLP-1/GIP 이중작용제 | 체중 감소 (중국 3상)",
+      "safetyNotesKo": [
+        "연구용 - 3상(중국), 미승인"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "메스꺼움",
+        "구토",
+        "설사",
+        "식욕 감소",
+        "⚠️ 임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "ghrp-2": {
+      "id": "ghrp-2",
+      "nameEn": "GHRP-2 (Pralmorelin)",
+      "subtitle": "GH Secretagogue (Ghrelin Mimetic) | GH Release, Diagnostic",
+      "nameKo": "프랄모렐린 (GHRP-2)",
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "100-300mcg (연구)",
+      "frequency": "1일 1-3회",
+      "cycle": "사이클 사용",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "GHRP-2 (pralmorelin) is a synthetic ghrelin mimetic and GHS-R1a agonist. It is approved in Japan (PMDA, 2004) as a growth-hormone-deficiency diagnostic agent; it is not FDA-approved and is banned by WADA. It produces a strong GH pulse with less appetite/cortisol stimulation than GHRP-6.",
+      "keyBenefits": "Strong, relatively clean GH pulse with less hunger and cortisol than GHRP-6.",
+      "mechanism": "Binds GHS-R1a in the pituitary to stimulate growth hormone release; synergistic with GHRH analogs.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "GH Release",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "Recovery",
+          "effectiveness": "Moderate",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "연구 프로토콜",
+          "dose": "100-300mcg",
+          "frequency": "1일 1-3회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Increased hunger",
+        "Water retention",
+        "Tingling",
+        "Elevated cortisol/prolactin (mild)"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Growth Hormone",
+        "Recovery",
+        "Muscle"
+      ],
+      "sourceUrl": "https://en.wikipedia.org/wiki/Pralmorelin",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "ghrp-6",
+        "ipamorelin",
+        "hexarelin"
+      ],
+      "safetyNotes": [
+        "Approved in Japan as a diagnostic only; not a treatment approval",
+        "WADA-banned (do not use in sport)"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "GHRP-2(프랄모렐린)는 합성 그렐린 유사체이자 GHS-R1a 작용제입니다. 일본에서 성장호르몬 결핍 진단제로 승인(PMDA, 2004)되었으며, FDA 미승인이고 WADA 금지 물질입니다. GHRP-6보다 식욕·코르티솔 자극이 적으면서 강한 GH 펄스를 일으킵니다.",
+      "keyBenefitsKo": "GHRP-6보다 식욕·코르티솔 자극이 적으면서 강력한 GH 펄스를 냅니다.",
+      "mechanismKo": "뇌하수체의 GHS-R1a에 결합하여 성장호르몬 분비를 자극하며, GHRH 유사체와 상승작용합니다.",
+      "subtitleKo": "성장호르몬 분비촉진 (그렐린 유사체) | GH 분비·진단",
+      "safetyNotesKo": [
+        "일본에서 진단용으로만 승인(치료 승인 아님)",
+        "WADA 금지(스포츠 사용 불가)"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "식욕 증가",
+        "수분 저류",
+        "저림",
+        "코르티솔·프로락틴 경미한 상승",
+        "⚠️ WADA 금지 물질(도핑)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "ghrp-1": {
+      "id": "ghrp-1",
+      "nameEn": "GHRP-1",
+      "subtitle": "GH Secretagogue (Synthetic Heptapeptide) | GH Release (Research)",
+      "nameKo": "GHRP-1",
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "연구용",
+      "frequency": "연구용",
+      "cycle": "사이클 사용",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "GHRP-1 is a synthetic heptapeptide growth-hormone secretagogue, used only in research (unapproved). It stimulates GH release via a pathway distinct from GHRH and acts synergistically with GHRH analogs.",
+      "keyBenefits": "Research-grade GH secretagogue that synergizes with GHRH analogs.",
+      "mechanism": "Acts on ghrelin/secretagogue receptors to trigger pituitary GH release, independent of and synergistic with GHRH.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "GH Release",
+          "effectiveness": "Under Study",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "연구 프로토콜",
+          "dose": "미확립",
+          "frequency": "연구용",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Increased hunger",
+        "Water retention",
+        "Tingling"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Growth Hormone",
+        "Recovery"
+      ],
+      "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/8049717/",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "ghrp-6",
+        "ghrp-2",
+        "ipamorelin"
+      ],
+      "safetyNotes": [
+        "Research use only - not approved, no standard human protocol"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "GHRP-1은 합성 헵타펩타이드 성장호르몬 분비촉진제로, 연구용으로만 사용됩니다(미승인). GHRH와는 다른 경로로 GH 분비를 자극하며 GHRH 유사체와 상승작용합니다.",
+      "keyBenefitsKo": "GHRH 유사체와 상승작용하는 연구용 GH 분비촉진제입니다.",
+      "mechanismKo": "그렐린/분비촉진 수용체에 작용해 뇌하수체 GH 분비를 유도하며 GHRH와 독립적·상승적으로 작용합니다.",
+      "subtitleKo": "성장호르몬 분비촉진 (합성 헵타펩타이드) | GH 분비 (연구)",
+      "safetyNotesKo": [
+        "연구용 전용 - 미승인, 표준 인체 프로토콜 없음"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "식욕 증가",
+        "수분 저류",
+        "저림",
+        "⚠️ 연구용·표준 프로토콜 미확립"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "macimorelin": {
+      "id": "macimorelin",
+      "nameEn": "Macimorelin (Macrilen)",
+      "subtitle": "Oral Ghrelin Receptor Agonist | GH-deficiency Diagnostic (FDA)",
+      "nameKo": "마시모렐린",
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "routes": [
+        "Oral"
+      ],
+      "typicalDose": "0.5mg/kg (진단 단회)",
+      "frequency": "진단 시 단회",
+      "cycle": "진단용",
+      "storage": "실온 (건조·차광)",
+      "routeDetail": "",
+      "descriptionEn": "Macimorelin (Macrilen) is an oral ghrelin receptor agonist and the first FDA-approved oral test for adult growth hormone deficiency. It is given as a single 0.5mg/kg oral dose for diagnosis; research into pediatric diagnosis and cachexia is ongoing.",
+      "keyBenefits": "The only orally administered GH stimulation test; convenient diagnostic standard.",
+      "mechanism": "Binds the GHS-R (ghrelin) receptor to stimulate pituitary GH secretion.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "GH-deficiency Diagnosis",
+          "effectiveness": "Most Effective",
+          "level": 4
+        },
+        {
+          "name": "GH Release",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "진단 프로토콜",
+          "dose": "0.5mg/kg",
+          "frequency": "단회",
+          "route": "경구"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Dysgeusia (taste change)",
+        "Dizziness",
+        "Headache",
+        "Fatigue"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Growth Hormone",
+        "Diagnostic"
+      ],
+      "sourceUrl": "https://www.nature.com/articles/s41401-025-01606-7",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "ipamorelin",
+        "ghrp-2",
+        "anamorelin"
+      ],
+      "safetyNotes": [
+        "FDA-approved diagnostic; monitor QT-prolonging drug interactions"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "마시모렐린(마크릴렌)은 경구 그렐린 수용체 작용제로, 성인 성장호르몬 결핍의 첫 FDA 승인 경구 검사제입니다. 진단 시 0.5mg/kg 단회 경구 투여하며, 소아 진단·악액질 연구가 진행 중입니다.",
+      "keyBenefitsKo": "유일한 경구 성장호르몬 자극 검사로, 편리한 진단 표준입니다.",
+      "mechanismKo": "GHS-R(그렐린) 수용체에 결합하여 뇌하수체 GH 분비를 자극합니다.",
+      "subtitleKo": "경구 그렐린 수용체 작용제 | 성장호르몬 결핍 진단 (FDA 승인)",
+      "safetyNotesKo": [
+        "FDA 승인 진단제; QT 연장 약물 병용 주의"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "미각 변화",
+        "어지럼",
+        "두통",
+        "피로감",
+        "⚠️ QT 연장 약물과 병용 주의"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "anamorelin": {
+      "id": "anamorelin",
+      "nameEn": "Anamorelin (Adlumiz)",
+      "subtitle": "Oral Ghrelin Agonist | Cancer Cachexia, Lean Mass (Japan Approved)",
+      "nameKo": "아나모렐린",
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "routes": [
+        "Oral"
+      ],
+      "typicalDose": "100mg",
+      "frequency": "1일 1회",
+      "cycle": "지속 요법",
+      "storage": "실온 (건조·차광)",
+      "routeDetail": "",
+      "descriptionEn": "Anamorelin (Adlumiz) is an oral ghrelin receptor agonist approved in Japan for cancer cachexia. It increases appetite, lean body mass, and GH/IGF-1, making it directly relevant to muscle preservation during weight loss.",
+      "keyBenefits": "Increases appetite and lean mass - useful against muscle loss during caloric deficit.",
+      "mechanism": "Agonizes the ghrelin (GHS-R) receptor, raising appetite, lean mass, and GH/IGF-1.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Muscle/Lean Mass",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "Appetite",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 용량",
+          "dose": "100mg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Increased appetite",
+        "Hyperglycemia",
+        "Nausea"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Muscle",
+        "Growth Hormone",
+        "Appetite"
+      ],
+      "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/40542284/",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "ipamorelin",
+        "mk-677",
+        "macimorelin"
+      ],
+      "safetyNotes": [
+        "Approved in Japan for cancer cachexia; monitor blood glucose"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "아나모렐린(아들루미즈)은 일본에서 암 악액질 치료제로 승인된 경구 그렐린 수용체 작용제입니다. 식욕, 제지방량, GH/IGF-1을 증가시켜 감량 중 근육 보존과 직접 관련이 있습니다.",
+      "keyBenefitsKo": "식욕과 제지방량을 늘려 열량 부족 시 근손실 방지에 유용합니다.",
+      "mechanismKo": "그렐린(GHS-R) 수용체를 작용시켜 식욕·제지방량·GH/IGF-1을 높입니다.",
+      "subtitleKo": "경구 그렐린 작용제 | 암 악액질·제지방 (일본 승인)",
+      "safetyNotesKo": [
+        "일본에서 암 악액질 승인; 혈당 모니터링 필요"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "식욕 증가",
+        "고혈당",
+        "메스꺼움",
+        "⚠️ 당뇨/고혈당 주의"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "capromorelin": {
+      "id": "capromorelin",
+      "nameEn": "Capromorelin (Entyce)",
+      "subtitle": "Ghrelin Agonist | Appetite & GH (Approved Veterinary)",
+      "nameKo": "카프로모렐린",
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "routes": [
+        "Oral"
+      ],
+      "typicalDose": "3mg/kg (수의)",
+      "frequency": "1일 1회",
+      "cycle": "지속 요법",
+      "storage": "실온 (건조·차광)",
+      "routeDetail": "",
+      "descriptionEn": "Capromorelin (Entyce) is a ghrelin receptor agonist FDA-approved as a veterinary appetite stimulant for dogs. It also underwent human trials in older adults, increasing appetite, GH, and lean mass.",
+      "keyBenefits": "Appetite and lean-mass support via ghrelin agonism (human data from aging/frailty trials).",
+      "mechanism": "Agonizes the ghrelin (GHS-R) receptor to stimulate appetite and GH secretion.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Appetite",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "GH Release",
+          "effectiveness": "Moderate",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "수의 용량",
+          "dose": "3mg/kg",
+          "frequency": "1일 1회",
+          "route": "경구"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Increased appetite",
+        "Hypersalivation",
+        "GI upset"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Appetite",
+        "Growth Hormone",
+        "Muscle"
+      ],
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/full/10.1002/vms3.83",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "ipamorelin",
+        "mk-677",
+        "anamorelin"
+      ],
+      "safetyNotes": [
+        "Approved for veterinary use only; human use is off-label/research"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "카프로모렐린(엔타이스)은 개 식욕촉진제로 FDA 승인된(수의용) 그렐린 수용체 작용제입니다. 과거 고령자 대상 사람 임상도 진행되어 식욕·GH·제지방량 증가를 보였습니다.",
+      "keyBenefitsKo": "그렐린 작용으로 식욕·제지방량을 지원합니다(노쇠 임상의 사람 데이터 존재).",
+      "mechanismKo": "그렐린(GHS-R) 수용체를 작용시켜 식욕과 GH 분비를 자극합니다.",
+      "subtitleKo": "그렐린 작용제 | 식욕·성장호르몬 (수의용 승인)",
+      "safetyNotesKo": [
+        "수의용으로만 승인; 사람 사용은 오프라벨/연구"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "식욕 증가",
+        "침 분비 증가",
+        "위장 불편",
+        "⚠️ 사람 대상은 미승인(수의 승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "relamorelin": {
+      "id": "relamorelin",
+      "nameEn": "Relamorelin (RM-131)",
+      "subtitle": "Ghrelin Analog | Gastric Motility & GH (Phase 2b)",
+      "nameKo": "렐라모렐린",
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "10-100mcg (임상)",
+      "frequency": "1일 2회",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Relamorelin (RM-131) is a synthetic pentapeptide ghrelin analog that is more potent and longer-lasting than ghrelin. It completed Phase 2b for diabetic gastroparesis, accelerating gastric emptying and reducing vomiting, while also stimulating GH.",
+      "keyBenefits": "Speeds gastric emptying and reduces nausea/vomiting; also raises GH.",
+      "mechanism": "Potent ghrelin receptor agonism promoting GI motility and GH release.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Gastric Motility",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "GH Release",
+          "effectiveness": "Moderate",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 용량",
+          "dose": "10-100mcg",
+          "frequency": "1일 2회",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Hyperglycemia",
+        "Injection site reaction",
+        "Headache"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Growth Hormone",
+        "Gut",
+        "Recovery"
+      ],
+      "sourceUrl": "https://en.wikipedia.org/wiki/Relamorelin",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "ipamorelin",
+        "ghrp-2",
+        "anamorelin"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 2b, not approved; monitor glucose"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "렐라모렐린(RM-131)은 그렐린보다 강력하고 반감기가 긴 합성 펜타펩타이드 그렐린 유사체입니다. 당뇨병성 위마비 대상 2b상을 마쳤으며, 위 배출을 촉진하고 구토를 줄이며 GH도 자극합니다.",
+      "keyBenefitsKo": "위 배출을 촉진하고 메스꺼움·구토를 줄이며 GH도 높입니다.",
+      "mechanismKo": "강력한 그렐린 수용체 작용으로 위장 운동과 GH 분비를 촉진합니다.",
+      "subtitleKo": "그렐린 유사체 | 위장 운동·성장호르몬 (2b상)",
+      "safetyNotesKo": [
+        "연구용 - 2b상, 미승인; 혈당 모니터링"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "고혈당",
+        "주사 부위 반응",
+        "두통",
+        "⚠️ 임상 개발 단계(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "igf-1-des": {
+      "id": "igf-1-des",
+      "nameEn": "IGF-1 DES (des(1-3)IGF-1)",
+      "subtitle": "Truncated IGF-1 Analog | Local Muscle Anabolic (Research)",
+      "nameKo": "IGF-1 DES",
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "20-50mcg (국소, 연구)",
+      "frequency": "훈련일",
+      "cycle": "사이클 사용",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "IGF-1 DES (des(1-3)IGF-1) is an N-terminal-truncated IGF-1 analog used only in research. It binds the IGF-1 receptor with high affinity and, because of its short half-life and reduced IGFBP binding, acts locally at injected/damaged tissue rather than systemically. It is a distinct molecule from IGF-1 LR3.",
+      "keyBenefits": "Localized muscle hypertrophy/repair at the injection site (not systemic).",
+      "mechanism": "High-affinity IGF-1 receptor binding with short half-life for site-specific anabolic action.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "매우 짧음(국소)",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Muscle Growth",
+          "effectiveness": "Under Study",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "연구 프로토콜",
+          "dose": "20-50mcg",
+          "frequency": "훈련 부위 국소",
+          "route": "국소 피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Hypoglycemia risk",
+        "Local injection reaction"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Muscle",
+        "Recovery"
+      ],
+      "sourceUrl": "https://swolverine.com/blogs/blog/igf-des-for-beginners-benefits-dosage-and-stacking-strategies",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "igf-1-lr3",
+        "peg-mgf",
+        "mk-677"
+      ],
+      "safetyNotes": [
+        "Research use only - not approved; hypoglycemia risk with IGF compounds"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "IGF-1 DES(des(1-3)IGF-1)는 N말단이 절단된 IGF-1 유사체로 연구용으로만 사용됩니다. IGF-1 수용체에 고친화도로 결합하고, 반감기가 짧고 IGFBP 결합이 낮아 전신이 아닌 주사·손상 부위에 국소적으로 작용합니다. IGF-1 LR3와는 다른 분자입니다.",
+      "keyBenefitsKo": "주사 부위에 국소적인 근비대·근재생을 유도합니다(전신 작용 아님).",
+      "mechanismKo": "IGF-1 수용체에 고친화도로 결합하며 반감기가 짧아 부위 특이적 동화 작용을 합니다.",
+      "subtitleKo": "절단형 IGF-1 유사체 | 국소 근육 동화 (연구)",
+      "safetyNotesKo": [
+        "연구용 전용 - 미승인; IGF 계열은 저혈당 위험"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "저혈당 위험",
+        "국소 주사 반응",
+        "⚠️ 연구용·미승인, 반감기 짧아 타이밍 중요"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "humanin": {
+      "id": "humanin",
+      "nameEn": "Humanin",
+      "subtitle": "Mitochondrial-derived Peptide | Cytoprotection & Metabolism (Research)",
+      "nameKo": "휴머닌",
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "연구용",
+      "frequency": "연구용",
+      "cycle": "사이클 사용",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Humanin is a mitochondrial-derived peptide (MDP), a distinct molecule from MOTS-c, used in research. It is anti-apoptotic, anti-inflammatory, and metabolically active, with associations to insulin sensitivity, neuroprotection, and protection against muscle wasting. No standardized human protocol exists.",
+      "keyBenefits": "Cellular stress protection and metabolic support; researched for anti-muscle-wasting effects.",
+      "mechanism": "Mitochondrial-derived signaling promoting cytoprotection, anti-inflammation, and metabolic regulation.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Metabolism",
+          "effectiveness": "Under Study",
+          "level": 2
+        },
+        {
+          "name": "Cytoprotection",
+          "effectiveness": "Under Study",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "연구 프로토콜",
+          "dose": "미확립",
+          "frequency": "연구용",
+          "route": "피하주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Limited human safety data"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Longevity",
+        "Metabolism",
+        "Muscle"
+      ],
+      "sourceUrl": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12930096/",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "mots-c",
+        "ss-31",
+        "nad-plus"
+      ],
+      "safetyNotes": [
+        "Research use only - not approved, limited human data"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "휴머닌은 미토콘드리아 유래 펩타이드(MDP)로, MOTS-c와는 다른 분자이며 연구용으로 사용됩니다. 항세포자멸·항염·대사 활성이 있으며 인슐린 감수성, 신경보호, 근소모 방지와의 연관이 보고됩니다. 표준 인체 프로토콜은 없습니다.",
+      "keyBenefitsKo": "세포 스트레스 보호와 대사 지원 효과가 있으며 근소모 방지 연구가 진행 중입니다.",
+      "mechanismKo": "미토콘드리아 유래 신호로 세포보호·항염·대사 조절을 촉진합니다.",
+      "subtitleKo": "미토콘드리아 유래 펩타이드 | 세포보호·대사 (연구)",
+      "safetyNotesKo": [
+        "연구용 전용 - 미승인, 사람 데이터 제한"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "사람 안전성 데이터 제한",
+        "⚠️ 연구용·표준 프로토콜 미확립"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "pentadeca-arginate": {
+      "id": "pentadeca-arginate",
+      "nameEn": "Pentadeca Arginate (PDA)",
+      "subtitle": "BPC-157 Variant (Arginine Salt) | Tissue Healing (Emerging)",
+      "nameKo": "펜타데카 아르기네이트",
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "routes": [
+        "Injectable",
+        "Oral"
+      ],
+      "typicalDose": "250-750mcg (국소) / 500mcg 경구",
+      "frequency": "1일 1-2회",
+      "cycle": "4-8주",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Pentadeca Arginate (PDA) is a BPC-157 variant with the same 15 amino acids but formulated as an arginine salt (rather than acetate), a 2025 trend. Human data are limited (one 12-patient case series). It shares BPC-157's angiogenic/tissue-regenerative properties with markedly improved acid stability, favoring oral use.",
+      "keyBenefits": "BPC-157-like tendon/gut healing with better oral stability.",
+      "mechanism": "Shares BPC-157's angiogenesis and tissue-repair signaling; arginine salt raises pH stability.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Tissue Repair",
+          "effectiveness": "Under Study",
+          "level": 2
+        },
+        {
+          "name": "Gut Health",
+          "effectiveness": "Under Study",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "국소 치유",
+          "dose": "250-750mcg",
+          "frequency": "1일 1회, 손상부위 인근",
+          "route": "피하주사"
+        },
+        {
+          "goal": "경구",
+          "dose": "500mcg",
+          "frequency": "1일 2회",
+          "route": "경구"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Injection site reaction",
+        "Limited human safety data"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Recovery",
+        "Gut",
+        "Healing"
+      ],
+      "sourceUrl": "https://www.paragonsportsmedicine.com/peptides/pentadeca-arginate-pda",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "bpc-157",
+        "tb-500",
+        "kpv"
+      ],
+      "safetyNotes": [
+        "Emerging - not approved; human evidence limited to a small case series"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "펜타데카 아르기네이트(PDA)는 BPC-157와 아미노산 15개가 동일하되 아세테이트 대신 아르기닌염으로 제형화한 변형입니다(2025 트렌드). 사람 데이터는 제한적입니다(12명 케이스 시리즈 1건). BPC-157의 혈관신생·조직재생 특성을 공유하면서 산 안정성이 크게 개선되어 경구 사용에 유리합니다.",
+      "keyBenefitsKo": "BPC-157과 유사한 건·장 치유 효과에 경구 안정성이 개선된 형태입니다.",
+      "mechanismKo": "BPC-157의 혈관신생·조직재생 신호를 공유하며, 아르기닌염이 pH 안정성을 높입니다.",
+      "subtitleKo": "BPC-157 변형(아르기닌염) | 조직 치유 (신흥)",
+      "safetyNotesKo": [
+        "신흥 - 미승인; 사람 근거는 소규모 케이스 시리즈뿐"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "주사 부위 반응",
+        "사람 안전성 데이터 제한",
+        "⚠️ 신흥·미승인, 근거는 소규모 케이스뿐"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "matrixyl": {
+      "id": "matrixyl",
+      "nameEn": "Matrixyl (Palmitoyl Pentapeptide-4)",
+      "subtitle": "Cosmetic Signal Peptide | Collagen, Anti-wrinkle (Topical)",
+      "nameKo": "마트릭실",
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "routes": [
+        "Topical"
+      ],
+      "typicalDose": "4% 도포",
+      "frequency": "1일 2회",
+      "cycle": "지속 사용",
+      "storage": "실온 (건조·차광)",
+      "routeDetail": "",
+      "descriptionEn": "Matrixyl (palmitoyl pentapeptide-4) is a cosmeceutical signal peptide that stimulates collagen and fibronectin synthesis. Applied topically (~4%, twice daily), clinical studies show improved elasticity and reduced fine lines over ~12 weeks.",
+      "keyBenefits": "Topical collagen booster that improves elasticity and fine lines.",
+      "mechanism": "Signal peptide that upregulates collagen and fibronectin synthesis in the dermis.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Skin/Anti-aging",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "화장품 도포",
+          "dose": "4%",
+          "frequency": "1일 2회",
+          "route": "국소 도포"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Generally well tolerated (topical)",
+        "Mild irritation possible"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Skin",
+        "Anti-aging",
+        "Cosmetic"
+      ],
+      "sourceUrl": "https://onlinelibrary.wiley.com/doi/10.1111/jocd.15849",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "ghk-cu",
+        "snap-8",
+        "ahk-cu"
+      ],
+      "safetyNotes": [
+        "Cosmetic ingredient - topical use; not a drug"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "마트릭실(팔미토일 펜타펩타이드-4)은 콜라겐·피브로넥틴 합성을 자극하는 코스메슈티컬 신호 펩타이드입니다. 국소 도포(약 4%, 1일 2회) 시 약 12주에 걸쳐 탄력 개선과 잔주름 감소가 임상에서 확인되었습니다.",
+      "keyBenefitsKo": "탄력과 잔주름을 개선하는 도포용 콜라겐 부스터입니다.",
+      "mechanismKo": "진피에서 콜라겐·피브로넥틴 합성을 촉진하는 신호 펩타이드입니다.",
+      "subtitleKo": "화장품 신호 펩타이드 | 콜라겐·주름개선 (도포)",
+      "safetyNotesKo": [
+        "화장품 원료 - 국소 도포용; 의약품 아님"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "대체로 내약성 양호(도포)",
+        "경미한 자극 가능",
+        "⚠️ 화장품 원료(치료제 아님)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "argireline": {
+      "id": "argireline",
+      "nameEn": "Argireline (Acetyl Hexapeptide-8)",
+      "subtitle": "Cosmetic 'Topical Botox' | Expression-line Relaxation (Topical)",
+      "nameKo": "아르지렐린",
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "routes": [
+        "Topical"
+      ],
+      "typicalDose": "10% 도포",
+      "frequency": "1일 2회",
+      "cycle": "지속 사용",
+      "storage": "실온 (건조·차광)",
+      "routeDetail": "",
+      "descriptionEn": "Argireline (acetyl hexapeptide-8) is a cosmeceutical peptide, distinct from SNAP-8 (acetyl octapeptide-3), marketed as a 'topical botox.' Applied at ~10% twice daily, it relaxes facial expression muscles; studies report about 27% reduction in wrinkle depth over ~30 days.",
+      "keyBenefits": "Softens expression lines topically without injections.",
+      "mechanism": "Inhibits the SNARE complex to reduce facial muscle contraction.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Skin/Anti-wrinkle",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "화장품 도포",
+          "dose": "10%",
+          "frequency": "1일 2회",
+          "route": "국소 도포"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Generally well tolerated (topical)",
+        "Mild irritation possible"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Skin",
+        "Anti-aging",
+        "Cosmetic"
+      ],
+      "sourceUrl": "https://www.mdpi.com/2079-9284/12/5/209",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "snap-8",
+        "matrixyl",
+        "ghk-cu"
+      ],
+      "safetyNotes": [
+        "Cosmetic ingredient - topical use; not a drug"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "아르지렐린(아세틸 헥사펩타이드-8)은 SNAP-8(아세틸 옥타펩타이드-3)과는 다른 코스메슈티컬 펩타이드로, '바르는 보톡스'로 알려져 있습니다. 약 10% 농도로 1일 2회 도포 시 표정근을 이완시키며, 약 30일에 걸쳐 주름 깊이 약 27% 감소가 보고됩니다.",
+      "keyBenefitsKo": "주사 없이 도포만으로 표정주름을 완화합니다.",
+      "mechanismKo": "SNARE 복합체를 억제하여 표정근 수축을 줄입니다.",
+      "subtitleKo": "화장품 '바르는 보톡스' | 표정주름 이완 (도포)",
+      "safetyNotesKo": [
+        "화장품 원료 - 국소 도포용; 의약품 아님"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "대체로 내약성 양호(도포)",
+        "경미한 자극 가능",
+        "⚠️ 화장품 원료(치료제 아님)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "syn-ake": {
+      "id": "syn-ake",
+      "nameEn": "Syn-Ake (Dipeptide Diaminobutyroyl Benzylamide Diacetate)",
+      "subtitle": "Cosmetic Snake-venom-mimetic | Anti-wrinkle (Topical)",
+      "nameKo": "신-에이크",
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "routes": [
+        "Topical"
+      ],
+      "typicalDose": "4% 도포",
+      "frequency": "1일 1-2회",
+      "cycle": "지속 사용",
+      "storage": "실온 (건조·차광)",
+      "routeDetail": "",
+      "descriptionEn": "Syn-Ake is a cosmetic peptide that mimics Waglerin-1, a toxin from the temple viper. Applied topically (~4%), it blocks nicotinic acetylcholine receptors to relax muscle contraction; studies report roughly 19-31% reductions in wrinkle size/depth over 3-6 weeks.",
+      "keyBenefits": "Muscle-relaxing anti-wrinkle effect via a snake-venom-mimetic mechanism.",
+      "mechanism": "Blocks nicotinic acetylcholine receptors, reducing calcium influx and muscle contraction.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Skin/Anti-wrinkle",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "화장품 도포",
+          "dose": "4%",
+          "frequency": "1일 1-2회",
+          "route": "국소 도포"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Generally well tolerated (topical)",
+        "Mild irritation possible"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Skin",
+        "Anti-aging",
+        "Cosmetic"
+      ],
+      "sourceUrl": "https://incidecoder.com/ingredients/dipeptide-diaminobutyroyl-benzylamide-diacetate",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "argireline",
+        "snap-8",
+        "matrixyl"
+      ],
+      "safetyNotes": [
+        "Cosmetic ingredient - topical use; not a drug"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "신-에이크는 사원 독사의 독소인 와글레린-1을 모방한 화장품 펩타이드입니다. 국소 도포(약 4%) 시 니코틴성 아세틸콜린 수용체를 차단하여 근수축을 이완시키며, 3~6주에 걸쳐 주름 크기·깊이 약 19~31% 감소가 보고됩니다.",
+      "keyBenefitsKo": "뱀독 모방 기전으로 근육을 이완시켜 주름을 개선합니다.",
+      "mechanismKo": "니코틴성 아세틸콜린 수용체를 차단해 칼슘 유입과 근수축을 줄입니다.",
+      "subtitleKo": "화장품 뱀독 모방 펩타이드 | 주름개선 (도포)",
+      "safetyNotesKo": [
+        "화장품 원료 - 국소 도포용; 의약품 아님"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "대체로 내약성 양호(도포)",
+        "경미한 자극 가능",
+        "⚠️ 화장품 원료(치료제 아님)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "pdrn": {
+      "id": "pdrn",
+      "nameEn": "PDRN (Polydeoxyribonucleotide)",
+      "subtitle": "Salmon-DNA Regenerative | Skin Booster & Wound Healing (Approved)",
+      "nameKo": "PDRN (폴리데옥시리보뉴클레오타이드)",
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "시술 용량",
+      "frequency": "시술 주기",
+      "cycle": "시술 코스",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "PDRN (polydeoxyribonucleotide), derived from salmon DNA, is approved in Italy (AIFA, 1994) for wounds/ulcers and is widely used in Korea as skin boosters (e.g., Rejuran, a polynucleotide filler). Delivered by intradermal/subcutaneous injection, it improves pores, texture, wrinkles, scars, and pigmentation.",
+      "keyBenefits": "Regenerative skin booster improving texture, pores, wrinkles, and healing.",
+      "mechanism": "Activates adenosine A2A receptors to promote angiogenesis, fibroblast proliferation, and collagen synthesis.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Skin Regeneration",
+          "effectiveness": "Effective",
+          "level": 3
+        },
+        {
+          "name": "Wound Healing",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "시술(스킨부스터)",
+          "dose": "제품별 상이",
+          "frequency": "시술 주기(수 주 간격)",
+          "route": "피내/피하 주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Injection site swelling/bruising",
+        "Temporary redness"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Skin",
+        "Anti-aging",
+        "Healing"
+      ],
+      "sourceUrl": "https://www.mdpi.com/2076-3417/15/19/10437",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "ghk-cu",
+        "matrixyl",
+        "glow"
+      ],
+      "safetyNotes": [
+        "Approved for wounds/ulcers (Italy) and used as licensed skin boosters; administered by professionals"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "PDRN(폴리데옥시리보뉴클레오타이드)은 연어 DNA에서 유래하며, 이탈리아에서 창상·궤양 치료로 승인(AIFA, 1994)되었고 국내에서는 리쥬란 등 스킨부스터(폴리뉴클레오타이드 필러)로 널리 사용됩니다. 피내·피하 주사로 시술하며 모공·결·주름·흉터·색소침착을 개선합니다.",
+      "keyBenefitsKo": "결·모공·주름·치유를 개선하는 재생 스킨부스터입니다.",
+      "mechanismKo": "아데노신 A2A 수용체를 활성화해 혈관신생·섬유아세포 증식·콜라겐 합성을 촉진합니다.",
+      "subtitleKo": "연어 DNA 재생 물질 | 스킨부스터·창상치유 (승인)",
+      "safetyNotesKo": [
+        "창상·궤양 승인(이탈리아) 및 허가 스킨부스터로 사용; 전문가 시술 권장"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "주사 부위 부기·멍",
+        "일시적 홍조",
+        "⚠️ 의료 시술로 전문가 시행 권장"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "vilon": {
+      "id": "vilon",
+      "nameEn": "Vilon (Lys-Glu)",
+      "subtitle": "Khavinson Dipeptide Bioregulator | Immune & Aging (Research)",
+      "nameKo": "빌론",
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "연구용",
+      "frequency": "연구용",
+      "cycle": "코스 사용",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Vilon (Lys-Glu) is a short peptide bioregulator from the Khavinson (Russian) research tradition, used in research and unapproved. It is proposed to act as a gene-regulatory bioregulator supporting immune function and aging markers.",
+      "keyBenefits": "Short-peptide bioregulator studied for immune and aging support.",
+      "mechanism": "Proposed gene-regulatory (bioregulator) activity influencing immune and senescence pathways.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Immune",
+          "effectiveness": "Under Study",
+          "level": 2
+        },
+        {
+          "name": "Longevity",
+          "effectiveness": "Under Study",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "연구 프로토콜",
+          "dose": "미확립",
+          "frequency": "연구용",
+          "route": "피하/근육주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Limited human safety data"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Longevity",
+        "Immune"
+      ],
+      "sourceUrl": "https://superpower.com/guides/khavinson-peptides",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "epitalon",
+        "thymalin",
+        "pinealon"
+      ],
+      "safetyNotes": [
+        "Research use only - not approved; evidence largely from Russian bioregulator studies"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "빌론(Lys-Glu)은 카비손(러시아) 연구 계열의 짧은 펩타이드 바이오레귤레이터로, 연구용이며 미승인입니다. 유전자 조절 바이오레귤레이터로 면역 기능과 노화 지표를 지원하는 것으로 제안됩니다.",
+      "keyBenefitsKo": "면역·노화 지원으로 연구되는 짧은 펩타이드 바이오레귤레이터입니다.",
+      "mechanismKo": "면역·노화 경로에 영향을 주는 유전자 조절(바이오레귤레이터) 작용으로 제안됩니다.",
+      "subtitleKo": "카비손 디펩타이드 바이오레귤레이터 | 면역·노화 (연구)",
+      "safetyNotesKo": [
+        "연구용 전용 - 미승인; 근거는 러시아 바이오레귤레이터 연구 중심"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "사람 안전성 데이터 제한",
+        "⚠️ 연구용·미승인, 근거 제한적"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "davunetide": {
+      "id": "davunetide",
+      "nameEn": "Davunetide (NAP)",
+      "subtitle": "ADNP-derived Neuroprotective Peptide | Microtubule Stability (Research)",
+      "nameKo": "다부네타이드",
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "routes": [
+        "Nasal"
+      ],
+      "typicalDose": "임상 용량(비강)",
+      "frequency": "임상 프로토콜",
+      "cycle": "연구",
+      "storage": "실온 (건조·차광)",
+      "routeDetail": "",
+      "descriptionEn": "Davunetide (NAP) is an 8-amino-acid peptide derived from ADNP that stabilizes microtubules to support axonal transport and neuroprotection. A previous Phase 3 in progressive supranuclear palsy failed; in October 2024 a Phase 3 was restarted for children with ADNP syndrome. It was administered intranasally in trials.",
+      "keyBenefits": "Neuroprotective microtubule stabilizer under renewed clinical study for a genetic syndrome.",
+      "mechanism": "ADNP-derived microtubule stabilization improving axonal transport and neuronal resilience.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Neuroprotection",
+          "effectiveness": "Under Study",
+          "level": 2
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 프로토콜",
+          "dose": "시험 용량",
+          "frequency": "임상 프로토콜",
+          "route": "비강 분무"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Nasal irritation",
+        "Limited efficacy in prior large trials"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Nootropic",
+        "Neuroprotection"
+      ],
+      "sourceUrl": "https://www.alzforum.org/therapeutics/davunetide",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "cerebrolysin",
+        "semax",
+        "dihexa"
+      ],
+      "safetyNotes": [
+        "Investigational - prior Phase 3 failed (PSP); new Phase 3 (2024) for ADNP syndrome; not approved"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "다부네타이드(NAP)는 ADNP에서 유래한 8아미노산 펩타이드로, 미세소관을 안정화하여 축삭 수송과 신경보호를 돕습니다. 과거 진행성핵상마비 3상은 실패했으며, 2024년 10월 ADNP 증후군 소아 대상 3상이 재개되었습니다. 임상에서는 비강 분무로 투여했습니다.",
+      "keyBenefitsKo": "유전 증후군 대상으로 임상이 재개된 신경보호 미세소관 안정제입니다.",
+      "mechanismKo": "ADNP 유래 미세소관 안정화로 축삭 수송과 신경 회복력을 개선합니다.",
+      "subtitleKo": "ADNP 유래 신경보호 펩타이드 | 미세소관 안정화 (연구)",
+      "safetyNotesKo": [
+        "연구용 - 과거 3상 실패(PSP); 2024년 ADNP 증후군 신규 3상; 미승인"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "비강 자극",
+        "과거 대규모 임상에서 효능 미입증",
+        "⚠️ 연구용·미승인"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "gonadorelin": {
+      "id": "gonadorelin",
+      "nameEn": "Gonadorelin (GnRH)",
+      "subtitle": "GnRH Decapeptide | HPG-axis, Fertility & TRT-adjunct (Approved)",
+      "nameKo": "고나도렐린",
+      "researchStatus": "Well Researched",
+      "isApproved": true,
+      "routes": [
+        "Injectable"
+      ],
+      "typicalDose": "50-100mcg (TRT 병용)",
+      "frequency": "주 2-3회",
+      "cycle": "지속 요법",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "",
+      "descriptionEn": "Gonadorelin is a synthetic decapeptide identical to GnRH. It is FDA-approved for HPG-axis evaluation and ovulation induction, and used off-label alongside TRT. Given SC/IM (50-100mcg, 2-3x/week) with a very short 2-4 minute half-life, it stimulates pituitary LH/FSH to preserve testicular function and fertility.",
+      "keyBenefits": "Preserves testicular function and fertility during testosterone therapy.",
+      "mechanism": "Mimics GnRH to stimulate pituitary LH/FSH release, maintaining endogenous testosterone.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "2-4분",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Fertility/HPG-axis",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "TRT 병용",
+          "dose": "50-100mcg",
+          "frequency": "주 2-3회",
+          "route": "피하/근육주사"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Injection site reaction",
+        "Headache",
+        "Flushing"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Hormone",
+        "Fertility"
+      ],
+      "sourceUrl": "https://www.peptidesinstitute.org/peptides/gonadorelin",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "hcg",
+        "kisspeptin",
+        "trt"
+      ],
+      "safetyNotes": [
+        "FDA-approved for diagnostic/ovulation use; TRT-adjunct use is off-label"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "고나도렐린은 GnRH와 동일한 합성 데카펩타이드입니다. FDA 승인 적응증은 HPG축 평가와 배란유도이며, TRT와 병용해 오프라벨로도 사용됩니다. 피하/근육(50~100mcg, 주 2~3회)으로 투여하고 반감기가 2~4분으로 매우 짧으며, 뇌하수체 LH/FSH를 자극해 고환 기능과 생식능을 보존합니다.",
+      "keyBenefitsKo": "테스토스테론 요법 중 고환 기능과 생식능을 보존합니다.",
+      "mechanismKo": "GnRH를 모방해 뇌하수체 LH/FSH 분비를 자극하여 내인성 테스토스테론을 유지합니다.",
+      "subtitleKo": "GnRH 데카펩타이드 | HPG축·생식능·TRT 병용 (승인)",
+      "safetyNotesKo": [
+        "진단·배란유도로 FDA 승인; TRT 병용은 오프라벨"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "주사 부위 반응",
+        "두통",
+        "홍조",
+        "⚠️ TRT 병용은 오프라벨"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
+    },
+    "larazotide": {
+      "id": "larazotide",
+      "nameEn": "Larazotide Acetate",
+      "subtitle": "Tight-junction Regulator | Gut Permeability / Celiac (Oral)",
+      "nameKo": "라라조타이드",
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "routes": [
+        "Oral"
+      ],
+      "typicalDose": "임상 용량(경구)",
+      "frequency": "식전",
+      "cycle": "지속",
+      "storage": "실온 (건조·차광)",
+      "routeDetail": "",
+      "descriptionEn": "Larazotide acetate is an oral tight-junction regulator (zonulin antagonist) that reduces intestinal permeability ('leaky gut'). It completed Phase 3 for celiac disease, though FDA approval is pending/on hold. It is taken orally.",
+      "keyBenefits": "Reduces intestinal permeability; investigated for celiac and gut-barrier support.",
+      "mechanism": "Zonulin antagonism that tightens intestinal tight junctions, reducing permeability.",
+      "pharmacokinetics": {
+        "peak": "",
+        "halfLife": "",
+        "cleared": ""
+      },
+      "researchIndications": [
+        {
+          "name": "Gut Health",
+          "effectiveness": "Effective",
+          "level": 3
+        }
+      ],
+      "protocolTiming": "",
+      "protocols": [
+        {
+          "goal": "임상 용량",
+          "dose": "시험 용량",
+          "frequency": "식전",
+          "route": "경구"
+        }
+      ],
+      "interactions": [],
+      "reconstitute": [],
+      "qualityGood": [],
+      "qualityBad": [],
+      "effectsTimeline": [],
+      "sideEffects": [
+        "Generally well tolerated",
+        "Mild GI symptoms"
+      ],
+      "quickStart": {},
+      "tags": [
+        "Gut",
+        "Immune"
+      ],
+      "sourceUrl": "https://exploring-peptides.com/article/best-peptides-for-gut-health/",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "relatedSlugs": [
+        "kpv",
+        "bpc-157",
+        "ll-37"
+      ],
+      "safetyNotes": [
+        "Investigational - Phase 3 complete, FDA approval on hold; not approved"
+      ],
+      "stopSigns": [],
+      "descriptionKo": "라라조타이드 아세테이트는 장투과성('새는 장')을 줄이는 경구 타이트정션 조절제(조눌린 길항제)입니다. 셀리악병 대상 3상을 마쳤으나 FDA 승인은 보류 상태입니다. 경구로 복용합니다.",
+      "keyBenefitsKo": "장투과성을 줄이며, 셀리악·장벽 보호 목적으로 연구됩니다.",
+      "mechanismKo": "조눌린을 길항하여 장의 타이트정션을 조여 투과성을 낮춥니다.",
+      "subtitleKo": "타이트정션 조절제 | 장투과성·셀리악 (경구)",
+      "safetyNotesKo": [
+        "연구용 - 3상 완료, FDA 승인 보류; 미승인"
+      ],
+      "stopSignsKo": [],
+      "latestResearchKo": [],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "",
+      "sideEffectsKo": [
+        "대체로 내약성 양호",
+        "경미한 위장 증상",
+        "⚠️ 3상 완료, FDA 승인 보류(미승인)"
+      ],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": [],
+      "qualityBadKo": [],
+      "interactionsKo": []
     }
   }
 }
