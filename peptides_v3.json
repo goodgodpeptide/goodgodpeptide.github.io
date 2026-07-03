@@ -1,7 +1,7 @@
 {
   "version": "3.0",
-  "lastUpdated": "2026-03-26T17:32:47.104265",
-  "totalCount": 76,
+  "lastUpdated": "2026-07-03T22:45:36.942932",
+  "totalCount": 81,
   "index": [
     {
       "id": "5-amino-1mq",
@@ -163,6 +163,27 @@
       "cycle": "4-8 weeks"
     },
     {
+      "id": "bromantane",
+      "nameEn": "Bromantane (Ladasten)",
+      "nameKo": "브로만탄 (라다스텐)",
+      "subtitle": "Adamantane Actoprotector | Dopamine & Serotonin Synthesis Enhancer",
+      "routes": [
+        "Oral"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "인지 강화",
+        "도파민",
+        "세로토닌",
+        "항불안",
+        "적응원",
+        "러시아"
+      ],
+      "typicalDose": "50-100mg",
+      "cycle": "4-8주"
+    },
+    {
       "id": "cagrilintide",
       "nameEn": "Cagrilintide",
       "nameKo": "카그릴린타이드",
@@ -178,6 +199,26 @@
       ],
       "typicalDose": "",
       "cycle": ""
+    },
+    {
+      "id": "cardiogen",
+      "nameEn": "Cardiogen",
+      "nameKo": "카르디오겐",
+      "subtitle": "Cardiac Bioregulatory Tetrapeptide | Cardiovascular & Tissue Repair",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "tags": [
+        "심혈관",
+        "심장 보호",
+        "바이오레귤레이터",
+        "테트라펩타이드",
+        "러시아"
+      ],
+      "typicalDose": "10-20mg",
+      "cycle": "2-4주"
     },
     {
       "id": "cartalax",
@@ -215,24 +256,6 @@
       "cycle": "7-30 days"
     },
     {
-      "id": "cjc-ipa-protocol",
-      "nameEn": "CJC + IPA Protocol",
-      "nameKo": "CJC-1295+이파모렐린",
-      "subtitle": "CJC-1295 (no DAC) / Ipamorelin ProtocolMod GRF 1-29 + Ipamorelin | Pulsatile Growth Hormone Optimization",
-      "routes": [
-        "Injectable"
-      ],
-      "researchStatus": "Well Researched",
-      "isApproved": false,
-      "tags": [
-        "Muscle Growth",
-        "Anti Aging",
-        "Recovery"
-      ],
-      "typicalDose": "",
-      "cycle": "8-12 weeks on, 4 weeks off"
-    },
-    {
       "id": "cjc-1295",
       "nameEn": "CJC-1295 (without DAC)",
       "nameKo": "",
@@ -265,6 +288,24 @@
       ],
       "typicalDose": "",
       "cycle": "8-12 weeks"
+    },
+    {
+      "id": "cjc-ipa-protocol",
+      "nameEn": "CJC + IPA Protocol",
+      "nameKo": "CJC-1295+이파모렐린",
+      "subtitle": "CJC-1295 (no DAC) / Ipamorelin ProtocolMod GRF 1-29 + Ipamorelin | Pulsatile Growth Hormone Optimization",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Well Researched",
+      "isApproved": false,
+      "tags": [
+        "Muscle Growth",
+        "Anti Aging",
+        "Recovery"
+      ],
+      "typicalDose": "",
+      "cycle": "8-12 weeks on, 4 weeks off"
     },
     {
       "id": "cyclic-glycine-proline",
@@ -318,6 +359,24 @@
       ],
       "typicalDose": "100-300mcg",
       "cycle": "5-10 days"
+    },
+    {
+      "id": "eloralintide",
+      "nameEn": "Eloralintide",
+      "nameKo": "엘로랄린타이드",
+      "subtitle": "Selective Amylin Receptor Agonist | Obesity & Weight Management",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "weight-loss",
+        "amylin",
+        "obesity"
+      ],
+      "typicalDose": "1-9mg",
+      "cycle": "지속"
     },
     {
       "id": "epitalon",
@@ -408,6 +467,26 @@
       ],
       "typicalDose": "0.5-2%1-",
       "cycle": "12-16 weeks"
+    },
+    {
+      "id": "ghrp-6",
+      "nameEn": "GHRP-6",
+      "nameKo": "성장호르몬 분비촉진 펩타이드-6",
+      "subtitle": "Growth Hormone Releasing Peptide-6 | GH Release & Cardioprotection",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Extensively Studied",
+      "isApproved": false,
+      "tags": [
+        "GH 분비촉진",
+        "성장호르몬",
+        "그렐린",
+        "근육 성장",
+        "심장 보호"
+      ],
+      "typicalDose": "100-300mcg",
+      "cycle": "8-12주"
     },
     {
       "id": "glow",
@@ -626,6 +705,25 @@
       "cycle": "4-12 weeks"
     },
     {
+      "id": "livagen",
+      "nameEn": "Livagen",
+      "nameKo": "리바젠",
+      "subtitle": "Khavinson Tetrapeptide (KEDA) | Chromatin Remodeler & Hepatocyte Bioregulator",
+      "routes": [
+        "Injectable",
+        "Oral"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "tags": [
+        "anti-aging",
+        "khavinson",
+        "chromatin"
+      ],
+      "typicalDose": "100-200mcg",
+      "cycle": "2주"
+    },
+    {
       "id": "ll-37",
       "nameEn": "LL-37",
       "nameKo": "",
@@ -801,6 +899,25 @@
       "cycle": ""
     },
     {
+      "id": "ovagen",
+      "nameEn": "Ovagen",
+      "nameKo": "오바젠",
+      "subtitle": "Khavinson Tripeptide (EDL) | Renal Bioregulator",
+      "routes": [
+        "Injectable",
+        "Oral"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "tags": [
+        "anti-aging",
+        "khavinson",
+        "kidney"
+      ],
+      "typicalDose": "커뮤니티 용량 미확립",
+      "cycle": "수일~수주 (쥐 프로토콜)"
+    },
+    {
       "id": "oxytocin",
       "nameEn": "Oxytocin",
       "nameKo": "옥시토신",
@@ -888,6 +1005,26 @@
       ],
       "typicalDose": "5mgOnce daily",
       "cycle": "20 days"
+    },
+    {
+      "id": "pnc-27",
+      "nameEn": "PNC-27",
+      "nameKo": "PNC-27",
+      "subtitle": "Chimeric p53-Penetratin Anticancer Peptide | HDM-2 Targeting",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "항암",
+        "p53",
+        "HDM-2",
+        "전임상",
+        "FDA 경고"
+      ],
+      "typicalDose": "실험적 단계",
+      "cycle": "미확립"
     },
     {
       "id": "prostamax",
@@ -1158,6 +1295,24 @@
       "cycle": "8-12 weeks"
     },
     {
+      "id": "thymalin",
+      "nameEn": "Thymalin",
+      "nameKo": "티말린",
+      "subtitle": "Calf Thymus Polypeptide Complex | Immune Reconstitution & Geroprotection",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "tags": [
+        "immune",
+        "thymus",
+        "khavinson"
+      ],
+      "typicalDose": "5-20mg",
+      "cycle": "3-10일 (총 30-100mg)"
+    },
+    {
       "id": "thymosin-alpha-1",
       "nameEn": "Thymosin Alpha-1 (Tα1)",
       "nameKo": "티모신알파1",
@@ -1249,6 +1404,24 @@
       "cycle": ""
     },
     {
+      "id": "vesugen",
+      "nameEn": "Vesugen",
+      "nameKo": "베수젠",
+      "subtitle": "Khavinson Vascular Tripeptide (KED) | Endothelial Bioregulator",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "tags": [
+        "vascular",
+        "khavinson",
+        "heart-health"
+      ],
+      "typicalDose": "400mcg/kg (마우스)",
+      "cycle": "2개월 (마우스 프로토콜)"
+    },
+    {
       "id": "vip",
       "nameEn": "VIP",
       "nameKo": "",
@@ -1283,87 +1456,6 @@
       ],
       "typicalDose": "",
       "cycle": "4-8 weeks"
-    },
-    {
-      "id": "ghrp-6",
-      "nameEn": "GHRP-6",
-      "nameKo": "성장호르몬 분비촉진 펩타이드-6",
-      "subtitle": "Growth Hormone Releasing Peptide-6 | GH Release & Cardioprotection",
-      "routes": [
-        "Injectable"
-      ],
-      "researchStatus": "Extensively Studied",
-      "isApproved": false,
-      "tags": [
-        "GH 분비촉진",
-        "성장호르몬",
-        "그렐린",
-        "근육 성장",
-        "심장 보호"
-      ],
-      "typicalDose": "100-300mcg",
-      "cycle": "8-12주"
-    },
-    {
-      "id": "bromantane",
-      "nameEn": "Bromantane (Ladasten)",
-      "nameKo": "브로만탄 (라다스텐)",
-      "subtitle": "Adamantane Actoprotector | Dopamine & Serotonin Synthesis Enhancer",
-      "routes": [
-        "Oral"
-      ],
-      "researchStatus": "Well Researched",
-      "isApproved": false,
-      "tags": [
-        "인지 강화",
-        "도파민",
-        "세로토닌",
-        "항불안",
-        "적응원",
-        "러시아"
-      ],
-      "typicalDose": "50-100mg",
-      "cycle": "4-8주"
-    },
-    {
-      "id": "cardiogen",
-      "nameEn": "Cardiogen",
-      "nameKo": "카르디오겐",
-      "subtitle": "Cardiac Bioregulatory Tetrapeptide | Cardiovascular & Tissue Repair",
-      "routes": [
-        "Injectable"
-      ],
-      "researchStatus": "Limited Research",
-      "isApproved": false,
-      "tags": [
-        "심혈관",
-        "심장 보호",
-        "바이오레귤레이터",
-        "테트라펩타이드",
-        "러시아"
-      ],
-      "typicalDose": "10-20mg",
-      "cycle": "2-4주"
-    },
-    {
-      "id": "pnc-27",
-      "nameEn": "PNC-27",
-      "nameKo": "PNC-27",
-      "subtitle": "Chimeric p53-Penetratin Anticancer Peptide | HDM-2 Targeting",
-      "routes": [
-        "Injectable"
-      ],
-      "researchStatus": "Emerging Research",
-      "isApproved": false,
-      "tags": [
-        "항암",
-        "p53",
-        "HDM-2",
-        "전임상",
-        "FDA 경고"
-      ],
-      "typicalDose": "실험적 단계",
-      "cycle": "미확립"
     }
   ],
   "peptides": {
@@ -4532,7 +4624,7 @@
       "nameEn": "Bioglutide",
       "subtitle": "NA-931 | Quadruple IGF-1/GLP-1/GIP/Glucagon Agonist",
       "nameKo": "바이오글루타이드",
-      "researchStatus": "Clinical Research",
+      "researchStatus": "Provenance Flagged",
       "isApproved": false,
       "routes": [
         "Oral"
@@ -4748,16 +4840,7 @@
         "semaglutide",
         "survodutide"
       ],
-      "safetyNotes": [
-        "Investigational drug - not yet FDA approved",
-        "Start at lower dose (50mg) and titrate up as tolerated",
-        "Most common side effects: mild nausea (7.3%), diarrhea (6.3-8.1%)",
-        "83% of GI adverse events rated mild or insignificant in trials",
-        "No serious drug-related adverse events in Phase 2",
-        "Caution with personal/family history of medullary thyroid carcinoma (GLP-1 class concern)",
-        "Monitor for pancreatitis symptoms (severe abdominal pain)",
-        "Drug interactions not fully characterized - avoid stacking with other GLP-1 agonists"
-      ],
+      "safetyNotes": "⚠️ pep-pedia.org에서 출처 의심 경고. Phase 2 디자인이 Viking VK2735와 동일, NA-931+Tirzepatide 프로토콜이 Lilly 임상과 동일. 분자구조/CAS 미공개. 미검증 데이터로 취급 권장.",
       "stopSigns": [
         "Severe or persistent abdominal pain (potential pancreatitis)",
         "Severe nausea/vomiting preventing adequate nutrition",
@@ -4771,16 +4854,7 @@
       "keyBenefitsKo": "경구 투여(주사 없음), 근육 보존 체중 감소, 음식 유무에 관계없이 1일 1회 투여, 주사 가능한 GLP-1보다 경미한 GI 부작용, 포괄적인 대사 효과를 위한 4중 수용체 활성화.",
       "mechanismKo": "NA-931은 혈액뇌관문을 통과하는 고리형 IGF-1 단편에서 유래된 작은 친유성 분자입니다. IGF-1(근육 보존, 인슐린 민감성), GLP-1(식욕 억제, 인슐린 분비), GIP(포도당 대사, 지방 저장), 글루카곤(에너지 소비, 지방 산화) 수용체를 동시에 활성화합니다. 분자 정보무게독점(소분자)길이작음",
       "subtitleKo": "NA-931 | 4중 IGF-1/GLP-1/GIP/글루카곤 작용제",
-      "safetyNotesKo": [
-        "연구용 약물 – 아직 FDA 승인을 받지 않음",
-        "더 낮은 용량(50mg)으로 시작하고 내약성에 따라 증량합니다.",
-        "가장 흔한 부작용: 가벼운 메스꺼움(7.3%), 설사(6.3-8.1%)",
-        "임상시험에서 GI 이상반응의 83%가 경미하거나 중요하지 않은 것으로 평가되었습니다.",
-        "임상 2상에서 약물 관련 중대한 이상반응은 발생하지 않음",
-        "갑상선 수질암종의 개인/가족력이 있는 경우 주의(GLP-1 등급 우려)",
-        "췌장염 증상(심각한 복통)을 모니터링합니다.",
-        "완전히 특성화되지 않은 약물 상호작용 - 다른 GLP-1 작용제와의 중복을 피하십시오."
-      ],
+      "safetyNotesKo": "⚠️ pep-pedia.org에서 출처 의심 경고. Phase 2 디자인이 Viking VK2735와 동일, NA-931+Tirzepatide 프로토콜이 Lilly 임상과 동일. 분자구조/CAS 미공개. 미검증 데이터로 취급 권장.",
       "stopSignsKo": [
         "심각하거나 지속적인 복통(잠재적 췌장염)",
         "심각한 메스꺼움/구토로 인해 적절한 영양 섭취가 불가능함",
@@ -4967,7 +5041,8 @@
           "description": "Different metabolic pathways - may be synergistic for fat loss and energy metabolism",
           "descriptionKo": "다양한 대사 경로 - 지방 감소 및 에너지 대사에 시너지 효과가 있을 수 있습니다."
         }
-      ]
+      ],
+      "provenanceFlagged": true
     },
     "bpc-157": {
       "id": "bpc-157",
@@ -39073,6 +39148,867 @@
           }
         ]
       }
+    },
+    "eloralintide": {
+      "id": "eloralintide",
+      "nameEn": "Eloralintide",
+      "nameKo": "엘로랄린타이드",
+      "subtitle": "Selective Amylin Receptor Agonist | Obesity & Weight Management",
+      "subtitleKo": "선택적 아밀린 수용체 작용제 | 비만 및 체중관리",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "typicalDose": "1-9mg",
+      "frequency": "주 1회",
+      "cycle": "지속",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "피하주사 (SC), 주 1회",
+      "descriptionEn": "Eloralintide (LY3841136) is a lipidated amylin receptor agonist developed by Eli Lilly. It is a 37-amino-acid analog with a methylene thioacetal bridge replacing the native disulfide and Lys(26) acylated with a C20 fatty diacid for albumin binding, enabling once-weekly dosing. Phase 2 trial (48 weeks, N=263) showed 9.5%-20.1% body weight reduction vs 0.4% placebo, with the weight loss curve not yet plateauing. Being evaluated in combination with tirzepatide in the ATTAIN program. 85% of weight loss is fat mass.",
+      "descriptionKo": "엘로랄린타이드(LY3841136)는 Eli Lilly가 개발한 지질화 아밀린 수용체 작용제. 37개 아미노산 유사체로 주 1회 투여 가능. Phase 2 임상(48주, 263명)에서 체중 9.5~20.1% 감소(위약 0.4%). 감량분의 85%가 지방. 티르제파타이드와 병용 평가 중(ATTAIN 프로그램).",
+      "keyBenefits": "Phase 2에서 최대 20.1% 체중감소, 체지방 선택적 감량(85% 지방), 주 1회 투여, 티르제파타이드 병용 시 추가 효과 기대",
+      "keyBenefitsKo": "Phase 2에서 최대 20.1% 체중감소, 체지방 선택적 감량(85% 지방), 주 1회 투여, 티르제파타이드 병용 시 추가 효과 기대",
+      "mechanism": "아밀린 수용체에 선택적으로 결합하여 식욕 억제, 위 배출 지연, 포만감 증가. GLP-1과는 독립적 경로로 작용하여 병용 시 시너지 가능.",
+      "mechanismKo": "아밀린 수용체에 선택적으로 결합하여 식욕 억제, 위 배출 지연, 포만감 증가. GLP-1과는 독립적 경로로 작용하여 병용 시 시너지 가능.",
+      "pharmacokinetics": {
+        "peak": "4.2일",
+        "halfLife": "12.9-15.3일",
+        "cleared": "~65-76일"
+      },
+      "researchIndications": [
+        {
+          "name": "체중감소",
+          "effectiveness": "Effective",
+          "level": "Phase 2"
+        },
+        {
+          "name": "비만",
+          "effectiveness": "Effective",
+          "level": "Phase 2"
+        },
+        {
+          "name": "심혈관 건강",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        }
+      ],
+      "protocols": [
+        {
+          "goal": "체중감소 (Phase 2 기준)",
+          "dose": "1-9mg",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        },
+        {
+          "goal": "티르제파타이드 병용 (ATTAIN)",
+          "dose": "용량 미공개",
+          "frequency": "주 1회",
+          "route": "피하주사"
+        }
+      ],
+      "protocolTiming": "⚠️ Phase 2/3 임상시험 단계. 시판 전 의약품. 프로토콜은 임상시험 데이터 기반.",
+      "protocolTimingKo": "⚠️ Phase 2/3 임상시험 단계. 시판 전 의약품. 프로토콜은 임상시험 데이터 기반.",
+      "interactions": [
+        {
+          "name": "Tirzepatide",
+          "type": "Synergistic",
+          "description": "ATTAIN 프로그램에서 병용 평가 중. 독립적 경로(아밀린 vs GLP-1)로 추가 체중감소 기대."
+        },
+        {
+          "name": "Cagrilintide",
+          "type": "Avoid Combination",
+          "description": "동일 아밀린 수용체 타겟. 병용 시 과도한 수용체 자극 위험."
+        },
+        {
+          "name": "Pramlintide",
+          "type": "Avoid Combination",
+          "description": "동일 수용체 경로. 병용 불필요."
+        }
+      ],
+      "interactionsKo": [
+        {
+          "name": "티르제파타이드",
+          "type": "시너지",
+          "description": "ATTAIN 프로그램에서 병용 평가 중."
+        },
+        {
+          "name": "카그릴린타이드",
+          "type": "병용 금지",
+          "description": "동일 수용체 타겟."
+        },
+        {
+          "name": "프람린타이드",
+          "type": "병용 금지",
+          "description": "동일 수용체 경로."
+        }
+      ],
+      "sideEffects": [
+        {
+          "name": "오심",
+          "severity": "Common"
+        },
+        {
+          "name": "구토",
+          "severity": "Common"
+        },
+        {
+          "name": "주사부위 반응",
+          "severity": "Common"
+        }
+      ],
+      "sideEffectsKo": [
+        {
+          "name": "오심",
+          "severity": "흔함"
+        },
+        {
+          "name": "구토",
+          "severity": "흔함"
+        },
+        {
+          "name": "주사부위 반응",
+          "severity": "흔함"
+        }
+      ],
+      "safetyNotes": "Phase 2/3 임상시험 단계. Eli Lilly 개발. 시판 승인 전.",
+      "safetyNotesKo": "Phase 2/3 임상시험 단계. Eli Lilly 개발. 시판 승인 전.",
+      "stopSigns": "심한 오심/구토, 급성 복통, 심한 저혈당 증상 시 즉시 중단",
+      "stopSignsKo": "심한 오심/구토, 급성 복통, 심한 저혈당 증상 시 즉시 중단",
+      "reconstitute": {},
+      "qualityGood": [
+        "Eli Lilly 제약사 개발",
+        "대규모 Phase 2 완료(263명)",
+        "체지방 선택적 감량"
+      ],
+      "qualityBad": [
+        "시판 전 단계",
+        "장기 안전성 미확인",
+        "가격 미정"
+      ],
+      "qualityGoodKo": [
+        "Eli Lilly 제약사 개발",
+        "대규모 Phase 2 완료(263명)",
+        "체지방 선택적 감량"
+      ],
+      "qualityBadKo": [
+        "시판 전 단계",
+        "장기 안전성 미확인",
+        "가격 미정"
+      ],
+      "effectsTimeline": [
+        {
+          "period": "1-4주",
+          "effect": "식욕 감소 시작"
+        },
+        {
+          "period": "12-24주",
+          "effect": "유의미한 체중감소"
+        },
+        {
+          "period": "48주+",
+          "effect": "체중감소 지속(플래토 미도달)"
+        }
+      ],
+      "effectsTimelineKo": [
+        {
+          "period": "1-4주",
+          "effect": "식욕 감소 시작"
+        },
+        {
+          "period": "12-24주",
+          "effect": "유의미한 체중감소"
+        },
+        {
+          "period": "48주+",
+          "effect": "체중감소 지속(플래토 미도달)"
+        }
+      ],
+      "quickStart": "⚠️ 임상시험 단계 약물. 일반 구매 불가.",
+      "tags": [
+        "weight-loss",
+        "amylin",
+        "obesity",
+        "eli-lilly",
+        "phase-2"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/eloralintide",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [
+        {
+          "title": "Phase 2 Trial (48wk, N=263)",
+          "description": "9.5-20.1% body weight reduction vs 0.4% placebo. The Lancet."
+        }
+      ],
+      "latestResearchKo": [
+        {
+          "title": "Phase 2 임상(48주, 263명)",
+          "description": "위약 대비 9.5-20.1% 체중감소. The Lancet."
+        }
+      ],
+      "relatedSlugs": [
+        "cagrilintide",
+        "tirzepatide",
+        "semaglutide",
+        "retatrutide",
+        "survodutide"
+      ],
+      "researchIndicationsDetailedKo": {}
+    },
+    "livagen": {
+      "id": "livagen",
+      "nameEn": "Livagen",
+      "nameKo": "리바젠",
+      "subtitle": "Khavinson Tetrapeptide (KEDA) | Chromatin Remodeler & Hepatocyte Bioregulator",
+      "subtitleKo": "카빈슨 테트라펩타이드 (KEDA) | 크로마틴 리모델러 및 간세포 바이오레귤레이터",
+      "routes": [
+        "Injectable",
+        "Oral"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "typicalDose": "100-200mcg",
+      "frequency": "매일",
+      "cycle": "2주",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "피하주사 (SC) 또는 경구",
+      "descriptionEn": "Livagen is a Khavinson tetrapeptide with sequence Lys-Glu-Asp-Ala (KEDA). MW 461.5 Da. It acts as a chromatin remodeler, decondensing pericentromeric heterochromatin and reactivating age-silenced rRNA genes in elderly lymphocytes. Also an enkephalinase inhibitor (IC50 ~20 micromolar). Enhanced hepatocyte protein synthesis in old rat cells. ~15 PubMed papers, all from Khavinson network. No RCT or human PK data. Note: KEDA, not KEDG (which is Testagen).",
+      "descriptionKo": "리바젠은 Lys-Glu-Asp-Ala(KEDA) 서열의 카빈슨 테트라펩타이드. 분자량 461.5 Da. 노인 림프구에서 이질염색질 탈응축 및 노화-침묵 rRNA 유전자 재활성화. 엔케팔리나제 억제제(IC50 ~20μM). 노화 쥐 간세포 단백질 합성 촉진. PubMed 논문 ~15편(전부 카빈슨 연구팀). RCT 없음.",
+      "keyBenefits": "크로마틴 리모델링, 노화 관련 유전자 재활성화, 간세포 단백질 합성 촉진",
+      "keyBenefitsKo": "크로마틴 리모델링, 노화 관련 유전자 재활성화, 간세포 단백질 합성 촉진",
+      "mechanism": "이질염색질 탈응축 → 노화-침묵 rRNA 유전자 재활성화. 엔케팔리나제 억제(IC50 ~20μM). 간세포 단백질 합성 촉진.",
+      "mechanismKo": "이질염색질 탈응축 → 노화-침묵 rRNA 유전자 재활성화. 엔케팔리나제 억제(IC50 ~20μM). 간세포 단백질 합성 촉진.",
+      "pharmacokinetics": {
+        "peak": "3분",
+        "halfLife": "30분",
+        "cleared": "~2.5시간"
+      },
+      "researchIndications": [
+        {
+          "name": "항노화",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        },
+        {
+          "name": "회복",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        },
+        {
+          "name": "항염증",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        }
+      ],
+      "protocols": [
+        {
+          "goal": "항노화 (커뮤니티 프로토콜)",
+          "dose": "100-200mcg",
+          "frequency": "매일",
+          "route": "피하주사"
+        },
+        {
+          "goal": "경구 (쥐 프로토콜 기반)",
+          "dose": "용량 미정",
+          "frequency": "매일",
+          "route": "경구"
+        }
+      ],
+      "protocolTiming": "⚠️ 모든 프로토콜은 전임상 데이터 기반. 인간 임상 없음.",
+      "protocolTimingKo": "⚠️ 모든 프로토콜은 전임상 데이터 기반. 인간 임상 없음.",
+      "interactions": [
+        {
+          "name": "Epitalon",
+          "type": "Synergistic",
+          "description": "상보적 카빈슨 바이오레귤레이터. Epitalon은 텔로머라제, Livagen은 크로마틴 리모델링."
+        },
+        {
+          "name": "Testagen",
+          "type": "Monitor Combination",
+          "description": "유사 서열 주의(KEDA vs KEDG). 병용 시 모니터링 권장."
+        },
+        {
+          "name": "Vilon",
+          "type": "Compatible",
+          "description": "다른 조직 특이성. 병용 가능."
+        },
+        {
+          "name": "Cortagen",
+          "type": "Compatible",
+          "description": "다른 조직 특이성(뇌). 병용 가능."
+        }
+      ],
+      "interactionsKo": [
+        {
+          "name": "에피탈론",
+          "type": "시너지",
+          "description": "상보적 카빈슨 바이오레귤레이터."
+        },
+        {
+          "name": "테스타젠",
+          "type": "모니터링",
+          "description": "유사 서열 주의."
+        },
+        {
+          "name": "빌론",
+          "type": "호환",
+          "description": "다른 조직 특이성."
+        }
+      ],
+      "sideEffects": [],
+      "sideEffectsKo": [],
+      "safetyNotes": "전임상 데이터만 존재. 인간 PK 데이터 없음. 카빈슨 연구팀 논문만 존재.",
+      "safetyNotesKo": "전임상 데이터만 존재. 인간 PK 데이터 없음. 카빈슨 연구팀 논문만 존재.",
+      "stopSigns": "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음.",
+      "stopSignsKo": "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음.",
+      "reconstitute": {},
+      "qualityGood": [
+        "고유한 크로마틴 리모델링 메커니즘",
+        "PubMed 논문 15편"
+      ],
+      "qualityBad": [
+        "인간 임상 없음",
+        "카빈슨 연구팀 편향",
+        "RCT 없음"
+      ],
+      "qualityGoodKo": [
+        "고유한 크로마틴 리모델링 메커니즘",
+        "PubMed 논문 15편"
+      ],
+      "qualityBadKo": [
+        "인간 임상 없음",
+        "카빈슨 연구팀 편향",
+        "RCT 없음"
+      ],
+      "effectsTimeline": [],
+      "effectsTimelineKo": [],
+      "quickStart": "⚠️ 전임상 단계. 인간 용량·안전성 미확립.",
+      "tags": [
+        "anti-aging",
+        "khavinson",
+        "chromatin",
+        "liver",
+        "bioregulator"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/livagen",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "latestResearchKo": [],
+      "relatedSlugs": [
+        "epitalon",
+        "testagen",
+        "pinealon",
+        "cartalax"
+      ],
+      "researchIndicationsDetailedKo": {}
+    },
+    "ovagen": {
+      "id": "ovagen",
+      "nameEn": "Ovagen",
+      "nameKo": "오바젠",
+      "subtitle": "Khavinson Tripeptide (EDL) | Renal Bioregulator",
+      "subtitleKo": "카빈슨 트리펩타이드 (EDL) | 신장 바이오레귤레이터",
+      "routes": [
+        "Injectable",
+        "Oral"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "typicalDose": "커뮤니티 용량 미확립",
+      "frequency": "매일",
+      "cycle": "수일~수주 (쥐 프로토콜)",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "피하주사 (SC) 또는 경구",
+      "descriptionEn": "Ovagen is a Khavinson tripeptide with sequence Glu-Asp-Leu (EDL). MW 375.37 Da. PubChem CID 444128. Despite marketing as hepatoprotective, ALL PubMed papers study KIDNEY endpoints (cisplatin nephrotoxicity, gentamicin nephropathy, ischemia-reperfusion kidney injury). Reduces senescence markers p16/p21/p53 and increases SIRT-6 in renal cells. The liver claim rests on a single table entry in a 2021 review. Sold in Russia as BAFS oral capsule. 6 PubMed papers, all Khavinson network.",
+      "descriptionKo": "오바젠은 Glu-Asp-Leu(EDL) 서열의 카빈슨 트리펩타이드. 분자량 375.37 Da. 간 보호로 마케팅되나 실제 PubMed 논문은 전부 신장 관련(시스플라틴 신독성, 겐타마이신 신병증, 허혈-재관류 신손상). 신장세포에서 p16/p21/p53 감소, SIRT-6 증가. 러시아에서 BAFS 경구 캡슐로 판매.",
+      "keyBenefits": "신장 세포 보호, 노화 마커 감소(p16/p21/p53), SIRT-6 증가",
+      "keyBenefitsKo": "신장 세포 보호, 노화 마커 감소(p16/p21/p53), SIRT-6 증가",
+      "mechanism": "노화 마커 p16/p21/p53 하향조절, SIRT-6 상향조절. 신장세포 보호 작용.",
+      "mechanismKo": "노화 마커 p16/p21/p53 하향조절, SIRT-6 상향조절. 신장세포 보호 작용.",
+      "pharmacokinetics": {
+        "peak": "2분",
+        "halfLife": "15분",
+        "cleared": "~1.3시간"
+      },
+      "researchIndications": [
+        {
+          "name": "회복",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        },
+        {
+          "name": "항노화",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        }
+      ],
+      "protocols": [
+        {
+          "goal": "신장 보호 (전임상)",
+          "dose": "용량 미확립",
+          "frequency": "매일",
+          "route": "피하주사"
+        }
+      ],
+      "protocolTiming": "⚠️ 전임상(동물) 데이터만 존재. 인간 용량 미확립.",
+      "protocolTimingKo": "⚠️ 전임상(동물) 데이터만 존재. 인간 용량 미확립.",
+      "interactions": [
+        {
+          "name": "Livagen",
+          "type": "Monitor Combination",
+          "description": "동시 사용 시 주의."
+        },
+        {
+          "name": "Pinealon",
+          "type": "Compatible",
+          "description": "다른 조직 특이성(뇌). 병용 가능."
+        },
+        {
+          "name": "Cartalax",
+          "type": "Compatible",
+          "description": "다른 조직 특이성(연골). 병용 가능."
+        },
+        {
+          "name": "Nephrotoxic drugs",
+          "type": "Monitor Combination",
+          "description": "신독성 약물과 병용 시 모니터링."
+        }
+      ],
+      "interactionsKo": [
+        {
+          "name": "리바젠",
+          "type": "모니터링",
+          "description": "동시 사용 시 주의."
+        },
+        {
+          "name": "피넬론",
+          "type": "호환",
+          "description": "다른 조직 특이성."
+        },
+        {
+          "name": "카르탈락스",
+          "type": "호환",
+          "description": "다른 조직 특이성."
+        }
+      ],
+      "sideEffects": [],
+      "sideEffectsKo": [],
+      "safetyNotes": "⚠️ '간 보호' 마케팅과 달리 실제 연구는 전부 신장 관련. 간 효과 근거 극히 부족.",
+      "safetyNotesKo": "⚠️ '간 보호' 마케팅과 달리 실제 연구는 전부 신장 관련. 간 효과 근거 극히 부족.",
+      "stopSigns": "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음.",
+      "stopSignsKo": "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음.",
+      "reconstitute": {},
+      "qualityGood": [
+        "신장 보호 전임상 데이터"
+      ],
+      "qualityBad": [
+        "인간 임상 없음",
+        "간 보호 마케팅은 근거 부족",
+        "카빈슨 편향"
+      ],
+      "qualityGoodKo": [
+        "신장 보호 전임상 데이터"
+      ],
+      "qualityBadKo": [
+        "인간 임상 없음",
+        "간 보호 마케팅은 근거 부족",
+        "카빈슨 편향"
+      ],
+      "effectsTimeline": [],
+      "effectsTimelineKo": [],
+      "quickStart": "⚠️ 전임상 단계. 인간 용량 미확립.",
+      "tags": [
+        "anti-aging",
+        "khavinson",
+        "kidney",
+        "bioregulator"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/ovagen",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [],
+      "latestResearchKo": [],
+      "relatedSlugs": [
+        "pinealon",
+        "cartalax",
+        "livagen",
+        "epitalon"
+      ],
+      "researchIndicationsDetailedKo": {}
+    },
+    "thymalin": {
+      "id": "thymalin",
+      "nameEn": "Thymalin",
+      "nameKo": "티말린",
+      "subtitle": "Calf Thymus Polypeptide Complex | Immune Reconstitution & Geroprotection",
+      "subtitleKo": "송아지 흉선 폴리펩타이드 복합체 | 면역재건 및 노화방지",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "typicalDose": "5-20mg",
+      "frequency": "매일",
+      "cycle": "3-10일 (총 30-100mg)",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "근육주사 (IM)",
+      "descriptionEn": "Thymalin is a multi-component polypeptide extract from calf thymus, containing fractions up to ~10 kDa. Identified active fragments include EW (Glu-Trp = Thymogen, ~333 Da), KE (Lys-Glu = Vilon, ~275 Da), and EDP (Glu-Asp-Pro = Crystagen, ~359 Da). NOT the same as Thymulin (FTS nonapeptide). Registered Russian pharmaceutical since 1982 (Samson-Med, LS-000267). Accelerates T-lymphocyte maturation. COVID-19 open-label RCT (n=92): lymphocytes +55%, CD4+ +88.9%, IL-6 reduced 5.5-fold. Long-term observational (n=266, 6-8yr): 2.0-2.5x reduced mortality (effect sizes considered implausibly large). Nearly all evidence from Khavinson group.",
+      "descriptionKo": "티말린은 송아지 흉선에서 추출한 다성분 폴리펩타이드 복합체(~10kDa 이하). 활성 분획: EW(티모겐), KE(빌론), EDP(크리스타겐). 티뮬린(FTS 노나펩타이드)과 다름. 1982년 러시아 등록 의약품. T림프구 성숙 촉진. COVID-19 RCT(92명): 림프구 +55%, CD4+ +88.9%, IL-6 5.5배 감소.",
+      "keyBenefits": "T림프구 성숙 촉진, 면역재건, 1982년 이후 러시아 임상 경험",
+      "keyBenefitsKo": "T림프구 성숙 촉진, 면역재건, 1982년 이후 러시아 임상 경험",
+      "mechanism": "CD117+ 전구세포로부터 T림프구 성숙 촉진. 흉선 기능 활성화. IL-6 등 염증 사이토카인 감소.",
+      "mechanismKo": "CD117+ 전구세포로부터 T림프구 성숙 촉진. 흉선 기능 활성화. IL-6 등 염증 사이토카인 감소.",
+      "pharmacokinetics": {
+        "peak": "3분",
+        "halfLife": "30분",
+        "cleared": "~2.5시간"
+      },
+      "researchIndications": [
+        {
+          "name": "면역 지원",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        },
+        {
+          "name": "항염증",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        },
+        {
+          "name": "항노화",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        }
+      ],
+      "protocols": [
+        {
+          "goal": "면역재건 (러시아 프로토콜)",
+          "dose": "5-10mg",
+          "frequency": "매일",
+          "route": "근육주사"
+        },
+        {
+          "goal": "표준 코스",
+          "dose": "10-20mg",
+          "frequency": "매일 (3-10일)",
+          "route": "근육주사"
+        }
+      ],
+      "protocolTiming": "러시아 등록 의약품(1982~). 총 투여량 30-100mg/코스. 코스 간 3-6개월 휴약.",
+      "protocolTimingKo": "러시아 등록 의약품(1982~). 총 투여량 30-100mg/코스. 코스 간 3-6개월 휴약.",
+      "interactions": [
+        {
+          "name": "Epitalon",
+          "type": "Synergistic",
+          "description": "상보적 카빈슨 바이오레귤레이터. 러시아 노화방지 프로토콜에서 병용."
+        },
+        {
+          "name": "Thymosin Alpha-1",
+          "type": "Compatible",
+          "description": "다른 면역조절 경로. 병용 가능."
+        },
+        {
+          "name": "Pinealon",
+          "type": "Compatible",
+          "description": "다른 조직 특이성(뇌). 병용 가능."
+        },
+        {
+          "name": "Immunosuppressants",
+          "type": "Avoid Combination",
+          "description": "면역억제제와 상반 작용. 이식환자 금기."
+        },
+        {
+          "name": "Thymulin",
+          "type": "Monitor Combination",
+          "description": "다른 물질이나 유사 조직 타겟. 병용 시 주의."
+        }
+      ],
+      "interactionsKo": [
+        {
+          "name": "에피탈론",
+          "type": "시너지",
+          "description": "러시아 노화방지 프로토콜에서 병용."
+        },
+        {
+          "name": "티모신알파-1",
+          "type": "호환",
+          "description": "다른 면역조절 경로."
+        },
+        {
+          "name": "면역억제제",
+          "type": "병용 금지",
+          "description": "상반 작용. 이식환자 금기."
+        },
+        {
+          "name": "티뮬린",
+          "type": "모니터링",
+          "description": "다른 물질이나 유사 타겟."
+        }
+      ],
+      "sideEffects": [
+        {
+          "name": "주사부위 반응",
+          "severity": "Mild"
+        },
+        {
+          "name": "미열",
+          "severity": "Rare"
+        }
+      ],
+      "sideEffectsKo": [
+        {
+          "name": "주사부위 반응",
+          "severity": "경미"
+        },
+        {
+          "name": "미열",
+          "severity": "드묾"
+        }
+      ],
+      "safetyNotes": "러시아 등록 의약품(40년+). 단, 대부분 연구가 카빈슨 연구팀. 관찰 연구의 효과크기 비현실적 가능성.",
+      "safetyNotesKo": "러시아 등록 의약품(40년+). 단, 대부분 연구가 카빈슨 연구팀. 관찰 연구의 효과크기 비현실적 가능성.",
+      "stopSigns": "심한 알레르기 반응, 자가면역 증상 악화 시 즉시 중단",
+      "stopSignsKo": "심한 알레르기 반응, 자가면역 증상 악화 시 즉시 중단",
+      "reconstitute": {},
+      "qualityGood": [
+        "러시아 등록 의약품(1982~)",
+        "COVID-19 RCT 존재",
+        "40년+ 임상 경험"
+      ],
+      "qualityBad": [
+        "카빈슨 연구팀 편향",
+        "관찰 연구 효과크기 비현실적",
+        "서구권 규제 승인 없음"
+      ],
+      "qualityGoodKo": [
+        "러시아 등록 의약품(1982~)",
+        "COVID-19 RCT 존재",
+        "40년+ 임상 경험"
+      ],
+      "qualityBadKo": [
+        "카빈슨 연구팀 편향",
+        "관찰 연구 효과크기 비현실적",
+        "서구권 규제 승인 없음"
+      ],
+      "effectsTimeline": [
+        {
+          "period": "수일",
+          "effect": "림프구 수 증가"
+        },
+        {
+          "period": "1-2주",
+          "effect": "면역 기능 개선"
+        }
+      ],
+      "effectsTimelineKo": [
+        {
+          "period": "수일",
+          "effect": "림프구 수 증가"
+        },
+        {
+          "period": "1-2주",
+          "effect": "면역 기능 개선"
+        }
+      ],
+      "quickStart": "5-10mg IM 매일, 3-10일 코스. 총 30-100mg.",
+      "tags": [
+        "immune",
+        "thymus",
+        "khavinson",
+        "anti-aging",
+        "bioregulator"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/thymalin",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [
+        {
+          "title": "COVID-19 Open-Label RCT (n=92)",
+          "description": "Lymphocytes +55%, CD4+ +88.9%, IL-6 reduced 5.5-fold."
+        }
+      ],
+      "latestResearchKo": [
+        {
+          "title": "COVID-19 공개 RCT (92명)",
+          "description": "림프구 +55%, CD4+ +88.9%, IL-6 5.5배 감소."
+        }
+      ],
+      "relatedSlugs": [
+        "thymosin-alpha-1",
+        "thymulin",
+        "epitalon",
+        "pinealon"
+      ],
+      "researchIndicationsDetailedKo": {}
+    },
+    "vesugen": {
+      "id": "vesugen",
+      "nameEn": "Vesugen",
+      "nameKo": "베수젠",
+      "subtitle": "Khavinson Vascular Tripeptide (KED) | Endothelial Bioregulator",
+      "subtitleKo": "카빈슨 혈관 트리펩타이드 (KED) | 내피세포 바이오레귤레이터",
+      "routes": [
+        "Injectable"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "typicalDose": "400mcg/kg (마우스)",
+      "frequency": "매일",
+      "cycle": "2개월 (마우스 프로토콜)",
+      "storage": "냉장 (2-8°C)",
+      "routeDetail": "피하주사 (SC)",
+      "descriptionEn": "Vesugen (also Vezugen) is a Khavinson vascular tripeptide with sequence Lys-Glu-Asp (KED). MW 390.39 Da. PubChem CID 87571363. Vascular endothelial bioregulator that normalizes endothelin-1, restores connexin gap-junction expression, upregulates SIRT1, and reduces E-selectin. Mouse Alzheimer study (5xFAD) preserved mushroom-type dendritic spines (PMID 34071923, but correction published Jan 2025). Two small uncontrolled human studies (ED n=41, aging n=32). ~15 PubMed papers, nearly all Khavinson network. Sold in Russia as BAFS supplement.",
+      "descriptionKo": "베수젠은 Lys-Glu-Asp(KED) 서열의 카빈슨 혈관 트리펩타이드. 분자량 390.39 Da. 혈관 내피세포 바이오레귤레이터. 엔도텔린-1 정상화, 코넥신 갭접합 복원, SIRT1 상향조절, E-셀렉틴 감소. 마우스 알츠하이머 연구(5xFAD)에서 수상돌기 가시 보존. 소규모 비대조 인간 연구 2건(ED 41명, 노화 32명).",
+      "keyBenefits": "혈관 내피세포 보호, SIRT1 상향조절, 엔도텔린-1 정상화",
+      "keyBenefitsKo": "혈관 내피세포 보호, SIRT1 상향조절, 엔도텔린-1 정상화",
+      "mechanism": "엔도텔린-1 정상화, 코넥신 갭접합 복원, SIRT1 상향조절, E-셀렉틴 감소. 혈관 내피세포 기능 개선.",
+      "mechanismKo": "엔도텔린-1 정상화, 코넥신 갭접합 복원, SIRT1 상향조절, E-셀렉틴 감소. 혈관 내피세포 기능 개선.",
+      "pharmacokinetics": {
+        "peak": "2분",
+        "halfLife": "15분",
+        "cleared": "~1.3시간"
+      },
+      "researchIndications": [
+        {
+          "name": "심혈관 건강",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        },
+        {
+          "name": "항노화",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        },
+        {
+          "name": "신경보호",
+          "effectiveness": "Emerging",
+          "level": "Limited Research"
+        }
+      ],
+      "protocols": [
+        {
+          "goal": "혈관 보호 (마우스 기반)",
+          "dose": "400mcg/kg",
+          "frequency": "매일",
+          "route": "피하주사"
+        },
+        {
+          "goal": "커뮤니티 프로토콜",
+          "dose": "용량 미확립",
+          "frequency": "매일",
+          "route": "피하주사"
+        }
+      ],
+      "protocolTiming": "⚠️ 인간 용량 미확립. 마우스 데이터 기반. 러시아 BAFS 보충제로 판매.",
+      "protocolTimingKo": "⚠️ 인간 용량 미확립. 마우스 데이터 기반. 러시아 BAFS 보충제로 판매.",
+      "interactions": [
+        {
+          "name": "Epitalon",
+          "type": "Synergistic",
+          "description": "상보적 카빈슨 바이오레귤레이터."
+        },
+        {
+          "name": "Pinealon",
+          "type": "Compatible",
+          "description": "다른 조직 특이성(뇌). 병용 가능."
+        },
+        {
+          "name": "Cartalax",
+          "type": "Compatible",
+          "description": "다른 조직 특이성(연골). 병용 가능."
+        },
+        {
+          "name": "Cardiogen",
+          "type": "Compatible",
+          "description": "다른 조직 특이성(심장). 병용 가능."
+        },
+        {
+          "name": "Antihypertensives",
+          "type": "Monitor Combination",
+          "description": "혈압 강하 효과 중복 가능. 모니터링."
+        },
+        {
+          "name": "Anticoagulants",
+          "type": "Monitor Combination",
+          "description": "혈관 기능 변화로 항응고제 효과 변동 가능."
+        },
+        {
+          "name": "Vilon",
+          "type": "Monitor Combination",
+          "description": "유사 서열(KE). 주의 필요."
+        }
+      ],
+      "interactionsKo": [
+        {
+          "name": "에피탈론",
+          "type": "시너지",
+          "description": "상보적 카빈슨 바이오레귤레이터."
+        },
+        {
+          "name": "항고혈압제",
+          "type": "모니터링",
+          "description": "혈압 강하 효과 중복 가능."
+        },
+        {
+          "name": "항응고제",
+          "type": "모니터링",
+          "description": "혈관 기능 변화 가능."
+        }
+      ],
+      "sideEffects": [],
+      "sideEffectsKo": [],
+      "safetyNotes": "⚠️ 알츠하이머 연구 논문에 교정 게재(2025.01, PMID 39861198). 소규모 비대조 인간 연구 2건만 존재.",
+      "safetyNotesKo": "⚠️ 알츠하이머 연구 논문에 교정 게재(2025.01). 소규모 비대조 인간 연구 2건만 존재.",
+      "stopSigns": "혈압 이상 변동, 출혈 경향, 이상 반응 시 즉시 중단",
+      "stopSignsKo": "혈압 이상 변동, 출혈 경향, 이상 반응 시 즉시 중단",
+      "reconstitute": {},
+      "qualityGood": [
+        "소규모 인간 연구 2건 존재",
+        "SIRT1 상향조절 확인"
+      ],
+      "qualityBad": [
+        "대조군 없는 소규모 연구",
+        "카빈슨 편향",
+        "핵심 논문 교정 이력"
+      ],
+      "qualityGoodKo": [
+        "소규모 인간 연구 2건 존재",
+        "SIRT1 상향조절 확인"
+      ],
+      "qualityBadKo": [
+        "대조군 없는 소규모 연구",
+        "카빈슨 편향",
+        "핵심 논문 교정 이력"
+      ],
+      "effectsTimeline": [],
+      "effectsTimelineKo": [],
+      "quickStart": "⚠️ 인간 용량 미확립. 전문가 상담 필수.",
+      "tags": [
+        "vascular",
+        "khavinson",
+        "heart-health",
+        "anti-aging",
+        "neuroprotection"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/vesugen",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [
+        {
+          "title": "5xFAD Mouse Alzheimer's (PMID 34071923)",
+          "description": "Preserved mushroom-type dendritic spines. Correction published Jan 2025."
+        }
+      ],
+      "latestResearchKo": [
+        {
+          "title": "5xFAD 마우스 알츠하이머 (PMID 34071923)",
+          "description": "수상돌기 가시 보존. 2025.01 교정 게재."
+        }
+      ],
+      "relatedSlugs": [
+        "cardiogen",
+        "epitalon",
+        "pinealon",
+        "cartalax"
+      ],
+      "researchIndicationsDetailedKo": {}
     }
   }
 }
