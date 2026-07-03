@@ -686,6 +686,45 @@
       localStorage.setItem("theme", isLight ? "light" : "dark");
     };
 
+    // ── 화면 방향 제어 (2026-07-04 GG: manifest orientation:any가 폰 자동회전 잠금을 무시하고
+    //    홈설치앱을 멋대로 회전시킴 → 웹앱은 시스템 자동회전 스위치를 읽는 API가 없으므로 앱에서 직접 통제).
+    //    screen.orientation.lock 은 홈설치(standalone)/전체화면에서만 동작 → 브라우저 탭에선 throw, catch로 무시.
+    //    기본값 'portrait': 설치 직후 멋대로 안 돌아감(세로 고정). 가로/자동은 사용자가 톱니 메뉴에서 직접 선택. ──
+    window.applyOrientation = function(mode) {
+      try {
+        const so = screen.orientation;
+        if (!so) return;
+        if (mode === "auto") {
+          if (so.unlock) so.unlock();
+        } else if (so.lock) {
+          so.lock(mode === "landscape" ? "landscape" : "portrait").catch(function(){});
+        }
+      } catch (e) {}
+    };
+    window._orientLabel = function(mode) {
+      return mode === "landscape" ? "↔️ 가로 고정" : mode === "auto" ? "🔄 자동 회전" : "🔒 세로 고정";
+    };
+    window.cycleOrientation = function() {
+      const order = ["portrait", "landscape", "auto"];
+      const cur = localStorage.getItem("orientLock") || "portrait";
+      const next = order[(order.indexOf(cur) + 1) % order.length];
+      localStorage.setItem("orientLock", next);
+      window.applyOrientation(next);
+      const btn = document.getElementById("orient-toggle");
+      if (btn) btn.textContent = window._orientLabel(next);
+    };
+    // 로드 시 저장된 방향 복원 + 버튼 라벨 반영
+    (function() {
+      const mode = localStorage.getItem("orientLock") || "portrait";
+      const apply = function() {
+        window.applyOrientation(mode);
+        const btn = document.getElementById("orient-toggle");
+        if (btn) btn.textContent = window._orientLabel(mode);
+      };
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", apply);
+      else apply();
+    })();
+
     window.toggleSettingsMenu = function() {
       const menu = document.getElementById("settings-menu");
       const isOpen = menu.style.display === "block";
@@ -9800,8 +9839,9 @@
       .content { max-width: 860px; }
     }
     @media (orientation: landscape) {
-      /* 약물 카드 2열 — 세로스크롤 절반 + 넓은 가로폭 활용 */
-      #remaining-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: start; }
+      /* 약물 카드 — 개수에 맞춰 자동배치: 1개면 가운데(최대 480px, 오른쪽 빈공간 방지), 2개+면 2열.
+         2026-07-04 GG: 약 1개일 때 카드가 왼쪽 절반에 붙고 오른쪽이 텅 비어 허전 → auto-fit+center로 해결. */
+      #remaining-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 480px)); justify-content: center; gap: 8px; align-items: start; }
       #remaining-cards .drug-card { margin-bottom: 0; }
       /* 달력 셀 높이 축소 — 6주 그리드가 낮은 가로화면에 들어오게 */
       #calendar-container div[style*="min-height:56px"] { min-height: 40px !important; }
@@ -10135,6 +10175,12 @@
                    border-bottom:1px solid #374151;color:#e2e8f0;font-size:13px;
                    text-align:left;cursor:pointer;font-family:inherit">
             🌙 다크 모드
+          </button>
+          <button id="orient-toggle" onclick="cycleOrientation()"
+            style="width:100%;padding:12px 16px;background:none;border:none;
+                   border-bottom:1px solid #374151;color:#e2e8f0;font-size:13px;
+                   text-align:left;cursor:pointer;font-family:inherit">
+            🔒 세로 고정
           </button>
           <button onclick="closeSettingsMenu();openDonationModal()"
             style="width:100%;padding:12px 16px;background:none;border:none;
