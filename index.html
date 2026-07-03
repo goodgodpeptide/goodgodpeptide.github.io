@@ -684,6 +684,9 @@
       document.documentElement.style.background = isLight ? "#f0f2f5" : "#0a0a14";
       document.getElementById("theme-toggle").textContent = isLight ? "☀️ 라이트 모드" : "🌙 다크 모드";
       localStorage.setItem("theme", isLight ? "light" : "dark");
+      // 테마 토글 즉시 반영: 저장됨 인디케이터 + 백과사전 상태배지 색 재적용(재렌더 없이는 이전 테마 색 유지되던 문제)
+      try { setSaveStatus(window._lastSaveStatus || 'saved'); } catch (e) {}
+      try { if (window.renderEncyclopedia) window.renderEncyclopedia(); } catch (e) {}  // 내부에서 encyclopediaData 없으면 자체 return
     };
 
     // ── 화면 방향 제어 (2026-07-04 GG: manifest orientation:any가 폰 자동회전 잠금을 무시하고
@@ -959,13 +962,17 @@
     function setSaveStatus(s) {
       const el = document.getElementById("save-status");
       if (!el) return;
+      window._lastSaveStatus = s;
+      const isLight = document.body.classList.contains('light-mode');
+      // [text, darkBg, darkColor, darkBorder, lightBg, lightColor, lightBorder] — 2026-07-04 GG: 라이트모드 대응
       const m = {
-        saved:   ["☁️ 저장됨",    "#0f2a1a", "#4ade80", "#166534"],
-        saving:  ["⏳ 저장중...", "#2a200a", "#facc15", "#713f12"],
-        error:   ["❌ 오류",      "#2a0a0a", "#f87171", "#7f1d1d"],
-        loading: ["🔄 로딩",      "#0a1a2a", "#60a5fa", "#1e3a5f"],
+        saved:   ["☁️ 저장됨",    "#0f2a1a", "#4ade80", "#166534", "#dcfce7", "#166534", "#86efac"],
+        saving:  ["⏳ 저장중...", "#2a200a", "#facc15", "#713f12", "#fef9c3", "#854d0e", "#fde047"],
+        error:   ["❌ 오류",      "#2a0a0a", "#f87171", "#7f1d1d", "#fee2e2", "#991b1b", "#fca5a5"],
+        loading: ["🔄 로딩",      "#0a1a2a", "#60a5fa", "#1e3a5f", "#dbeafe", "#1e40af", "#93c5fd"],
       };
-      const [text, bg, color, border] = m[s] || m.saved;
+      const v = m[s] || m.saved;
+      const [text, bg, color, border] = isLight ? [v[0], v[4], v[5], v[6]] : [v[0], v[1], v[2], v[3]];
       Object.assign(el.style, { background: bg, color, borderColor: border });
       el.textContent = text;
     }
