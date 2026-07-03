@@ -6779,13 +6779,21 @@
     };
 
     // 연구 상태 표시 헬퍼
+    // 다크(color/bg): 어두운 배경+밝은 텍스트. 라이트(lightColor/lightBg): 연한 배경+진한 텍스트(흰 카드 대비).
+    // 2026-07-04 GG: 라이트모드에서 상태배지가 어둡게 튀고 '제한적 연구'가 저대비 → 라이트 전용 색 추가.
     const ENC_STATUS = {
-      'Extensively Studied': { label:'광범위 연구', color:'#4ade80', bg:'#052e16' },
-      'Well Researched':     { label:'충분한 연구', color:'#60a5fa', bg:'#172554' },
-      'Clinical Research':   { label:'임상 연구',   color:'#a78bfa', bg:'#2e1065' },
-      'Emerging Research':   { label:'신흥 연구',   color:'#fbbf24', bg:'#451a03' },
-      'Limited Research':    { label:'제한적 연구', color:'#94a3b8', bg:'#1e293b' },
+      'Extensively Studied': { label:'광범위 연구', color:'#4ade80', bg:'#052e16', lightColor:'#15803d', lightBg:'#dcfce7' },
+      'Well Researched':     { label:'충분한 연구', color:'#60a5fa', bg:'#172554', lightColor:'#1d4ed8', lightBg:'#dbeafe' },
+      'Clinical Research':   { label:'임상 연구',   color:'#a78bfa', bg:'#2e1065', lightColor:'#6d28d9', lightBg:'#ede9fe' },
+      'Emerging Research':   { label:'신흥 연구',   color:'#fbbf24', bg:'#451a03', lightColor:'#b45309', lightBg:'#fef3c7' },
+      'Limited Research':    { label:'제한적 연구', color:'#94a3b8', bg:'#1e293b', lightColor:'#475569', lightBg:'#e2e8f0' },
     };
+    // 현재 테마에 맞는 상태배지 색 반환 (라이트/다크 자동)
+    function encSt(status) {
+      const s = ENC_STATUS[status] || ENC_STATUS['Limited Research'];
+      const isLight = document.body.classList.contains('light-mode');
+      return { label: s.label, color: isLight ? s.lightColor : s.color, bg: isLight ? s.lightBg : s.bg };
+    }
 
     window.setEncFilter = function(btn, status) {
       encFilterStatus = status;
@@ -6893,7 +6901,7 @@
       const recent = getEncRecent();
 
       function encCard(p, highlight) {
-        const st = ENC_STATUS[p.researchStatus] || ENC_STATUS['Limited Research'];
+        const st = encSt(p.researchStatus);
         const routes = (p.routes||[]).join(' / ') || 'N/A';
         const cardBg = isLightEnc ? '#ffffff' : '#111827';
         const cardBd = isLightEnc ? '#e2e8f0' : '#1f2937';
@@ -7030,7 +7038,7 @@
       };
 
       const mid = 'em_' + peptideId.replace(/[^a-z0-9]/g,'_');
-      const st = ENC_STATUS[pep.researchStatus] || ENC_STATUS['Limited Research'];
+      const st = encSt(pep.researchStatus);
       const routes = (pep.routes||[]).join(', ') || 'N/A';
       const interTypeStyle = { Synergistic:'#4ade80', Compatible:'#60a5fa', 'Monitor Combination':'#fbbf24', 'Avoid Combination':'#ef4444', Unknown:'#94a3b8' };
       const interTypeLabel = { Synergistic:'시너지', Compatible:'호환', 'Monitor Combination':'주의 필요', 'Avoid Combination':'병용 금지', Unknown:'불명확' };
@@ -7274,7 +7282,7 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             ${relSlugs.map(slug => {
               const rp = encyclopediaData.peptides[slug];
-              const rst = ENC_STATUS[rp.researchStatus] || ENC_STATUS['Limited Research'];
+              const rst = encSt(rp.researchStatus);
               return `
               <div onclick="document.getElementById('enc-modal').remove();setTimeout(()=>openEncyclopediaModal('${slug}'),80)"
                    style="background:${C.relCard};border:1px solid ${C.borderSub};border-radius:10px;padding:12px;cursor:pointer;transition:border-color .15s"
