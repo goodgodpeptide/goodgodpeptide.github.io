@@ -9757,6 +9757,19 @@
     .chart-wrap { background: #0a0a14; border: 1px solid #1f2937; border-radius: 14px; padding: 10px 10px 4px; margin-bottom: 12px; }
     canvas { display: block; width: 100%; touch-action: none; cursor: crosshair; }
 
+    /* 가로(landscape) 전환 대응 — 2026-07-03 GG: manifest orientation:any 언락 + 넓고 낮은 화면 최적화.
+       그래프 canvas는 width:100%라 넓은 가로폭을 자동 활용(시계열 보기 유리), 헤더/카드 여백은 축소해 세로공간 확보. */
+    @media (orientation: landscape) {
+      .content { max-width: 760px; padding: 8px 16px; }
+      .top-bar { padding-top: 6px; padding-bottom: 6px; }
+      .tab-btn { padding: 8px 4px; }
+      .card { padding: 12px 14px; margin-bottom: 8px; }
+      .modal-box { max-height: 92vh; overflow-y: auto; }
+    }
+    @media (orientation: landscape) and (min-width: 900px) {
+      .content { max-width: 860px; }
+    }
+
     .result-card { background: #0d1b2a; border: 1px solid #1d4ed8; border-radius: 12px; padding: 14px; }
     .result-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1f2937; font-size: 13px; }
     .result-row span:first-child { color: #9ca3af; }
