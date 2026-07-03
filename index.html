@@ -13,6 +13,14 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="펩타이드 매니저" />
   <meta name="mobile-web-app-capable" content="yes" />
+  <script>
+    /* 2026-07-03: 앱 전체가 핀치로 확대돼 '해상도 낮아 보이는' 문제 근본 차단.
+       iOS Safari/PWA는 user-scalable=no를 무시하므로 gesture 이벤트를 직접 막아 페이지 줌 차단.
+       (차트 자체 핀치줌은 touch 이벤트 기반이라 영향 없음 / 탭·스크롤도 정상) */
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
+      document.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false });
+    });
+  </script>
   <!-- DNS/TCP 미리 연결 — 폰트·Firebase CDN 첫 로딩 대기 시간 단축 -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
