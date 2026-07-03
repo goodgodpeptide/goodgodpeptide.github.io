@@ -1,6 +1,6 @@
 {
   "version": "3.0",
-  "lastUpdated": "2026-07-04T01:58:53.173851",
+  "lastUpdated": "2026-07-04T02:12:09.409477",
   "totalCount": 110,
   "index": [
     {
@@ -153,7 +153,7 @@
         "Injectable"
       ],
       "researchStatus": "Extensively Studied",
-      "isApproved": true,
+      "isApproved": false,
       "tags": [
         "Wound Healing",
         "Neurological",
@@ -749,7 +749,7 @@
         "Injectable"
       ],
       "researchStatus": "Extensively Studied",
-      "isApproved": false,
+      "isApproved": true,
       "tags": [
         "Weight Loss",
         "MASLD/MASH benefitsDiabetes",
@@ -889,7 +889,7 @@
         "Injectable"
       ],
       "researchStatus": "Extensively Studied",
-      "isApproved": false,
+      "isApproved": true,
       "tags": [
         "Weight Loss",
         "Diabetes",
@@ -979,7 +979,7 @@
         "Injectable"
       ],
       "researchStatus": "Limited Research",
-      "isApproved": true,
+      "isApproved": false,
       "tags": [
         "Muscle Repair",
         "Tissue Regeneration",
@@ -1196,7 +1196,7 @@
       "routes": [
         "Injectable"
       ],
-      "researchStatus": "Limited Research",
+      "researchStatus": "Clinical Research",
       "isApproved": true,
       "tags": [
         "Mitochondrial",
@@ -5565,7 +5565,7 @@
       "subtitle": "Body Protection Compound-157 | Pentadecapeptide",
       "nameKo": "BPC-157",
       "researchStatus": "Extensively Studied",
-      "isApproved": true,
+      "isApproved": false,
       "routes": [
         "Injectable"
       ],
@@ -5574,7 +5574,7 @@
       "cycle": "4-8 weeks",
       "storage": "냉장 (2-8°C)",
       "routeDetail": "Belly, thigh, arm (near injury for localized healing)",
-      "descriptionEn": "BPC-157 is a synthetic pentadecapeptide (15 amino acids) derived from a protective protein found in human gastric juice. It's known for its remarkable healing properties and is extensively researched for tissue repair, inflammation reduction, and gastrointestinal protection. Not FDA approved and prohibited by WADA (added 2022) under S0: Non-Approved Substances - no TUE available for athletes.",
+      "descriptionEn": "BPC-157 is a synthetic pentadecapeptide (15 amino acids) derived from a protective protein found in human gastric juice. It's known for its remarkable healing properties and is extensively researched for tissue repair, inflammation reduction, and gastrointestinal protection. Not FDA approved and prohibited by WADA (added 2022) under S0: Non-Approved Substances - no TUE available for athletes. NOTE (2026): BPC-157 is NOT approved by the FDA/EMA or any jurisdiction (research use only). It was removed from the FDA compounding Category 2 list in April 2026 and is under Pharmacy Compounding Advisory Committee review (July 2026) - which is not an approval.",
       "keyBenefits": "Accelerated healing of tendons, ligaments, muscles, bones, and localized tissue repair. Superior bioavailability for targeted healing with anti-inflammatory effects.",
       "mechanism": "Injectable BPC-157 provides direct tissue targeting and higher local concentrations. Promotes angiogenesis (formation of new blood vessels), enhances collagen synthesis, modulates growth factor expression, and provides localized protection against tissue damage.Molecular InformationWeight1,419.53 DaLength15 amino acidsTypePentadecapeptideAmino Acid Sequence:Gly-Lys-Pro-Pro-Pro-Gly-Lys-Pro-Ala-Asp-",
       "pharmacokinetics": {
@@ -5818,7 +5818,7 @@
         "Allergic reactions (rare but possible)",
         "Any concerning symptoms - consult your healthcare provider"
       ],
-      "descriptionKo": "BPC-157은 인간 위액에서 발견되는 보호 단백질에서 추출한 합성 펜타데카펩티드(15개 아미노산)입니다. 놀라운 치유력으로 잘 알려져 있으며 조직 복구, 염증 감소 및 위장 보호를 위해 광범위하게 연구되고 있습니다. S0: 비승인 물질 - 운동선수에게 TUE가 제공되지 않음에 따라 WADA(2022년 추가)에 의해 FDA 승인 및 금지되지 않았습니다.",
+      "descriptionKo": "BPC-157은 인간 위액에서 발견되는 보호 단백질에서 추출한 합성 펜타데카펩티드(15개 아미노산)입니다. 놀라운 치유력으로 잘 알려져 있으며 조직 복구, 염증 감소 및 위장 보호를 위해 광범위하게 연구되고 있습니다. S0: 비승인 물질 - 운동선수에게 TUE가 제공되지 않음에 따라 WADA(2022년 추가)에 의해 FDA 승인 및 금지되지 않았습니다. [정정] BPC-157은 FDA/EMA 등 어디에서도 승인되지 않았습니다(연구용). 2026년 4월 FDA 조제 Category 2에서 제외되고 7월 조제자문위 검토 중이나, 이는 승인이 아닙니다.",
       "keyBenefitsKo": "힘줄, 인대, 근육, 뼈의 치유를 가속화하고 국소 조직을 복구합니다. 항염증 효과로 표적 치유를 위한 탁월한 생체 이용률.",
       "mechanismKo": "주사 가능한 BPC-157은 직접적인 조직 표적화와 더 높은 국소 농도를 제공합니다. 혈관 신생(새로운 혈관 형성)을 촉진하고, 콜라겐 합성을 강화하며, 성장 인자 발현을 조절하고, 조직 손상에 대한 국부적인 보호를 제공합니다. 분자 정보무게1,419.53 DaLength15 아미노산 유형펜타데카펩티드아미노산 서열:Gly-Lys-Pro-Pro-Pro-Gly-Lys-Pro-Ala-Asp-",
       "subtitleKo": "신체 보호 화합물-157 | 펜타데카펩타이드",
@@ -19153,7 +19153,7 @@
       "subtitle": "Dual GLP-1/Glucagon Receptor Agonist | Weight Loss & Diabetes",
       "nameKo": "마즈두타이드",
       "researchStatus": "Extensively Studied",
-      "isApproved": false,
+      "isApproved": true,
       "routes": [
         "Injectable"
       ],
@@ -19162,7 +19162,7 @@
       "cycle": "",
       "storage": "냉장 (2-8°C)",
       "routeDetail": "Abdomen, thigh, or upper arm - rotate sites",
-      "descriptionEn": "Mazdutide (IBI362/LY3305677) is a first-in-class dual glucagon-like peptide-1 (GLP-1) and glucagon receptor agonist, and a synthetic analog of oxyntomodulin. Unlike tirzepatide which targets GIP/GLP-1, mazdutide uniquely combines GLP-1's appetite suppression with glucagon's ability to stimulate thermogenesis and increase energy expenditure. Phase 3 trials (GLORY-1, GLORY-2) have demonstrated up to 20% weight loss, with recent head-to-head trials showing superiority over semaglutide for both glycemic control and weight reduction in patients with type 2 diabetes and obesity.",
+      "descriptionEn": "Mazdutide (IBI362/LY3305677) is a first-in-class dual glucagon-like peptide-1 (GLP-1) and glucagon receptor agonist, and a synthetic analog of oxyntomodulin. Unlike tirzepatide which targets GIP/GLP-1, mazdutide uniquely combines GLP-1's appetite suppression with glucagon's ability to stimulate thermogenesis and increase energy expenditure. Phase 3 trials (GLORY-1, GLORY-2) have demonstrated up to 20% weight loss, with recent head-to-head trials showing superiority over semaglutide for both glycemic control and weight reduction in patients with type 2 diabetes and obesity. UPDATE: Approved by China's NMPA on June 27, 2025 for chronic weight management (world's first dual glucagon/GLP-1 agonist approved) and on Sept 19, 2025 for type 2 diabetes.",
       "keyBenefits": "Up to 20% body weight loss, superior glycemic control vs semaglutide, increased energy expenditure via glucagon receptor activation, improved cardiometabolic markers (BP, lipids, liver fat), once-weekly convenience",
       "mechanism": "Dual agonist of GLP-1 and glucagon receptors. GLP-1 activation: stimulates insulin release, suppresses glucagon, slows gastric emptying, reduces appetite via hypothalamic signaling. Glucagon activation: increases energy expenditure and thermogenesis, improves hepatic fat metabolism. The dual mechanism provides synergistic weight loss effects while GLP-1 counteracts glucagon's glucose-raising effec",
       "pharmacokinetics": {
@@ -19443,7 +19443,7 @@
         "Kidney problems (decreased urination, swelling, persistent fatigue)",
         "Signs of gallbladder problems (severe upper right abdominal pain)"
       ],
-      "descriptionKo": "Mazdutide(IBI362/LY3305677)는 업계 최초의 이중 글루카곤 유사 펩타이드-1(GLP-1) 및 글루카곤 수용체 작용제이자 옥신토모듈린의 합성 유사체입니다. GIP/GLP-1을 표적으로 하는 티르제파티드와는 달리, 마즈두티드는 GLP-1의 식욕 억제와 열 발생을 자극하고 에너지 소비를 증가시키는 글루카곤의 능력을 독특하게 결합합니다. 3상 시험(GLORY-1, GLORY-2)에서는 최대 20%의 체중 감소가 입증되었으며, 최근 직접 비교 시험에서는 제2형 당뇨병 및 비만 환자의 혈당 조절 및 체중 감소 모두에서 세마글루타이드보다 우월한 것으로 나타났습니다.",
+      "descriptionKo": "Mazdutide(IBI362/LY3305677)는 업계 최초의 이중 글루카곤 유사 펩타이드-1(GLP-1) 및 글루카곤 수용체 작용제이자 옥신토모듈린의 합성 유사체입니다. GIP/GLP-1을 표적으로 하는 티르제파티드와는 달리, 마즈두티드는 GLP-1의 식욕 억제와 열 발생을 자극하고 에너지 소비를 증가시키는 글루카곤의 능력을 독특하게 결합합니다. 3상 시험(GLORY-1, GLORY-2)에서는 최대 20%의 체중 감소가 입증되었으며, 최근 직접 비교 시험에서는 제2형 당뇨병 및 비만 환자의 혈당 조절 및 체중 감소 모두에서 세마글루타이드보다 우월한 것으로 나타났습니다. [업데이트] 2025년 6월 27일 중국 NMPA가 만성 체중관리로 승인(세계 첫 글루카곤/GLP-1 이중작용제 승인), 2025년 9월 19일 제2형 당뇨로 승인.",
       "keyBenefitsKo": "체중 최대 20% 감소, 세마글루타이드 대비 우수한 혈당 조절, 글루카곤 수용체 활성화를 통한 에너지 소비 증가, 심대사 지표(BP, 지질, 간 지방) 개선, 주 1회 편리성",
       "mechanismKo": "GLP-1과 글루카곤 수용체의 이중 작용제. GLP-1 활성화: 인슐린 방출을 자극하고, 글루카곤을 억제하고, 위 배출을 늦추고, 시상하부 신호를 통해 식욕을 감소시킵니다. 글루카곤 활성화: 에너지 소비와 열 발생을 증가시키고 간 지방 대사를 개선합니다. 이중 메커니즘은 시너지적인 체중 감소 효과를 제공하는 동시에 GLP-1은 글루카곤의 포도당 상승 효과를 방해합니다.",
       "subtitleKo": "이중 GLP-1/글루카곤 수용체 작용제 | 체중 감소 및 당뇨병",
@@ -23139,7 +23139,7 @@
       "subtitle": "Small-Molecule GLP-1 Receptor Agonist | Weight Loss & Diabetes",
       "nameKo": "오포글리프론",
       "researchStatus": "Extensively Studied",
-      "isApproved": false,
+      "isApproved": true,
       "routes": [
         "Injectable"
       ],
@@ -23148,7 +23148,7 @@
       "cycle": "",
       "storage": "실온",
       "routeDetail": "Not applicable - oral tablet administration",
-      "descriptionEn": "Orforglipron (LY-3502970) is an oral, non-peptide GLP-1 receptor agonist - the first small-molecule GLP-1 to complete Phase 3 trials. Unlike injectable GLP-1s, it requires no injections, refrigeration, or food/water restrictions. Clinical trials show substantial weight loss (up to 12.4% at 72 weeks) and robust glycemic control (HbA1c reductions of 1.3-1.6%). Developed by Chugai Pharmaceutical and licensed to Eli Lilly, FDA approval expected 2026.",
+      "descriptionEn": "Orforglipron (LY-3502970) is an oral, non-peptide GLP-1 receptor agonist - the first small-molecule GLP-1 to complete Phase 3 trials. Unlike injectable GLP-1s, it requires no injections, refrigeration, or food/water restrictions. Clinical trials show substantial weight loss (up to 12.4% at 72 weeks) and robust glycemic control (HbA1c reductions of 1.3-1.6%). Developed by Chugai Pharmaceutical and licensed to Eli Lilly, FDA approval expected 2026. UPDATE (2026): FDA approved as Foundayo on April 1, 2026 - the first oral small-molecule GLP-1 approved for chronic weight management.",
       "keyBenefits": "Significant weight loss (up to 12.4% at 72 weeks), robust diabetes control (HbA1c reduction 1.3-1.6%), once-daily oral tablet, no refrigeration or food restrictions, reduced cardiovascular risk markers, preserved muscle mass during weight loss",
       "mechanism": "Small-molecule GLP-1 receptor agonist with biased signaling - preferentially activates G protein/cAMP pathways (enhancing insulin secretion, suppressing glucagon, delaying gastric emptying, reducing appetite) while minimizing receptor desensitization. 79.1% oral bioavailability with 29-49 hour half-life supporting once-daily dosing.",
       "pharmacokinetics": {
@@ -23450,7 +23450,7 @@
         "Unusual fatigue, dark urine, yellowing of skin/eyes (potential liver concerns)",
         "Vision changes or persistent eye pain"
       ],
-      "descriptionKo": "오르포글리프론(LY-3502970)은 경구용 비펩타이드성 GLP-1 수용체 작용제로서 임상 3상 시험을 완료한 최초의 소분자 GLP-1이다. 주사 가능한 GLP-1과 달리 주사, 냉장 또는 음식/물 제한이 필요하지 않습니다. 임상 시험에서는 상당한 체중 감소(72주차에 최대 12.4%)와 강력한 혈당 조절(HbA1c 1.3~1.6% 감소)이 나타났습니다. Chugai Pharmaceutical에서 개발하고 Eli Lilly에 라이선스를 부여한 FDA 승인은 2026년으로 예상됩니다.",
+      "descriptionKo": "오르포글리프론(LY-3502970)은 경구용 비펩타이드성 GLP-1 수용체 작용제로서 임상 3상 시험을 완료한 최초의 소분자 GLP-1이다. 주사 가능한 GLP-1과 달리 주사, 냉장 또는 음식/물 제한이 필요하지 않습니다. 임상 시험에서는 상당한 체중 감소(72주차에 최대 12.4%)와 강력한 혈당 조절(HbA1c 1.3~1.6% 감소)이 나타났습니다. Chugai Pharmaceutical에서 개발하고 Eli Lilly에 라이선스를 부여한 FDA 승인은 2026년으로 예상됩니다. [2026 업데이트] 2026년 4월 1일 FDA가 Foundayo로 승인 — 체중관리용으로 승인된 첫 경구 소분자 GLP-1.",
       "keyBenefitsKo": "상당한 체중 감소(72주차에 최대 12.4%), 강력한 당뇨병 관리(HbA1c 감소 1.3-1.6%), 1일 1회 경구 정제, 냉장 또는 식품 제한 없음, 심혈관 위험 지표 감소, 체중 감량 중 근육량 보존",
       "mechanismKo": "편향된 신호 전달 기능을 갖춘 소분자 GLP-1 수용체 작용제 - 수용체 둔감화를 최소화하면서 G 단백질/cAMP 경로(인슐린 분비 강화, 글루카곤 억제, 위 배출 지연, 식욕 감소)를 우선적으로 활성화합니다. 1일 1회 투여를 지원하는 29~49시간의 반감기로 경구 생체 이용률이 79.1%입니다.",
       "subtitleKo": "소분자 GLP-1 수용체 작용제 | 체중 감소 및 당뇨병",
@@ -25348,7 +25348,7 @@
       "subtitle": "Pegylated Mechano Growth Factor | IGF-1 Splice Variant",
       "nameKo": "",
       "researchStatus": "Limited Research",
-      "isApproved": true,
+      "isApproved": false,
       "routes": [
         "Injectable"
       ],
@@ -25357,7 +25357,7 @@
       "cycle": "4-8 weeks",
       "storage": "냉장 (2-8°C)",
       "routeDetail": "Subcutaneous or Intramuscular",
-      "descriptionEn": "PEG-MGF (Pegylated Mechano Growth Factor) is a modified form of the IGF-1 splice variant MGF (IGF-1Ec), with polyethylene glycol attached to extend its half-life from minutes to hours. MGF is naturally expressed in muscle tissue following mechanical stress or injury, where it activates satellite cells to support muscle repair. A landmark 2011 human cell study (cited 74+ times) showed MGF significantly increased satellite cell proliferation at doses as low as 3ng/ml, with effects on proliferative lifespan in young but not elderly donors. While in vitro and animal studies show promise for muscle",
+      "descriptionEn": "PEG-MGF (Pegylated Mechano Growth Factor) is a modified form of the IGF-1 splice variant MGF (IGF-1Ec), with polyethylene glycol attached to extend its half-life from minutes to hours. MGF is naturally expressed in muscle tissue following mechanical stress or injury, where it activates satellite cells to support muscle repair. A landmark 2011 human cell study (cited 74+ times) showed MGF significantly increased satellite cell proliferation at doses as low as 3ng/ml, with effects on proliferative lifespan in young but not elderly donors. While in vitro and animal studies show promise for muscle NOTE: PEG-MGF is a research chemical and is NOT approved for any indication.",
       "keyBenefits": "Extended half-life (hours vs minutes for unmodified MGF) through PEGylation. Activates satellite cells for muscle repair and regeneration. May support recovery from mechanical stress or injury.",
       "mechanism": "PEG-MGF activates muscle satellite (stem) cells by binding to specific receptors, stimulating the MAPK/ERK signaling pathway. This enhances protein synthesis and promotes muscle fiber repair. The E-peptide domain appears to have distinct activity from mature IGF-1.Molecular InformationWeight~2,888 Da (MGF-24aa E-peptide)Length24 amino acids (C-terminal E-peptide)TypeIGF-1Ec splice variant C-termin",
       "pharmacokinetics": {
@@ -25601,7 +25601,7 @@
         "Unexpected swelling or edema",
         "Any symptoms suggesting abnormal growth stimulation"
       ],
-      "descriptionKo": "PEG-MGF(Pegylated Mechano Growth Factor)는 IGF-1 스플라이스 변형 MGF(IGF-1Ec)의 변형된 형태로 폴리에틸렌 글리콜이 부착되어 반감기가 몇 분에서 몇 시간으로 연장됩니다. MGF는 기계적 스트레스나 부상 후 근육 조직에서 자연적으로 발현되며, 위성 세포를 활성화하여 근육 복구를 지원합니다. 획기적인 2011년 인간 세포 연구(74회 이상 인용)에서는 MGF가 3ng/ml의 낮은 용량에서도 위성 세포 증식을 크게 증가시켰으며, 젊은 기증자의 증식 수명에 영향을 미치지만 노인 기증자는 그렇지 않은 것으로 나타났습니다. 체외 및 동물 연구에서 근육에 대한 가능성이 밝혀졌지만",
+      "descriptionKo": "PEG-MGF(Pegylated Mechano Growth Factor)는 IGF-1 스플라이스 변형 MGF(IGF-1Ec)의 변형된 형태로 폴리에틸렌 글리콜이 부착되어 반감기가 몇 분에서 몇 시간으로 연장됩니다. MGF는 기계적 스트레스나 부상 후 근육 조직에서 자연적으로 발현되며, 위성 세포를 활성화하여 근육 복구를 지원합니다. 획기적인 2011년 인간 세포 연구(74회 이상 인용)에서는 MGF가 3ng/ml의 낮은 용량에서도 위성 세포 증식을 크게 증가시켰으며, 젊은 기증자의 증식 수명에 영향을 미치지만 노인 기증자는 그렇지 않은 것으로 나타났습니다. 체외 및 동물 연구에서 근육에 대한 가능성이 밝혀졌지만 [정정] PEG-MGF는 연구용 물질로 어떤 적응증으로도 승인되지 않았습니다.",
       "keyBenefitsKo": "PEG화를 통해 반감기 연장(수정되지 않은 MGF의 경우 시간 대 분). 근육 복구 및 재생을 위해 위성 세포를 활성화합니다. 기계적 스트레스나 부상으로부터의 회복을 지원할 수 있습니다.",
       "mechanismKo": "PEG-MGF는 특정 수용체에 결합하여 MAPK/ERK 신호 전달 경로를 자극함으로써 근육 위성(줄기) 세포를 활성화합니다. 이는 단백질 합성을 향상시키고 근육 섬유 복구를 촉진합니다. E-펩티드 도메인은 성숙한 IGF-1과 별개의 활성을 갖는 것으로 보입니다. 분자 정보무게~2,888 Da(MGF-24aa E-펩티드)길이24개 아미노산(C-말단 E-펩티드)유형IGF-1Ec 스플라이스 변형 C-말단",
       "subtitleKo": "Pegylated Mechano 성장 인자 | IGF-1 스플라이스 변형",
@@ -28464,7 +28464,7 @@
       "cycle": "",
       "storage": "냉장 (2-8°C)",
       "routeDetail": "Abdomen, thigh, or upper arm (rotate weekly)",
-      "descriptionEn": "Semaglutide is a long-acting glucagon-like peptide-1 (GLP-1) receptor agonist FDA-approved for type 2 diabetes management (as Ozempic) and chronic weight management (as Wegovy). With over 17,000 participants in clinical trials, it demonstrates significant weight loss potential (average 15-20% body weight reduction) through appetite suppression, slowed gastric emptying, and enhanced glucose control.",
+      "descriptionEn": "Semaglutide is a long-acting glucagon-like peptide-1 (GLP-1) receptor agonist FDA-approved for type 2 diabetes management (as Ozempic) and chronic weight management (as Wegovy). With over 17,000 participants in clinical trials, it demonstrates significant weight loss potential (average 15-20% body weight reduction) through appetite suppression, slowed gastric emptying, and enhanced glucose control. UPDATE (2026): Oral Wegovy (oral semaglutide 25mg) was FDA-approved in Dec 2025 for weight loss (first oral GLP-1 for weight management), and Wegovy was approved for MASH with fibrosis (2025).",
       "keyBenefits": "FDA-approved treatment with established efficacy for weight loss (15-20% average) and diabetes management. Convenient once-weekly dosing with proven cardiovascular benefits and comprehensive safety data from extensive clinical trials.",
       "mechanism": "Subcutaneous semaglutide mimics native GLP-1, binding to GLP-1 receptors to stimulate glucose-dependent insulin secretion, suppress glucagon, slow gastric emptying, and reduce appetite through hypothalamic pathways. The 7-day half-life allows weekly dosing.Molecular InformationWeight4,113.64 DaLength31 amino acidsTypeGLP-1 receptor agonistAmino Acid Sequence:His-Aib-Glu-Gly-Thr-Phe-Thr-Ser-Asp-Val",
       "pharmacokinetics": {
@@ -28758,7 +28758,7 @@
         "Severe hypoglycemia symptoms: confusion, shakiness, blurred vision, slurred speech, loss of consciousness",
         "Signs of kidney problems: decreased urination, swelling in legs/feet"
       ],
-      "descriptionKo": "세마글루티드는 제2형 당뇨병 관리(Ozempic) 및 만성 체중 관리(Wegovy)에 대해 FDA 승인을 받은 지속성 글루카곤 유사 펩타이드-1(GLP-1) 수용체 작용제입니다. 임상 시험에 17,000명 이상의 참가자가 참여한 이 제품은 식욕 억제, 위 배출 속도 저하, 혈당 조절 강화를 통해 상당한 체중 감소 가능성(평균 15-20% 체중 감소)을 보여줍니다.",
+      "descriptionKo": "세마글루티드는 제2형 당뇨병 관리(Ozempic) 및 만성 체중 관리(Wegovy)에 대해 FDA 승인을 받은 지속성 글루카곤 유사 펩타이드-1(GLP-1) 수용체 작용제입니다. 임상 시험에 17,000명 이상의 참가자가 참여한 이 제품은 식욕 억제, 위 배출 속도 저하, 혈당 조절 강화를 통해 상당한 체중 감소 가능성(평균 15-20% 체중 감소)을 보여줍니다. [2026 업데이트] 경구 위고비(경구 세마글루타이드 25mg)가 2025년 12월 FDA 승인(체중관리용 첫 경구 GLP-1), 위고비가 섬유증 동반 MASH에도 승인(2025).",
       "keyBenefitsKo": "체중 감소(평균 15~20%) 및 당뇨병 관리에 대한 효능이 입증된 FDA 승인 치료법입니다. 광범위한 임상 시험을 통해 입증된 심혈관 혜택과 포괄적인 안전성 데이터를 바탕으로 편리한 주 1회 투여가 가능합니다.",
       "mechanismKo": "피하 세마글루티드는 천연 GLP-1을 모방하여 GLP-1 수용체에 결합하여 포도당 의존성 인슐린 분비를 자극하고 글루카곤을 억제하며 위 배출을 늦추고 시상하부 경로를 통해 식욕을 감소시킵니다. 반감기는 7일이므로 매주 투여할 수 있습니다. 분자 정보무게4,113.64 DaLength31 아미노산유형GLP-1 수용체 작용제아미노산 서열:His-Aib-Glu-Gly-Thr-Phe-Thr-Ser-Asp-Val",
       "subtitleKo": "GLP-1 수용체 작용제 | 체중 감소 및 당뇨병",
@@ -31319,7 +31319,7 @@
       "nameEn": "SS-31 (Elamipretide)",
       "subtitle": "Mitochondrial-Targeted Peptide | Cardiolipin Protector",
       "nameKo": "SS-31(엘라미프레티드)",
-      "researchStatus": "Limited Research",
+      "researchStatus": "Clinical Research",
       "isApproved": true,
       "routes": [
         "Injectable"
@@ -31329,7 +31329,7 @@
       "cycle": "4-12 weeks",
       "storage": "냉장 (2-8°C)",
       "routeDetail": "Subcutaneous: Abdomen, thigh | IV: As directed by protocol",
-      "descriptionEn": "SS-31, also known as Elamipretide or Bendavia, is a small aromatic-cationic tetrapeptide that selectively targets mitochondria. Unlike traditional antioxidants, SS-31 specifically binds to cardiolipin in the inner mitochondrial membrane, protecting it from oxidative damage and improving cellular energy production. This unique mechanism makes it particularly promising for age-related conditions, heart disease, and mitochondrial disorders.",
+      "descriptionEn": "SS-31, also known as Elamipretide or Bendavia, is a small aromatic-cationic tetrapeptide that selectively targets mitochondria. Unlike traditional antioxidants, SS-31 specifically binds to cardiolipin in the inner mitochondrial membrane, protecting it from oxidative damage and improving cellular energy production. This unique mechanism makes it particularly promising for age-related conditions, heart disease, and mitochondrial disorders. UPDATE: Elamipretide received FDA accelerated approval on Sept 19, 2025 as Forzinity - the first therapy for Barth syndrome and the first drug directly targeting mitochondria.",
       "keyBenefits": "Directly protects mitochondria, improves cellular energy, reduces oxidative damage, enhances exercise capacity",
       "mechanism": "Selectively binds to cardiolipin in inner mitochondrial membrane, preventing lipid peroxidation and optimizing electron transport chain function",
       "pharmacokinetics": {
@@ -31550,7 +31550,7 @@
         "Any cardiovascular symptoms",
         "Severe headaches or vision changes"
       ],
-      "descriptionKo": "Elamipretide 또는 Bendavia로도 알려진 SS-31은 미토콘드리아를 선택적으로 표적으로 삼는 작은 방향족 양이온 테트라펩타이드입니다. 전통적인 항산화제와 달리 SS-31은 미토콘드리아 내부 막의 카디오리핀과 특이적으로 결합하여 산화 손상으로부터 보호하고 세포 에너지 생산을 향상시킵니다. 이 독특한 메커니즘은 특히 연령 관련 질환, 심장병 및 미토콘드리아 장애에 유망합니다.",
+      "descriptionKo": "Elamipretide 또는 Bendavia로도 알려진 SS-31은 미토콘드리아를 선택적으로 표적으로 삼는 작은 방향족 양이온 테트라펩타이드입니다. 전통적인 항산화제와 달리 SS-31은 미토콘드리아 내부 막의 카디오리핀과 특이적으로 결합하여 산화 손상으로부터 보호하고 세포 에너지 생산을 향상시킵니다. 이 독특한 메커니즘은 특히 연령 관련 질환, 심장병 및 미토콘드리아 장애에 유망합니다. [업데이트] 엘라미프레티드가 2025년 9월 19일 FDA 가속승인으로 Forzinity 출시 — 바스증후군 첫 치료제이자 미토콘드리아를 직접 표적하는 첫 약물.",
       "keyBenefitsKo": "미토콘드리아를 직접 보호하고, 세포 에너지를 향상시키며, 산화 손상을 감소시키고, 운동 능력을 향상시킵니다.",
       "mechanismKo": "미토콘드리아 내부막의 카디오리핀과 선택적으로 결합하여 지질 과산화를 방지하고 전자 전달 사슬 기능을 최적화합니다.",
       "subtitleKo": "미토콘드리아 표적 펩타이드 | 카디오리핀 보호제",
