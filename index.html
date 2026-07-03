@@ -20,6 +20,15 @@
     ['gesturestart', 'gesturechange', 'gestureend'].forEach(function (ev) {
       document.addEventListener(ev, function (e) { e.preventDefault(); }, { passive: false });
     });
+    // iOS PWA/Safari에서 이전에 핀치줌된 상태가 영구 저장돼 "해상도 깨진 듯" 보이는 문제 강제 리셋.
+    // viewport meta를 0.99→1.0으로 깜빡여 브라우저가 저장된 줌을 버리게 강제.
+    (function () {
+      var vp = document.querySelector('meta[name="viewport"]');
+      if (!vp) return;
+      var orig = vp.getAttribute('content');
+      vp.setAttribute('content', 'width=device-width, initial-scale=0.99, maximum-scale=0.99');
+      setTimeout(function () { vp.setAttribute('content', orig); }, 1);
+    })();
   </script>
   <!-- DNS/TCP 미리 연결 — 폰트·Firebase CDN 첫 로딩 대기 시간 단축 -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
