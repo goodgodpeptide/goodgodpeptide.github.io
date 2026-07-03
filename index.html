@@ -6812,17 +6812,25 @@
     // ── 📢 업데이트 패치노트 (2026-07-04 GG: 원래있던거/신규추가/변경 구분) ──
     // 최근 21일 이내 추가/변경된 펩타이드에만 목록카드 NEW/갱신 배지. 커밋·경로·개인정보 없음(날짜·이름·설명만).
     window._encBadgeMap = null;
+    window._encRecencyMap = null;  // id → 가장 최근 patchNotes 날짜(ms). 최신순 정렬용(창 제한 없음)
     function buildEncBadgeMap() {
-      const map = {};
+      const map = {}, rec = {};
       const pn = (encyclopediaData && encyclopediaData.patchNotes) || [];
       const now = Date.now(), WINDOW = 21 * 24 * 3600 * 1000;
       pn.forEach(e => {
         const t = Date.parse(e.date);
-        if (isNaN(t) || (now - t) > WINDOW) return;
-        (e.added || []).forEach(it => { if (it.id && !map[it.id]) map[it.id] = 'new'; });
-        (e.updated || []).forEach(it => { if (it.id && !map[it.id]) map[it.id] = 'updated'; });
+        if (isNaN(t)) return;
+        const within = (now - t) <= WINDOW;  // 배지는 최근 21일만, recency는 전체
+        const mark = (it, kind) => {
+          if (!it.id) return;
+          if (within && !map[it.id]) map[it.id] = kind;
+          if (!rec[it.id] || t > rec[it.id]) rec[it.id] = t;
+        };
+        (e.added || []).forEach(it => mark(it, 'new'));
+        (e.updated || []).forEach(it => mark(it, 'updated'));
       });
       window._encBadgeMap = map;
+      window._encRecencyMap = rec;
     }
     window.togglePatchNotes = function() {
       const collapsed = localStorage.getItem('enc_patchnotes_collapsed') === '1';
@@ -6892,6 +6900,10 @@
 
       if (sort === 'status') {
         list.sort((a,b) => statusOrder.indexOf(a.researchStatus) - statusOrder.indexOf(b.researchStatus));
+      } else if (sort === 'recent') {
+        // 최신순: 최근 추가/변경(patchNotes 날짜)된 것 상위, 날짜 없는 건 뒤로(이름순 tiebreak)
+        const rec = window._encRecencyMap || {};
+        list.sort((a,b) => (rec[b.id] || 0) - (rec[a.id] || 0) || a.nameEn.localeCompare(b.nameEn));
       } else {
         list.sort((a,b) => a.nameEn.localeCompare(b.nameEn));
       }
@@ -10809,6 +10821,7 @@
           <select id="enc-sort" onchange="renderEncyclopedia()"
             style="padding:9px 10px;background:#1f2937;border:1px solid #374151;border-radius:10px;color:#94a3b8;font-size:13px;font-family:inherit;outline:none">
             <option value="name">이름순</option>
+            <option value="recent">최신순</option>
             <option value="status">연구등급순</option>
           </select>
         </div>
