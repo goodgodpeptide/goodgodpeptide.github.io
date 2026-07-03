@@ -6794,8 +6794,62 @@
       renderEncyclopedia();
     };
 
+    // ── 📢 업데이트 패치노트 (2026-07-04 GG: 원래있던거/신규추가/변경 구분) ──
+    // 최근 21일 이내 추가/변경된 펩타이드에만 목록카드 NEW/갱신 배지. 커밋·경로·개인정보 없음(날짜·이름·설명만).
+    window._encBadgeMap = null;
+    function buildEncBadgeMap() {
+      const map = {};
+      const pn = (encyclopediaData && encyclopediaData.patchNotes) || [];
+      const now = Date.now(), WINDOW = 21 * 24 * 3600 * 1000;
+      pn.forEach(e => {
+        const t = Date.parse(e.date);
+        if (isNaN(t) || (now - t) > WINDOW) return;
+        (e.added || []).forEach(it => { if (it.id && !map[it.id]) map[it.id] = 'new'; });
+        (e.updated || []).forEach(it => { if (it.id && !map[it.id]) map[it.id] = 'updated'; });
+      });
+      window._encBadgeMap = map;
+    }
+    window.togglePatchNotes = function() {
+      const collapsed = localStorage.getItem('enc_patchnotes_collapsed') === '1';
+      localStorage.setItem('enc_patchnotes_collapsed', collapsed ? '0' : '1');
+      renderPatchNotes();
+    };
+    window.renderPatchNotes = function() {
+      const host = document.getElementById('enc-patchnotes');
+      if (!host || !encyclopediaData) return;
+      const pn = encyclopediaData.patchNotes || [];
+      if (!pn.length) { host.innerHTML = ''; return; }
+      const isLight = document.body.classList.contains('light-mode');
+      const collapsed = localStorage.getItem('enc_patchnotes_collapsed') === '1';
+      const bg = isLight ? '#ffffff' : '#111827', bd = isLight ? '#e2e8f0' : '#1f2937';
+      const titleClr = isLight ? '#1a1a2e' : '#f1f5f9', subClr = isLight ? '#6b7280' : '#94a3b8';
+      const chipBg = isLight ? '#f1f5f9' : '#1e293b', chipClr = isLight ? '#334155' : '#cbd5e1';
+      const totalNew = pn.reduce((s, e) => s + ((e.added || []).length), 0);
+      const chip = it => `<span onclick="event.stopPropagation();openEncyclopediaModal('${it.id}')" style="display:inline-block;padding:2px 8px;margin:2px 3px 2px 0;background:${chipBg};border-radius:6px;font-size:11px;color:${chipClr};cursor:pointer">${escapeHtml(it.name)}</span>`;
+      let body = '';
+      pn.forEach(e => {
+        body += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:${titleClr};margin-bottom:6px">📅 ${escapeHtml(e.date)}</div>`;
+        if (e.added && e.added.length) {
+          body += `<div style="margin-bottom:6px"><div style="font-size:11px;color:#22c55e;font-weight:600;margin-bottom:3px">🟢 신규 ${e.added.length}종 추가${e.addedNote ? ` — ${escapeHtml(e.addedNote)}` : ''}</div><div>${e.added.map(chip).join('')}</div></div>`;
+        }
+        if (e.updated && e.updated.length) {
+          body += `<div style="margin-bottom:4px"><div style="font-size:11px;color:#60a5fa;font-weight:600;margin-bottom:3px">🔵 ${e.updated.length}종 정보 갱신</div>${e.updated.map(u => `<div style="font-size:11px;color:${subClr};padding:1px 0;line-height:1.7">• ${chip(u)} ${escapeHtml(u.note || '')}</div>`).join('')}</div>`;
+        }
+        body += `</div>`;
+      });
+      host.innerHTML = `<div style="background:${bg};border:1px solid ${bd};border-radius:14px;padding:14px;margin-bottom:12px">
+          <div onclick="togglePatchNotes()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+            <span style="font-size:14px;font-weight:700;color:${titleClr}">📢 업데이트 소식${collapsed && totalNew ? ` <span style="padding:1px 7px;background:#16a34a22;color:#22c55e;border-radius:20px;font-size:10px;font-weight:700;margin-left:2px">🆕 ${totalNew}</span>` : ''}</span>
+            <span style="color:${subClr};font-size:12px">${collapsed ? '펼치기 ▼' : '접기 ▲'}</span>
+          </div>
+          <div style="display:${collapsed ? 'none' : 'block'};margin-top:12px">${body}</div>
+        </div>`;
+    };
+
     window.renderEncyclopedia = function() {
       if (!encyclopediaData) return;
+      if (!window._encBadgeMap) buildEncBadgeMap();
+      renderPatchNotes();
       const q = (document.getElementById('enc-search')?.value || '').toLowerCase();
       const sort = document.getElementById('enc-sort')?.value || 'name';
       const grid = document.getElementById('encyclopedia-grid');
@@ -6850,6 +6904,12 @@
         const routeClr = isLightEnc ? '#2563eb' : '#60a5fa';
         const arrowClr = isLightEnc ? '#9ca3af' : '#374151';
         const nameKo = encyclopediaData.peptides[p.id]?.nameKo || '';
+        const _bdg = (window._encBadgeMap || {})[p.id];
+        const badgeHtml = _bdg === 'new'
+          ? `<span style="padding:2px 7px;background:#16a34a22;color:#22c55e;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap">🆕 NEW</span>`
+          : _bdg === 'updated'
+          ? `<span style="padding:2px 7px;background:#2563eb22;color:#60a5fa;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap">🔄 갱신</span>`
+          : '';
         const tags = (p.tags||[]).slice(0,3).map(t =>
           `<span style="padding:2px 7px;background:${tagBg};border-radius:4px;font-size:10px;color:${tagClr}">${TAG_KO[t]||t}</span>`
         ).join('');
@@ -6873,6 +6933,7 @@
               <span style="padding:2px 8px;background:${st.bg};border-radius:20px;font-size:10px;color:${st.color};white-space:nowrap">
                 ${st.label}
               </span>
+              ${badgeHtml}
             </div>
             <div style="font-size:12px;color:#6b7280;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
               ${p.subtitle || ''}
@@ -10719,6 +10780,8 @@
     <div id="panel-community" class="tab-panel"></div>
 
     <div id="panel-encyclopedia" class="tab-panel">
+      <!-- 📢 업데이트 패치노트 (renderPatchNotes로 채움) -->
+      <div id="enc-patchnotes"></div>
       <!-- 검색 & 필터 바 -->
       <div style="background:#111827;border:1px solid #1f2937;border-radius:14px;padding:14px;margin-bottom:12px">
         <div style="display:flex;gap:8px;margin-bottom:10px">

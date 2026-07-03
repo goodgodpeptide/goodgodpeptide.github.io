@@ -1,6 +1,6 @@
 {
   "version": "3.0",
-  "lastUpdated": "2026-07-04T02:12:09.409477",
+  "lastUpdated": "2026-07-04T03:45:56.222273",
   "totalCount": 110,
   "index": [
     {
@@ -43210,5 +43210,188 @@
       "qualityBadKo": [],
       "interactionsKo": []
     }
-  }
+  },
+  "patchNotes": [
+    {
+      "date": "2026-07-04",
+      "added": [
+        {
+          "id": "ecnoglutide",
+          "name": "에크노글루타이드"
+        },
+        {
+          "id": "amycretin",
+          "name": "아미크레틴"
+        },
+        {
+          "id": "vk2735",
+          "name": "VK2735"
+        },
+        {
+          "id": "maridebart-cafraglutide",
+          "name": "마리티드"
+        },
+        {
+          "id": "petrelintide",
+          "name": "페트렐린타이드"
+        },
+        {
+          "id": "met-097i",
+          "name": "MET-097i"
+        },
+        {
+          "id": "pemvidutide",
+          "name": "펨비두타이드"
+        },
+        {
+          "id": "enicepatide",
+          "name": "에니세파타이드"
+        },
+        {
+          "id": "zovaglutide",
+          "name": "조바글루타이드"
+        },
+        {
+          "id": "aleniglipron",
+          "name": "알레니글리프론"
+        },
+        {
+          "id": "gubamy",
+          "name": "굽아미"
+        },
+        {
+          "id": "ribupatide",
+          "name": "리부파타이드"
+        },
+        {
+          "id": "ghrp-2",
+          "name": "프랄모렐린(GHRP-2)"
+        },
+        {
+          "id": "ghrp-1",
+          "name": "GHRP-1"
+        },
+        {
+          "id": "macimorelin",
+          "name": "마시모렐린"
+        },
+        {
+          "id": "anamorelin",
+          "name": "아나모렐린"
+        },
+        {
+          "id": "capromorelin",
+          "name": "카프로모렐린"
+        },
+        {
+          "id": "relamorelin",
+          "name": "렐라모렐린"
+        },
+        {
+          "id": "igf-1-des",
+          "name": "IGF-1 DES"
+        },
+        {
+          "id": "humanin",
+          "name": "휴머닌"
+        },
+        {
+          "id": "pentadeca-arginate",
+          "name": "펜타데카 아르기네이트"
+        },
+        {
+          "id": "matrixyl",
+          "name": "마트릭실"
+        },
+        {
+          "id": "argireline",
+          "name": "아르지렐린"
+        },
+        {
+          "id": "syn-ake",
+          "name": "신-에이크"
+        },
+        {
+          "id": "pdrn",
+          "name": "PDRN"
+        },
+        {
+          "id": "vilon",
+          "name": "빌론"
+        },
+        {
+          "id": "davunetide",
+          "name": "다부네타이드"
+        },
+        {
+          "id": "gonadorelin",
+          "name": "고나도렐린"
+        },
+        {
+          "id": "larazotide",
+          "name": "라라조타이드"
+        }
+      ],
+      "addedNote": "차세대 비만/GLP-1·성장호르몬 분비촉진·미용/장수 신규 펩타이드",
+      "updated": [
+        {
+          "id": "orforglipron",
+          "name": "오포글리프론",
+          "note": "FDA 승인 반영 (Foundayo, 첫 경구 GLP-1 알약)"
+        },
+        {
+          "id": "mazdutide",
+          "name": "마즈두타이드",
+          "note": "중국 NMPA 승인 반영 (체중·당뇨)"
+        },
+        {
+          "id": "semaglutide",
+          "name": "세마글루타이드",
+          "note": "경구 위고비·지방간(MASH) 승인 설명 추가"
+        },
+        {
+          "id": "ss-31",
+          "name": "SS-31(엘라미프레티드)",
+          "note": "FDA 승인 반영 (Forzinity, 바스증후군)"
+        },
+        {
+          "id": "bpc-157",
+          "name": "BPC-157",
+          "note": "미승인으로 정정 (원본 데이터 오류)"
+        },
+        {
+          "id": "peg-mgf",
+          "name": "PEG-MGF",
+          "note": "미승인으로 정정 (연구용 물질)"
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "added": [
+        {
+          "id": "eloralintide",
+          "name": "엘로랄린타이드"
+        },
+        {
+          "id": "livagen",
+          "name": "리바젠"
+        },
+        {
+          "id": "ovagen",
+          "name": "오바젠"
+        },
+        {
+          "id": "thymalin",
+          "name": "티말린"
+        },
+        {
+          "id": "vesugen",
+          "name": "베수젠"
+        }
+      ],
+      "addedNote": "펩타이드 신규 추가",
+      "updated": []
+    }
+  ]
 }
