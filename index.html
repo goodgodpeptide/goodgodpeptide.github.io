@@ -687,6 +687,10 @@
       // 테마 토글 즉시 반영: 저장됨 인디케이터 + 백과사전 상태배지 색 재적용(재렌더 없이는 이전 테마 색 유지되던 문제)
       try { setSaveStatus(window._lastSaveStatus || 'saved'); } catch (e) {}
       try { if (window.renderEncyclopedia) window.renderEncyclopedia(); } catch (e) {}  // 내부에서 encyclopediaData 없으면 자체 return
+      // 신규 인사이트 카드 3종 테마 색 재적용
+      try { renderAdherence(); } catch (e) {}
+      try { renderPeptideWeightInsight(); } catch (e) {}
+      try { renderInbodyQuality(); } catch (e) {}
     };
 
     // ── 화면 방향 제어 (2026-07-04 GG: manifest orientation:any가 폰 자동회전 잠금을 무시하고
@@ -2361,6 +2365,7 @@
     // ══════════════════════════════════════════════
     function renderAll() {
       renderRemainingCards();
+      try { renderAdherence(); } catch (e) {}            // ⑦ 미투약 배너 + 준수율/스트릭
       renderPeptideFilterBar();
       renderPeptideList();
       renderPeptideGraph();
@@ -2368,6 +2373,7 @@
       renderWeightStats();
       renderWeightList();
       renderWeightGraph();
+      try { renderPeptideWeightInsight(); } catch (e) {} // ⑤ 펩타이드별 체중효과
       renderSupplementPanel();
       renderWaterTracker();
       if (document.getElementById("panel-calendar")?.style.display !== "none") renderCalendar();
@@ -4773,6 +4779,9 @@
         ctx.fillText(label, PAD.l + f * gW, cH - 6);
       }
 
+      // ⑤ 약물 활성기간 음영 밴드 오버레이 (데이터 선 아래에 깔림)
+      try { drawDrugActivityBands(ctx, { PAD, gW, gH, minT, maxT, rangeT, isLight: isLightW }); } catch (e) {}
+
       // 목표 체중선
       if (target) {
         const ty = PAD.t + gH - ((target - minW) / rangeW) * gH;
@@ -5017,6 +5026,268 @@
       if (el("s-age")) el("s-age").value = appData.age || "";
       if (el("s-activity")) el("s-activity").value = appData.activity || "1.55";
       document.querySelectorAll(".gender-btn").forEach(b => b.classList.toggle("active", b.dataset.v === appData.gender));
+    }
+
+    // ══════════════════════════════════════════════
+    // 신규 인사이트 카드 3종 (⑤ 펩타이드 체중효과 · ⑥ 감량 질 · ⑦ 투약 준수율)
+    // 순수 렌더 함수 — load/save/삭제 로직 불변, 신규 데이터 필요 없음(기존 records/weightRecords/inbodyRecords/drugSchedules 활용)
+    // ══════════════════════════════════════════════
+
+    // ms → KST 'YYYY-MM-DD' (기존 msToKstInput 재사용으로 일관된 KST 기준)
+    function _kstDateStr(ms) { return msToKstInput(ms).slice(0, 10); }
+
+    // (t,w) 점 배열 → 주당 회귀 기울기(kg/주). 점 2개 미만이면 null
+    function _weeklySlope(pts) {
+      const n = pts.length;
+      if (n < 2) return null;
+      let st = 0, sw = 0;
+      for (const p of pts) { st += p.t; sw += p.w; }
+      const mt = st / n, mw = sw / n;
+      let num = 0, den = 0;
+      for (const p of pts) { const dt = p.t - mt; num += dt * (p.w - mw); den += dt * dt; }
+      if (den === 0) return null;
+      return (num / den) * 7 * 86400000; // kg/ms → kg/주
+    }
+
+    // ⑤ 약물별 활성기간 음영 밴드 (renderWeightGraph 내부에서 호출) — 첫 투약~마지막 투약+1주기
+    function drawDrugActivityBands(ctx, o) {
+      const recs = appData.records || [];
+      if (!recs.length) return;
+      const alpha = o.isLight ? "26" : "1f"; // 8자리 hex 알파(라이트 약간 진하게)
+      const drugs = getActiveDrugs().filter(d => recs.some(r => r.drug === d));
+      let labelRow = 0;
+      drugs.forEach(drug => {
+        const cfg = DRUG_CONFIG[drug];
+        if (!cfg) return;
+        const dr = recs.filter(r => r.drug === drug);
+        const firstT = Math.min(...dr.map(r => r.time));
+        const lastT = Math.max(...dr.map(r => r.time));
+        // 활성 종료 = 마지막 투약 + 1주기(예상 커버리지)
+        const coverMs = (getDoseCycle(drug) || cfg.defaultDoseDays || 7) * 86400000;
+        const segS = Math.max(o.minT, firstT);
+        const segE = Math.min(o.maxT, lastT + coverMs);
+        if (segE <= segS) return; // 가시 범위 밖
+        const x0 = o.PAD.l + ((segS - o.minT) / o.rangeT) * o.gW;
+        const x1 = o.PAD.l + ((segE - o.minT) / o.rangeT) * o.gW;
+        const w = Math.max(1, x1 - x0);
+        ctx.fillStyle = cfg.color + alpha;
+        ctx.fillRect(x0, o.PAD.t, w, o.gH);
+        // 밴드 시작 경계선
+        ctx.strokeStyle = cfg.color + "80"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x0, o.PAD.t); ctx.lineTo(x0, o.PAD.t + o.gH); ctx.stroke();
+        // 라벨(밴드 폭 충분할 때만, 세로로 살짝 계단식 배치해 겹침 방지)
+        if (w > 34) {
+          ctx.fillStyle = cfg.color; ctx.font = "9px 'Noto Sans KR'"; ctx.textAlign = "left";
+          ctx.fillText(cfg.short, x0 + 3, o.PAD.t + 10 + (labelRow % 3) * 11);
+          labelRow++;
+        }
+      });
+    }
+
+    // ⑤ 펩타이드별 체중효과 인사이트 카드
+    function renderPeptideWeightInsight() {
+      const c = document.getElementById("peptide-weight-insight");
+      if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
+      const recs = appData.records || [];
+      const weights = (appData.weightRecords || []).slice().sort((a, b) => a.time - b.time);
+      if (weights.length < 2 || !recs.length) { c.innerHTML = ""; return; }
+      const latestW = weights[weights.length - 1];
+
+      const rows = [];
+      Object.keys(DRUG_CONFIG).forEach(drug => {
+        const dr = recs.filter(r => r.drug === drug);
+        if (!dr.length) return;
+        const firstT = Math.min(...dr.map(r => r.time));
+        const after = weights.filter(w => w.time >= firstT).map(w => ({ t: w.time, w: w.weight }));
+        if (after.length < 2) return; // 시작 후 체중점 부족 → 스킵
+        const before = weights.filter(w => w.time < firstT).map(w => ({ t: w.time, w: w.weight }));
+        const afterSlope = _weeklySlope(after);
+        const beforeSlope = _weeklySlope(before); // null 가능
+        const startW = after[0].w;
+        const deltaKg = latestW.weight - startW;
+        const weeks = Math.max(0, (latestW.time - firstT) / (7 * 86400000));
+        rows.push({ cfg: DRUG_CONFIG[drug], weeks, deltaKg, afterSlope, beforeSlope });
+      });
+      if (!rows.length) { c.innerHTML = ""; return; }
+      rows.sort((a, b) => (a.afterSlope || 0) - (b.afterSlope || 0)); // 주당 감량 큰 순
+
+      const cardBg = isLight ? "#ffffff" : "#111827";
+      const border = isLight ? "#e2e8f0" : "#1f2937";
+      const tSub = isLight ? "#64748b" : "#6b7280";
+      const tMain = isLight ? "#1a1a2e" : "#e2e8f0";
+      const itemBg = isLight ? "#f8fafc" : "#0d0d1a";
+
+      const items = rows.map(r => {
+        const dColor = r.deltaKg < 0 ? "#4ade80" : r.deltaKg > 0 ? "#f87171" : "#9ca3af";
+        const wk = r.weeks >= 1 ? Math.round(r.weeks) : r.weeks.toFixed(1);
+        const slopeStr = r.afterSlope == null ? "--" : `${r.afterSlope > 0 ? '+' : ''}${r.afterSlope.toFixed(2)}kg/주`;
+        const slopeColor = (r.afterSlope || 0) < 0 ? "#4ade80" : (r.afterSlope || 0) > 0 ? "#f87171" : "#9ca3af";
+        let cmp = "";
+        if (r.beforeSlope != null && r.afterSlope != null) {
+          const accel = r.afterSlope - r.beforeSlope; // 음수면 시작 후 더 빠르게 감량
+          const cColor = accel < 0 ? "#4ade80" : accel > 0 ? "#f87171" : "#9ca3af";
+          cmp = `<span style="color:${cColor};font-size:10px"> · 시작 전 대비 ${accel < 0 ? '▼' : '▲'}${Math.abs(accel).toFixed(2)}</span>`;
+        }
+        return `<div style="background:${itemBg};border:1px solid ${border};border-radius:10px;padding:9px 11px;margin-bottom:7px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+            <span style="font-size:12px;font-weight:700;color:${tMain}">${r.cfg.emoji} ${r.cfg.short}</span>
+            <span style="font-size:13px;font-weight:800;color:${dColor};font-family:'JetBrains Mono',monospace">${r.deltaKg > 0 ? '+' : ''}${r.deltaKg.toFixed(1)}kg</span>
+          </div>
+          <div style="font-size:11px;color:${tSub}">시작 후 <b style="color:${tMain}">${wk}주</b> · 주당 <b style="color:${slopeColor}">${slopeStr}</b>${cmp}</div>
+        </div>`;
+      }).join('');
+
+      c.innerHTML = `<div class="card" style="margin-bottom:12px;background:${cardBg};border:1px solid ${border}">
+        <div class="section-title" style="margin-bottom:6px">💉📉 펩타이드별 체중효과</div>
+        <div style="font-size:10px;color:${tSub};margin-bottom:8px">각 약물 첫 투약일 기준 이후 체중 변화 · 회귀 기울기(kg/주)</div>
+        ${items}
+      </div>`;
+    }
+
+    // ⑥ 감량 질(質) 스코어 카드 — 연속 인바디 간 Δ체지방(bfm) vs Δ골격근(sm)
+    function renderInbodyQuality() {
+      const c = document.getElementById("inbody-quality-card");
+      if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
+      const recs = (appData.inbodyRecords || []).slice().sort((a, b) => a.time - b.time);
+      const valid = recs.filter(r => typeof r.sm === 'number' && typeof r.bfm === 'number');
+      if (valid.length < 2) { c.innerHTML = ""; return; }
+      const prev = valid[valid.length - 2], cur = valid[valid.length - 1];
+      const fatDelta = cur.bfm - prev.bfm;              // 음수 = 체지방 감소(좋음)
+      const musDelta = cur.sm - prev.sm;               // 양수 = 골격근 증가(좋음)
+      const wDelta = (cur.weight || 0) - (prev.weight || 0); // 음수 = 감량
+      const days = Math.max(1, Math.round((cur.time - prev.time) / 86400000));
+
+      const cardBg = isLight ? "#ffffff" : "#111827";
+      const border = isLight ? "#e2e8f0" : "#1f2937";
+      const tSub = isLight ? "#64748b" : "#6b7280";
+      const tMain = isLight ? "#1a1a2e" : "#e2e8f0";
+      const sg = (x, u) => `${x >= 0 ? '+' : ''}${x.toFixed(1)}${u || ''}`;
+
+      let bodyHtml, headBg = border, warnHtml = "";
+      const fatLoss = -fatDelta, muscleLoss = -musDelta;
+      const lossDenom = Math.max(0, fatLoss) + Math.max(0, muscleLoss);
+      if (wDelta < -0.05 && lossDenom > 0.01) {
+        const fatPct = Math.round(Math.max(0, fatLoss) / lossDenom * 100);
+        const musPct = 100 - fatPct;
+        const warn = musPct >= 30;
+        const barFat = isLight ? "#22c55e" : "#4ade80";
+        const barMus = warn ? "#f87171" : "#facc15";
+        headBg = warn ? "#f8717133" : "#4ade8033";
+        if (warn) warnHtml = `<div style="font-size:10px;color:#f87171;margin-top:8px">⚠️ 근육 손실 비중이 높습니다 — 단백질 섭취·저항운동 점검 권장</div>`;
+        bodyHtml = `
+          <div style="font-size:13px;font-weight:800;color:${tMain};margin-bottom:8px">이번 감량 ${Math.abs(wDelta).toFixed(1)}kg 중 지방 <span style="color:${barFat}">${fatPct}%</span> / 근육 <span style="color:${barMus}">${musPct}%</span></div>
+          <div style="display:flex;height:14px;border-radius:7px;overflow:hidden;margin-bottom:8px">
+            <div style="width:${fatPct}%;background:${barFat}"></div>
+            <div style="width:${musPct}%;background:${barMus}"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="color:${tSub}">체지방 <b style="color:${fatDelta <= 0 ? '#4ade80' : '#f87171'}">${sg(fatDelta, 'kg')}</b></span>
+            <span style="color:${tSub}">골격근 <b style="color:${musDelta >= 0 ? '#60a5fa' : '#f87171'}">${sg(musDelta, 'kg')}</b></span>
+            <span style="color:${tSub}">체중 <b style="color:${tMain}">${sg(wDelta, 'kg')}</b></span>
+          </div>${warnHtml}`;
+      } else {
+        // 감량 아님(증량/유지) — 성분 변화만 중립 표시
+        const label = wDelta > 0.05 ? "체중 증가" : "체중 거의 유지";
+        bodyHtml = `
+          <div style="font-size:13px;font-weight:700;color:${tMain};margin-bottom:8px">${label} (${sg(wDelta, 'kg')})</div>
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="color:${tSub}">체지방 <b style="color:${fatDelta <= 0 ? '#4ade80' : '#f87171'}">${sg(fatDelta, 'kg')}</b></span>
+            <span style="color:${tSub}">골격근 <b style="color:${musDelta >= 0 ? '#60a5fa' : '#f87171'}">${sg(musDelta, 'kg')}</b></span>
+          </div>`;
+      }
+
+      c.innerHTML = `<div class="card" style="margin-bottom:12px;background:${cardBg};border:1px solid ${border}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:6px 8px;border-radius:8px;background:${headBg}">
+          <span class="section-title" style="margin:0">⚖️ 감량 질(質) 스코어</span>
+          <span style="font-size:10px;color:${tSub}">최근 ${days}일</span>
+        </div>
+        ${bodyHtml}
+      </div>`;
+    }
+
+    // ⑦ 미투약 감지 배너 + 준수율/스트릭 카드
+    function renderAdherence() {
+      const c = document.getElementById("adherence-cards");
+      if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
+      const recs = appData.records || [];
+      const scheds = appData.drugSchedules || {};
+      const now = Date.now();
+      // 실제 사용 중인 약물만(최근 30일 ≥1회 기록) — 미사용 기본약물 오탐(false alarm) 방지
+      const used = getActiveDrugs().filter(d => recs.some(r => r.drug === d && r.time >= now - 30 * 86400000));
+      if (!used.length) { c.innerHTML = ""; return; }
+
+      // 날짜별 투약 약물 집합
+      const takenBy = {};
+      recs.forEach(r => { const ds = _kstDateStr(r.time); (takenBy[ds] || (takenBy[ds] = new Set())).add(r.drug); });
+      const takenOn = (ds, d) => !!(takenBy[ds] && takenBy[ds].has(d));
+
+      const todayMid = kstInputToMs(_kstDateStr(now) + 'T00:00');
+      const dayStrBack = i => _kstDateStr(todayMid - i * 86400000);
+
+      // 어제 예정 vs 미기록 (scheduleNotifications와 동일한 shouldTakeOnDate 로직)
+      const yStr = dayStrBack(1);
+      const missed = used.filter(d => shouldTakeOnDate(scheds[d], yStr) && !takenOn(yStr, d));
+
+      // 최근 30일(어제~-29일) 준수율
+      let schedCnt = 0, takenCnt = 0;
+      for (let i = 1; i <= 30; i++) {
+        const ds = dayStrBack(i);
+        used.forEach(d => { if (shouldTakeOnDate(scheds[d], ds)) { schedCnt++; if (takenOn(ds, d)) takenCnt++; } });
+      }
+      const compliance = schedCnt > 0 ? Math.round(takenCnt / schedCnt * 100) : null;
+
+      // 연속기록 스트릭: 어제부터 역순, 예정약 전부 기록한 날만 카운트(미투약이면 중단, 예정 없는 날은 건너뜀)
+      let streak = 0;
+      for (let i = 1; i <= 400; i++) {
+        const ds = dayStrBack(i);
+        const due = used.filter(d => shouldTakeOnDate(scheds[d], ds));
+        if (!due.length) continue;
+        if (due.every(d => takenOn(ds, d))) streak++; else break;
+      }
+
+      const cardBg = isLight ? "#ffffff" : "#111827";
+      const border = isLight ? "#e2e8f0" : "#1f2937";
+      const tSub = isLight ? "#64748b" : "#6b7280";
+      const tMain = isLight ? "#1a1a2e" : "#e2e8f0";
+
+      // 미투약 배너 (약물 전량 표시 — 자르지 않음)
+      let bannerHtml = "";
+      if (missed.length) {
+        const bBg = isLight ? "#fef3c7" : "#3a2f0b";
+        const bBorder = "#f59e0b";
+        const items = missed.map(d => {
+          const cfg = DRUG_CONFIG[d] || { short: d, emoji: "💊" };
+          const esc = d.replace(/'/g, "\\'");
+          return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0">
+            <span style="font-size:12px;color:${isLight ? '#92400e' : '#fcd34d'}">⚠️ 어제 <b>${cfg.emoji} ${cfg.short}</b> 미기록</span>
+            <button onclick="openAddModal('${esc}')" style="flex-shrink:0;padding:4px 10px;background:${bBorder};border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">지금 기록</button>
+          </div>`;
+        }).join('');
+        bannerHtml = `<div style="background:${bBg};border:1px solid ${bBorder}55;border-radius:12px;padding:8px 12px;margin-bottom:10px">${items}</div>`;
+      }
+
+      // 준수율 + 스트릭 카드
+      const compColor = compliance == null ? "#9ca3af" : compliance >= 90 ? "#4ade80" : compliance >= 70 ? "#facc15" : "#f87171";
+      const statsHtml = `<div class="card" style="margin-bottom:12px;background:${cardBg};border:1px solid ${border}">
+        <div class="section-title" style="margin-bottom:8px">✅ 투약 준수율</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="text-align:center;padding:8px;background:${isLight ? '#f8fafc' : '#0d0d1a'};border-radius:10px">
+            <div style="font-size:10px;color:${tSub};margin-bottom:2px">최근 30일 준수율</div>
+            <div style="font-size:20px;font-weight:800;color:${compColor};font-family:'JetBrains Mono',monospace">${compliance == null ? '--' : compliance + '%'}</div>
+            <div style="font-size:9px;color:${tSub}">${takenCnt}/${schedCnt}회</div>
+          </div>
+          <div style="text-align:center;padding:8px;background:${isLight ? '#f8fafc' : '#0d0d1a'};border-radius:10px">
+            <div style="font-size:10px;color:${tSub};margin-bottom:2px">연속 완벽기록</div>
+            <div style="font-size:20px;font-weight:800;color:${streak > 0 ? '#60a5fa' : '#9ca3af'};font-family:'JetBrains Mono',monospace">${streak}일${streak >= 7 ? ' 🔥' : ''}</div>
+            <div style="font-size:9px;color:${tSub}">${used.length}종 추적 중</div>
+          </div>
+        </div>
+      </div>`;
+
+      c.innerHTML = bannerHtml + statsHtml;
     }
 
     function renderWeightList() {
@@ -8529,7 +8800,7 @@
       if (panel) panel.style.display = "block";
       const btn = document.querySelector(`.wtab-btn[data-wtab="${tab}"]`);
       if (btn) btn.classList.add("active");
-      if (tab === 'record') setTimeout(() => { renderWeightGraph(); initWeightTouch(); }, 50);
+      if (tab === 'record') setTimeout(() => { renderWeightGraph(); initWeightTouch(); try { renderPeptideWeightInsight(); } catch (e) {} }, 50);
       if (tab === 'inbody') setTimeout(renderInbodyPanel, 50);
       if (tab === 'analysis') setTimeout(renderAnalysis, 50);
     };
@@ -9354,6 +9625,7 @@
   ${badges.length ? `<div style="display:flex;gap:4px;flex-wrap:wrap">${badges.join('')}</div>` : ''}
 </div>`;
       }).join('');
+      try { renderInbodyQuality(); } catch (e) {}   // ⑥ 감량 질 스코어 카드
     };
 
     function renderInbodyGraph() {
@@ -10309,6 +10581,8 @@
         </button>
         <div id="active-drug-toggles" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
       </div>
+      <!-- ⑦ 미투약 감지 배너 + 준수율/스트릭 (renderAdherence) -->
+      <div id="adherence-cards"></div>
       <div id="remaining-cards"></div>
 
       <div class="pk-info">
@@ -10686,6 +10960,8 @@
           </div>
           <canvas id="weight-chart"></canvas>
         </div>
+        <!-- ⑤ 펩타이드별 체중효과 인사이트 (renderPeptideWeightInsight) -->
+        <div id="peptide-weight-insight"></div>
         <div id="weight-list"></div>
       </div>
 
@@ -10696,6 +10972,8 @@
           <div style="font-size:12px;color:#6b7280;margin-bottom:8px">📈 골격근량 · 체지방량 추이</div>
           <canvas id="inbody-chart"></canvas>
         </div>
+        <!-- ⑥ 감량 질(質) 스코어 (renderInbodyQuality) -->
+        <div id="inbody-quality-card"></div>
         <div id="inbody-list"></div>
       </div>
 
