@@ -1,8 +1,8 @@
-const CACHE_NAME = 'peptide-app-v8';
+const CACHE_NAME = 'peptide-app-v9';
 const STATIC_ASSETS = [
   './',
   './index.html',
-  './peptides_v3.json',
+  // peptides_v3.json(2.4MB)은 install 시 미리 받지 않고 첫 사용 시점에 캐시 (stale-while-revalidate 아래 참고)
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
@@ -52,14 +52,19 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // peptides_v3.json: 네트워크 우선, 실패 시 캐시
+  // peptides_v3.json: stale-while-revalidate (즉시 캐시 응답 + 백그라운드 갱신)
+  // — 2.4MB라 네트워크 우선이면 매번 로드 지연됨. 캐시 있으면 즉시 응답 후 백그라운드로 최신화.
   if (url.pathname.endsWith('peptides_v3.json')) {
     e.respondWith(
-      fetch(e.request).then(res => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        return res;
-      }).catch(() => caches.match(e.request))
+      caches.match(e.request).then(cached => {
+        const fetchPromise = fetch(e.request).then(res => {
+          if (res && res.ok) {
+            caches.open(CACHE_NAME).then(cache => cache.put(e.request, res.clone())).catch(() => {});
+          }
+          return res;
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
     );
     return;
   }
