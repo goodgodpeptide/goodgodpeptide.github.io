@@ -8383,15 +8383,16 @@
         const period = (sched.courseDays || 30) + (sched.restDays || 14);
         return (diff % period) < (sched.courseDays || 30);
       }
-      // interval 또는 스케줄 없음: 마지막 투약일 기준 주기 계산 (사용자 커스텀 주기 우선)
+      // interval 또는 스케줄 없음: 마지막 투약일 기�� 주기 계산 (사용자 커스텀 주기 우선)
       const intervalDays = sched?.intervalDays || getDoseCycle(drug);
       const recs = (appData.records || [])
         .filter(r => r.drug === drug && kstDateStr(r.time) <= dateStr)
         .sort((a, b) => b.time - a.time);
-      if (!recs.length) return false; // 투약 기록 없으면 미표시
+      if (!recs.length) return false;
       const lastDateStr = kstDateStr(recs[0].time);
       const diff = dateDiffDays(lastDateStr, dateStr);
-      return diff % intervalDays === 0;
+      if (diff <= 0) return diff === 0;
+      return diff >= intervalDays;
     }
 
     // 특정 날짜에 복용/투약 예정인 항목 목록 반환
