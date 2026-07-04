@@ -5532,7 +5532,7 @@
         </div>
       </div>`;
 
-      c.innerHTML = bannerHtml + statsHtml;
+      c.innerHTML = bannerHtml;  // 준수율/스트릭(statsHtml)은 달력 탭 renderCalendarAdherence로 이전(2026-07-04 GG). 여기는 미투약 배너만.
     }
 
     function renderWeightList() {
@@ -8487,9 +8487,66 @@
       return data;
     }
 
+    // ⑦→달력 이전(2026-07-04 GG): 투약 준수율/스트릭을 달력 탭으로 옮기고 접기/펼치기 + 기준을 '표시월'로(30일 대신 직관적).
+    window.toggleCalAdherence = function() {
+      const v = localStorage.getItem("cal_adherence_collapsed") === "1";
+      localStorage.setItem("cal_adherence_collapsed", v ? "0" : "1");
+      try { renderCalendarAdherence(); } catch (e) {}
+    };
+    function renderCalendarAdherence() {
+      const c = document.getElementById("calendar-adherence");
+      if (!c) return;
+      const isLight = document.body.classList.contains("light-mode");
+      const recs = appData.records || [];
+      const scheds = appData.drugSchedules || {};
+      const now = Date.now();
+      const used = getActiveDrugs().filter(d => recs.some(r => r.drug === d && r.time >= now - 60 * 86400000));
+      if (!used.length) { c.innerHTML = ""; return; }
+      const takenBy = {};
+      recs.forEach(r => { const ds = _kstDateStr(r.time); (takenBy[ds] || (takenBy[ds] = new Set())).add(r.drug); });
+      const takenOn = (ds, d) => !!(takenBy[ds] && takenBy[ds].has(d));
+      // 표시월(calYear/calMonth) 준수율 — 오늘까지만 집계(미래일 제외)
+      const todayStr = _kstDateStr(now);
+      const dim = new Date(calYear, calMonth + 1, 0).getDate();
+      let schedCnt = 0, takenCnt = 0;
+      for (let day = 1; day <= dim; day++) {
+        const ds = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+        if (ds > todayStr) break;
+        used.forEach(d => { if (shouldTakeOnDate(scheds[d], ds)) { schedCnt++; if (takenOn(ds, d)) takenCnt++; } });
+      }
+      const compliance = schedCnt > 0 ? Math.round(takenCnt / schedCnt * 100) : null;
+      // 연속 완벽기록 스트릭(어제부터 역순, 전체)
+      const todayMid = kstInputToMs(todayStr + "T00:00");
+      const back = i => _kstDateStr(todayMid - i * 86400000);
+      let streak = 0;
+      for (let i = 1; i <= 400; i++) { const ds = back(i); const due = used.filter(d => shouldTakeOnDate(scheds[d], ds)); if (!due.length) continue; if (due.every(d => takenOn(ds, d))) streak++; else break; }
+      const collapsed = localStorage.getItem("cal_adherence_collapsed") === "1";
+      const cardBg = isLight ? "#ffffff" : "#111827", border = isLight ? "#e2e8f0" : "#1f2937";
+      const tSub = isLight ? "#64748b" : "#6b7280";
+      const compColor = compliance == null ? "#9ca3af" : compliance >= 90 ? "#4ade80" : compliance >= 70 ? "#facc15" : "#f87171";
+      const body = collapsed ? "" : `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div style="text-align:center;padding:8px;background:${isLight ? "#f8fafc" : "#0d0d1a"};border-radius:10px">
+            <div style="font-size:10px;color:${tSub};margin-bottom:2px">${calYear}년 ${calMonth + 1}월 준수율</div>
+            <div style="font-size:20px;font-weight:800;color:${compColor};font-family:'JetBrains Mono',monospace">${compliance == null ? "--" : compliance + "%"}</div>
+            <div style="font-size:9px;color:${tSub}">${takenCnt}/${schedCnt}회</div>
+          </div>
+          <div style="text-align:center;padding:8px;background:${isLight ? "#f8fafc" : "#0d0d1a"};border-radius:10px">
+            <div style="font-size:10px;color:${tSub};margin-bottom:2px">연속 완벽기록</div>
+            <div style="font-size:20px;font-weight:800;color:${streak > 0 ? "#60a5fa" : "#9ca3af"};font-family:'JetBrains Mono',monospace">${streak}일${streak >= 7 ? " 🔥" : ""}</div>
+            <div style="font-size:9px;color:${tSub}">${used.length}종 추적 중</div>
+          </div>
+        </div>`;
+      c.innerHTML = `<div class="card" style="margin-bottom:12px;background:${cardBg};border:1px solid ${border}">
+        <div onclick="toggleCalAdherence()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+          <span class="section-title" style="margin:0">✅ 투약 준수율${collapsed && compliance != null ? ` · <span style="color:${compColor}">${compliance}%</span>` : ""}</span>
+          <span style="color:${tSub};font-size:12px">${collapsed ? "펼치기 ▼" : "접기 ▲"}</span>
+        </div>${body}</div>`;
+    }
+
     function renderCalendar() {
       const c = document.getElementById("calendar-container");
       if (!c) return;
+      try { renderCalendarAdherence(); } catch (e) {}
       const isLight = document.body.classList.contains("light-mode");
       const data = getCalendarData();
       const holidays = getKoreanHolidays(calYear);
@@ -11374,6 +11431,7 @@
 
     <!-- 달력 패널 -->
     <div id="panel-calendar" class="tab-panel">
+      <div id="calendar-adherence"></div>
       <div id="calendar-container"></div>
     </div>
 
