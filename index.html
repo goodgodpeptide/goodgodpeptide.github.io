@@ -654,6 +654,122 @@
       document.getElementById("backup-restore-warning").style.display = "none";
     };
 
+    // ══════════════════════════════════════════════
+    // 리포트 / CSV 내보내기 (설정 메뉴 → 리포트/내보내기)
+    // ══════════════════════════════════════════════
+    window.openReportModal = function() {
+      const modal = document.getElementById("report-modal");
+      if (!modal) return;
+      const pad = n => String(n).padStart(2, '0');
+      const toDateInput = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      const now = new Date();
+      const before = new Date(now.getTime() - 29 * 86400000);
+      const startEl = document.getElementById("report-start");
+      const endEl = document.getElementById("report-end");
+      if (startEl && !startEl.value) startEl.value = toDateInput(before);
+      if (endEl && !endEl.value) endEl.value = toDateInput(now);
+      modal.style.display = "flex";
+      modal.onclick = (e) => { if (e.target === modal) modal.style.display = "none"; };
+    };
+
+    // 선택된 기간(KST 00:00~23:59)의 ms 범위 반환. 미선택 시 null + 안내 토스트
+    function _reportRange() {
+      const startVal = document.getElementById("report-start")?.value;
+      const endVal = document.getElementById("report-end")?.value;
+      if (!startVal || !endVal) { showToast("⚠️ 기간을 선택하세요"); return null; }
+      return { startMs: kstInputToMs(startVal + "T00:00"), endMs: kstInputToMs(endVal + "T23:59"), startVal, endVal };
+    }
+
+    // 기간별 리포트를 인쇄 전용 영역에 렌더링 후 브라우저 인쇄(→ PDF로 저장) 실행
+    window.printDateRangeReport = function() {
+      const range = _reportRange();
+      if (!range) return;
+      const { startMs, endMs, startVal, endVal } = range;
+      const recs  = (appData.records || []).filter(r => r.time >= startMs && r.time <= endMs).sort((a,b) => a.time - b.time);
+      const wrecs = (appData.weightRecords || []).filter(r => r.time >= startMs && r.time <= endMs).sort((a,b) => a.time - b.time);
+      const ses   = (appData.sideEffects || []).filter(r => r.time >= startMs && r.time <= endMs).sort((a,b) => a.time - b.time);
+
+      let html = `<h1>체중관리 리포트</h1><div class="rp-range">기간: ${startVal} ~ ${endVal} · 생성: ${escapeHtml(toKSTString(Date.now()))}</div>`;
+
+      html += `<h2>💊 투약 기록 (${recs.length}건)</h2>`;
+      if (recs.length) {
+        html += `<table><thead><tr><th>일시</th><th>약물</th><th>용량(mg)</th><th>경로</th><th>비고</th></tr></thead><tbody>`;
+        recs.forEach(r => {
+          const cfg = DRUG_CONFIG[r.drug] || {};
+          const routeInfo = ADMIN_ROUTES.find(rt => rt.id === (r.route || cfg.defaultRoute || 'SC'));
+          const siteInfo = r.site ? INJECTION_SITES.find(s => s.id === r.site) : null;
+          html += `<tr><td>${escapeHtml(toKSTString(r.time))}</td><td>${escapeHtml(r.drug)}</td><td>${escapeHtml(r.dose)}</td><td>${escapeHtml(routeInfo?.label || r.route || '')}</td><td>${escapeHtml([siteInfo?.label, r.isOverride ? '수동입력' : ''].filter(Boolean).join(' · '))}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+      } else html += `<p class="rp-empty">기록 없음</p>`;
+
+      html += `<h2>⚖️ 체중 추이 (${wrecs.length}건)</h2>`;
+      if (wrecs.length) {
+        html += `<table><thead><tr><th>일시</th><th>체중(kg)</th></tr></thead><tbody>`;
+        wrecs.forEach(r => { html += `<tr><td>${escapeHtml(toKSTString(r.time))}</td><td>${escapeHtml(r.weight)}</td></tr>`; });
+        html += `</tbody></table>`;
+        const first = wrecs[0].weight, last = wrecs[wrecs.length - 1].weight;
+        const diff = Math.round((last - first) * 10) / 10;
+        html += `<p class="rp-summary">변화: ${first}kg → ${last}kg (${diff >= 0 ? '+' : ''}${diff}kg)</p>`;
+      } else html += `<p class="rp-empty">기록 없음</p>`;
+
+      html += `<h2>⚠️ 부작용 기록 (${ses.length}건)</h2>`;
+      if (ses.length) {
+        html += `<table><thead><tr><th>일시</th><th>약물</th><th>증상</th><th>메모</th></tr></thead><tbody>`;
+        ses.forEach(r => {
+          html += `<tr><td>${escapeHtml(toKSTString(r.time))}</td><td>${escapeHtml(r.drug || '')}</td><td>${escapeHtml((r.symptoms || []).join(', '))}</td><td>${escapeHtml(r.note || '')}</td></tr>`;
+        });
+        html += `</tbody></table>`;
+      } else html += `<p class="rp-empty">기록 없음</p>`;
+
+      const area = document.getElementById("print-report-area");
+      if (!area) return;
+      area.innerHTML = html;
+      setTimeout(() => window.print(), 60);
+    };
+
+    // CSV 셀 이스케이프 (콤마/줄바꿈/따옴표 포함 시 큰따옴표로 감싸기)
+    function _csvCell(v) {
+      const s = String(v == null ? '' : v);
+      return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }
+    // CSV 문자열 → 파일 다운로드 (BOM 포함: 엑셀에서 한글 깨짐 방지)
+    function _downloadCsv(rows, filename) {
+      const csv = rows.map(r => r.map(_csvCell).join(',')).join('\r\n');
+      const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" }); // BOM: 엑셀 한글 깨짐 방지
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    }
+    function _ymdNow() {
+      const d = new Date();
+      return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    // 투약 기록 전체를 CSV로 다운로드
+    window.exportRecordsCsv = function() {
+      const rows = [["일시", "약물", "용량(mg)", "경로", "부위", "비고"]];
+      (appData.records || []).slice().sort((a,b) => a.time - b.time).forEach(r => {
+        const cfg = DRUG_CONFIG[r.drug] || {};
+        const routeInfo = ADMIN_ROUTES.find(rt => rt.id === (r.route || cfg.defaultRoute || 'SC'));
+        const siteInfo = r.site ? INJECTION_SITES.find(s => s.id === r.site) : null;
+        rows.push([toKSTString(r.time), r.drug, r.dose, routeInfo?.label || r.route || '', siteInfo?.label || '', r.isOverride ? '수동입력' : '']);
+      });
+      _downloadCsv(rows, `투약기록_${_ymdNow()}.csv`);
+      showToast('✅ 투약 기록 CSV 다운로드');
+    };
+
+    // 체중 기록 전체를 CSV로 다운로드
+    window.exportWeightCsv = function() {
+      const rows = [["일시", "체중(kg)"]];
+      (appData.weightRecords || []).slice().sort((a,b) => a.time - b.time).forEach(r => {
+        rows.push([toKSTString(r.time), r.weight]);
+      });
+      _downloadCsv(rows, `체중기록_${_ymdNow()}.csv`);
+      showToast('✅ 체중 기록 CSV 다운로드');
+    };
+
     // ── PWA 설치 프롬프트 ────────────────────────────────────
     window._pwaInstallPrompt = null;
     window.addEventListener('beforeinstallprompt', function(e) {
@@ -697,6 +813,14 @@
       // 테마 토글 즉시 반영: 저장됨 인디케이터 + 백과사전 상태배지 색 재적용(재렌더 없이는 이전 테마 색 유지되던 문제)
       try { setSaveStatus(window._lastSaveStatus || 'saved'); } catch (e) {}
       try { if (window.renderEncyclopedia) window.renderEncyclopedia(); } catch (e) {}  // 내부에서 encyclopediaData 없으면 자체 return
+    };
+
+    // ── 글자 크게 모드 (설정 → 🔤 글자 크게) — 저시력/고령 사용자 가독성 개선 ──
+    window.toggleBigFont = () => {
+      const isBig = document.body.classList.toggle("big-font");
+      const btn = document.getElementById("bigfont-toggle");
+      if (btn) btn.textContent = isBig ? "🔡 글자 크게 (끄기)" : "🔤 글자 크게";
+      localStorage.setItem("bigFont", isBig ? "1" : "0");
     };
 
     // ── 화면 방향 제어 (2026-07-04 GG: manifest orientation:any가 폰 자동회전 잠금을 무시하고
@@ -774,6 +898,15 @@
       document.addEventListener("DOMContentLoaded", () => {
         const btn = document.getElementById("theme-toggle");
         if (btn) btn.textContent = "☀️ 라이트 모드";
+      });
+    }
+
+    // 저장된 글자 크게 설정 복원
+    if (localStorage.getItem("bigFont") === "1") {
+      document.body.classList.add("big-font");
+      document.addEventListener("DOMContentLoaded", () => {
+        const btn = document.getElementById("bigfont-toggle");
+        if (btn) btn.textContent = "🔡 글자 크게 (끄기)";
       });
     }
 
@@ -1636,8 +1769,19 @@
     };
 
     window.deleteRecord = (id) => {
-      appData.records = (appData.records || []).filter(r => r.id !== id);
+      appData.records = appData.records || [];
+      const idx = appData.records.findIndex(r => r.id === id);
+      if (idx === -1) return;
+      const removed = appData.records[idx];
+      appData.records.splice(idx, 1);
       scheduleSave(); renderAll();
+      // 오터치 삭제 방지 — 5초간 실행취소 가능 (수정/삭제 버튼이 인접해 있어 오조작이 잦음)
+      showToast("🗑️ 삭제됨", 5000, { label: "실행취소", onClick: () => {
+        appData.records = appData.records || [];
+        const restoreIdx = Math.min(idx, appData.records.length);
+        appData.records.splice(restoreIdx, 0, removed);
+        scheduleSave(); renderAll();
+      }});
     };
 
     window.openEditRecordModal = (id) => {
@@ -1719,8 +1863,19 @@
     };
 
     window.deleteWeightRecord = (id) => {
-      appData.weightRecords = (appData.weightRecords || []).filter(r => r.id !== id);
+      appData.weightRecords = appData.weightRecords || [];
+      const idx = appData.weightRecords.findIndex(r => r.id === id);
+      if (idx === -1) return;
+      const removed = appData.weightRecords[idx];
+      appData.weightRecords.splice(idx, 1);
       scheduleSave(); renderAll();
+      // 오터치 삭제 방지 — 5초간 실행취소 가능
+      showToast("🗑️ 삭제됨", 5000, { label: "실행취소", onClick: () => {
+        appData.weightRecords = appData.weightRecords || [];
+        const restoreIdx = Math.min(idx, appData.weightRecords.length);
+        appData.weightRecords.splice(restoreIdx, 0, removed);
+        scheduleSave(); renderAll();
+      }});
     };
 
     // ── 부작용 로그 ──────────────────────────────────
@@ -2453,7 +2608,7 @@
       // 마지막으로 사용한 탭 복원 (새로고침 시 유지)
       const savedTab = localStorage.getItem("lastTab");
       if (savedTab && document.getElementById("panel-" + savedTab)) {
-        switchTab(savedTab);
+        switchTab(savedTab, true); // isRestore=true — 새로고침 직후 복원이므로 scrollTo(0,0) 스킵
       } else {
         startLiveUpdate();
       }
@@ -3542,16 +3697,30 @@
       showToast(`✅ ${drug.split(' ')[0]} ${dose}mg · ${siteInfo?.label || ''} 기록 완료`);
     };
 
-    // 토스트 메시지
-    function showToast(msg, duration) {
+    // 토스트 메시지 — action: {label, onClick} 전달 시 액션 버튼 포함 (예: 삭제 실행취소)
+    function showToast(msg, duration, action) {
       let t = document.getElementById("toast");
       if (!t) {
         t = document.createElement("div");
         t.id = "toast";
-        t.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;border:1px solid #374151;border-radius:12px;padding:10px 20px;font-size:13px;color:#e2e8f0;z-index:999;transition:opacity .3s;max-width:90vw;text-align:center";
+        t.style.cssText = "position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;border:1px solid #374151;border-radius:12px;padding:10px 14px 10px 20px;font-size:13px;color:#e2e8f0;z-index:999;transition:opacity .3s;max-width:90vw;text-align:center;display:flex;align-items:center;gap:10px;justify-content:center";
         document.body.appendChild(t);
       }
-      t.textContent = msg;
+      t.innerHTML = "";
+      const msgSpan = document.createElement("span");
+      msgSpan.textContent = msg;
+      t.appendChild(msgSpan);
+      if (action && action.label && typeof action.onClick === "function") {
+        const btn = document.createElement("button");
+        btn.textContent = action.label;
+        btn.style.cssText = "background:none;border:none;color:#60a5fa;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;padding:2px 4px;flex-shrink:0;white-space:nowrap";
+        btn.onclick = () => {
+          action.onClick();
+          t.style.opacity = "0";
+          clearTimeout(t._timer);
+        };
+        t.appendChild(btn);
+      }
       t.style.opacity = "1";
       clearTimeout(t._timer);
       t._timer = setTimeout(() => { t.style.opacity = "0"; }, duration || 2500);
@@ -3564,7 +3733,7 @@
       const isLight = document.body.classList.contains("light-mode");
       let recs = (appData.records || []).filter(r => filter === "전체" || DRUG_CONFIG[r.drug]?.short === filter)
         .sort((a, b) => b.time - a.time);
-      if (!recs.length) { c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:32px 0;font-size:14px">기록이 없습니다</div>`; return; }
+      if (!recs.length) { c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:32px 0;font-size:14px">기록이 없습니다<br><button onclick="openAddModal()" style="margin-top:12px;padding:8px 18px;background:#1d4ed8;border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 첫 투약 기록하기</button></div>`; return; }
       const count = recs.length;
       const hdrBorder = isLight ? '#e2e8f0' : '#1f2937';
       const hdrTxt = isLight ? '#6b7280' : '#4b5563';
@@ -5100,7 +5269,7 @@
       if (!c) return;
       const isLight = document.body.classList.contains("light-mode");
       const recs = (appData.weightRecords || []).sort((a,b) => b.time - a.time);
-      if (!recs.length) { c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:32px 0;font-size:14px">기록이 없습니다</div>`; return; }
+      if (!recs.length) { c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:32px 0;font-size:14px">기록이 없습니다<br><button onclick="openWeightModal()" style="margin-top:12px;padding:8px 18px;background:#059669;border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 첫 체중 기록하기</button></div>`; return; }
       const count = recs.length;
       const hdrBorder = isLight ? '#e2e8f0' : '#1f2937';
       const hdrTxt = isLight ? '#6b7280' : '#4b5563';
@@ -5624,7 +5793,7 @@
       const inv = appData.inventory || [];
 
       if (!inv.length) {
-        c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:16px;font-size:13px">재고 항목이 없습니다</div>`;
+        c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:16px;font-size:13px">재고 항목이 없습니다<br><button onclick="openInventoryModal()" style="margin-top:10px;padding:7px 16px;background:#b45309;border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ 재고 추가하기</button></div>`;
         return;
       }
 
@@ -5787,7 +5956,7 @@
       const activeDrugs = getActiveDrugs();
 
       if (!vials.length) {
-        c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:16px;font-size:13px">조제된 바이알이 없습니다</div>`;
+        c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:16px;font-size:13px">조제된 바이알이 없습니다<br><button onclick="openReconModal()" style="margin-top:10px;padding:7px 16px;background:#1d4ed8;border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ 조제 기록하기</button></div>`;
         return;
       }
 
@@ -6777,12 +6946,15 @@
       catch(e) { alert("댓글 삭제에 실패했습니다."); }
     };
 
-    window.switchTab = (tab) => {
+    window.switchTab = (tab, isRestore) => {
       document.querySelectorAll(".tab-panel").forEach(p => p.style.display = "none");
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
       document.getElementById("panel-"+tab).style.display = "block";
       document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add("active");
       localStorage.setItem("lastTab", tab);
+      // 탭 전환 시 스크롤 최상단 복귀 (긴 목록 스크롤한 채 다른 탭 이동 시 이전 스크롤 위치가 남던 문제)
+      // 단, 새로고침 직후 마지막 탭 복원 호출(isRestore=true)일 땐 스킵 — 사용자가 스크롤한 적이 없으므로 불필요
+      if (!isRestore) window.scrollTo(0, 0);
       if (tab === "peptide") {
         setTimeout(() => { renderPeptideGraph(); initGraphTouch(); initDoseHistoryTouch(); startLiveUpdate(); fetchFxRates(); loadCostSettings(); }, 50);
       } else {
@@ -9374,7 +9546,7 @@
       const textMain = isLight ? '#1a1a2e' : '#e2e8f0';
       const textSub  = isLight ? '#64748b' : '#6b7280';
       if (!recs.length) {
-        c.innerHTML = `<div style="text-align:center;padding:32px;color:${textSub};font-size:13px">인바디 기록이 없습니다.<br>측정 후 결과를 추가하세요.</div>`;
+        c.innerHTML = `<div style="text-align:center;padding:32px;color:${textSub};font-size:13px">인바디 기록이 없습니다.<br>측정 후 결과를 추가하세요.<br><button onclick="openInbodyModal()" style="margin-top:12px;padding:8px 18px;background:#7c3aed;border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">+ 인바디 기록 추가</button></div>`;
         return;
       }
       const gender = appData.gender || '남성';
@@ -10208,6 +10380,43 @@
     body.light-mode #don-cert-method,
     body.light-mode #don-cert-note { background: #ffffff !important; border-color: #d1d5db !important; color: #374151 !important; }
     body.light-mode #don-krw-hint { color: #7c3aed !important; }
+
+    /* ── 탭 바 sticky — top-bar(52px) 바로 아래 고정 + 탭 전환 시 스크롤 최상단 복귀 ── 2026-07-04 UX */
+    .tabs { position: sticky; top: 52px; z-index: 9; }
+    @media (orientation: landscape) { .tabs { top: 44px; } }
+
+    /* ── 주사 부위 선택 모달(quick-site-btns) 버튼 — 라이트모드 오버라이드 (다크 하드코딩 #1f2937/#374151 대응) ── */
+    body.light-mode #quick-site-btns button[style*="border:2px solid #374151"] {
+      border-color: #d1d5db !important; background: #f3f4f6 !important; color: #64748b !important;
+    }
+
+    /* ── 글자 크게 모드 (설정 → 🔤 글자 크게) — 저시력/고령 사용자 가독성 개선 ── */
+    body.big-font [style*="font-size:9px"]  { font-size: 12px !important; }
+    body.big-font [style*="font-size:10px"] { font-size: 13px !important; }
+    body.big-font [style*="font-size:11px"] { font-size: 14px !important; }
+    body.big-font .tab-btn { font-size: 13px !important; }
+    body.big-font .stat-label { font-size: 13px !important; }
+    body.big-font .section-title { font-size: 14px !important; }
+
+    /* ── 인쇄 전용 리포트 영역 — 화면에서는 숨김, 인쇄 시에만 표시 (printDateRangeReport) ── */
+    #print-report-area { display: none; }
+    @media print {
+      body * { visibility: hidden; }
+      #print-report-area, #print-report-area * { visibility: visible; }
+      #print-report-area {
+        display: block !important;
+        position: absolute; left: 0; top: 0; width: 100%;
+        color: #000; background: #fff; font-family: 'Noto Sans KR', sans-serif; padding: 12px;
+      }
+      #print-report-area h1 { font-size: 20px; margin-bottom: 4px; }
+      #print-report-area .rp-range { font-size: 12px; color: #333; margin-bottom: 16px; }
+      #print-report-area h2 { font-size: 15px; margin: 18px 0 8px; border-bottom: 2px solid #333; padding-bottom: 4px; }
+      #print-report-area table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+      #print-report-area th, #print-report-area td { border: 1px solid #999; padding: 5px 8px; text-align: left; }
+      #print-report-area th { background: #eee; }
+      #print-report-area .rp-empty { font-size: 12px; color: #666; }
+      #print-report-area .rp-summary { font-size: 13px; font-weight: 700; margin-top: 4px; }
+    }
   </style>
 </head>
 <body>
@@ -10328,6 +10537,12 @@
                    text-align:left;cursor:pointer;font-family:inherit">
             💾 백업 / 복원
           </button>
+          <button onclick="closeSettingsMenu();openReportModal()"
+            style="width:100%;padding:12px 16px;background:none;border:none;
+                   border-bottom:1px solid #374151;color:#e2e8f0;font-size:13px;
+                   text-align:left;cursor:pointer;font-family:inherit">
+            📊 리포트 / 내보내기
+          </button>
           <button onclick="closeSettingsMenu();openNicknameModal()"
             style="width:100%;padding:12px 16px;background:none;border:none;
                    border-bottom:1px solid #374151;color:#e2e8f0;font-size:13px;
@@ -10345,6 +10560,12 @@
                    border-bottom:1px solid #374151;color:#e2e8f0;font-size:13px;
                    text-align:left;cursor:pointer;font-family:inherit">
             🔒 세로 고정
+          </button>
+          <button id="bigfont-toggle" onclick="toggleBigFont()"
+            style="width:100%;padding:12px 16px;background:none;border:none;
+                   border-bottom:1px solid #374151;color:#e2e8f0;font-size:13px;
+                   text-align:left;cursor:pointer;font-family:inherit">
+            🔤 글자 크게
           </button>
           <button onclick="closeSettingsMenu();openDonationModal()"
             style="width:100%;padding:12px 16px;background:none;border:none;
@@ -11053,6 +11274,56 @@
     </div>
   </div>
 </div>
+
+<!-- 리포트 / 내보내기 모달 -->
+<div id="report-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:1000;align-items:flex-end">
+  <div style="background:#0f172a;border-top:2px solid #60a5fa;border-radius:20px 20px 0 0;width:100%;max-height:85vh;overflow-y:auto;padding:24px 20px 36px;color:#f1f5f9;font-family:inherit;-webkit-overflow-scrolling:touch">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <div style="font-size:18px;font-weight:700">📊 리포트 / 내보내기</div>
+      <button onclick="document.getElementById('report-modal').style.display='none'"
+        style="background:none;border:none;color:#6b7280;font-size:22px;cursor:pointer">✕</button>
+    </div>
+
+    <!-- 기간 선택 리포트 (PDF 저장) -->
+    <div style="background:#1e293b;border-radius:14px;padding:16px;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:700;color:#60a5fa;margin-bottom:6px">🖨️ 기간 리포트 (PDF로 저장)</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.6">
+        선택한 기간의 투약 · 체중 추이 · 부작용을 표로 정리해 인쇄합니다.<br>인쇄창에서 "PDF로 저장"을 선택하세요.
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+        <input id="report-start" type="date" class="input-field" style="flex:1" />
+        <span style="color:#6b7280;font-size:12px">~</span>
+        <input id="report-end" type="date" class="input-field" style="flex:1" />
+      </div>
+      <button onclick="printDateRangeReport()"
+        style="width:100%;padding:12px;background:linear-gradient(135deg,#1d4ed8,#2563eb);border:none;
+               border-radius:10px;color:white;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+        🖨️ 리포트 인쇄 / PDF 저장
+      </button>
+    </div>
+
+    <!-- CSV 내보내기 -->
+    <div style="background:#1e293b;border-radius:14px;padding:16px">
+      <div style="font-size:14px;font-weight:700;color:#4ade80;margin-bottom:6px">📄 CSV 내보내기</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:12px;line-height:1.6">
+        전체 기록을 엑셀에서 열 수 있는 CSV 파일로 다운로드합니다.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onclick="exportRecordsCsv()"
+          style="width:100%;padding:12px;background:#14532d;border:none;border-radius:10px;color:#4ade80;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+          💊 투약 기록 CSV 다운로드
+        </button>
+        <button onclick="exportWeightCsv()"
+          style="width:100%;padding:12px;background:#14532d;border:none;border-radius:10px;color:#4ade80;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+          ⚖️ 체중 기록 CSV 다운로드
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 인쇄 전용 영역 — 화면에는 숨겨져 있다가 인쇄(printDateRangeReport) 시에만 표시 (print CSS 참고) -->
+<div id="print-report-area"></div>
 
 <!-- 커스텀 확인 다이얼로그 (confirm() 대체) -->
 <div id="custom-confirm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center">
