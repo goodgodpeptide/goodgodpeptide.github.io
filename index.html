@@ -7125,37 +7125,55 @@
       } catch(e) { alert('오류: '+e.message); }
     };
 
-    // 📢 커뮤니티 업데이트 패치노트 (2026-07-04 GG: 커뮤니티에 펼치기/접기로) — 백과사전 patchNotes 재사용
+    // 📢 커뮤니티 패치노트 = 앱 전체 changelog(버그수정·신기능·UX·데이터). 백과사전 patchNotes(펩타이드 추가)와 별개 — 2026-07-04 GG.
+    // 새 업데이트 배포 시 여기 맨 위에 한 줄씩 추가.
+    const APP_CHANGELOG = [
+      { date: "2026-07-04", items: [
+        { type: "fix",  text: "데이터 유실 버그 수정 — 로드 실패 시 빈 데이터로 클라우드 덮어쓰기 차단 + 저장 안전망(앱 닫힘 즉시저장·실패 재시도·오프라인 캐시)·다기기 충돌 방지" },
+        { type: "feat", text: "펩타이드별 체중효과 인사이트 — 약물 시작 후 주당 감량 자동분석 + 체중그래프 약물 활성기간 음영" },
+        { type: "feat", text: "감량 질 스코어 — 인바디로 감량 중 지방/근육 손실 비율" },
+        { type: "feat", text: "미투약 감지 + 준수율/스트릭 (달력 탭, 표시월 기준, 접기/펼치기)" },
+        { type: "feat", text: "기록 삭제 실행취소(Undo) — 오터치 영구삭제 방지" },
+        { type: "feat", text: "리포트 & 내보내기 — 인쇄용 PDF 리포트 + 투약·체중 CSV 다운로드" },
+        { type: "feat", text: "커뮤니티 업데이트 소식(이 패치노트)" },
+        { type: "ui",   text: "탭바 스크롤 고정 + 탭이동 시 맨위로 · 빈 화면 '첫 기록' 버튼 · 글자 크게 설정 · 라이트모드 색상 수정 · 백과사전 캐시 최적화" },
+        { type: "fix",  text: "화면방향 제어(세로/가로/자동) · 라이트모드 상태배지·저장됨 색상 · 흰창 차단" },
+        { type: "data", text: "백과사전 펩타이드 81→110종(신규 29종) + 기존 6종 승인상태 갱신(오포글리프론 FDA승인 등)" },
+      ]},
+      { date: "2026-07-03", items: [
+        { type: "feat", text: "백과사전 업데이트 소식(패치노트) + 최신순 정렬 + NEW/갱신 배지" },
+        { type: "data", text: "펩타이드 5종 추가 (76→81)" },
+        { type: "fix",  text: "핀치줌 고착 해소 · PWA 설치 배너" },
+      ]},
+    ];
     window.toggleCommunityPatchNotes = function() {
       const v = localStorage.getItem("community_pn_collapsed") === "1";
       localStorage.setItem("community_pn_collapsed", v ? "0" : "1");
       try { renderCommunityPatchNotes(); } catch (e) {}
     };
-    async function renderCommunityPatchNotes() {
+    function renderCommunityPatchNotes() {
       const host = document.getElementById("community-patchnotes");
       if (!host) return;
-      if (!encyclopediaData) {
-        try { const res = await fetch("peptides_v3.json"); encyclopediaData = await res.json(); } catch (e) { host.innerHTML = ""; return; }
-      }
-      const pn = (encyclopediaData && encyclopediaData.patchNotes) || [];
-      if (!pn.length) { host.innerHTML = ""; return; }
+      const cl = APP_CHANGELOG || [];
+      if (!cl.length) { host.innerHTML = ""; return; }
       const isLight = document.body.classList.contains("light-mode");
       const collapsed = localStorage.getItem("community_pn_collapsed") === "1";
       const bg = isLight ? "#ffffff" : "#12121e", bd = isLight ? "#e2e8f0" : "#1f2937";
-      const titleClr = isLight ? "#1a1a2e" : "#f1f5f9", subClr = isLight ? "#6b7280" : "#94a3b8";
-      const chipBg = isLight ? "#f1f5f9" : "#1e293b", chipClr = isLight ? "#334155" : "#cbd5e1";
-      const totalNew = pn.reduce((s, e) => s + ((e.added || []).length), 0);
-      const chip = it => `<span onclick="event.stopPropagation();switchTab('encyclopedia');setTimeout(()=>{try{openEncyclopediaModal('${it.id}')}catch(e){}},200)" style="display:inline-block;padding:2px 8px;margin:2px 3px 2px 0;background:${chipBg};border-radius:6px;font-size:11px;color:${chipClr};cursor:pointer">${escapeHtml(it.name)}</span>`;
+      const titleClr = isLight ? "#1a1a2e" : "#f1f5f9", subClr = isLight ? "#475569" : "#94a3b8";
+      const TYPE = { fix:{e:"🐛",c:"#f87171",l:"버그수정"}, feat:{e:"✨",c:"#4ade80",l:"신기능"}, ui:{e:"🎨",c:"#60a5fa",l:"UX"}, data:{e:"📚",c:"#a78bfa",l:"데이터"} };
+      const totalItems = cl.reduce((s, e) => s + (e.items ? e.items.length : 0), 0);
       let body = "";
-      pn.forEach(e => {
+      cl.forEach(e => {
         body += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:${titleClr};margin-bottom:6px">📅 ${escapeHtml(e.date)}</div>`;
-        if (e.added && e.added.length) body += `<div style="margin-bottom:6px"><div style="font-size:11px;color:#22c55e;font-weight:600;margin-bottom:3px">🟢 신규 ${e.added.length}종 추가${e.addedNote ? ` — ${escapeHtml(e.addedNote)}` : ""}</div><div>${e.added.map(chip).join("")}</div></div>`;
-        if (e.updated && e.updated.length) body += `<div style="margin-bottom:4px"><div style="font-size:11px;color:#60a5fa;font-weight:600;margin-bottom:3px">🔵 ${e.updated.length}종 정보 갱신</div>${e.updated.map(u => `<div style="font-size:11px;color:${subClr};padding:1px 0;line-height:1.7">• ${chip(u)} ${escapeHtml(u.note || "")}</div>`).join("")}</div>`;
+        (e.items || []).forEach(it => {
+          const t = TYPE[it.type] || TYPE.feat;
+          body += `<div style="font-size:11.5px;color:${subClr};padding:3px 0;line-height:1.55;display:flex;gap:6px"><span style="color:${t.c};font-weight:700;white-space:nowrap;flex-shrink:0">${t.e} ${t.l}</span><span>${escapeHtml(it.text)}</span></div>`;
+        });
         body += `</div>`;
       });
       host.innerHTML = `<div style="background:${bg};border:1px solid ${bd};border-radius:14px;padding:14px;margin-bottom:16px">
           <div onclick="toggleCommunityPatchNotes()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
-            <span style="font-size:14px;font-weight:700;color:${titleClr}">📢 업데이트 소식${collapsed && totalNew ? ` <span style="padding:1px 7px;background:#16a34a22;color:#22c55e;border-radius:20px;font-size:10px;font-weight:700;margin-left:2px">🆕 ${totalNew}</span>` : ""}</span>
+            <span style="font-size:14px;font-weight:700;color:${titleClr}">📢 업데이트·패치 소식${collapsed && totalItems ? ` <span style="padding:1px 7px;background:#16a34a22;color:#22c55e;border-radius:20px;font-size:10px;font-weight:700;margin-left:2px">${totalItems}</span>` : ""}</span>
             <span style="color:${subClr};font-size:12px">${collapsed ? "펼치기 ▼" : "접기 ▲"}</span>
           </div>
           <div style="display:${collapsed ? "none" : "block"};margin-top:12px">${body}</div>
