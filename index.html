@@ -78,6 +78,7 @@
     let currentUser = null;
     let saveTimer = null;
     let dataLoaded = false;          // ① loadData 성공 시에만 true — false면 saveData 차단(로드실패 후 덮어쓰기 방지)
+    let _pendingAllowEmpty = false;  // ④#5 사용자가 마지막 기록을 '의도적으로' 삭제한 경우 빈데이터 가드를 1회 통과시킴(삭제가 서버에 반영되도록)
     let _lastSyncedUpdatedAt = 0;    // ④ 이 클라이언트가 마지막으로 반영한 서버 updatedAt(다기기 충돌 감지 기준)
     let appData = { records: [], weightRecords: [], gender: "남성", height: "", targetWeight: "" };
 
@@ -1112,7 +1113,10 @@
           const existing = snap.data();
           // 안전가드: 빈 appData로 기존 데이터 덮어쓰기 방지
           const exCount = (existing.records||[]).length + (existing.weightRecords||[]).length;
-          if (recCount === 0 && exCount > 0) {
+          // ④#5: dataLoaded 가드(위 1091)가 이미 '로드실패 후 저장'을 원천차단하므로, 여기 도달 시 데이터는
+          //      정상 로드된 상태 → 빈 recCount는 사용자가 '의도적으로' 다 지운 것일 수 있음. 의도삭제(_pendingAllowEmpty)면
+          //      1회 통과시켜 삭제가 서버에 반영되게(안 그러면 마지막 기록 삭제가 무음 차단→새로고침시 부활). 그 외 spurious 빈값은 계속 차단.
+          if (recCount === 0 && exCount > 0 && !_pendingAllowEmpty) {
             console.warn("saveData 중단: 빈 appData로 기존 데이터 덮어쓰기 방지");
             return;
           }
@@ -1128,6 +1132,7 @@
       }
 
       setSaveStatus("saving");
+      _pendingAllowEmpty = false;                    // ④#5 의도삭제 통과권은 저장 진행 시 1회 소비
       const now = Date.now();
       appData.updatedAt = now;                       // ④ 저장 타임스탬프 갱신
       try {
@@ -1782,6 +1787,7 @@
       if (idx === -1) return;
       const removed = appData.records[idx];
       appData.records.splice(idx, 1);
+      _pendingAllowEmpty = true;   // ④#5 의도적 삭제 — 마지막 기록이어도 서버 반영 허용
       scheduleSave(); renderAll();
       // 오터치 삭제 방지 — 5초간 실행취소 가능 (수정/삭제 버튼이 인접해 있어 오조작이 잦음)
       showToast("🗑️ 삭제됨", 5000, { label: "실행취소", onClick: () => {
@@ -1876,6 +1882,7 @@
       if (idx === -1) return;
       const removed = appData.weightRecords[idx];
       appData.weightRecords.splice(idx, 1);
+      _pendingAllowEmpty = true;   // ④#5 의도적 삭제 — 마지막 기록이어도 서버 반영 허용
       scheduleSave(); renderAll();
       // 오터치 삭제 방지 — 5초간 실행취소 가능
       showToast("🗑️ 삭제됨", 5000, { label: "실행취소", onClick: () => {
