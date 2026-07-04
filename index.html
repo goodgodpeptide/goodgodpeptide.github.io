@@ -817,6 +817,9 @@
       try { renderAdherence(); } catch (e) {}
       try { renderPeptideWeightInsight(); } catch (e) {}
       try { renderInbodyQuality(); } catch (e) {}
+      // 감사 ④#4: 달력(준수율 포함)·커뮤니티 카드도 테마 토글 시 재렌더 — 안 하면 탭 재진입 전까지 반대 테마 색 잔존
+      try { renderCalendar(); } catch (e) {}
+      try { renderCommunityPatchNotes(); } catch (e) {}
     };
 
     // ── 글자 크게 모드 (설정 → 🔤 글자 크게) — 저시력/고령 사용자 가독성 개선 ──
@@ -7131,6 +7134,8 @@
       { date: "2026-07-04", items: [
         { type: "fix",  text: "투약 준수율·스트릭·미투약 배너 정확도 수정 — 주기/주1회 약이 '매일 예정'으로 잘못 집계되던 것을 마지막 투약일 기준으로 정상 계산(주1회 약 준수율이 실제대로 표시)" },
         { type: "fix",  text: "라이트모드에서 모달(약물·체중 기록 추가 등) 제목·라벨이 안 보이던 것 수정" },
+        { type: "ui",   text: "라이트↔다크 테마 전환 시 달력·커뮤니티 카드가 이전 테마 색으로 남던 것 수정" },
+        { type: "fix",  text: "달력 과거 월 준수율이 약물 시작 전 날짜까지 세어 0%로 뜨던 것 수정" },
         { type: "fix",  text: "데이터 유실 버그 수정 — 로드 실패 시 빈 데이터로 클라우드 덮어쓰기 차단 + 저장 안전망(앱 닫힘 즉시저장·실패 재시도·오프라인 캐시)·다기기 충돌 방지" },
         { type: "feat", text: "펩타이드별 체중효과 인사이트 — 약물 시작 후 주당 감량 자동분석 + 체중그래프 약물 활성기간 음영" },
         { type: "feat", text: "감량 질 스코어 — 인바디로 감량 중 지방/근육 손실 비율" },
@@ -8566,6 +8571,9 @@
       const takenBy = {};
       recs.forEach(r => { const ds = _kstDateStr(r.time); (takenBy[ds] || (takenBy[ds] = new Set())).add(r.drug); });
       const takenOn = (ds, d) => !!(takenBy[ds] && takenBy[ds].has(d));
+      // 감사 ④#2: 약물별 첫 기록일 — daily/weekdays 약이 시작 전 과거월까지 분모에 잡혀 0% 뜨던 것 방지
+      const firstRec = {};
+      recs.forEach(r => { const ds = _kstDateStr(r.time); if (!firstRec[r.drug] || ds < firstRec[r.drug]) firstRec[r.drug] = ds; });
       // 표시월(calYear/calMonth) 준수율 — 오늘까지만 집계(미래일 제외)
       const todayStr = _kstDateStr(now);
       const dim = new Date(calYear, calMonth + 1, 0).getDate();
@@ -8573,7 +8581,7 @@
       for (let day = 1; day <= dim; day++) {
         const ds = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
         if (ds > todayStr) break;
-        used.forEach(d => { if (isDrugDueOnDate(d, ds)) { schedCnt++; if (takenOn(ds, d)) takenCnt++; } });
+        used.forEach(d => { if (ds >= (firstRec[d] || "9999-99-99") && isDrugDueOnDate(d, ds)) { schedCnt++; if (takenOn(ds, d)) takenCnt++; } });
       }
       const compliance = schedCnt > 0 ? Math.round(takenCnt / schedCnt * 100) : null;
       // 연속 완벽기록 스트릭(어제부터 역순, 전체)
