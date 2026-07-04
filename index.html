@@ -49,7 +49,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, serverTimestamp, getDocs, arrayUnion, arrayRemove, onSnapshot, query, orderBy, limit }
+    import { getFirestore, initializeFirestore, persistentLocalCache, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, serverTimestamp, getDocs, arrayUnion, arrayRemove, onSnapshot, query, orderBy, limit }
       from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -64,11 +64,21 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    // 오프라인 지속 캐시(IndexedDB) 활성화 — 오프라인/네트워크 순단 시 loadData가 캐시로 복원되어
+    // 빈 화면 대신 마지막 데이터를 표시(②-c). 초기화 실패(구형 브라우저 등) 시 getFirestore로 폴백.
+    let db;
+    try {
+      db = initializeFirestore(app, { localCache: persistentLocalCache() });
+    } catch (e) {
+      console.warn("persistentLocalCache 초기화 실패 → 기본 getFirestore 폴백:", e);
+      db = getFirestore(app);
+    }
     const provider = new GoogleAuthProvider();
 
     let currentUser = null;
     let saveTimer = null;
+    let dataLoaded = false;          // ① loadData 성공 시에만 true — false면 saveData 차단(로드실패 후 덮어쓰기 방지)
+    let _lastSyncedUpdatedAt = 0;    // ④ 이 클라이언트가 마지막으로 반영한 서버 updatedAt(다기기 충돌 감지 기준)
     let appData = { records: [], weightRecords: [], gender: "남성", height: "", targetWeight: "" };
 
     // ══════════════════════════════════════════════
@@ -875,6 +885,7 @@
     }
 
     async function loadData() {
+      dataLoaded = false;   // ① 매 로드 시도마다 초기화 — 성공 경로에서만 true로 승격(로드실패 후 저장 차단 유지)
       setSaveStatus("loading");
       try {
         const snap = await getDoc(doc(db, "users", currentUser.uid));
@@ -897,7 +908,10 @@
               });
               if (ok) {
                 appData = { ...appData, ...lb.data };
+                appData.updatedAt = Date.now();                       // ④ 복구본에 최신 타임스탬프 부여
                 await setDoc(doc(db, "users", currentUser.uid), appData);
+                _lastSyncedUpdatedAt = appData.updatedAt;             // ④ 방금 쓴 값을 동기화 기준으로
+                dataLoaded = true;                                   // ① 로컬백업 복구도 성공 로드로 간주
                 setSaveStatus("saved");
                 return;
               }
@@ -905,33 +919,85 @@
           }
           appData = { ...appData, ...fsData };
         }
+        _lastSyncedUpdatedAt = appData.updatedAt || 0;   // ④ 서버 기준 타임스탬프 기록(신규 사용자는 0)
+        dataLoaded = true;                               // ① 로드 성공 — 이후 saveData 허용
         setSaveStatus("saved");
-      } catch(e) { setSaveStatus("error"); }
+      } catch(e) {
+        // ① getDoc 실패 → dataLoaded=false 유지(fail-closed). 이 상태에서 기록 추가해도 saveData가 차단.
+        console.error("loadData 실패 — 저장 차단 상태 유지:", e);
+        setSaveStatus("error");
+      }
     }
 
-    async function saveData() {
-      if (!currentUser) return;
-      // 안전가드: records + weightRecords 모두 비어있고 Firestore에 기존 데이터 있으면 저장 중단
-      const recCount = (appData.records||[]).length + (appData.weightRecords||[]).length;
-      if (recCount === 0) {
+    // ②-b setDoc 지수백오프 재시도 — 전송 실패 시 tries회까지(기본 3=최초+재시도 2회, 0.5s→1s 백오프).
+    async function _setDocWithRetry(ref, data, tries = 3) {
+      for (let i = 0; i < tries; i++) {
         try {
-          const snap = await getDoc(doc(db, "users", currentUser.uid));
-          if (snap.exists()) {
-            const existing = snap.data();
-            const exCount = (existing.records||[]).length + (existing.weightRecords||[]).length;
-            if (exCount > 0) {
-              console.warn("saveData 중단: 빈 appData로 기존 데이터 덮어쓰기 방지");
-              return;
-            }
-          }
-        } catch(e) {}
+          await setDoc(ref, data);
+          return;
+        } catch (e) {
+          if (i === tries - 1) throw e;                        // 마지막 시도 실패 → 상위로 전파
+          await new Promise(r => setTimeout(r, 500 * Math.pow(2, i))); // 500ms, 1000ms
+        }
       }
+    }
+
+    // opts.immediate: pagehide 등 페이지 종료 직전 즉시 flush(사전 getDoc/재시도 생략 — 지속캐시에 로컬 저장이 우선).
+    async function saveData(opts = {}) {
+      if (!currentUser) return;
+      const immediate = opts.immediate === true;
+      // ① 로드 실패/미완 상태에서는 저장 차단 — 빈·부분 appData로 서버 문서 덮어쓰기 방지(fail-closed).
+      if (dataLoaded !== true) {
+        console.warn("saveData 차단: 데이터 미로드 상태(dataLoaded!==true) — 덮어쓰기 방지");
+        setSaveStatus("error");
+        try { showToast("⚠️ 데이터 로드 실패 — 새로고침 후 다시 시도하세요", 4000); } catch(_) {}
+        return;
+      }
+      const ref = doc(db, "users", currentUser.uid);
+      const recCount = (appData.records||[]).length + (appData.weightRecords||[]).length;
+
+      // 즉시 flush가 아닐 때만 서버 스냅샷 1회 조회 → 빈데이터 가드 + 다기기 충돌 검사(④)를 함께 수행.
+      if (!immediate) {
+        let snap;
+        try {
+          snap = await getDoc(ref);
+        } catch (e) {
+          // getDoc 실패 → 빈/충돌 판정 불가하므로 fail-CLOSED(저장 중단). (기존 catch{} fail-open 버그 수정)
+          console.warn("saveData 중단: 사전조회 getDoc 실패(fail-closed) —", e);
+          setSaveStatus("error");
+          return;
+        }
+        if (snap.exists()) {
+          const existing = snap.data();
+          // 안전가드: 빈 appData로 기존 데이터 덮어쓰기 방지
+          const exCount = (existing.records||[]).length + (existing.weightRecords||[]).length;
+          if (recCount === 0 && exCount > 0) {
+            console.warn("saveData 중단: 빈 appData로 기존 데이터 덮어쓰기 방지");
+            return;
+          }
+          // ④ 다기기 덮어쓰기 방지: 서버 updatedAt가 내가 아는 값보다 최신이면 다른 기기가 먼저 저장한 것 → 보류.
+          const serverUpdatedAt = existing.updatedAt || 0;
+          if (serverUpdatedAt > _lastSyncedUpdatedAt) {
+            console.warn("saveData 보류: 서버가 더 최신(다른 기기 변경) server=", serverUpdatedAt, "local=", _lastSyncedUpdatedAt);
+            setSaveStatus("error");
+            try { showToast("⚠️ 다른 기기에서 변경됨 — 새로고침하세요", 5000); } catch(_) {}
+            return;
+          }
+        }
+      }
+
       setSaveStatus("saving");
+      const now = Date.now();
+      appData.updatedAt = now;                       // ④ 저장 타임스탬프 갱신
       try {
-        await setDoc(doc(db, "users", currentUser.uid), appData);
-        saveLsBackup(); // 로컬백업도 동시에 저장
+        await _setDocWithRetry(ref, appData, immediate ? 1 : 3);  // ②-b 재시도(즉시 flush는 1회만)
+        _lastSyncedUpdatedAt = now;                  // ④ 방금 쓴 값을 동기화 기준으로 승격
+        saveLsBackup();                              // 로컬백업도 동시에 저장
         setSaveStatus("saved");
-      } catch(e) { setSaveStatus("error"); }
+      } catch(e) {
+        console.warn("saveData 전송 최종 실패:", e);
+        setSaveStatus("error");
+      }
     }
 
     // ── 주간 자동 서버 백업 ────────────────────────────────
@@ -958,6 +1024,16 @@
       clearTimeout(saveTimer);
       saveTimer = setTimeout(saveData, 800);
     }
+
+    // ②-a 페이지 종료(탭 닫기·앱 전환·모바일 백그라운드) 직전 대기 중 저장을 즉시 flush.
+    // 디바운스(800ms)를 우회해 saveData를 직접 호출 → 마지막 변경 유실 방지.
+    window.addEventListener('pagehide', () => {
+      if (saveTimer) {
+        clearTimeout(saveTimer);
+        saveTimer = null;
+        saveData({ immediate: true });   // 종료 중이므로 사전조회·재시도 없이 즉시 1회 저장(지속캐시가 로컬 durable 보장)
+      }
+    });
 
     function setSaveStatus(s) {
       const el = document.getElementById("save-status");
