@@ -998,7 +998,8 @@
       if (data.drugCycle) {
         const migrated = {};
         Object.entries(data.drugCycle).forEach(([k, v]) => {
-          migrated[DRUG_NAME_MIGRATION[k] || k] = v;
+          const newKey = DRUG_NAME_MIGRATION[k] || k;
+          if (!(newKey in migrated)) migrated[newKey] = v;
         });
         data.drugCycle = migrated;
       }
