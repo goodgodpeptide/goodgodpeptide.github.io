@@ -7129,6 +7129,8 @@
     // 새 업데이트 배포 시 여기 맨 위에 한 줄씩 추가.
     const APP_CHANGELOG = [
       { date: "2026-07-04", items: [
+        { type: "fix",  text: "투약 준수율·스트릭·미투약 배너 정확도 수정 — 주기/주1회 약이 '매일 예정'으로 잘못 집계되던 것을 마지막 투약일 기준으로 정상 계산(주1회 약 준수율이 실제대로 표시)" },
+        { type: "fix",  text: "라이트모드에서 모달(약물·체중 기록 추가 등) 제목·라벨이 안 보이던 것 수정" },
         { type: "fix",  text: "데이터 유실 버그 수정 — 로드 실패 시 빈 데이터로 클라우드 덮어쓰기 차단 + 저장 안전망(앱 닫힘 즉시저장·실패 재시도·오프라인 캐시)·다기기 충돌 방지" },
         { type: "feat", text: "펩타이드별 체중효과 인사이트 — 약물 시작 후 주당 감량 자동분석 + 체중그래프 약물 활성기간 음영" },
         { type: "feat", text: "감량 질 스코어 — 인바디로 감량 중 지방/근육 손실 비율" },
@@ -8571,17 +8573,17 @@
       for (let day = 1; day <= dim; day++) {
         const ds = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
         if (ds > todayStr) break;
-        used.forEach(d => { if (shouldTakeOnDate(scheds[d], ds)) { schedCnt++; if (takenOn(ds, d)) takenCnt++; } });
+        used.forEach(d => { if (isDrugDueOnDate(d, ds)) { schedCnt++; if (takenOn(ds, d)) takenCnt++; } });
       }
       const compliance = schedCnt > 0 ? Math.round(takenCnt / schedCnt * 100) : null;
       // 연속 완벽기록 스트릭(어제부터 역순, 전체)
       const todayMid = kstInputToMs(todayStr + "T00:00");
       const back = i => _kstDateStr(todayMid - i * 86400000);
       let streak = 0;
-      for (let i = 1; i <= 400; i++) { const ds = back(i); const due = used.filter(d => shouldTakeOnDate(scheds[d], ds)); if (!due.length) continue; if (due.every(d => takenOn(ds, d))) streak++; else break; }
+      for (let i = 1; i <= 400; i++) { const ds = back(i); const due = used.filter(d => isDrugDueOnDate(d, ds)); if (!due.length) continue; if (due.every(d => takenOn(ds, d))) streak++; else break; }
       // 미투약 배너(어제 예정인데 기록 없음) — 2026-07-04 GG: 투약탭→달력탭 이전
       const yStr = back(1);
-      const missed = used.filter(d => shouldTakeOnDate(scheds[d], yStr) && !takenOn(yStr, d));
+      const missed = used.filter(d => isDrugDueOnDate(d, yStr) && !takenOn(yStr, d));
       let bannerHtml = "";
       if (missed.length) {
         const bBg2 = isLight ? "#fef3c7" : "#3a2f0b", bBorder2 = "#f59e0b";
@@ -10668,6 +10670,8 @@
     body.light-mode .input-field { background: #f8fafc; border-color: #d1d5db; color: #1a1a2e; }
     body.light-mode .modal-box { background: #ffffff; border-color: #e2e8f0; }
     body.light-mode .modal-overlay { background: #00000055; }
+    body.light-mode .modal-title { color: #1e293b; }      /* 2026-07-04 ④#3: 흰 모달바탕에서 밝은회색 제목이 안보이던 것 수정 */
+    body.light-mode .modal-box label { color: #475569; }  /* 모달 라벨 대비 강화 (#backup-modal은 자체 !important 규칙 우선) */
     body.light-mode .pk-info { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
     body.light-mode .zoom-hint { color: #6b7280; }
     body.light-mode .section-title { color: #64748b; }
