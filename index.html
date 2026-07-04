@@ -7198,6 +7198,7 @@
 
     window.loadCommunity = function() {
       renderCommunityTab();
+      renderCommunityPatchNotes();
       loadHallOfFame(); // 명예의전당 비동기 로드
       if (communityUnsubscribe) communityUnsubscribe();
       try {
@@ -10982,8 +10983,7 @@
         </button>
         <div id="active-drug-toggles" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"></div>
       </div>
-      <!-- ⑦ 미투약 감지 배너 + 준수율/스트릭 (renderAdherence) -->
-      <div id="adherence-cards"></div>
+      <!-- ⑦ 미투약 배너: 달력 탭으로 이전됨 (2026-07-04 GG) -->
       <div id="remaining-cards"></div>
 
       <div class="pk-info">
