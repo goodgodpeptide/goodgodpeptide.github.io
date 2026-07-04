@@ -5465,85 +5465,11 @@
 
     // ⑦ 미투약 감지 배너 + 준수율/스트릭 카드
     function renderAdherence() {
+      // ④#9: 미투약 배너·준수율·스트릭은 2026-07-04 달력탭 renderCalendarAdherence로 이전됨.
+      //      과거 이 함수는 배너/준수율/30일·400일 루프를 전부 계산한 뒤 innerHTML=""로 폐기 →
+      //      매 renderAll·toggleTheme마다 무의미 순회였음. 결과가 항상 ""이므로 컨테이너 비우기만 남김(동작 동일, 헛계산 제거).
       const c = document.getElementById("adherence-cards");
-      if (!c) return;
-      const isLight = document.body.classList.contains("light-mode");
-      const recs = appData.records || [];
-      const scheds = appData.drugSchedules || {};
-      const now = Date.now();
-      // 실제 사용 중인 약물만(최근 30일 ≥1회 기록) — 미사용 기본약물 오탐(false alarm) 방지
-      const used = getActiveDrugs().filter(d => recs.some(r => r.drug === d && r.time >= now - 30 * 86400000));
-      if (!used.length) { c.innerHTML = ""; return; }
-
-      // 날짜별 투약 약물 집합
-      const takenBy = {};
-      recs.forEach(r => { const ds = _kstDateStr(r.time); (takenBy[ds] || (takenBy[ds] = new Set())).add(r.drug); });
-      const takenOn = (ds, d) => !!(takenBy[ds] && takenBy[ds].has(d));
-
-      const todayMid = kstInputToMs(_kstDateStr(now) + 'T00:00');
-      const dayStrBack = i => _kstDateStr(todayMid - i * 86400000);
-
-      // 어제 예정 vs 미기록 (scheduleNotifications와 동일한 shouldTakeOnDate 로직)
-      const yStr = dayStrBack(1);
-      const missed = used.filter(d => shouldTakeOnDate(scheds[d], yStr) && !takenOn(yStr, d));
-
-      // 최근 30일(어제~-29일) 준수율
-      let schedCnt = 0, takenCnt = 0;
-      for (let i = 1; i <= 30; i++) {
-        const ds = dayStrBack(i);
-        used.forEach(d => { if (shouldTakeOnDate(scheds[d], ds)) { schedCnt++; if (takenOn(ds, d)) takenCnt++; } });
-      }
-      const compliance = schedCnt > 0 ? Math.round(takenCnt / schedCnt * 100) : null;
-
-      // 연속기록 스트릭: 어제부터 역순, 예정약 전부 기록한 날만 카운트(미투약이면 중단, 예정 없는 날은 건너뜀)
-      let streak = 0;
-      for (let i = 1; i <= 400; i++) {
-        const ds = dayStrBack(i);
-        const due = used.filter(d => shouldTakeOnDate(scheds[d], ds));
-        if (!due.length) continue;
-        if (due.every(d => takenOn(ds, d))) streak++; else break;
-      }
-
-      const cardBg = isLight ? "#ffffff" : "#111827";
-      const border = isLight ? "#e2e8f0" : "#1f2937";
-      const tSub = isLight ? "#64748b" : "#6b7280";
-      const tMain = isLight ? "#1a1a2e" : "#e2e8f0";
-
-      // 미투약 배너 (약물 전량 표시 — 자르지 않음)
-      let bannerHtml = "";
-      if (missed.length) {
-        const bBg = isLight ? "#fef3c7" : "#3a2f0b";
-        const bBorder = "#f59e0b";
-        const items = missed.map(d => {
-          const cfg = DRUG_CONFIG[d] || { short: d, emoji: "💊" };
-          const esc = d.replace(/'/g, "\\'");
-          return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0">
-            <span style="font-size:12px;color:${isLight ? '#92400e' : '#fcd34d'}">⚠️ 어제 <b>${cfg.emoji} ${cfg.short}</b> 미기록</span>
-            <button onclick="openAddModal('${esc}')" style="flex-shrink:0;padding:4px 10px;background:${bBorder};border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">지금 기록</button>
-          </div>`;
-        }).join('');
-        bannerHtml = `<div style="background:${bBg};border:1px solid ${bBorder}55;border-radius:12px;padding:8px 12px;margin-bottom:10px">${items}</div>`;
-      }
-
-      // 준수율 + 스트릭 카드
-      const compColor = compliance == null ? "#9ca3af" : compliance >= 90 ? "#4ade80" : compliance >= 70 ? "#facc15" : "#f87171";
-      const statsHtml = `<div class="card" style="margin-bottom:12px;background:${cardBg};border:1px solid ${border}">
-        <div class="section-title" style="margin-bottom:8px">✅ 투약 준수율</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div style="text-align:center;padding:8px;background:${isLight ? '#f8fafc' : '#0d0d1a'};border-radius:10px">
-            <div style="font-size:10px;color:${tSub};margin-bottom:2px">최근 30일 준수율</div>
-            <div style="font-size:20px;font-weight:800;color:${compColor};font-family:'JetBrains Mono',monospace">${compliance == null ? '--' : compliance + '%'}</div>
-            <div style="font-size:9px;color:${tSub}">${takenCnt}/${schedCnt}회</div>
-          </div>
-          <div style="text-align:center;padding:8px;background:${isLight ? '#f8fafc' : '#0d0d1a'};border-radius:10px">
-            <div style="font-size:10px;color:${tSub};margin-bottom:2px">연속 완벽기록</div>
-            <div style="font-size:20px;font-weight:800;color:${streak > 0 ? '#60a5fa' : '#9ca3af'};font-family:'JetBrains Mono',monospace">${streak}일${streak >= 7 ? ' 🔥' : ''}</div>
-            <div style="font-size:9px;color:${tSub}">${used.length}종 추적 중</div>
-          </div>
-        </div>
-      </div>`;
-
-      c.innerHTML = "";  // 미투약 배너·준수율 전부 달력 탭 renderCalendarAdherence로 이전(2026-07-04 GG).
+      if (c) c.innerHTML = "";
     }
 
     function renderWeightList() {
@@ -8589,7 +8515,16 @@
       for (let day = 1; day <= dim; day++) {
         const ds = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
         if (ds > todayStr) break;
-        used.forEach(d => { if (ds >= (firstRec[d] || "9999-99-99") && isDrugDueOnDate(d, ds)) { schedCnt++; if (takenOn(ds, d)) takenCnt++; } });
+        const isToday = ds === todayStr;
+        used.forEach(d => {
+          if (ds >= (firstRec[d] || "9999-99-99") && isDrugDueOnDate(d, ds)) {
+            const taken = takenOn(ds, d);
+            // ④#7: 오늘분은 아직 안 먹었으면 분모에서 제외 — 투약 전 %가 매일 아침 하락하거나 매월 1일 0%(빨강)로
+            //       뜨던 것 방지. 먹고 나면 정상 집계(1/1). 어제까지는 그대로 포함.
+            if (isToday && !taken) return;
+            schedCnt++; if (taken) takenCnt++;
+          }
+        });
       }
       const compliance = schedCnt > 0 ? Math.round(takenCnt / schedCnt * 100) : null;
       // 연속 완벽기록 스트릭(어제부터 역순, 전체)
