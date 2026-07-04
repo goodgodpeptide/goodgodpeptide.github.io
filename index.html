@@ -5532,7 +5532,7 @@
         </div>
       </div>`;
 
-      c.innerHTML = bannerHtml;  // 준수율/스트릭(statsHtml)은 달력 탭 renderCalendarAdherence로 이전(2026-07-04 GG). 여기는 미투약 배너만.
+      c.innerHTML = "";  // 미투약 배너·준수율 전부 달력 탭 renderCalendarAdherence로 이전(2026-07-04 GG).
     }
 
     function renderWeightList() {
@@ -7125,6 +7125,43 @@
       } catch(e) { alert('오류: '+e.message); }
     };
 
+    // 📢 커뮤니티 업데이트 패치노트 (2026-07-04 GG: 커뮤니티에 펼치기/접기로) — 백과사전 patchNotes 재사용
+    window.toggleCommunityPatchNotes = function() {
+      const v = localStorage.getItem("community_pn_collapsed") === "1";
+      localStorage.setItem("community_pn_collapsed", v ? "0" : "1");
+      try { renderCommunityPatchNotes(); } catch (e) {}
+    };
+    async function renderCommunityPatchNotes() {
+      const host = document.getElementById("community-patchnotes");
+      if (!host) return;
+      if (!encyclopediaData) {
+        try { const res = await fetch("peptides_v3.json"); encyclopediaData = await res.json(); } catch (e) { host.innerHTML = ""; return; }
+      }
+      const pn = (encyclopediaData && encyclopediaData.patchNotes) || [];
+      if (!pn.length) { host.innerHTML = ""; return; }
+      const isLight = document.body.classList.contains("light-mode");
+      const collapsed = localStorage.getItem("community_pn_collapsed") === "1";
+      const bg = isLight ? "#ffffff" : "#12121e", bd = isLight ? "#e2e8f0" : "#1f2937";
+      const titleClr = isLight ? "#1a1a2e" : "#f1f5f9", subClr = isLight ? "#6b7280" : "#94a3b8";
+      const chipBg = isLight ? "#f1f5f9" : "#1e293b", chipClr = isLight ? "#334155" : "#cbd5e1";
+      const totalNew = pn.reduce((s, e) => s + ((e.added || []).length), 0);
+      const chip = it => `<span onclick="event.stopPropagation();switchTab('encyclopedia');setTimeout(()=>{try{openEncyclopediaModal('${it.id}')}catch(e){}},200)" style="display:inline-block;padding:2px 8px;margin:2px 3px 2px 0;background:${chipBg};border-radius:6px;font-size:11px;color:${chipClr};cursor:pointer">${escapeHtml(it.name)}</span>`;
+      let body = "";
+      pn.forEach(e => {
+        body += `<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:700;color:${titleClr};margin-bottom:6px">📅 ${escapeHtml(e.date)}</div>`;
+        if (e.added && e.added.length) body += `<div style="margin-bottom:6px"><div style="font-size:11px;color:#22c55e;font-weight:600;margin-bottom:3px">🟢 신규 ${e.added.length}종 추가${e.addedNote ? ` — ${escapeHtml(e.addedNote)}` : ""}</div><div>${e.added.map(chip).join("")}</div></div>`;
+        if (e.updated && e.updated.length) body += `<div style="margin-bottom:4px"><div style="font-size:11px;color:#60a5fa;font-weight:600;margin-bottom:3px">🔵 ${e.updated.length}종 정보 갱신</div>${e.updated.map(u => `<div style="font-size:11px;color:${subClr};padding:1px 0;line-height:1.7">• ${chip(u)} ${escapeHtml(u.note || "")}</div>`).join("")}</div>`;
+        body += `</div>`;
+      });
+      host.innerHTML = `<div style="background:${bg};border:1px solid ${bd};border-radius:14px;padding:14px;margin-bottom:16px">
+          <div onclick="toggleCommunityPatchNotes()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+            <span style="font-size:14px;font-weight:700;color:${titleClr}">📢 업데이트 소식${collapsed && totalNew ? ` <span style="padding:1px 7px;background:#16a34a22;color:#22c55e;border-radius:20px;font-size:10px;font-weight:700;margin-left:2px">🆕 ${totalNew}</span>` : ""}</span>
+            <span style="color:${subClr};font-size:12px">${collapsed ? "펼치기 ▼" : "접기 ▲"}</span>
+          </div>
+          <div style="display:${collapsed ? "none" : "block"};margin-top:12px">${body}</div>
+        </div>`;
+    }
+
     function renderCommunityTab() {
       const panel = document.getElementById("panel-community");
       if (!panel) return;
@@ -7135,6 +7172,7 @@
       panel.innerHTML=`
         <div style="padding:16px;max-width:640px;margin:0 auto">
           <div id="hall-of-fame-section" style="display:none"></div>
+          <div id="community-patchnotes"></div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
             <div style="font-size:16px;font-weight:800;color:${txt}">💬 커뮤니티</div>
             <button onclick="openNicknameModal()" style="background:${isL?'#f1f5f9':'#1f2937'};border:1px solid ${border};border-radius:20px;color:${nick?'#60a5fa':'#f97316'};padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">
@@ -7155,6 +7193,7 @@
           </div>
           <div id="post-list"><div style="text-align:center;padding:32px;color:#4a5568">로딩 중...</div></div>
         </div>`;
+      try { renderCommunityPatchNotes(); } catch (e) {}
     }
 
     window.loadCommunity = function() {
@@ -8520,6 +8559,14 @@
       const back = i => _kstDateStr(todayMid - i * 86400000);
       let streak = 0;
       for (let i = 1; i <= 400; i++) { const ds = back(i); const due = used.filter(d => shouldTakeOnDate(scheds[d], ds)); if (!due.length) continue; if (due.every(d => takenOn(ds, d))) streak++; else break; }
+      // 미투약 배너(어제 예정인데 기록 없음) — 2026-07-04 GG: 투약탭→달력탭 이전
+      const yStr = back(1);
+      const missed = used.filter(d => shouldTakeOnDate(scheds[d], yStr) && !takenOn(yStr, d));
+      let bannerHtml = "";
+      if (missed.length) {
+        const bBg2 = isLight ? "#fef3c7" : "#3a2f0b", bBorder2 = "#f59e0b";
+        bannerHtml = `<div style="background:${bBg2};border:1px solid ${bBorder2}55;border-radius:12px;padding:8px 12px;margin-bottom:10px">${missed.map(d => { const cfg = DRUG_CONFIG[d] || { short: d, emoji: "💊" }; const esc = d.replace(/'/g, "\\'"); return `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0"><span style="font-size:12px;color:${isLight ? "#92400e" : "#fcd34d"}">⚠️ 어제 <b>${cfg.emoji} ${cfg.short}</b> 미기록</span><button onclick="openAddModal('${esc}')" style="flex-shrink:0;padding:4px 10px;background:${bBorder2};border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">지금 기록</button></div>`; }).join("")}</div>`;
+      }
       const collapsed = localStorage.getItem("cal_adherence_collapsed") === "1";
       const cardBg = isLight ? "#ffffff" : "#111827", border = isLight ? "#e2e8f0" : "#1f2937";
       const tSub = isLight ? "#64748b" : "#6b7280";
@@ -8536,7 +8583,7 @@
             <div style="font-size:9px;color:${tSub}">${used.length}종 추적 중</div>
           </div>
         </div>`;
-      c.innerHTML = `<div class="card" style="margin-bottom:12px;background:${cardBg};border:1px solid ${border}">
+      c.innerHTML = bannerHtml + `<div class="card" style="margin-bottom:12px;background:${cardBg};border:1px solid ${border}">
         <div onclick="toggleCalAdherence()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
           <span class="section-title" style="margin:0">✅ 투약 준수율${collapsed && compliance != null ? ` · <span style="color:${compColor}">${compliance}%</span>` : ""}</span>
           <span style="color:${tSub};font-size:12px">${collapsed ? "펼치기 ▼" : "접기 ▲"}</span>
