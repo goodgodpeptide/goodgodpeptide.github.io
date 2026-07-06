@@ -7065,6 +7065,9 @@
     // 📢 커뮤니티 패치노트 = 앱 전체 changelog(버그수정·신기능·UX·데이터). 백과사전 patchNotes(펩타이드 추가)와 별개 — 2026-07-04 GG.
     // 새 업데이트 배포 시 여기 맨 위에 한 줄씩 추가.
     const APP_CHANGELOG = [
+      { date: "2026-07-06", items: [
+        { type: "feat", text: "GLP-1 용량 환산 (투약 탭 하단, 접이식) — 세마글루타이드·터제파타이드·레타트루타이드를 임상 감량%로 맞춘 동급 용량 계산기 + 갈아탈 때 권장 시작용량·워시아웃·타이트레이션 캘린더를 잡아주는 스위칭 도우미" },
+      ] },
       { date: "2026-07-04", items: [
         { type: "fix",  text: "투약 준수율·스트릭·미투약 배너 정확도 수정 — 주기/주1회 약이 '매일 예정'으로 잘못 집계되던 것을 마지막 투약일 기준으로 정상 계산(주1회 약 준수율이 실제대로 표시)" },
         { type: "fix",  text: "라이트모드에서 모달(약물·체중 기록 추가 등) 제목·라벨이 안 보이던 것 수정" },
@@ -7226,7 +7229,7 @@
       // 단, 새로고침 직후 마지막 탭 복원 호출(isRestore=true)일 땐 스킵 — 사용자가 스크롤한 적이 없으므로 불필요
       if (!isRestore) window.scrollTo(0, 0);
       if (tab === "peptide") {
-        setTimeout(() => { renderPeptideGraph(); initGraphTouch(); initDoseHistoryTouch(); startLiveUpdate(); fetchFxRates(); loadCostSettings(); }, 50);
+        setTimeout(() => { renderPeptideGraph(); initGraphTouch(); initDoseHistoryTouch(); startLiveUpdate(); fetchFxRates(); loadCostSettings(); renderGlp1(); }, 50);
       } else {
         stopLiveUpdate();
       }
@@ -7238,6 +7241,237 @@
       else if (communityUnsubscribe && tab !== "community") { communityUnsubscribe(); communityUnsubscribe = null; }
       if (tab === "settings") setTimeout(_syncNotifyBtn, 50);
     };
+
+    // ══════════════════════════════════════════════
+    // GLP-1 용량 환산·스위칭 도우미 (2026-07-06 GG 요청)
+    //  - 세마/터제/레타는 작용 수용체 수가 달라 mg 대 mg 환산 불가 →
+    //    임상 체중감량%로 앵커링해 "동급 용량"을 찾는다.
+    //  - 데이터는 전부 정적(공개 임상: STEP-1/SURMOUNT-1/레타 Phase2·TRIUMPH +
+    //    레딧/커뮤니티 스위칭 관행). API·서버 불필요, 오프라인 계산.
+    //  - ⚠️ 의료조언 아님·미승인약 포함·감량%는 임상 근사치 (UI에 고지 필수).
+    // ══════════════════════════════════════════════
+    const GLP1_DRUGS = {
+      sema: {
+        name: '세마글루타이드', brand: '위고비 / 오젬픽', receptors: 'GLP-1 단일',
+        color: '#3b82f6',
+        // [용량mg, 대표 체중감량%] — 감량%는 임상 근사치
+        doses: [
+          [0.25, 2], [0.5, 5], [1.0, 9], [1.7, 12], [2.4, 15], [7.2, 21],
+        ],
+        note: '7.2mg는 신규 고용량(HD). 표준 유지용량은 2.4mg.',
+        halfLifeDays: 7,
+      },
+      tirz: {
+        name: '터제파타이드', brand: '마운자로 / 젭바운드', receptors: 'GLP-1 + GIP (이중)',
+        color: '#8b5cf6',
+        doses: [
+          [2.5, 8], [5, 15], [7.5, 17], [10, 19.5], [12.5, 20], [15, 21],
+        ],
+        note: 'SURMOUNT-1 기준 5/10/15mg = 15/19.5/21%. 7.5·12.5는 보간값.',
+        halfLifeDays: 5,
+      },
+      reta: {
+        name: '레타트루타이드', brand: '(미승인 · 임상 단계)', receptors: 'GLP-1 + GIP + 글루카곤 (삼중)',
+        color: '#f59e0b',
+        doses: [
+          [1, 8.7], [2, 12], [4, 17], [8, 23], [12, 24],
+        ],
+        note: 'Phase2(48주) 4/8/12mg = 17/23/24%. Phase3서 12mg은 68~80주에 ~28%. 글루카곤 작용은 4mg+부터 강해짐(심박수↑).',
+        halfLifeDays: 6,
+      },
+    };
+
+    // 갈아탈 때(스위칭) 규칙 — 효과등가가 아니라 부작용 안전 시작점
+    const GLP1_SWITCH = {
+      // 목표약: {start: 권장 시작mg, cautious: 신중 시작mg, floorNote}
+      sema: { start: 0.25, cautious: 0.25, startNote: '이전에 뭘 쓰던 세마는 0.25mg부터 재시작이 표준.' },
+      tirz: { start: 2.5, cautious: 2.5, startNote: '이전 용량 무관 터제는 2.5mg부터 시작(GIP 축이 새로 붙음).' },
+      reta: { start: 2, cautious: 1, startNote: '이전 용량 무관 레타는 2mg 시작이 커뮤니티 합의(신중파 1mg). 삼중작용이라 낮은 용량도 세게 먹힘.' },
+    };
+
+    function glp1EscalationDose(key, curMg) {
+      // 다음 단계 용량 반환 (없으면 현재 유지)
+      const arr = GLP1_DRUGS[key].doses.map(d => d[0]);
+      const i = arr.indexOf(curMg);
+      return (i >= 0 && i < arr.length - 1) ? arr[i + 1] : curMg;
+    }
+
+    function glp1EfficacyOf(key, mg) {
+      const d = GLP1_DRUGS[key].doses.find(x => x[0] === mg);
+      return d ? d[1] : null;
+    }
+
+    function glp1EquivDose(targetKey, effPct) {
+      // 목표약에서 감량% effPct에 가장 가까운 용량 반환 {mg, eff, over}
+      const doses = GLP1_DRUGS[targetKey].doses;
+      let best = null, bestGap = 1e9;
+      for (const [mg, eff] of doses) {
+        const gap = Math.abs(eff - effPct);
+        if (gap < bestGap) { bestGap = gap; best = { mg, eff }; }
+      }
+      // 목표약 최대치로도 effPct에 한참 못 미치면 '천장 초과' 표시
+      const maxEff = Math.max(...doses.map(d => d[1]));
+      best.over = effPct > maxEff + 2;
+      return best;
+    }
+
+    // ── 계산기: 현재약+용량 → 다른 두 약 동급용량 ──
+    let glp1CalcState = { drug: 'sema', mg: 2.4 };
+    // ── 스위칭: from약+용량 → to약 ──
+    let glp1SwState = { from: 'sema', fromMg: 2.4, to: 'reta' };
+
+    function glp1DrugBtns(selected, onpick) {
+      return Object.keys(GLP1_DRUGS).map(k => {
+        const d = GLP1_DRUGS[k];
+        const on = k === selected;
+        return `<button onclick="${onpick}('${k}')" style="flex:1;min-width:0;padding:9px 4px;border-radius:10px;border:1.5px solid ${on ? d.color : '#374151'};background:${on ? d.color + '22' : 'transparent'};color:${on ? d.color : '#9ca3af'};font-weight:${on ? 700 : 500};font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap">${d.name.slice(0, 4)}<br><span style="font-size:9px;opacity:.7">${d.brand.split(' / ')[0]}</span></button>`;
+      }).join('');
+    }
+
+    function glp1DoseSelect(key, selMg, id, onchange) {
+      const opts = GLP1_DRUGS[key].doses.map(([mg, eff]) =>
+        `<option value="${mg}" ${mg === selMg ? 'selected' : ''}>${mg} mg (감량 ~${eff}%)</option>`
+      ).join('');
+      return `<select id="${id}" class="input-field" style="width:100%" onchange="${onchange}(this.value)">${opts}</select>`;
+    }
+
+    window.glp1PickCalcDrug = (k) => {
+      glp1CalcState.drug = k;
+      glp1CalcState.mg = GLP1_DRUGS[k].doses.find(d => d[0] === 2.4) ? 2.4 : GLP1_DRUGS[k].doses[Math.floor(GLP1_DRUGS[k].doses.length / 2)][0];
+      renderGlp1();
+    };
+    window.glp1PickCalcDose = (v) => { glp1CalcState.mg = parseFloat(v); renderGlp1(); };
+    window.glp1PickSwFrom = (k) => { glp1SwState.from = k; glp1SwState.fromMg = GLP1_DRUGS[k].doses[GLP1_DRUGS[k].doses.length - 2][0]; if (glp1SwState.to === k) glp1SwState.to = Object.keys(GLP1_DRUGS).find(x => x !== k); renderGlp1(); };
+    window.glp1PickSwFromDose = (v) => { glp1SwState.fromMg = parseFloat(v); renderGlp1(); };
+    window.glp1PickSwTo = (k) => { glp1SwState.to = k; renderGlp1(); };
+
+    function glp1CalcCard() {
+      const { drug, mg } = glp1CalcState;
+      const eff = glp1EfficacyOf(drug, mg);
+      const others = Object.keys(GLP1_DRUGS).filter(k => k !== drug);
+      let rows = '';
+      for (const k of others) {
+        const eq = glp1EquivDose(k, eff);
+        const d = GLP1_DRUGS[k];
+        rows += `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:#0d0d1a;border:1px solid #1f2937;border-left:3px solid ${d.color};border-radius:11px;margin-bottom:7px">
+          <div><div style="font-weight:700;color:${d.color};font-size:13px">${d.name}</div><div style="font-size:10px;color:#6b7280">${d.receptors}</div></div>
+          <div style="text-align:right">${eq.over
+            ? `<div style="font-weight:700;color:#f87171;font-size:14px">천장 초과</div><div style="font-size:10px;color:#9ca3af">최대 ${eq.mg}mg로도 부족</div>`
+            : `<div style="font-weight:800;color:#e2e8f0;font-size:16px">${eq.mg} mg</div><div style="font-size:10px;color:#9ca3af">감량 ~${eq.eff}%</div>`}</div>
+        </div>`;
+      }
+      const cur = GLP1_DRUGS[drug];
+      return `<div class="card">
+        <div class="section-title">1️⃣ 동급 용량 계산기</div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:9px">지금 쓰는 약·용량을 고르면, 나머지 두 약에서 <b>같은 감량 효과</b>를 내는 용량을 찾아줍니다.</div>
+        <div style="display:flex;gap:6px;margin-bottom:9px">${glp1DrugBtns(drug, 'glp1PickCalcDrug')}</div>
+        ${glp1DoseSelect(drug, mg, 'glp1-calc-dose', 'glp1PickCalcDose')}
+        <div style="text-align:center;margin:13px 0 11px;font-size:12px;color:${cur.color}">${cur.name} ${mg}mg = 임상 감량 <b style="font-size:15px">~${eff}%</b> 급</div>
+        <div style="font-size:10px;color:#6b7280;text-align:center;margin-bottom:9px">↓ 같은 감량대 동급 용량 ↓</div>
+        ${rows}
+        <div style="font-size:10px;color:#6b7280;margin-top:6px;line-height:1.5">📌 세 임상이 기간(48/68/72주)·대상이 달라 <b>정확한 1:1이 아닌 근사치</b>입니다. mg이 아니라 감량%로 맞춘 값이에요.</div>
+      </div>`;
+    }
+
+    function glp1SwitchCard() {
+      const { from, fromMg, to } = glp1SwState;
+      const rule = GLP1_SWITCH[to];
+      const fromD = GLP1_DRUGS[from], toD = GLP1_DRUGS[to];
+      const startMg = rule.start;
+
+      // 타이트레이션 캘린더 (오늘부터 4주 간격, 목표약 표준 스케줄)
+      const sched = toD.doses.map(d => d[0]).filter(mg => mg >= startMg);
+      // 레타는 글루카곤 구간(4·8mg) 6주 유지, 그 외 4주
+      const today = new Date();
+      let calRows = '', cursor = new Date(today);
+      sched.forEach((mg, i) => {
+        const dateStr = `${cursor.getMonth() + 1}/${cursor.getDate()}`;
+        const isGlucZone = (to === 'reta' && (mg === 4 || mg === 8));
+        const holdWk = isGlucZone ? 6 : 4;
+        const eff = glp1EfficacyOf(to, mg);
+        calRows += `<div style="display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid #1a1a28">
+          <div style="flex:0 0 44px;font-size:11px;color:#9ca3af;font-weight:600">${dateStr}</div>
+          <div style="flex:0 0 12px;color:${toD.color};font-size:13px">${i === 0 ? '▶' : '↑'}</div>
+          <div style="flex:1"><b style="color:#e2e8f0;font-size:13px">${mg} mg</b> <span style="font-size:10px;color:#6b7280">~${eff}% · ${holdWk}주 유지${isGlucZone ? ' ⚠️심박' : ''}</span></div>
+        </div>`;
+        cursor.setDate(cursor.getDate() + holdWk * 7);
+      });
+
+      const wash = Math.max(fromD.halfLifeDays * 2, 7);
+      const others = Object.keys(GLP1_DRUGS).filter(k => k !== from);
+
+      return `<div class="card">
+        <div class="section-title">2️⃣ 스위칭 도우미</div>
+        <div style="font-size:11px;color:#9ca3af;margin-bottom:9px">갈아탈 때 <b>안전 시작용량 + 워시아웃 + 타이트레이션 캘린더</b>를 잡아줍니다. (시작용량은 효과등가가 아니라 부작용 안전 기준)</div>
+        <div style="font-size:10px;color:#6b7280;margin-bottom:4px">지금 쓰는 약</div>
+        <div style="display:flex;gap:6px;margin-bottom:7px">${glp1DrugBtns(from, 'glp1PickSwFrom')}</div>
+        ${glp1DoseSelect(from, fromMg, 'glp1-sw-dose', 'glp1PickSwFromDose')}
+        <div style="font-size:10px;color:#6b7280;margin:11px 0 4px">갈아탈 약</div>
+        <div style="display:flex;gap:6px">${others.map(k => { const on = k === to; const d = GLP1_DRUGS[k]; return `<button onclick="glp1PickSwTo('${k}')" style="flex:1;padding:9px 4px;border-radius:10px;border:1.5px solid ${on ? d.color : '#374151'};background:${on ? d.color + '22' : 'transparent'};color:${on ? d.color : '#9ca3af'};font-weight:${on ? 700 : 500};font-size:12px;cursor:pointer;font-family:inherit">${d.name.slice(0, 4)}</button>`; }).join('')}</div>
+
+        <div style="margin-top:14px;padding:12px;background:${toD.color}14;border:1px solid ${toD.color}44;border-radius:12px">
+          <div style="font-size:11px;color:#9ca3af">권장 시작용량</div>
+          <div style="font-size:22px;font-weight:800;color:${toD.color};margin:2px 0">${startMg} mg<span style="font-size:12px;color:#9ca3af;font-weight:500"> / 주 ${rule.cautious < startMg ? ` (신중하면 ${rule.cautious}mg)` : ''}</span></div>
+          <div style="font-size:11px;color:#cbd5e1;line-height:1.5">${rule.startNote}</div>
+        </div>
+
+        <div style="margin-top:9px;display:flex;gap:8px">
+          <div style="flex:1;padding:10px;background:#0d0d1a;border:1px solid #1f2937;border-radius:11px">
+            <div style="font-size:10px;color:#6b7280">🔄 무리셋(바로 전환)</div>
+            <div style="font-size:12px;color:#e2e8f0;margin-top:3px;line-height:1.45">다음 주사일에 ${startMg}mg로 교체. 첫 1~2주 위장 부작용 겹칠 수 있음(전약 반감기 ${fromD.halfLifeDays}일).</div>
+          </div>
+          <div style="flex:1;padding:10px;background:#0d0d1a;border:1px solid #1f2937;border-radius:11px">
+            <div style="font-size:10px;color:#6b7280">🧼 완전 리셋</div>
+            <div style="font-size:12px;color:#e2e8f0;margin-top:3px;line-height:1.45">전약 끊고 <b>${wash}일</b>(반감기×2+) 쉰 뒤 ${startMg}mg 시작.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:13px">
+          <div style="font-size:11px;color:#9ca3af;margin-bottom:5px">📅 ${toD.name} 타이트레이션 (오늘부터)</div>
+          ${calRows}
+        </div>
+        ${to === 'reta' ? `<div style="font-size:10px;color:#fbbf24;margin-top:8px;line-height:1.5">⚠️ 레타 4mg+부터 글루카곤 작용 → 안정시 심박수 5~15bpm↑ 흔함. 4·8mg은 6주씩 천천히, 심박 체크.</div>` : ''}
+      </div>`;
+    }
+
+    function glp1DisclaimerCard() {
+      return `<div class="card" style="border-color:#7f1d1d55;background:#1a0e0e">
+        <div style="font-size:11px;color:#fca5a5;line-height:1.6">
+          ⚠️ <b>의료조언 아님 · 참고용</b><br>
+          · 감량%는 서로 다른 임상시험의 <b>근사치</b>이며 개인차가 큽니다.<br>
+          · 레타트루타이드는 <b>아직 미승인 약</b>이며 공식 스위칭 프로토콜이 없어 커뮤니티 관행에 기반합니다.<br>
+          · 그레이마켓 펩타이드는 실제 함량이 표시량의 <b>62~100%</b>로 편차가 큽니다.<br>
+          · 최종 용량·전환은 <b>반드시 본인 판단과 의사 상담</b>으로 결정하세요.
+        </div>
+      </div>`;
+    }
+
+    window.toggleGlp1 = function () {
+      const v = localStorage.getItem('glp1_collapsed') === '1';
+      localStorage.setItem('glp1_collapsed', v ? '0' : '1');
+      renderGlp1();
+    };
+
+    function renderGlp1() {
+      const el = document.getElementById('glp1-section');
+      if (!el) return;
+      // 기본 접힘 (localStorage에 값 없으면 접힌 상태)
+      const collapsed = localStorage.getItem('glp1_collapsed') !== '0';
+      const body = collapsed ? '' :
+        `<div style="margin-top:12px">
+           ${glp1CalcCard()}
+           ${glp1SwitchCard()}
+           ${glp1DisclaimerCard()}
+         </div>`;
+      el.innerHTML =
+        `<div class="card" style="margin-bottom:0">
+           <div onclick="toggleGlp1()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer">
+             <span style="font-size:14px;font-weight:700;color:#e2e8f0">💊 GLP-1 용량 환산 <span style="font-size:11px;color:#6b7280;font-weight:500">세마·터제·레타 갈아타기</span></span>
+             <span style="color:#60a5fa;font-size:12px;white-space:nowrap">${collapsed ? '펼치기 ▼' : '접기 ▲'}</span>
+           </div>
+           ${body}
+         </div>`;
+    }
 
     // ══════════════════════════════════════════════
     // 백과사전
@@ -11294,6 +11528,9 @@
         <div id="cost-result"><div style="font-size:12px;color:#4a5568;text-align:center;padding:10px">구매 가격을 입력하세요</div></div>
         </div><!-- /drug-sec-cost -->
       </div>
+
+      <!-- ── GLP-1 용량 환산·스위칭 (2026-07-06 GG 요청, 투약탭 하단 접이식 섹션) ── -->
+      <div id="glp1-section" style="margin-top:14px"></div>
     </div>
 
     <!-- ── 체중 패널 ── -->
