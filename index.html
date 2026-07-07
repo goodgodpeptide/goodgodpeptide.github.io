@@ -3457,7 +3457,7 @@
           let ddayText = "", ddayColor = "#facc15";
           if (diffMs > 0) {
             if (calDiff > 0) { ddayText = `D-${calDiff}`; ddayColor = "#facc15"; }
-            else { ddayText = `오늘! +${diffHrs}h`; ddayColor = "#f97316"; }
+            else { ddayText = `오늘! +${diffHrs}h 후`; ddayColor = "#f97316"; }
           } else {
             ddayText = calDiff === 0 ? `+${Math.abs(diffHrs)}h 지남` : `+${Math.abs(calDiff)}일 지남`;
             ddayColor = "#f87171";
@@ -3519,7 +3519,7 @@
           const diffHrs = Math.floor(diffMs / 3600000);
           if (diffMs > 0) {
             if (calDiff > 0) { ddayText = `D-${calDiff}`; ddayColor = "#facc15"; }
-            else { ddayText = `오늘! +${diffHrs}h`; ddayColor = "#f97316"; }
+            else { ddayText = `오늘! +${diffHrs}h 후`; ddayColor = "#f97316"; }
           } else {
             ddayText = calDiff === 0 ? `+${Math.abs(diffHrs)}h 지남` : `+${Math.abs(calDiff)}일 지남`;
             ddayColor = "#f87171";
