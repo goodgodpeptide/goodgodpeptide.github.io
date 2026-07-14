@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peptide-app-v13';
+const CACHE_NAME = 'peptide-app-v14';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -16,12 +16,12 @@ self.addEventListener('install', e => {
 });
 
 self.addEventListener('activate', e => {
+  // 🔴 SW_UPDATED postMessage 브로드캐스트 제거 (2026-07-15 GG '킬때마다 배너 2-3번'):
+  //    클라이언트의 updatefound 경로와 이중으로 배너를 띄우던 원인. 캐시 정리만 수행.
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.matchAll()).then(clients => {
-      clients.forEach(c => c.postMessage({ type: 'SW_UPDATED' }));
-    })
+    )
   );
   self.clients.claim();
 });
