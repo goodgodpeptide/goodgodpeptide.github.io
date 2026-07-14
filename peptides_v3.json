@@ -5355,7 +5355,9 @@
         "semaglutide",
         "survodutide"
       ],
-      "safetyNotes": "⚠️ pep-pedia.org에서 출처 의심 경고. Phase 2 디자인이 Viking VK2735와 동일, NA-931+Tirzepatide 프로토콜이 Lilly 임상과 동일. 분자구조/CAS 미공개. 미검증 데이터로 취급 권장.",
+      "safetyNotes": [
+        "⚠️ pep-pedia.org에서 출처 의심 경고. Phase 2 디자인이 Viking VK2735와 동일, NA-931+Tirzepatide 프로토콜이 Lilly 임상과 동일. 분자구조/CAS 미공개. 미검증 데이터로 취급 권장."
+      ],
       "stopSigns": [
         "Severe or persistent abdominal pain (potential pancreatitis)",
         "Severe nausea/vomiting preventing adequate nutrition",
@@ -5369,7 +5371,9 @@
       "keyBenefitsKo": "경구 투여(주사 없음), 근육 보존 체중 감소, 음식 유무에 관계없이 1일 1회 투여, 주사 가능한 GLP-1보다 경미한 GI 부작용, 포괄적인 대사 효과를 위한 4중 수용체 활성화.",
       "mechanismKo": "NA-931은 혈액뇌관문을 통과하는 고리형 IGF-1 단편에서 유래된 작은 친유성 분자입니다. IGF-1(근육 보존, 인슐린 민감성), GLP-1(식욕 억제, 인슐린 분비), GIP(포도당 대사, 지방 저장), 글루카곤(에너지 소비, 지방 산화) 수용체를 동시에 활성화합니다. 분자 정보무게독점(소분자)길이작음",
       "subtitleKo": "NA-931 | 4중 IGF-1/GLP-1/GIP/글루카곤 작용제",
-      "safetyNotesKo": "⚠️ pep-pedia.org에서 출처 의심 경고. Phase 2 디자인이 Viking VK2735와 동일, NA-931+Tirzepatide 프로토콜이 Lilly 임상과 동일. 분자구조/CAS 미공개. 미검증 데이터로 취급 권장.",
+      "safetyNotesKo": [
+        "⚠️ pep-pedia.org에서 출처 의심 경고. Phase 2 디자인이 Viking VK2735와 동일, NA-931+Tirzepatide 프로토콜이 Lilly 임상과 동일. 분자구조/CAS 미공개. 미검증 데이터로 취급 권장."
+      ],
       "stopSignsKo": [
         "심각하거나 지속적인 복통(잠재적 췌장염)",
         "심각한 메스꺼움/구토로 인해 적절한 영양 섭취가 불가능함",
@@ -39759,38 +39763,28 @@
         }
       ],
       "sideEffects": [
-        {
-          "name": "오심",
-          "severity": "Common"
-        },
-        {
-          "name": "구토",
-          "severity": "Common"
-        },
-        {
-          "name": "주사부위 반응",
-          "severity": "Common"
-        }
+        "오심 (흔함)",
+        "구토 (흔함)",
+        "주사부위 반응 (흔함)"
       ],
       "sideEffectsKo": [
-        {
-          "name": "오심",
-          "severity": "흔함"
-        },
-        {
-          "name": "구토",
-          "severity": "흔함"
-        },
-        {
-          "name": "주사부위 반응",
-          "severity": "흔함"
-        }
+        "오심 (흔함)",
+        "구토 (흔함)",
+        "주사부위 반응 (흔함)"
       ],
-      "safetyNotes": "Phase 2/3 임상시험 단계. Eli Lilly 개발. 시판 승인 전.",
-      "safetyNotesKo": "Phase 2/3 임상시험 단계. Eli Lilly 개발. 시판 승인 전.",
-      "stopSigns": "심한 오심/구토, 급성 복통, 심한 저혈당 증상 시 즉시 중단",
-      "stopSignsKo": "심한 오심/구토, 급성 복통, 심한 저혈당 증상 시 즉시 중단",
-      "reconstitute": {},
+      "safetyNotes": [
+        "Phase 2/3 임상시험 단계. Eli Lilly 개발. 시판 승인 전."
+      ],
+      "safetyNotesKo": [
+        "Phase 2/3 임상시험 단계. Eli Lilly 개발. 시판 승인 전."
+      ],
+      "stopSigns": [
+        "심한 오심/구토, 급성 복통, 심한 저혈당 증상 시 즉시 중단"
+      ],
+      "stopSignsKo": [
+        "심한 오심/구토, 급성 복통, 심한 저혈당 증상 시 즉시 중단"
+      ],
+      "reconstitute": [],
       "qualityGood": [
         "Eli Lilly 제약사 개발",
         "대규모 Phase 2 완료(263명)",
@@ -39812,34 +39806,16 @@
         "가격 미정"
       ],
       "effectsTimeline": [
-        {
-          "period": "1-4주",
-          "effect": "식욕 감소 시작"
-        },
-        {
-          "period": "12-24주",
-          "effect": "유의미한 체중감소"
-        },
-        {
-          "period": "48주+",
-          "effect": "체중감소 지속(플래토 미도달)"
-        }
+        "1-4주: 식욕 감소 시작",
+        "12-24주: 유의미한 체중감소",
+        "48주+: 체중감소 지속(플래토 미도달)"
       ],
       "effectsTimelineKo": [
-        {
-          "period": "1-4주",
-          "effect": "식욕 감소 시작"
-        },
-        {
-          "period": "12-24주",
-          "effect": "유의미한 체중감소"
-        },
-        {
-          "period": "48주+",
-          "effect": "체중감소 지속(플래토 미도달)"
-        }
+        "1-4주: 식욕 감소 시작",
+        "12-24주: 유의미한 체중감소",
+        "48주+: 체중감소 지속(플래토 미도달)"
       ],
-      "quickStart": "⚠️ 임상시험 단계 약물. 일반 구매 불가.",
+      "quickStart": {},
       "tags": [
         "weight-loss",
         "amylin",
@@ -39972,11 +39948,19 @@
       ],
       "sideEffects": [],
       "sideEffectsKo": [],
-      "safetyNotes": "전임상 데이터만 존재. 인간 PK 데이터 없음. 카빈슨 연구팀 논문만 존재.",
-      "safetyNotesKo": "전임상 데이터만 존재. 인간 PK 데이터 없음. 카빈슨 연구팀 논문만 존재.",
-      "stopSigns": "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음.",
-      "stopSignsKo": "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음.",
-      "reconstitute": {},
+      "safetyNotes": [
+        "전임상 데이터만 존재. 인간 PK 데이터 없음. 카빈슨 연구팀 논문만 존재."
+      ],
+      "safetyNotesKo": [
+        "전임상 데이터만 존재. 인간 PK 데이터 없음. 카빈슨 연구팀 논문만 존재."
+      ],
+      "stopSigns": [
+        "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음."
+      ],
+      "stopSignsKo": [
+        "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음."
+      ],
+      "reconstitute": [],
       "qualityGood": [
         "고유한 크로마틴 리모델링 메커니즘",
         "PubMed 논문 15편"
@@ -39997,7 +39981,7 @@
       ],
       "effectsTimeline": [],
       "effectsTimelineKo": [],
-      "quickStart": "⚠️ 전임상 단계. 인간 용량·안전성 미확립.",
+      "quickStart": {},
       "tags": [
         "anti-aging",
         "khavinson",
@@ -40108,11 +40092,19 @@
       ],
       "sideEffects": [],
       "sideEffectsKo": [],
-      "safetyNotes": "⚠️ '간 보호' 마케팅과 달리 실제 연구는 전부 신장 관련. 간 효과 근거 극히 부족.",
-      "safetyNotesKo": "⚠️ '간 보호' 마케팅과 달리 실제 연구는 전부 신장 관련. 간 효과 근거 극히 부족.",
-      "stopSigns": "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음.",
-      "stopSignsKo": "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음.",
-      "reconstitute": {},
+      "safetyNotes": [
+        "⚠️ '간 보호' 마케팅과 달리 실제 연구는 전부 신장 관련. 간 효과 근거 극히 부족."
+      ],
+      "safetyNotesKo": [
+        "⚠️ '간 보호' 마케팅과 달리 실제 연구는 전부 신장 관련. 간 효과 근거 극히 부족."
+      ],
+      "stopSigns": [
+        "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음."
+      ],
+      "stopSignsKo": [
+        "이상 반응 시 즉시 중단. 인간 안전성 데이터 없음."
+      ],
+      "reconstitute": [],
       "qualityGood": [
         "신장 보호 전임상 데이터"
       ],
@@ -40131,7 +40123,7 @@
       ],
       "effectsTimeline": [],
       "effectsTimelineKo": [],
-      "quickStart": "⚠️ 전임상 단계. 인간 용량 미확립.",
+      "quickStart": {},
       "tags": [
         "anti-aging",
         "khavinson",
@@ -40260,30 +40252,26 @@
         }
       ],
       "sideEffects": [
-        {
-          "name": "주사부위 반응",
-          "severity": "Mild"
-        },
-        {
-          "name": "미열",
-          "severity": "Rare"
-        }
+        "주사부위 반응 (경미)",
+        "미열 (희귀)"
       ],
       "sideEffectsKo": [
-        {
-          "name": "주사부위 반응",
-          "severity": "경미"
-        },
-        {
-          "name": "미열",
-          "severity": "드묾"
-        }
+        "주사부위 반응 (경미)",
+        "미열 (드묾)"
       ],
-      "safetyNotes": "러시아 등록 의약품(40년+). 단, 대부분 연구가 카빈슨 연구팀. 관찰 연구의 효과크기 비현실적 가능성.",
-      "safetyNotesKo": "러시아 등록 의약품(40년+). 단, 대부분 연구가 카빈슨 연구팀. 관찰 연구의 효과크기 비현실적 가능성.",
-      "stopSigns": "심한 알레르기 반응, 자가면역 증상 악화 시 즉시 중단",
-      "stopSignsKo": "심한 알레르기 반응, 자가면역 증상 악화 시 즉시 중단",
-      "reconstitute": {},
+      "safetyNotes": [
+        "러시아 등록 의약품(40년+). 단, 대부분 연구가 카빈슨 연구팀. 관찰 연구의 효과크기 비현실적 가능성."
+      ],
+      "safetyNotesKo": [
+        "러시아 등록 의약품(40년+). 단, 대부분 연구가 카빈슨 연구팀. 관찰 연구의 효과크기 비현실적 가능성."
+      ],
+      "stopSigns": [
+        "심한 알레르기 반응, 자가면역 증상 악화 시 즉시 중단"
+      ],
+      "stopSignsKo": [
+        "심한 알레르기 반응, 자가면역 증상 악화 시 즉시 중단"
+      ],
+      "reconstitute": [],
       "qualityGood": [
         "러시아 등록 의약품(1982~)",
         "COVID-19 RCT 존재",
@@ -40305,26 +40293,14 @@
         "서구권 규제 승인 없음"
       ],
       "effectsTimeline": [
-        {
-          "period": "수일",
-          "effect": "림프구 수 증가"
-        },
-        {
-          "period": "1-2주",
-          "effect": "면역 기능 개선"
-        }
+        "수일: 림프구 수 증가",
+        "1-2주: 면역 기능 개선"
       ],
       "effectsTimelineKo": [
-        {
-          "period": "수일",
-          "effect": "림프구 수 증가"
-        },
-        {
-          "period": "1-2주",
-          "effect": "면역 기능 개선"
-        }
+        "수일: 림프구 수 증가",
+        "1-2주: 면역 기능 개선"
       ],
-      "quickStart": "5-10mg IM 매일, 3-10일 코스. 총 30-100mg.",
+      "quickStart": {},
       "tags": [
         "immune",
         "thymus",
@@ -40470,11 +40446,19 @@
       ],
       "sideEffects": [],
       "sideEffectsKo": [],
-      "safetyNotes": "⚠️ 알츠하이머 연구 논문에 교정 게재(2025.01, PMID 39861198). 소규모 비대조 인간 연구 2건만 존재.",
-      "safetyNotesKo": "⚠️ 알츠하이머 연구 논문에 교정 게재(2025.01). 소규모 비대조 인간 연구 2건만 존재.",
-      "stopSigns": "혈압 이상 변동, 출혈 경향, 이상 반응 시 즉시 중단",
-      "stopSignsKo": "혈압 이상 변동, 출혈 경향, 이상 반응 시 즉시 중단",
-      "reconstitute": {},
+      "safetyNotes": [
+        "⚠️ 알츠하이머 연구 논문에 교정 게재(2025.01, PMID 39861198). 소규모 비대조 인간 연구 2건만 존재."
+      ],
+      "safetyNotesKo": [
+        "⚠️ 알츠하이머 연구 논문에 교정 게재(2025.01). 소규모 비대조 인간 연구 2건만 존재."
+      ],
+      "stopSigns": [
+        "혈압 이상 변동, 출혈 경향, 이상 반응 시 즉시 중단"
+      ],
+      "stopSignsKo": [
+        "혈압 이상 변동, 출혈 경향, 이상 반응 시 즉시 중단"
+      ],
+      "reconstitute": [],
       "qualityGood": [
         "소규모 인간 연구 2건 존재",
         "SIRT1 상향조절 확인"
@@ -40495,7 +40479,7 @@
       ],
       "effectsTimeline": [],
       "effectsTimelineKo": [],
-      "quickStart": "⚠️ 인간 용량 미확립. 전문가 상담 필수.",
+      "quickStart": {},
       "tags": [
         "vascular",
         "khavinson",
