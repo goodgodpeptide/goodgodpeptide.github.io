@@ -7972,9 +7972,12 @@
         </div>` : '';
 
       // ── 부작용 & 안전 (탭) ──
-      const se  = pep.sideEffects  || [];
-      const sn  = pep.safetyNotes  || [];
-      const ss  = pep.stopSigns    || [];
+      // 🔴 2026-07-14: 신규 펩타이드(eloralintide·thymalin 등 6종)는 safetyNotes/stopSigns/sideEffects가
+      //   배열이 아닌 '문자열'로 입력돼 sn.map() 크래시 → 모달이 안 열림. 문자열/배열 모두 배열로 정규화.
+      const _asArr = v => Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]);
+      const se  = _asArr(pep.sideEffects);
+      const sn  = _asArr(pep.safetyNotes);
+      const ss  = _asArr(pep.stopSigns);
       const hasAnySafety = se.length || sn.length || ss.length;
       const safetyHTML = hasAnySafety ? `
         <div class="enc-section">
