@@ -7138,6 +7138,7 @@
         <div style="padding:16px;max-width:640px;margin:0 auto">
           <div id="hall-of-fame-section" style="display:none"></div>
           <div id="community-patchnotes"></div>
+          <div id="saju-section"></div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
             <div style="font-size:16px;font-weight:800;color:${txt}">💬 커뮤니티</div>
             <button onclick="openNicknameModal()" style="background:${isL?'#f1f5f9':'#1f2937'};border:1px solid ${border};border-radius:20px;color:${nick?'#60a5fa':'#f97316'};padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">
@@ -7165,6 +7166,11 @@
       renderCommunityTab();
       renderCommunityPatchNotes();
       loadHallOfFame(); // 명예의전당 비동기 로드
+      // 🔮 사주(四柱)+토정비결 섹션 — saju/saju_ui.js(독립 모듈)가 로드됐으면 렌더.
+      // 저장된 생년월일이 있으면 바로 오늘의 운세, 없으면 입력폼(SajuUI 내부에서 판단).
+      try {
+        if (window.SajuUI) SajuUI.renderSajuSection(document.getElementById('saju-section'));
+      } catch (e) { console.error('[사주] 섹션 렌더 실패:', e); }
       if (communityUnsubscribe) communityUnsubscribe();
       try {
         const q = query(collection(db,"posts"), orderBy("time","desc"), limit(50));
@@ -12579,5 +12585,12 @@
       document.body.appendChild(banner);
     }
   </script>
+
+  <!-- 🔮 사주(四柱)+토정비결 모듈 (독립 모듈, saju/ 폴더 — 커뮤니티탭에서 SajuUI.renderSajuSection()으로 마운트) -->
+  <!-- 순서 고정: engine·toitjeong은 일반 스크립트(동기 로드, window.SajuEngine/window.Toitjeong을 즉시 노출) →
+       ui는 모듈(지연 실행, 위 firebase 초기화 모듈 이후 실행되어 getApp() 재사용이 항상 성공) -->
+  <script src="./saju/saju_engine.js"></script>
+  <script src="./saju/toitjeong.js"></script>
+  <script type="module" src="./saju/saju_ui.js"></script>
 </body>
 </html>

@@ -1,0 +1,176 @@
+/* ============================================================
+   saju/saju.css — 사주 기능 UI 전용 스타일시트 (독립 모듈)
+   - 클래스명은 전부 `saju-` 접두사 → 기존 앱 CSS와 충돌 없음
+   - 색상 토큰은 index.html 기존 다크/라이트 팔레트를 그대로 재사용
+     (dark: #12121e/#1f2937/#e2e8f0/#1d4ed8, light: #fff/#e2e8f0/#1a1a2e/#2563eb)
+   - saju_ui.js가 최초 렌더 시 <link> 태그로 자동 주입한다(수동 추가 불필요).
+   ============================================================ */
+
+.saju-wrap { padding: 16px; max-width: 640px; margin: 0 auto; box-sizing: border-box; }
+
+.saju-card {
+  background: #12121e; border: 1px solid #1f2937; border-radius: 14px;
+  padding: 14px 16px; margin-bottom: 12px;
+}
+body.light-mode .saju-card { background: #ffffff; border-color: #e2e8f0; box-shadow: 0 1px 4px #0001; }
+
+.saju-section-title {
+  font-size: 12px; font-weight: 700; color: #6b7280;
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px;
+}
+body.light-mode .saju-section-title { color: #64748b; }
+
+/* ── 입력 폼 ─────────────────────────────────────────── */
+.saju-form-title { font-size: 16px; font-weight: 800; color: #e2e8f0; margin-bottom: 6px; }
+body.light-mode .saju-form-title { color: #1a1a2e; }
+.saju-form-desc { font-size: 12px; color: #9ca3af; line-height: 1.6; margin-bottom: 14px; }
+body.light-mode .saju-form-desc { color: #64748b; }
+
+.saju-form-error {
+  background: #7f1d1d33; border: 1px solid #ef444455; color: #fca5a5;
+  border-radius: 10px; padding: 8px 12px; font-size: 12px; margin-bottom: 12px;
+}
+body.light-mode .saju-form-error { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+
+.saju-field-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.saju-select {
+  flex: 1; min-width: 0; padding: 10px 8px; background: #0d0d1a; border: 1px solid #374151;
+  border-radius: 10px; color: #e2e8f0; font-size: 14px; font-family: inherit; outline: none;
+}
+.saju-select:disabled { opacity: .45; }
+body.light-mode .saju-select { background: #f8fafc; border-color: #d1d5db; color: #1a1a2e; }
+
+.saju-checkbox-row { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; font-size: 12px; color: #9ca3af; }
+body.light-mode .saju-checkbox-row { color: #64748b; }
+.saju-checkbox-row label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+.saju-toggle-group { display: flex; gap: 8px; margin-bottom: 12px; }
+.saju-toggle-btn {
+  flex: 1; padding: 9px; background: #1f2937; border: 1px solid #374151; border-radius: 10px;
+  color: #9ca3af; font-size: 13px; font-family: inherit; cursor: pointer; transition: all .15s;
+}
+.saju-toggle-btn.active { background: #1d4ed8; border-color: #3b82f6; color: #fff; font-weight: 700; }
+body.light-mode .saju-toggle-btn { background: #f3f4f6; border-color: #d1d5db; color: #6b7280; }
+body.light-mode .saju-toggle-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+
+.saju-form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.saju-btn-primary {
+  padding: 10px 22px; background: #1d4ed8; border: none; border-radius: 10px; color: #fff;
+  font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer;
+}
+.saju-btn-primary:disabled { opacity: .6; cursor: default; }
+.saju-btn-secondary {
+  padding: 10px 18px; background: #374151; border: none; border-radius: 10px; color: #9ca3af;
+  font-size: 13px; font-family: inherit; cursor: pointer;
+}
+body.light-mode .saju-btn-secondary { background: #f1f5f9; color: #475569; }
+
+/* ── 운세 화면 헤더 / 탭 ─────────────────────────────── */
+.saju-header-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.saju-birth-summary { font-size: 12px; color: #9ca3af; line-height: 1.5; }
+body.light-mode .saju-birth-summary { color: #64748b; }
+.saju-mock-badge {
+  display: inline-block; margin-left: 6px; padding: 1px 7px; background: #f59e0b22; color: #f59e0b;
+  border-radius: 20px; font-size: 10px; font-weight: 700; vertical-align: middle;
+}
+.saju-edit-btn {
+  background: #1f2937; border: 1px solid #374151; border-radius: 20px; color: #60a5fa;
+  padding: 6px 14px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; white-space: nowrap;
+}
+body.light-mode .saju-edit-btn { background: #f1f5f9; border-color: #e2e8f0; color: #2563eb; }
+
+.saju-tab-bar { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; padding-bottom: 2px; }
+.saju-tab-btn {
+  padding: 7px 14px; background: #1f2937; border: 1px solid #374151; border-radius: 20px;
+  color: #9ca3af; font-size: 12px; cursor: pointer; font-family: inherit; white-space: nowrap; transition: all .15s;
+}
+.saju-tab-btn.active { background: #1d4ed8; border-color: #3b82f6; color: #fff; font-weight: 700; }
+body.light-mode .saju-tab-btn { background: #f3f4f6; border-color: #d1d5db; color: #6b7280; }
+body.light-mode .saju-tab-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+
+.saju-view-content { animation: sajuFadeIn .18s ease; }
+@keyframes sajuFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── 간지 배지 ───────────────────────────────────────── */
+.saju-ganji-card { text-align: center; }
+.saju-ganji-badge { font-size: 26px; font-weight: 800; color: #e2e8f0; letter-spacing: 1px; }
+body.light-mode .saju-ganji-badge { color: #1a1a2e; }
+.saju-ganji-reading { font-size: 15px; font-weight: 600; color: #60a5fa; margin-left: 4px; }
+body.light-mode .saju-ganji-reading { color: #2563eb; }
+
+/* ── 영역 지수 게이지 ────────────────────────────────── */
+.saju-gauge-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.saju-gauge-row:last-child { margin-bottom: 0; }
+.saju-gauge-label { width: 44px; flex-shrink: 0; font-size: 12px; color: #cbd5e1; font-weight: 600; }
+body.light-mode .saju-gauge-label { color: #334155; }
+.saju-gauge-track { flex: 1; height: 8px; background: #1f2937; border-radius: 6px; overflow: hidden; }
+body.light-mode .saju-gauge-track { background: #e5e7eb; }
+.saju-gauge-fill { height: 100%; border-radius: 6px; transition: width .3s ease; }
+.saju-gauge-val { width: 28px; flex-shrink: 0; text-align: right; font-size: 12px; color: #9ca3af; font-family: 'JetBrains Mono', monospace; }
+body.light-mode .saju-gauge-val { color: #64748b; }
+
+/* ── 합충 작용 칩 ────────────────────────────────────── */
+.saju-chip-list { display: flex; flex-direction: column; gap: 6px; }
+.saju-chip { display: flex; gap: 8px; align-items: baseline; border: 1px solid; border-radius: 10px; padding: 8px 10px; background: #0d0d1a55; }
+body.light-mode .saju-chip { background: #f8fafc; }
+.saju-chip-type { font-size: 11px; font-weight: 800; flex-shrink: 0; }
+.saju-chip-desc { font-size: 12px; color: #cbd5e1; line-height: 1.5; }
+body.light-mode .saju-chip-desc { color: #334155; }
+
+/* ── 풀이 텍스트 ─────────────────────────────────────── */
+.saju-text-summary { font-size: 13px; color: #e2e8f0; line-height: 1.7; margin-bottom: 8px; }
+body.light-mode .saju-text-summary { color: #1e293b; }
+.saju-text-detail-list { display: flex; flex-direction: column; gap: 6px; }
+.saju-text-detail { font-size: 12px; color: #9ca3af; line-height: 1.6; }
+.saju-text-detail b { color: #cbd5e1; font-weight: 700; margin-right: 4px; }
+body.light-mode .saju-text-detail { color: #64748b; }
+body.light-mode .saju-text-detail b { color: #334155; }
+
+/* ── 요일별 흐름(주간) ───────────────────────────────── */
+.saju-day-strip { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.saju-day-chip { flex: 1; min-width: 54px; text-align: center; background: #0d0d1a; border: 1px solid #1f2937; border-radius: 10px; padding: 8px 4px; }
+body.light-mode .saju-day-chip { background: #f8fafc; border-color: #e2e8f0; }
+.saju-day-date { font-size: 10px; color: #6b7280; margin-bottom: 4px; }
+.saju-day-ganji { font-size: 13px; font-weight: 700; color: #e2e8f0; }
+body.light-mode .saju-day-ganji { color: #1a1a2e; }
+.saju-day-ganji .saju-ganji-reading { display: block; font-size: 10px; margin-left: 0; }
+.saju-day-score { font-size: 10px; color: #60a5fa; margin-top: 3px; font-weight: 700; }
+
+/* ── 이달의 주요일(월간) ─────────────────────────────── */
+.saju-highlight-list { display: flex; flex-direction: column; gap: 5px; }
+.saju-highlight-item { font-size: 12px; color: #cbd5e1; line-height: 1.6; }
+body.light-mode .saju-highlight-item { color: #334155; }
+
+/* ── 대운 타임라인 ───────────────────────────────────── */
+.saju-daewoon-list { display: flex; flex-direction: column; gap: 8px; }
+.saju-daewoon-item {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  background: #0d0d1a; border: 1px solid #1f2937; border-radius: 12px; padding: 10px 12px;
+}
+body.light-mode .saju-daewoon-item { background: #f8fafc; border-color: #e2e8f0; }
+.saju-daewoon-item.current { border-color: #3b82f6; background: #1d4ed822; }
+body.light-mode .saju-daewoon-item.current { border-color: #2563eb; background: #eff6ff; }
+.saju-daewoon-age { width: 64px; flex-shrink: 0; font-size: 11px; color: #9ca3af; font-weight: 700; }
+body.light-mode .saju-daewoon-age { color: #64748b; }
+.saju-daewoon-ganji { width: 70px; flex-shrink: 0; font-size: 15px; font-weight: 800; color: #e2e8f0; }
+body.light-mode .saju-daewoon-ganji { color: #1a1a2e; }
+.saju-daewoon-summary { flex: 1; font-size: 11.5px; color: #9ca3af; line-height: 1.5; }
+body.light-mode .saju-daewoon-summary { color: #64748b; }
+.saju-daewoon-current-badge {
+  position: absolute; top: -8px; right: 10px; background: #1d4ed8; color: #fff;
+  font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+}
+
+/* ── 로딩 / 에러 ─────────────────────────────────────── */
+.saju-loading, .saju-error { text-align: center; padding: 32px 16px; color: #6b7280; font-size: 13px; }
+.saju-error { color: #f87171; }
+body.light-mode .saju-error { color: #dc2626; }
+.saju-retry-btn {
+  margin-top: 10px; padding: 7px 16px; background: #1f2937; border: 1px solid #374151; border-radius: 10px;
+  color: #cbd5e1; font-size: 12px; cursor: pointer; font-family: inherit;
+}
+body.light-mode .saju-retry-btn { background: #f1f5f9; border-color: #e2e8f0; color: #334155; }
+
+@media (max-width: 380px) {
+  .saju-daewoon-summary { display: none; } /* 좁은 화면에서는 요약 숨기고 간지·나이만 */
+}

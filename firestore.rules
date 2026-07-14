@@ -14,6 +14,12 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
+    // 🔮 사주(四柱) 정보 저장 — users/{uid} 문서 자체가 아니라 서브컬렉션(saju/profile).
+    // 위 users/{uid} 규칙은 그 문서 자체에만 적용되고 서브컬렉션까지 자동 상속되지 않으므로
+    // (backups/{uid}/{doc=**}처럼) 별도 match가 필요하다 — 없으면 저장 시 permission-denied.
+    match /users/{uid}/saju/{doc} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
     match /user_profiles/{uid} {
       allow read: if isApproved();
       allow write: if isSignedIn() && request.auth.uid == uid;
