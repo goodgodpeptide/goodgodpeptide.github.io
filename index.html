@@ -7066,6 +7066,8 @@
     // 새 업데이트 배포 시 여기 맨 위에 한 줄씩 추가.
     const APP_CHANGELOG = [
       { date: "2026-07-15", items: [
+        { type: "feat", text: "📦 해외배송 조회 17track 업그레이드 — 중국택배사·현지택배사 상세 이벤트를 한글 번역해 하나로 병합, 소요일수·합쳐진 택배사 표시 (해외직구 CN 운송장도 상세하게)" },
+        { type: "ui", text: "커뮤니티 탭 접기/펴기 — 사주·해외배송조회·게시판 각각 제목 눌러 접었다 폈다, 접은 상태 기억" },
         { type: "feat", text: "📮 해외배송 조회 신기능 (커뮤니티 탭) — EMS·국제등기 운송장번호로 배송 상태를 앱에서 바로 타임라인으로 확인 (우체국 기반, 해외직구 추적용)" },
         { type: "feat", text: "📦 배송 저장·추적 — 조회한 운송장을 별명 달아 저장하면 목록에서 상태(배송중/배달완료) 한눈에, 탭하면 타임라인, 개별·전체 새로고침·삭제까지. 계정에 저장돼 기기 바뀌어도 유지" },
         { type: "fix", text: "백과사전에서 일부 펩타이드(엘로랄린타이드·바이오글루티드·리바젠·오바젠·티말린·베수젠) 클릭 시 상세가 안 열리거나 '[object Object]'·내용 누락·번역 깨짐이 나던 것 수정 — 데이터 형식을 바로잡아 정상 표시" },
@@ -7141,14 +7143,20 @@
         <div style="padding:16px;max-width:640px;margin:0 auto">
           <div id="hall-of-fame-section" style="display:none"></div>
           <div id="community-patchnotes"></div>
-          <div id="saju-section"></div>
+          <!-- 🔮 사주 (접기/펴기 — 2026-07-15 GG '접었다폈다 다 만들어줘') -->
+          <div style="margin-bottom:16px">
+            <div onclick="toggleCollapse('saju')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:${cardBg};border:1px solid ${border};border-radius:12px;padding:11px 14px"><span style="font-size:13px;font-weight:800;color:${txt}">🔮 사주·운세</span><span id="arrow-saju" style="font-size:12px;color:${isL?'#94a3b8':'#6b7280'}">${_clpOpen('saju')?'▲':'▼'}</span></div>
+            <div id="collapse-saju" style="display:${_clpOpen('saju')?'block':'none'};margin-top:8px"><div id="saju-section"></div></div>
+          </div>
           <div id="track-section"></div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-            <div style="font-size:16px;font-weight:800;color:${txt}">💬 커뮤니티</div>
-            <button onclick="openNicknameModal()" style="background:${isL?'#f1f5f9':'#1f2937'};border:1px solid ${border};border-radius:20px;color:${nick?'#60a5fa':'#f97316'};padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">
+          <!-- 💬 게시판 (접기/펴기) -->
+          <div onclick="toggleCollapse('board')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div style="font-size:16px;font-weight:800;color:${txt}">💬 커뮤니티 <span id="arrow-board" style="font-size:12px;color:${isL?'#94a3b8':'#6b7280'}">${_clpOpen('board')?'▲':'▼'}</span></div>
+            <button onclick="event.stopPropagation();openNicknameModal()" style="background:${isL?'#f1f5f9':'#1f2937'};border:1px solid ${border};border-radius:20px;color:${nick?'#60a5fa':'#f97316'};padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">
               🧑 ${nick ? escapeHtml(nick) : '닉네임 설정'}
             </button>
           </div>
+          <div id="collapse-board" style="display:${_clpOpen('board')?'block':'none'}">
           <div style="background:${cardBg};border:1px solid ${border};border-radius:14px;padding:12px;margin-bottom:16px">
             ${nick ? `
             <textarea id="post-input" placeholder="자유롭게 글을 남겨보세요 💊" style="width:100%;background:${iBg};border:1px solid ${iB};border-radius:10px;color:${txt};padding:10px 12px;font-size:14px;font-family:inherit;resize:vertical;min-height:80px;box-sizing:border-box;outline:none;line-height:1.6" rows="3"></textarea>
@@ -7162,12 +7170,25 @@
             </div>`}
           </div>
           <div id="post-list"><div style="text-align:center;padding:32px;color:#4a5568">로딩 중...</div></div>
+          </div>
         </div>`;
       try { renderCommunityPatchNotes(); } catch (e) {}
     }
 
+    // 🔽 커뮤니티 섹션 접기/펴기 (2026-07-15 GG '접었다폈다 다 만들어줘') — 상태 localStorage 기억
+    function _clpOpen(key) { try { return localStorage.getItem('clp_'+key) !== '0'; } catch(_) { return true; } }
+    window.toggleCollapse = function(key) {
+      const body = document.getElementById('collapse-'+key);
+      const arrow = document.getElementById('arrow-'+key);
+      if (!body) return;
+      const nowOpen = body.style.display === 'none';   // 지금 닫혀있으면 → 열림
+      body.style.display = nowOpen ? '' : 'none';
+      if (arrow) arrow.textContent = nowOpen ? '▲' : '▼';
+      try { localStorage.setItem('clp_'+key, nowOpen ? '1' : '0'); } catch(_) {}
+    };
+
     // 📮 해외배송 조회 + 저장기록 (2026-07-15 GG '17track식 조회 탑재' + '기록·흔한기능 다 추가') —
-    //   앱 전용 미니 백엔드(app_backend.py, 회사PC+localtunnel)가 우체국을 대신 호출(공개프록시/DC IP는 403 차단).
+    //   앱 전용 미니 백엔드(app_backend.py, 회사PC+localtunnel)가 17track·우체국을 대신 호출(공개프록시/DC IP는 403 차단).
     //   저장목록은 appData.trackedShipments(계정 동기화). 상태배지·재조회·삭제·전체새로고침 등 추적앱 표준기능.
     const EMS_BACKEND = 'https://jwbs-ems-track.loca.lt';
     function _trackList() { if (!Array.isArray(appData.trackedShipments)) appData.trackedShipments = []; return appData.trackedShipments; }
@@ -7210,10 +7231,14 @@
       }).join('') : `<div style="font-size:12px;color:${sub};padding:8px 0">저장된 배송이 없어요. 조회 후 '💾 저장'을 누르면 여기 쌓여서 상태를 계속 추적해요.</div>`;
       el.innerHTML = `
         <div style="background:${cardBg};border:1px solid ${border};border-radius:14px;padding:14px;margin-bottom:16px">
-          <div style="font-size:14px;font-weight:800;color:${txt};margin-bottom:3px">📮 해외배송 조회</div>
-          <div style="font-size:11px;color:${sub};margin-bottom:10px">EMS·국제등기 운송장번호로 배송 상태 조회 (우체국)</div>
+          <div onclick="toggleCollapse('track')" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
+            <div style="font-size:14px;font-weight:800;color:${txt}">📮 해외배송 조회</div>
+            <span id="arrow-track" style="font-size:12px;color:${sub}">${_clpOpen('track')?'▲':'▼'}</span>
+          </div>
+          <div id="collapse-track" style="display:${_clpOpen('track')?'block':'none'}">
+          <div style="font-size:11px;color:${sub};margin-bottom:10px">EMS·국제등기·해외직구 운송장번호로 배송 상태 조회 (17track·우체국)</div>
           <div style="display:flex;gap:8px">
-            <input id="track-input" placeholder="운송장번호 (예: EM470596546KR)" style="flex:1;min-width:0;background:${iBg};border:1px solid ${iB};border-radius:10px;color:${txt};padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" onkeydown="if(event.key==='Enter')doTrack()">
+            <input id="track-input" placeholder="운송장번호 (예: EM470596546KR / LP...CN)" style="flex:1;min-width:0;background:${iBg};border:1px solid ${iB};border-radius:10px;color:${txt};padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" onkeydown="if(event.key==='Enter')doTrack()">
             <button onclick="doTrack()" style="background:#1d4ed8;border:none;border-radius:10px;color:white;padding:9px 16px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap">조회</button>
           </div>
           <div id="track-result" style="margin-top:12px"></div>
@@ -7222,6 +7247,7 @@
             ${saved.length?`<button onclick="refreshAllTracked()" style="background:none;border:1px solid ${border};border-radius:8px;color:${sub};font-size:11px;padding:3px 9px;cursor:pointer">🔄 전체 새로고침</button>`:''}
           </div>
           ${savedHtml}
+          </div>
         </div>`;
     }
 
@@ -7252,7 +7278,12 @@
       const saveBtn = isSaved
         ? `<span style="font-size:11px;color:${sub}">✓ 저장됨</span>`
         : `<button onclick="saveTracked('${encodeURIComponent(d.number)}','${escapeHtml((d.status||'').replace(/'/g,''))}')" style="background:${isL?'#f1f5f9':'#1f2937'};border:1px solid ${line};border-radius:8px;color:#60a5fa;font-size:11px;padding:4px 10px;cursor:pointer;font-family:inherit;font-weight:600">💾 저장</button>`;
-      box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:13px;font-weight:800;color:${txt}">🔖 ${escapeHtml(d.number)} — <span style="color:#22c55e">${escapeHtml(d.status||'')}</span></div>${saveBtn}</div>${rows}`;
+      // 17track이면 소요일수·합쳐진 택배사 메타 표시
+      const _meta = [];
+      if (d.transit_days != null && d.transit_days !== '') _meta.push(`🕐 ${escapeHtml(String(d.transit_days))}일 소요`);
+      if (Array.isArray(d.carriers) && d.carriers.length) _meta.push(`🚚 ${d.carriers.map(escapeHtml).join(' + ')}`);
+      const metaLine = _meta.length ? `<div style="font-size:11px;color:${sub};margin-bottom:10px">${_meta.join(' · ')}</div>` : '';
+      box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:13px;font-weight:800;color:${txt}">🔖 ${escapeHtml(d.number)} — <span style="color:#22c55e">${escapeHtml(d.status||'')}</span></div>${saveBtn}</div>${metaLine}${rows}`;
     }
 
     window.doTrack = async function(numOverride) {
