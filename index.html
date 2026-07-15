@@ -7259,21 +7259,32 @@
       if (!d.found) {
         box.innerHTML = `<div style="color:${sub};font-size:12px">🔖 ${escapeHtml(d.number)}<br>조회결과가 없어요 (접수 전이거나 만료된 번호일 수 있어요).<br><a href="${epostUrl}" target="_blank" rel="noopener" style="color:#60a5fa">우체국에서 직접 확인 ↗</a></div>`; return;
       }
-      const rows = d.events.map((e,i) => {
-        const last = i===d.events.length-1;
-        const dot = last ? '#22c55e' : '#60a5fa';
-        return `<div style="display:flex;gap:10px">
-          <div style="display:flex;flex-direction:column;align-items:center">
-            <div style="width:9px;height:9px;border-radius:50%;background:${dot};margin-top:5px;flex-shrink:0"></div>
-            ${last?'':`<div style="width:2px;flex:1;background:${line}"></div>`}
-          </div>
-          <div style="padding-bottom:${last?'0':'12px'};min-width:0">
-            <div style="font-size:13px;font-weight:700;color:${txt}">${escapeHtml(e.status||'')}${e.office?` · ${escapeHtml(e.office)}`:''}</div>
-            <div style="font-size:11px;color:${sub}">${escapeHtml(e.time||'')}</div>
-            ${e.detail?`<div style="font-size:11px;color:${sub};margin-top:2px;word-break:break-word">${escapeHtml(e.detail)}</div>`:''}
-          </div>
-        </div>`;
+      // 🔴 택배사별 그룹 + 최신 먼저 (2026-07-15 GG '17트랙처럼 보기쉽게') — 시간순 뒤섞임 개선
+      const byCarrier = {};
+      d.events.forEach(e => { const k = e.office||'배송'; (byCarrier[k]=byCarrier[k]||[]).push(e); });
+      const _multi = Object.keys(byCarrier).length > 1;
+      const rows = Object.keys(byCarrier).map(carrier => {
+        const evs = byCarrier[carrier].slice().reverse(); // 최신 먼저
+        const items = evs.map((e,i) => {
+          const first = i===0, lastRow = i===evs.length-1;
+          const dot = first ? '#22c55e' : (isL?'#cbd5e1':'#475569');
+          return `<div style="display:flex;gap:10px">
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div style="width:9px;height:9px;border-radius:50%;background:${dot};margin-top:5px;flex-shrink:0"></div>
+              ${lastRow?'':`<div style="width:2px;flex:1;background:${line}"></div>`}
+            </div>
+            <div style="padding-bottom:${lastRow?'2px':'12px'};min-width:0">
+              <div style="font-size:13px;font-weight:${first?'700':'500'};color:${first?txt:sub}">${escapeHtml(e.status||'')}</div>
+              <div style="font-size:11px;color:${sub}">${escapeHtml(e.time||'')}${e.detail?` · ${escapeHtml(e.detail)}`:''}</div>
+            </div>
+          </div>`;
+        }).join('');
+        return `${_multi?`<div style="font-size:12px;font-weight:800;color:#60a5fa;margin:4px 0 10px">🚚 ${escapeHtml(carrier)}</div>`:''}${items}${_multi?'<div style="height:14px"></div>':''}`;
       }).join('');
+      // 진행바 (상태 기반)
+      const _progMap = {'정보 없음':5,'접수 준비':12,'운송 중':55,'수령 대기':82,'배송 출발':88,'배달 완료':100,'예외/문제':50,'기간 만료':45};
+      const _prog = _progMap[d.status]!=null ? _progMap[d.status] : 45;
+      const progBar = `<div style="height:7px;background:${line};border-radius:4px;margin:8px 0 14px;overflow:hidden"><div style="height:100%;width:${_prog}%;background:linear-gradient(90deg,#60a5fa,#22c55e);border-radius:4px"></div></div>`;
       const isSaved = _trackList().some(s => s.num === d.number);
       const saveBtn = isSaved
         ? `<span style="font-size:11px;color:${sub}">✓ 저장됨</span>`
@@ -7283,7 +7294,7 @@
       if (d.transit_days != null && d.transit_days !== '') _meta.push(`🕐 ${escapeHtml(String(d.transit_days))}일 소요`);
       if (Array.isArray(d.carriers) && d.carriers.length) _meta.push(`🚚 ${d.carriers.map(escapeHtml).join(' + ')}`);
       const metaLine = _meta.length ? `<div style="font-size:11px;color:${sub};margin-bottom:10px">${_meta.join(' · ')}</div>` : '';
-      box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:13px;font-weight:800;color:${txt}">🔖 ${escapeHtml(d.number)} — <span style="color:#22c55e">${escapeHtml(d.status||'')}</span></div>${saveBtn}</div>${metaLine}${rows}`;
+      box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:13px;font-weight:800;color:${txt}">🔖 ${escapeHtml(d.number)} — <span style="color:#22c55e">${escapeHtml(d.status||'')}</span></div>${saveBtn}</div>${metaLine}${progBar}${rows}`;
     }
 
     window.doTrack = async function(numOverride) {
