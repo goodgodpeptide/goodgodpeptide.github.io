@@ -6812,10 +6812,14 @@
         el.style.display = 'block';
         el.innerHTML = `
           <div style="background:${cardBg};border:1px solid ${border};border-radius:14px;padding:14px;margin-bottom:16px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div onclick="toggleCollapse('hof')" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none">
               <div style="font-size:14px;font-weight:800;color:${sub}">🏆 명예의전당</div>
-              <button onclick="openDonationModal()" style="background:none;border:1px solid ${border};border-radius:20px;color:${sub};font-size:11px;padding:3px 10px;cursor:pointer;font-family:inherit;font-weight:600">☕ 후원하기</button>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button onclick="event.stopPropagation();openDonationModal()" style="background:none;border:1px solid ${border};border-radius:20px;color:${sub};font-size:11px;padding:3px 10px;cursor:pointer;font-family:inherit;font-weight:600">☕ 후원하기</button>
+                <span id="arrow-hof" style="font-size:12px;color:${sub}">${_clpOpen('hof')?'▲':'▼'}</span>
+              </div>
             </div>
+            <div id="collapse-hof" style="display:${_clpOpen('hof')?'block':'none'};margin-top:10px">
             ${entries.length ? `
             <div style="display:flex;flex-direction:column;gap:5px">
               ${entries.map((e,i)=>{
@@ -6833,6 +6837,7 @@
               }).join('')}
             </div>` : `
             <div style="text-align:center;padding:10px 0;font-size:12px;color:${subTxt}">아직 등록된 후원자가 없습니다 🙏<br>첫 번째 후원자가 되어보세요!</div>`}
+            </div>
           </div>`;
       } catch(e) { el.style.display='none'; }
     }
@@ -7205,8 +7210,10 @@
       const h=Math.floor(m/60); if (h<24) return h+'시간 전';
       return Math.floor(h/24)+'일 전';
     }
-    async function _trackFetch(num) {
-      const r = await fetch(`${EMS_BACKEND}/track?num=${encodeURIComponent(num)}`, { headers: { 'bypass-tunnel-reminder': 'true' } });
+    async function _trackFetch(num, fresh) {
+      // fresh=true → 서버 캐시 우회(수동 새로고침용). 일반 조회는 서버 120초 캐시로 즉시 응답.
+      const url = `${EMS_BACKEND}/track?num=${encodeURIComponent(num)}${fresh?'&nocache=1':''}`;
+      const r = await fetch(url, { headers: { 'bypass-tunnel-reminder': 'true' } });
       return await r.json();
     }
     function renderTrackSection() {
@@ -7314,7 +7321,11 @@
         // 저장된 번호면 상태 갱신
         if (d.found) { const it=_trackList().find(s=>s.num===d.number); if (it && it.status!==d.status){ it.status=d.status; it.lastChecked=Date.now(); saveData().catch(()=>{}); renderTrackSection(); } }
       } catch (e) {
-        box.innerHTML = `<div style="color:#f87171;font-size:12px">⚠️ 조회 서버에 연결 못했어요. 잠시 후 다시 시도하거나 <a href="${epostUrl}" target="_blank" rel="noopener" style="color:#60a5fa">우체국에서 직접 확인 ↗</a></div>`;
+        box.innerHTML = `<div style="color:#f87171;font-size:12.5px;line-height:1.7">⚠️ 조회 서버에 일시적으로 연결하지 못했어요. 잠시 후 다시 시도해 주세요.
+          <div style="margin-top:8px;display:flex;gap:10px;align-items:center">
+            <button onclick="doTrack('${num}')" style="background:#1d4ed8;border:none;border-radius:8px;color:#fff;font-size:12px;padding:6px 14px;cursor:pointer;font-family:inherit;font-weight:700">🔄 다시 시도</button>
+            <a href="${epostUrl}" target="_blank" rel="noopener" style="color:#60a5fa;font-size:12px">우체국에서 직접 확인 ↗</a>
+          </div></div>`;
       }
     };
 
@@ -7347,7 +7358,7 @@
       const num = decodeURIComponent(encNum);
       const it = _trackList().find(s=>s.num===num); if (!it) return;
       try {
-        const d = await _trackFetch(num);
+        const d = await _trackFetch(num, true);   // 수동 새로고침 → 최신
         if (d.found) { it.status = d.status; }
         it.lastChecked = Date.now();
         await saveData();
@@ -7358,7 +7369,7 @@
       const list = _trackList(); if (!list.length) return;
       try { showToast('🔄 전체 새로고침 중…'); } catch(_) {}
       for (const it of list) {
-        try { const d = await _trackFetch(it.num); if (d.found) it.status=d.status; it.lastChecked=Date.now(); } catch(_) {}
+        try { const d = await _trackFetch(it.num, true); if (d.found) it.status=d.status; it.lastChecked=Date.now(); } catch(_) {}
       }
       await saveData();
       renderTrackSection();
