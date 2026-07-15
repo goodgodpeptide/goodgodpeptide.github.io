@@ -7066,6 +7066,7 @@
     // 새 업데이트 배포 시 여기 맨 위에 한 줄씩 추가.
     const APP_CHANGELOG = [
       { date: "2026-07-15", items: [
+        { type: "feat", text: "📮 해외배송 조회 신기능 (커뮤니티 탭) — EMS·국제등기 운송장번호로 배송 상태를 앱에서 바로 타임라인으로 확인 (우체국 기반, 해외직구 추적용)" },
         { type: "fix", text: "백과사전에서 일부 펩타이드(엘로랄린타이드·바이오글루티드·리바젠·오바젠·티말린·베수젠) 클릭 시 상세가 안 열리거나 '[object Object]'·내용 누락·번역 깨짐이 나던 것 수정 — 데이터 형식을 바로잡아 정상 표시" },
         { type: "fix", text: "'새 버전이 있습니다·새로고침' 배너가 앱 열 때마다 두세 번씩 뜨고 새로고침해도 다시 뜨던 것 수정 — 알림을 세션당 한 번으로 정리" },
       ] },
@@ -7140,6 +7141,7 @@
           <div id="hall-of-fame-section" style="display:none"></div>
           <div id="community-patchnotes"></div>
           <div id="saju-section"></div>
+          <div id="track-section"></div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
             <div style="font-size:16px;font-weight:800;color:${txt}">💬 커뮤니티</div>
             <button onclick="openNicknameModal()" style="background:${isL?'#f1f5f9':'#1f2937'};border:1px solid ${border};border-radius:20px;color:${nick?'#60a5fa':'#f97316'};padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:600">
@@ -7163,6 +7165,67 @@
       try { renderCommunityPatchNotes(); } catch (e) {}
     }
 
+    // 📮 해외배송 조회 (2026-07-15 GG '17track식 EMS·국제등기 조회 체중앱에 탑재') —
+    //   앱 전용 미니 백엔드(app_backend.py, 회사PC+localtunnel)가 우체국을 대신 호출.
+    //   우체국은 공개프록시/데이터센터 IP를 막아서(403 실측) 회사PC 경유가 필수.
+    const EMS_BACKEND = 'https://jwbs-ems-track.loca.lt';
+    function renderTrackSection() {
+      const el = document.getElementById('track-section');
+      if (!el) return;
+      const isL = document.body.classList.contains('light-mode');
+      const cardBg=isL?'#fff':'#12121e', border=isL?'#e2e8f0':'#1f2937';
+      const txt=isL?'#1e293b':'#e2e8f0', sub=isL?'#64748b':'#9ca3af';
+      const iBg=isL?'#f8fafc':'#0d0d1a', iB=isL?'#e2e8f0':'#374151';
+      el.innerHTML = `
+        <div style="background:${cardBg};border:1px solid ${border};border-radius:14px;padding:14px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:800;color:${txt};margin-bottom:3px">📮 해외배송 조회</div>
+          <div style="font-size:11px;color:${sub};margin-bottom:10px">EMS·국제등기 운송장번호로 배송 상태 조회 (우체국)</div>
+          <div style="display:flex;gap:8px">
+            <input id="track-input" placeholder="운송장번호 (예: EM470596546KR)" style="flex:1;min-width:0;background:${iBg};border:1px solid ${iB};border-radius:10px;color:${txt};padding:9px 12px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box" onkeydown="if(event.key==='Enter')doTrack()">
+            <button onclick="doTrack()" style="background:#1d4ed8;border:none;border-radius:10px;color:white;padding:9px 16px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap">조회</button>
+          </div>
+          <div id="track-result" style="margin-top:12px"></div>
+        </div>`;
+    }
+
+    window.doTrack = async function() {
+      const inp = document.getElementById('track-input');
+      const box = document.getElementById('track-result');
+      if (!box) return;
+      const num = (inp?.value||'').trim().toUpperCase().replace(/[\s\-]/g,'');
+      const isL = document.body.classList.contains('light-mode');
+      const sub=isL?'#64748b':'#9ca3af', txt=isL?'#1e293b':'#e2e8f0', line=isL?'#e2e8f0':'#1f2937';
+      const epostUrl = `https://m.epost.go.kr/postal/mobile/mobile.trace.RetrieveEmsRigiTraceList.comm?POST_CODE=${encodeURIComponent(num)}`;
+      if (!num) { box.innerHTML = `<div style="color:${sub};font-size:12px">운송장번호를 입력하세요.</div>`; return; }
+      box.innerHTML = `<div style="color:${sub};font-size:13px">📮 조회 중…</div>`;
+      try {
+        const r = await fetch(`${EMS_BACKEND}/track?num=${encodeURIComponent(num)}`, { headers: { 'bypass-tunnel-reminder': 'true' } });
+        const d = await r.json();
+        if (!d.valid) { box.innerHTML = `<div style="color:#f87171;font-size:12px">⚠️ ${escapeHtml(d.error||'번호 형식 오류')}</div>`; return; }
+        if (!d.found) {
+          box.innerHTML = `<div style="color:${sub};font-size:12px">🔖 ${escapeHtml(d.number)}<br>조회결과가 없어요 (접수 전이거나 만료된 번호일 수 있어요).<br><a href="${epostUrl}" target="_blank" rel="noopener" style="color:#60a5fa">우체국에서 직접 확인 ↗</a></div>`; return;
+        }
+        const rows = d.events.map((e,i) => {
+          const last = i===d.events.length-1;
+          const dot = last ? '#22c55e' : '#60a5fa';
+          return `<div style="display:flex;gap:10px">
+            <div style="display:flex;flex-direction:column;align-items:center">
+              <div style="width:9px;height:9px;border-radius:50%;background:${dot};margin-top:5px;flex-shrink:0"></div>
+              ${last?'':`<div style="width:2px;flex:1;background:${line}"></div>`}
+            </div>
+            <div style="padding-bottom:${last?'0':'12px'};min-width:0">
+              <div style="font-size:13px;font-weight:700;color:${txt}">${escapeHtml(e.status||'')}${e.office?` · ${escapeHtml(e.office)}`:''}</div>
+              <div style="font-size:11px;color:${sub}">${escapeHtml(e.time||'')}</div>
+              ${e.detail?`<div style="font-size:11px;color:${sub};margin-top:2px;word-break:break-word">${escapeHtml(e.detail)}</div>`:''}
+            </div>
+          </div>`;
+        }).join('');
+        box.innerHTML = `<div style="font-size:13px;font-weight:800;color:${txt};margin-bottom:10px">🔖 ${escapeHtml(d.number)} — <span style="color:#22c55e">${escapeHtml(d.status||'')}</span></div>${rows}`;
+      } catch (e) {
+        box.innerHTML = `<div style="color:#f87171;font-size:12px">⚠️ 조회 서버에 연결 못했어요. 잠시 후 다시 시도하거나 <a href="${epostUrl}" target="_blank" rel="noopener" style="color:#60a5fa">우체국에서 직접 확인 ↗</a></div>`;
+      }
+    };
+
     window.loadCommunity = function() {
       renderCommunityTab();
       renderCommunityPatchNotes();
@@ -7172,6 +7235,7 @@
       try {
         if (window.SajuUI) SajuUI.renderSajuSection(document.getElementById('saju-section'));
       } catch (e) { console.error('[사주] 섹션 렌더 실패:', e); }
+      try { renderTrackSection(); } catch (e) { console.error('[배송조회] 렌더 실패:', e); }
       if (communityUnsubscribe) communityUnsubscribe();
       try {
         const q = query(collection(db,"posts"), orderBy("time","desc"), limit(50));
