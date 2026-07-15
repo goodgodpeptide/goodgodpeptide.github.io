@@ -7279,7 +7279,8 @@
             </div>
           </div>`;
         }).join('');
-        return `${_multi?`<div style="font-size:12px;font-weight:800;color:#60a5fa;margin:4px 0 10px">🚚 ${escapeHtml(carrier)}</div>`:''}${items}${_multi?'<div style="height:14px"></div>':''}`;
+        const flag = (d.carrier_flags && d.carrier_flags[carrier]) || '🚚';
+        return `${_multi?`<div style="font-size:12px;font-weight:800;color:#60a5fa;margin:4px 0 10px">${flag} ${escapeHtml(carrier)}</div>`:''}${items}${_multi?'<div style="height:14px"></div>':''}`;
       }).join('');
       // 진행바 (상태 기반)
       const _progMap = {'정보 없음':5,'접수 준비':12,'운송 중':55,'수령 대기':82,'배송 출발':88,'배달 완료':100,'예외/문제':50,'기간 만료':45};
@@ -7292,7 +7293,7 @@
       // 17track이면 소요일수·합쳐진 택배사 메타 표시
       const _meta = [];
       if (d.transit_days != null && d.transit_days !== '') _meta.push(`🕐 ${escapeHtml(String(d.transit_days))}일 소요`);
-      if (Array.isArray(d.carriers) && d.carriers.length) _meta.push(`🚚 ${d.carriers.map(escapeHtml).join(' + ')}`);
+      if (Array.isArray(d.carriers) && d.carriers.length) _meta.push(`${d.carriers.map(c=>((d.carrier_flags&&d.carrier_flags[c])?d.carrier_flags[c]+' ':'')+escapeHtml(c)).join(' + ')}`);
       const metaLine = _meta.length ? `<div style="font-size:11px;color:${sub};margin-bottom:10px">${_meta.join(' · ')}</div>` : '';
       box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:13px;font-weight:800;color:${txt}">🔖 ${escapeHtml(d.number)} — <span style="color:#22c55e">${escapeHtml(d.status||'')}</span></div>${saveBtn}</div>${metaLine}${progBar}${rows}`;
     }
