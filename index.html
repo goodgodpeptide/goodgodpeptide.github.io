@@ -80,7 +80,7 @@
     let dataLoaded = false;          // ① loadData 성공 시에만 true — false면 saveData 차단(로드실패 후 덮어쓰기 방지)
     let _pendingAllowEmpty = false;  // ④#5 사용자가 마지막 기록을 '의도적으로' 삭제한 경우 빈데이터 가드를 1회 통과시킴(삭제가 서버에 반영되도록)
     let _lastSyncedUpdatedAt = 0;    // ④ 이 클라이언트가 마지막으로 반영한 서버 updatedAt(다기기 충돌 감지 기준)
-    let appData = { records: [], weightRecords: [], gender: "남성", height: "", targetWeight: "" };
+    let appData = { records: [], weightRecords: [], gender: "남성", height: "", targetWeight: "", trackedShipments: [] };
 
     // ══════════════════════════════════════════════
     // KST 헬퍼 (완전 수정)
@@ -7067,6 +7067,7 @@
     const APP_CHANGELOG = [
       { date: "2026-07-15", items: [
         { type: "feat", text: "📮 해외배송 조회 신기능 (커뮤니티 탭) — EMS·국제등기 운송장번호로 배송 상태를 앱에서 바로 타임라인으로 확인 (우체국 기반, 해외직구 추적용)" },
+        { type: "feat", text: "📦 배송 저장·추적 — 조회한 운송장을 별명 달아 저장하면 목록에서 상태(배송중/배달완료) 한눈에, 탭하면 타임라인, 개별·전체 새로고침·삭제까지. 계정에 저장돼 기기 바뀌어도 유지" },
         { type: "fix", text: "백과사전에서 일부 펩타이드(엘로랄린타이드·바이오글루티드·리바젠·오바젠·티말린·베수젠) 클릭 시 상세가 안 열리거나 '[object Object]'·내용 누락·번역 깨짐이 나던 것 수정 — 데이터 형식을 바로잡아 정상 표시" },
         { type: "fix", text: "'새 버전이 있습니다·새로고침' 배너가 앱 열 때마다 두세 번씩 뜨고 새로고침해도 다시 뜨던 것 수정 — 알림을 세션당 한 번으로 정리" },
       ] },
@@ -7165,10 +7166,28 @@
       try { renderCommunityPatchNotes(); } catch (e) {}
     }
 
-    // 📮 해외배송 조회 (2026-07-15 GG '17track식 EMS·국제등기 조회 체중앱에 탑재') —
-    //   앱 전용 미니 백엔드(app_backend.py, 회사PC+localtunnel)가 우체국을 대신 호출.
-    //   우체국은 공개프록시/데이터센터 IP를 막아서(403 실측) 회사PC 경유가 필수.
+    // 📮 해외배송 조회 + 저장기록 (2026-07-15 GG '17track식 조회 탑재' + '기록·흔한기능 다 추가') —
+    //   앱 전용 미니 백엔드(app_backend.py, 회사PC+localtunnel)가 우체국을 대신 호출(공개프록시/DC IP는 403 차단).
+    //   저장목록은 appData.trackedShipments(계정 동기화). 상태배지·재조회·삭제·전체새로고침 등 추적앱 표준기능.
     const EMS_BACKEND = 'https://jwbs-ems-track.loca.lt';
+    function _trackList() { if (!Array.isArray(appData.trackedShipments)) appData.trackedShipments = []; return appData.trackedShipments; }
+    function _trackBadge(s) {
+      if (!s) return '⚪ 미조회';
+      if (s.includes('배달완료')||s.includes('배달 완료')) return '🟢 배달완료';
+      if (s.includes('반송')||s.includes('실패')||s.includes('미배달')) return '🔴 '+s;
+      return '🚚 '+s;
+    }
+    function _trackAgo(ts) {
+      if (!ts) return '';
+      const m = Math.floor((Date.now()-ts)/60000);
+      if (m<1) return '방금'; if (m<60) return m+'분 전';
+      const h=Math.floor(m/60); if (h<24) return h+'시간 전';
+      return Math.floor(h/24)+'일 전';
+    }
+    async function _trackFetch(num) {
+      const r = await fetch(`${EMS_BACKEND}/track?num=${encodeURIComponent(num)}`, { headers: { 'bypass-tunnel-reminder': 'true' } });
+      return await r.json();
+    }
     function renderTrackSection() {
       const el = document.getElementById('track-section');
       if (!el) return;
@@ -7176,6 +7195,19 @@
       const cardBg=isL?'#fff':'#12121e', border=isL?'#e2e8f0':'#1f2937';
       const txt=isL?'#1e293b':'#e2e8f0', sub=isL?'#64748b':'#9ca3af';
       const iBg=isL?'#f8fafc':'#0d0d1a', iB=isL?'#e2e8f0':'#374151';
+      const saved = _trackList();
+      const savedHtml = saved.length ? saved.map(s => {
+        const name = s.label ? escapeHtml(s.label) : escapeHtml(s.num);
+        const subline = (s.label?escapeHtml(s.num)+' · ':'') + _trackBadge(s.status) + (s.lastChecked?` · ${_trackAgo(s.lastChecked)}`:'');
+        return `<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid ${border}">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="viewTracked('${encodeURIComponent(s.num)}')">
+            <div style="font-size:13px;font-weight:700;color:${txt};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+            <div style="font-size:11px;color:${sub};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subline}</div>
+          </div>
+          <button onclick="refreshTracked('${encodeURIComponent(s.num)}',event)" title="새로고침" style="background:none;border:1px solid ${border};border-radius:8px;color:${sub};font-size:12px;padding:4px 8px;cursor:pointer">🔄</button>
+          <button onclick="deleteTracked('${encodeURIComponent(s.num)}',event)" title="삭제" style="background:none;border:none;color:${sub};font-size:14px;cursor:pointer;padding:2px 4px">🗑</button>
+        </div>`;
+      }).join('') : `<div style="font-size:12px;color:${sub};padding:8px 0">저장된 배송이 없어요. 조회 후 '💾 저장'을 누르면 여기 쌓여서 상태를 계속 추적해요.</div>`;
       el.innerHTML = `
         <div style="background:${cardBg};border:1px solid ${border};border-radius:14px;padding:14px;margin-bottom:16px">
           <div style="font-size:14px;font-weight:800;color:${txt};margin-bottom:3px">📮 해외배송 조회</div>
@@ -7185,45 +7217,109 @@
             <button onclick="doTrack()" style="background:#1d4ed8;border:none;border-radius:10px;color:white;padding:9px 16px;font-size:13px;cursor:pointer;font-family:inherit;font-weight:700;white-space:nowrap">조회</button>
           </div>
           <div id="track-result" style="margin-top:12px"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:2px">
+            <div style="font-size:12px;font-weight:700;color:${txt}">📦 저장된 배송 ${saved.length?`(${saved.length})`:''}</div>
+            ${saved.length?`<button onclick="refreshAllTracked()" style="background:none;border:1px solid ${border};border-radius:8px;color:${sub};font-size:11px;padding:3px 9px;cursor:pointer">🔄 전체 새로고침</button>`:''}
+          </div>
+          ${savedHtml}
         </div>`;
     }
 
-    window.doTrack = async function() {
+    function _renderTimeline(d, box, num) {
+      const isL = document.body.classList.contains('light-mode');
+      const sub=isL?'#64748b':'#9ca3af', txt=isL?'#1e293b':'#e2e8f0', line=isL?'#e2e8f0':'#1f2937';
+      const epostUrl = `https://m.epost.go.kr/postal/mobile/mobile.trace.RetrieveEmsRigiTraceList.comm?POST_CODE=${encodeURIComponent(num)}`;
+      if (!d.valid) { box.innerHTML = `<div style="color:#f87171;font-size:12px">⚠️ ${escapeHtml(d.error||'번호 형식 오류')}</div>`; return; }
+      if (!d.found) {
+        box.innerHTML = `<div style="color:${sub};font-size:12px">🔖 ${escapeHtml(d.number)}<br>조회결과가 없어요 (접수 전이거나 만료된 번호일 수 있어요).<br><a href="${epostUrl}" target="_blank" rel="noopener" style="color:#60a5fa">우체국에서 직접 확인 ↗</a></div>`; return;
+      }
+      const rows = d.events.map((e,i) => {
+        const last = i===d.events.length-1;
+        const dot = last ? '#22c55e' : '#60a5fa';
+        return `<div style="display:flex;gap:10px">
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <div style="width:9px;height:9px;border-radius:50%;background:${dot};margin-top:5px;flex-shrink:0"></div>
+            ${last?'':`<div style="width:2px;flex:1;background:${line}"></div>`}
+          </div>
+          <div style="padding-bottom:${last?'0':'12px'};min-width:0">
+            <div style="font-size:13px;font-weight:700;color:${txt}">${escapeHtml(e.status||'')}${e.office?` · ${escapeHtml(e.office)}`:''}</div>
+            <div style="font-size:11px;color:${sub}">${escapeHtml(e.time||'')}</div>
+            ${e.detail?`<div style="font-size:11px;color:${sub};margin-top:2px;word-break:break-word">${escapeHtml(e.detail)}</div>`:''}
+          </div>
+        </div>`;
+      }).join('');
+      const isSaved = _trackList().some(s => s.num === d.number);
+      const saveBtn = isSaved
+        ? `<span style="font-size:11px;color:${sub}">✓ 저장됨</span>`
+        : `<button onclick="saveTracked('${encodeURIComponent(d.number)}','${escapeHtml((d.status||'').replace(/'/g,''))}')" style="background:${isL?'#f1f5f9':'#1f2937'};border:1px solid ${line};border-radius:8px;color:#60a5fa;font-size:11px;padding:4px 10px;cursor:pointer;font-family:inherit;font-weight:600">💾 저장</button>`;
+      box.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div style="font-size:13px;font-weight:800;color:${txt}">🔖 ${escapeHtml(d.number)} — <span style="color:#22c55e">${escapeHtml(d.status||'')}</span></div>${saveBtn}</div>${rows}`;
+    }
+
+    window.doTrack = async function(numOverride) {
       const inp = document.getElementById('track-input');
       const box = document.getElementById('track-result');
       if (!box) return;
-      const num = (inp?.value||'').trim().toUpperCase().replace(/[\s\-]/g,'');
+      const num = (numOverride || inp?.value || '').trim().toUpperCase().replace(/[\s\-]/g,'');
       const isL = document.body.classList.contains('light-mode');
-      const sub=isL?'#64748b':'#9ca3af', txt=isL?'#1e293b':'#e2e8f0', line=isL?'#e2e8f0':'#1f2937';
+      const sub=isL?'#64748b':'#9ca3af';
       const epostUrl = `https://m.epost.go.kr/postal/mobile/mobile.trace.RetrieveEmsRigiTraceList.comm?POST_CODE=${encodeURIComponent(num)}`;
       if (!num) { box.innerHTML = `<div style="color:${sub};font-size:12px">운송장번호를 입력하세요.</div>`; return; }
       box.innerHTML = `<div style="color:${sub};font-size:13px">📮 조회 중…</div>`;
       try {
-        const r = await fetch(`${EMS_BACKEND}/track?num=${encodeURIComponent(num)}`, { headers: { 'bypass-tunnel-reminder': 'true' } });
-        const d = await r.json();
-        if (!d.valid) { box.innerHTML = `<div style="color:#f87171;font-size:12px">⚠️ ${escapeHtml(d.error||'번호 형식 오류')}</div>`; return; }
-        if (!d.found) {
-          box.innerHTML = `<div style="color:${sub};font-size:12px">🔖 ${escapeHtml(d.number)}<br>조회결과가 없어요 (접수 전이거나 만료된 번호일 수 있어요).<br><a href="${epostUrl}" target="_blank" rel="noopener" style="color:#60a5fa">우체국에서 직접 확인 ↗</a></div>`; return;
-        }
-        const rows = d.events.map((e,i) => {
-          const last = i===d.events.length-1;
-          const dot = last ? '#22c55e' : '#60a5fa';
-          return `<div style="display:flex;gap:10px">
-            <div style="display:flex;flex-direction:column;align-items:center">
-              <div style="width:9px;height:9px;border-radius:50%;background:${dot};margin-top:5px;flex-shrink:0"></div>
-              ${last?'':`<div style="width:2px;flex:1;background:${line}"></div>`}
-            </div>
-            <div style="padding-bottom:${last?'0':'12px'};min-width:0">
-              <div style="font-size:13px;font-weight:700;color:${txt}">${escapeHtml(e.status||'')}${e.office?` · ${escapeHtml(e.office)}`:''}</div>
-              <div style="font-size:11px;color:${sub}">${escapeHtml(e.time||'')}</div>
-              ${e.detail?`<div style="font-size:11px;color:${sub};margin-top:2px;word-break:break-word">${escapeHtml(e.detail)}</div>`:''}
-            </div>
-          </div>`;
-        }).join('');
-        box.innerHTML = `<div style="font-size:13px;font-weight:800;color:${txt};margin-bottom:10px">🔖 ${escapeHtml(d.number)} — <span style="color:#22c55e">${escapeHtml(d.status||'')}</span></div>${rows}`;
+        const d = await _trackFetch(num);
+        _renderTimeline(d, box, num);
+        // 저장된 번호면 상태 갱신
+        if (d.found) { const it=_trackList().find(s=>s.num===d.number); if (it && it.status!==d.status){ it.status=d.status; it.lastChecked=Date.now(); saveData().catch(()=>{}); renderTrackSection(); } }
       } catch (e) {
         box.innerHTML = `<div style="color:#f87171;font-size:12px">⚠️ 조회 서버에 연결 못했어요. 잠시 후 다시 시도하거나 <a href="${epostUrl}" target="_blank" rel="noopener" style="color:#60a5fa">우체국에서 직접 확인 ↗</a></div>`;
       }
+    };
+
+    window.viewTracked = function(encNum) {
+      const num = decodeURIComponent(encNum);
+      const inp = document.getElementById('track-input'); if (inp) inp.value = num;
+      doTrack(num);
+      try { document.getElementById('track-result')?.scrollIntoView({behavior:'smooth',block:'center'}); } catch(_) {}
+    };
+    window.saveTracked = async function(encNum, status) {
+      const num = decodeURIComponent(encNum);
+      const list = _trackList();
+      if (list.some(s=>s.num===num)) { renderTrackSection(); return; }
+      const label = prompt('별명 (선택 — 예: 세마글루타이드 주문). 비우면 번호로 저장', '') || '';
+      list.unshift({ num, label: label.trim(), status: status||'', lastChecked: Date.now() });
+      await saveData();
+      renderTrackSection();
+      try { showToast('💾 저장됨 — 저장된 배송에서 계속 추적해요'); } catch(_) {}
+    };
+    window.deleteTracked = async function(encNum, ev) {
+      if (ev) ev.stopPropagation();
+      const num = decodeURIComponent(encNum);
+      if (!await customConfirm('이 배송을 저장목록에서 삭제할까요?')) return;
+      appData.trackedShipments = _trackList().filter(s=>s.num!==num);
+      await saveData();
+      renderTrackSection();
+    };
+    window.refreshTracked = async function(encNum, ev) {
+      if (ev) ev.stopPropagation();
+      const num = decodeURIComponent(encNum);
+      const it = _trackList().find(s=>s.num===num); if (!it) return;
+      try {
+        const d = await _trackFetch(num);
+        if (d.found) { it.status = d.status; }
+        it.lastChecked = Date.now();
+        await saveData();
+        renderTrackSection();
+      } catch(_) { try{ showToast('⚠️ 새로고침 실패 — 잠시 후 다시'); }catch(e){} }
+    };
+    window.refreshAllTracked = async function() {
+      const list = _trackList(); if (!list.length) return;
+      try { showToast('🔄 전체 새로고침 중…'); } catch(_) {}
+      for (const it of list) {
+        try { const d = await _trackFetch(it.num); if (d.found) it.status=d.status; it.lastChecked=Date.now(); } catch(_) {}
+      }
+      await saveData();
+      renderTrackSection();
+      try { showToast('✅ 전체 새로고침 완료'); } catch(_) {}
     };
 
     window.loadCommunity = function() {
