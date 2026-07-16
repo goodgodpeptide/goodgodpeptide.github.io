@@ -8814,7 +8814,7 @@
           const drugRecs = (appData.records || []).filter(r => r.drug === drug).sort((a,b) => a.time - b.time);
           if (!drugRecs.length || kstDateStr(drugRecs[0].time) > dateStr) return;
         }
-        items.push({ type: 'drug', key: drug, label: drug, emoji: DRUG_CONFIG[drug]?.emoji || '💉', color: DRUG_CONFIG[drug]?.color || '#60a5fa', done });
+        items.push({ type: 'drug', key: drug, sortTime: '00:00', label: drug, emoji: DRUG_CONFIG[drug]?.emoji || '💉', color: DRUG_CONFIG[drug]?.color || '#60a5fa', done });
       });
 
       // 영양제 체크
@@ -8829,10 +8829,13 @@
             const firstTaken = Object.keys(s.taken || {}).map(k => k.slice(0, 10)).filter(d => d <= dateStr).sort()[0];
             if (!firstTaken) return;
           }
-          items.push({ type: 'supp', key: s.id + '_' + timing, label: s.name + ' (' + timing + ')', emoji: '💊', color: '#a78bfa', done });
+          items.push({ type: 'supp', key: s.id + '_' + timing, timing, sortTime: ((s.times && s.times[timing]) || TIMING_DEFAULT_TIMES[timing] || '99:99'), label: s.name + ' (' + timing + ')', emoji: '💊', color: '#a78bfa', done });
         });
       });
 
+      // 🔴 복용 시각 순 정렬 (2026-07-17 GG '저녁약이 아침약 사이에 껴있음') — 영양제 등록순이 아니라
+      //    실제 복용 시각(식전/식후 시간) 순으로: 아침식전→아침식후→…→저녁식후→자기전. 투약은 맨 위.
+      items.sort((a, b) => (a.sortTime || '00:00').localeCompare(b.sortTime || '00:00'));
       return items;
     }
 
