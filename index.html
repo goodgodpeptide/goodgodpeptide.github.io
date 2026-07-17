@@ -5013,6 +5013,9 @@
       const isLightW = document.body.classList.contains("light-mode");
       ctx.fillStyle = isLightW ? "#f0f4f8" : "#080810";
       ctx.fillRect(PAD.l, PAD.t, gW, gH);
+      // 🔴 약물 활성기간 배경음영 (2026-07-18 GG '약물 시기 배경음영') — 배경 위·그리드 아래.
+      //    drawDrugActivityBands가 minT/maxT로 클리핑하므로 1주/1달/3달/전체 줌 모두 안전.
+      try { drawDrugActivityBands(ctx, { minT, maxT, rangeT, PAD, gW, gH, isLight: isLightW }); } catch (e) { }
 
       // 그리드
       ctx.strokeStyle = isLightW ? "#dde3ea" : "#1a1a2e"; ctx.lineWidth = 1;
@@ -5087,9 +5090,11 @@
         const x = PAD.l + ((r.time - minT) / rangeT) * gW;
         const y = PAD.t + gH - ((r.weight - minW) / rangeW) * gH;
         ctx.beginPath(); ctx.arc(x, y, idx === allRecs.length - 1 ? 5 : 3.5, 0, Math.PI*2);
-        ctx.fillStyle = idx === allRecs.length - 1 ? "#4ade80" : "#22c55e";
+        // 🔴 점 색상 = 그 시점 활성 체중약 색(2026-07-18 GG '점색깔 바꿔'). 마지막 점·비활성은 기본 초록.
+        const _dc = _activeWeightColorAt(r.time);
+        ctx.fillStyle = idx === allRecs.length - 1 ? "#4ade80" : (_dc || "#22c55e");
         ctx.fill();
-        ctx.strokeStyle = "#080810"; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.strokeStyle = isLightW ? "#ffffff" : "#080810"; ctx.lineWidth = 1.5; ctx.stroke();
         // 레이블: 너무 가까우면 생략
         if (x - lastLabelX >= minPxBetween || idx === allRecs.length - 1) {
           ctx.fillStyle = idx === allRecs.length - 1 ? "#4ade80" : "#9ca3af";
@@ -5317,16 +5322,18 @@
       const recs = appData.records || [];
       if (!recs.length) return;
       const alpha = o.isLight ? "26" : "1f"; // 8자리 hex 알파(라이트 약간 진하게)
-      const drugs = getActiveDrugs().filter(d => recs.some(r => r.drug === d));
+      // 체중감량 약물(incretin·amylin)만 음영 — 재생·기타까지 다 칠하면 그래프가 지저분(2026-07-18)
+      const drugs = getActiveDrugs().filter(d => recs.some(r => r.drug === d)
+        && (_wtClassOf(DRUG_CONFIG[d]) === 'incretin' || _wtClassOf(DRUG_CONFIG[d]) === 'amylin'));
       let labelRow = 0;
       drugs.forEach(drug => {
         const cfg = DRUG_CONFIG[drug];
         if (!cfg) return;
         const dr = recs.filter(r => r.drug === drug);
-        const firstT = Math.min(...dr.map(r => r.time));
-        const lastT = Math.max(...dr.map(r => r.time));
-        // 활성 종료 = 마지막 투약 + 1주기(예상 커버리지)
         const coverMs = (getDoseCycle(drug) || cfg.defaultDoseDays || 7) * 86400000;
+        // 🔴 세그먼트별 밴드(2026-07-18) — 휴지기로 끊긴 구간은 각각 그려 공백이 드러나게(연속 통짜 아님)
+        const segs = _doseSegments(dr.map(r => r.time), coverMs);
+        segs.forEach(([firstT, lastT]) => {
         const segS = Math.max(o.minT, firstT);
         const segE = Math.min(o.maxT, lastT + coverMs);
         if (segE <= segS) return; // 가시 범위 밖
@@ -5344,7 +5351,22 @@
           ctx.fillText(cfg.short, x0 + 3, o.PAD.t + 10 + (labelRow % 3) * 11);
           labelRow++;
         }
-      });
+        });  // segs.forEach
+      });    // drugs.forEach
+    }
+
+    // 특정 시각에 활성인 체중감량 약물(incretin/amylin)의 색 — 그래프 점 색상용(2026-07-18 GG '점색깔').
+    //    겹치면 DRUG_CONFIG 순서상 첫 약색. 활성 약 없으면 null(기본 초록).
+    function _activeWeightColorAt(time) {
+      const recs = appData.records || [];
+      for (const drug of Object.keys(DRUG_CONFIG)) {
+        const cfg = DRUG_CONFIG[drug]; const cls = _wtClassOf(cfg);
+        if (cls !== 'incretin' && cls !== 'amylin') continue;
+        const dr = recs.filter(r => r.drug === drug); if (!dr.length) continue;
+        const coverMs = (getDoseCycle(drug) || cfg.defaultDoseDays || 7) * 86400000;
+        if (_doseSegments(dr.map(r => r.time), coverMs).some(([a, b]) => time >= a && time <= b + coverMs)) return cfg.color;
+      }
+      return null;
     }
 
     // 약물 체중효과 분류 (2026-07-18 GG '수용체 리셋/휴지기/GLP-1 계열 구분해야'):
@@ -5370,124 +5392,227 @@
       return segs;
     }
 
-    // ⑤ 펩타이드별 체중효과 인사이트 카드 — 활성기간 내로 한정 귀속 + 휴지기(수용체 리셋) 분리 + 계열 구분
+    // ⑤ 펩타이드별 체중효과 — 🔴 타임라인 귀속(2026-07-18 GG '겹치면 중복이잖아, 실제 빠진 kg로'):
+    //   체중 기록을 시간순으로 훑으며 각 구간 감량을 그때 활성인 약에만 1번 배분(중복 0). 2개+ 겹치면
+    //   '병용'으로 분리. 그래서 [각 약 + 병용 + 휴지기 + 투약전]의 합 = 실제 총 체중변화(검증됨).
+    //   결과를 window._peptideData에 저장 → 카드 탭 시 AI 상세분석 payload로 재사용.
+    function computePeptideAttribution() {
+      const recs = appData.records || [];
+      const weights = (appData.weightRecords || []).slice().sort((a, b) => a.time - b.time);
+      if (weights.length < 2 || !recs.length) return null;
+      const wpts = weights.map(w => ({ t: w.time, w: w.weight }));
+      const WK = 7 * 86400000;
+
+      // 약물별 활성 구간(세그먼트+약효잔존) 수집
+      const info = {};
+      Object.keys(DRUG_CONFIG).forEach(drug => {
+        const cfg = DRUG_CONFIG[drug];
+        const dr = recs.filter(r => r.drug === drug).sort((a, b) => a.time - b.time);
+        if (!dr.length) return;
+        const coverMs = (getDoseCycle(drug) || cfg.defaultDoseDays || 7) * 86400000;
+        const segs = _doseSegments(dr.map(r => r.time), coverMs);
+        info[drug] = { cfg, cls: _wtClassOf(cfg), coverMs, doses: dr,
+          intervals: segs.map(([a, b]) => [a, b + coverMs]), restart: segs.length > 1 };
+      });
+      // 체중감량 드라이버(incretin+amylin)만 타임라인 귀속에 참여(재생·기타는 제외)
+      const drivers = Object.keys(info).filter(d => info[d].cls === 'incretin' || info[d].cls === 'amylin');
+      if (!drivers.length) return { info, drivers: [], rows: [], combos: [], washoutKg: 0, washoutWeeks: 0, total: wpts[wpts.length - 1].w - wpts[0].w, wpts };
+      const activeAt = (drug, t) => info[drug].intervals.some(([a, b]) => t >= a && t <= b);
+      const firstDriverStart = Math.min(...drivers.map(d => info[d].intervals[0][0]));
+
+      const attr = {}, wkAcc = {}, combo = {}, comboWk = {};
+      let washoutKg = 0, washoutWeeks = 0, baselineKg = 0;
+      drivers.forEach(d => { attr[d] = 0; wkAcc[d] = 0; });
+      // 🔴 일 단위 세분 배분: 각 체중구간을 하루 단위로 쪼개, 감량을 선형분배해 그날 활성 약에 귀속.
+      //    → 짧은 겹침(병용)·투약 전환도 정확히 포착하고, 각 조각이 정확히 1버킷이라 합=총변화(중복0) 보존.
+      for (let i = 0; i < wpts.length - 1; i++) {
+        const a = wpts[i], b = wpts[i + 1];
+        const span = b.t - a.t; if (span <= 0) continue;
+        const delta = b.w - a.w;
+        const n = Math.max(1, Math.round(span / 86400000));  // 하루당 1스텝
+        const dPer = delta / n, wkPer = (span / WK) / n;
+        for (let k = 0; k < n; k++) {
+          const t = a.t + (k + 0.5) * span / n;
+          const act = drivers.filter(d => activeAt(d, t));
+          if (act.length === 1) { attr[act[0]] += dPer; wkAcc[act[0]] += wkPer; }
+          else if (act.length >= 2) { const key = act.slice().sort().join(' + '); combo[key] = (combo[key] || 0) + dPer; comboWk[key] = (comboWk[key] || 0) + wkPer; }
+          else if (t > firstDriverStart) { washoutKg += dPer; washoutWeeks += wkPer; }  // 투약 후 공백 = 휴지기
+          else { baselineKg += dPer; }  // 첫 투약 전 = 기저(어느 약도 아님)
+        }
+      }
+      // 드라이버 행: 실제 귀속 kg(중복 0) + 단독활성 주수 + 그 구간 속도
+      const rows = drivers.map(d => ({
+        drug: d, cfg: info[d].cfg, cls: info[d].cls,
+        attrKg: attr[d], weeks: wkAcc[d], slope: wkAcc[d] > 0.1 ? attr[d] / wkAcc[d] : null,
+        restart: info[d].restart, lastDose: info[d].doses[info[d].doses.length - 1]
+      })).filter(r => r.weeks > 0.1 || Math.abs(r.attrKg) > 0.05);
+      rows.sort((a, b) => a.attrKg - b.attrKg);  // 실제 감량 큰(음수) 순
+      const combos = Object.keys(combo).map(k => ({ names: k, deltaKg: combo[k], weeks: comboWk[k] }));
+      // 재생·기타(비체중) 약물 — 총합 제외, 참고용(동반기간 변화)
+      const others = Object.keys(info).filter(d => info[d].cls === 'other').map(d => {
+        const iv = info[d].intervals; const s = iv[0][0], e = iv[iv.length - 1][1];
+        const wi = wpts.filter(p => p.t >= s && p.t <= e);
+        return wi.length >= 2 ? { cfg: info[d].cfg, deltaKg: wi[wi.length - 1].w - wi[0].w, weeks: (wi[wi.length - 1].t - s) / WK } : null;
+      }).filter(Boolean);
+
+      const total = wpts[wpts.length - 1].w - wpts[0].w;
+      return { info, drivers, rows, combos, washoutKg, washoutWeeks, baselineKg, others,
+        total, startW: wpts[0].w, latestW: wpts[wpts.length - 1].w, wpts };
+    }
+
     function renderPeptideWeightInsight() {
       const c = document.getElementById("peptide-weight-insight");
       if (!c) return;
       const isLight = document.body.classList.contains("light-mode");
-      const recs = appData.records || [];
-      const weights = (appData.weightRecords || []).slice().sort((a, b) => a.time - b.time);
-      if (weights.length < 2 || !recs.length) { c.innerHTML = ""; return; }
-      const wpts = weights.map(w => ({ t: w.time, w: w.weight }));
-      // [a,b] 구간의 체중점(경계 포함) — 시작·끝 체중과 회귀 기울기 계산용
-      const inWin = (a, b) => wpts.filter(p => p.t >= a && p.t <= b);
+      const D = computePeptideAttribution();
+      window._peptideData = D;  // 모달 AI분석용
+      if (!D || !D.rows.length) { c.innerHTML = ""; return; }
 
       const CLS_META = {
-        incretin: { label: "GLP-1 계열", badge: isLight ? "#dbeafe" : "#1e3a5f", txt: isLight ? "#1d4ed8" : "#93c5fd", isWeight: true },
-        amylin: { label: "아밀린", badge: isLight ? "#fce7f3" : "#4a1d3d", txt: isLight ? "#be185d" : "#f9a8d4", isWeight: true },
-        other: { label: "재생·기타", badge: isLight ? "#f1f5f9" : "#1f2937", txt: isLight ? "#64748b" : "#9ca3af", isWeight: false },
+        incretin: { label: "GLP-1 계열", badge: isLight ? "#dbeafe" : "#1e3a5f", txt: isLight ? "#1d4ed8" : "#93c5fd" },
+        amylin: { label: "아밀린", badge: isLight ? "#fce7f3" : "#4a1d3d", txt: isLight ? "#be185d" : "#f9a8d4" },
       };
-
-      const rows = [];
-      Object.keys(DRUG_CONFIG).forEach(drug => {
-        const cfg = DRUG_CONFIG[drug];
-        const dr = recs.filter(r => r.drug === drug);
-        if (!dr.length) return;
-        const coverMs = (getDoseCycle(drug) || cfg.defaultDoseDays || 7) * 86400000;
-        const segs = _doseSegments(dr.map(r => r.time), coverMs);
-        const [s0, s1] = segs[segs.length - 1];          // 가장 최근 활성 구간(현재 상태 반영)
-        const winEnd = s1 + coverMs;                      // 마지막 투약 + 1주기(약효 잔존)
-        const wi = inWin(s0, winEnd);
-        if (wi.length < 2) return;                        // 활성기간 내 체중점 부족 → 스킵
-        const startW = wi[0].w, endW = wi[wi.length - 1].w;
-        const deltaKg = endW - startW;                    // 🔴 활성기간 내 변화만(전체 히스토리 아님)
-        const slope = _weeklySlope(wi);
-        const weeks = Math.max(0, (wi[wi.length - 1].t - s0) / (7 * 86400000));
-        const pre = inWin(s0 - 28 * 86400000, s0);        // 시작 직전 4주 추세(가속 비교용)
-        const preSlope = pre.length >= 2 ? _weeklySlope(pre) : null;
-        rows.push({ cfg, cls: _wtClassOf(cfg), weeks, deltaKg, slope, preSlope,
-          restart: segs.length > 1, s0, winEnd });
-      });
-      if (!rows.length) { c.innerHTML = ""; return; }
-      // 체중감량 약물(incretin·amylin) 먼저, 그 안에서 주당 감량 큰 순 / 기타는 뒤로
-      rows.sort((a, b) => (CLS_META[b.cls].isWeight - CLS_META[a.cls].isWeight) || ((a.slope || 0) - (b.slope || 0)));
-
-      // 💤 휴지기(수용체 리셋) 구간 = incretin 커버리지 사이의 공백. 반등을 약 효과와 분리해 표시
-      let cov = [];
-      Object.keys(DRUG_CONFIG).forEach(drug => {
-        const cfg = DRUG_CONFIG[drug];
-        if (_wtClassOf(cfg) !== 'incretin') return;
-        const dr = recs.filter(r => r.drug === drug);
-        if (!dr.length) return;
-        const coverMs = (getDoseCycle(drug) || cfg.defaultDoseDays || 7) * 86400000;
-        _doseSegments(dr.map(r => r.time), coverMs).forEach(([a, b]) => cov.push([a, b + coverMs]));
-      });
-      cov.sort((a, b) => a[0] - b[0]);
-      const merged = [];
-      for (const iv of cov) {
-        if (merged.length && iv[0] <= merged[merged.length - 1][1]) merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], iv[1]);
-        else merged.push(iv.slice());
-      }
-      const washouts = [];
-      for (let i = 0; i < merged.length - 1; i++) {
-        const gS = merged[i][1], gE = merged[i + 1][0];
-        if (gE - gS < 10 * 86400000) continue;            // 10일 미만 공백은 무시(연속 투약 취급)
-        const wi = inWin(gS, gE);
-        if (wi.length < 2) continue;
-        washouts.push({ weeks: (gE - gS) / (7 * 86400000), deltaKg: wi[wi.length - 1].w - wi[0].w, slope: _weeklySlope(wi) });
-      }
-
       const cardBg = isLight ? "#ffffff" : "#111827";
       const border = isLight ? "#e2e8f0" : "#1f2937";
       const tSub = isLight ? "#64748b" : "#6b7280";
       const tMain = isLight ? "#1a1a2e" : "#e2e8f0";
       const itemBg = isLight ? "#f8fafc" : "#0d0d1a";
       const fmtWk = w => w >= 1 ? Math.round(w) : w.toFixed(1);
+      const kgColor = k => k < 0 ? "#4ade80" : k > 0 ? "#f87171" : "#9ca3af";
+      const kgStr = k => `${k > 0 ? '+' : ''}${k.toFixed(1)}kg`;
 
-      const items = rows.map(r => {
-        const cm = CLS_META[r.cls];
-        const dColor = r.deltaKg < 0 ? "#4ade80" : r.deltaKg > 0 ? "#f87171" : "#9ca3af";
+      const items = D.rows.map(r => {
+        const cm = CLS_META[r.cls] || CLS_META.incretin;
         const slopeStr = r.slope == null ? "--" : `${r.slope > 0 ? '+' : ''}${r.slope.toFixed(2)}kg/주`;
-        const slopeColor = (r.slope || 0) < 0 ? "#4ade80" : (r.slope || 0) > 0 ? "#f87171" : "#9ca3af";
-        let cmp = "";
-        if (r.preSlope != null && r.slope != null) {
-          const accel = r.slope - r.preSlope;             // 음수면 시작 후 더 빠르게 감량
-          const cColor = accel < 0 ? "#4ade80" : accel > 0 ? "#f87171" : "#9ca3af";
-          cmp = `<span style="color:${cColor};font-size:10px"> · 시작 전 대비 ${accel < 0 ? '▼' : '▲'}${Math.abs(accel).toFixed(2)}</span>`;
-        }
         const badge = `<span style="font-size:9px;font-weight:700;color:${cm.txt};background:${cm.badge};border-radius:6px;padding:1px 5px">${cm.label}</span>`;
-        const restartTag = r.restart ? `<span style="font-size:9px;color:#f59e0b"> · 🔁리셋 후 재시작(재시작 기준)</span>` : "";
-        const nonWt = !cm.isWeight ? `<div style="font-size:9px;color:${tSub};margin-top:2px">※ 체중감량 기전 약물 아님 — 같은 기간 체중변화(참고용)</div>` : "";
+        const restartTag = r.restart ? `<span style="font-size:9px;color:#f59e0b"> · 🔁리셋 후 재시작</span>` : "";
         return `<div style="background:${itemBg};border:1px solid ${border};border-radius:10px;padding:9px 11px;margin-bottom:7px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
             <span style="font-size:12px;font-weight:700;color:${tMain}">${r.cfg.emoji} ${r.cfg.short} ${badge}</span>
-            <span style="font-size:13px;font-weight:800;color:${dColor};font-family:'JetBrains Mono',monospace">${r.deltaKg > 0 ? '+' : ''}${r.deltaKg.toFixed(1)}kg</span>
+            <span style="font-size:13px;font-weight:800;color:${kgColor(r.attrKg)};font-family:'JetBrains Mono',monospace">${kgStr(r.attrKg)}</span>
           </div>
-          <div style="font-size:11px;color:${tSub}">활성 <b style="color:${tMain}">${fmtWk(r.weeks)}주</b> · 주당 <b style="color:${slopeColor}">${slopeStr}</b>${cmp}${restartTag}</div>
-          ${nonWt}
+          <div style="font-size:11px;color:${tSub}">단독활성 <b style="color:${tMain}">${fmtWk(r.weeks)}주</b> · 주당 <b style="color:${kgColor(r.slope || 0)}">${slopeStr}</b>${restartTag}</div>
         </div>`;
       }).join('');
 
-      // 휴지기 카드(있을 때만) — 반등을 약 효과와 분리
-      const washItems = washouts.map(w => {
-        const dColor = w.deltaKg > 0 ? "#f87171" : w.deltaKg < 0 ? "#4ade80" : "#9ca3af";
-        const slopeStr = w.slope == null ? "--" : `${w.slope > 0 ? '+' : ''}${w.slope.toFixed(2)}kg/주`;
-        return `<div style="background:${itemBg};border:1px dashed ${isLight ? '#cbd5e1' : '#374151'};border-radius:10px;padding:9px 11px;margin-bottom:7px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-            <span style="font-size:12px;font-weight:700;color:${tMain}">💤 휴지기 <span style="font-size:9px;font-weight:700;color:${tSub}">수용체 리셋</span></span>
-            <span style="font-size:13px;font-weight:800;color:${dColor};font-family:'JetBrains Mono',monospace">${w.deltaKg > 0 ? '+' : ''}${w.deltaKg.toFixed(1)}kg</span>
+      // 병용(겹친) 구간 — 특정 약 단독 공로 아님
+      const comboItems = D.combos.map(o => `<div style="background:${itemBg};border:1px solid ${border};border-radius:10px;padding:9px 11px;margin-bottom:7px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;font-weight:700;color:${tMain}">🔗 병용 <span style="font-size:9px;color:${tSub}">${o.names.split(' + ').map(d => (DRUG_CONFIG[d] || {}).short || d).join(' + ')}</span></span>
+            <span style="font-size:13px;font-weight:800;color:${kgColor(o.deltaKg)};font-family:'JetBrains Mono',monospace">${kgStr(o.deltaKg)}</span>
           </div>
-          <div style="font-size:11px;color:${tSub}">GLP-1 중단 <b style="color:${tMain}">${fmtWk(w.weeks)}주</b> · 주당 <b style="color:${dColor}">${slopeStr}</b> (약효 아닌 반등)</div>
-        </div>`;
-      }).join('');
+          <div style="font-size:10px;color:${tSub}">${fmtWk(o.weeks)}주 겹침 · 이 감량은 특정 약 단독 공로로 못 봄</div>
+        </div>`).join('');
 
-      c.innerHTML = `<div class="card" style="margin-bottom:12px;background:${cardBg};border:1px solid ${border}">
-        <div class="section-title" style="margin-bottom:6px">💉📉 펩타이드별 체중효과</div>
-        <div style="font-size:10px;color:${tSub};margin-bottom:8px">각 약물 <b>활성기간(첫~마지막 투약+1주기) 내</b> 체중 변화만 귀속 · 계열/휴지기 구분 · 회귀 기울기(kg/주)</div>
+      const washItem = (D.washoutWeeks > 0.5) ? `<div style="background:${itemBg};border:1px dashed ${isLight ? '#cbd5e1' : '#374151'};border-radius:10px;padding:9px 11px;margin-bottom:7px">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;font-weight:700;color:${tMain}">💤 휴지기 <span style="font-size:9px;color:${tSub}">수용체 리셋</span></span>
+            <span style="font-size:13px;font-weight:800;color:${kgColor(D.washoutKg)};font-family:'JetBrains Mono',monospace">${kgStr(D.washoutKg)}</span>
+          </div>
+          <div style="font-size:10px;color:${tSub}">GLP-1 중단 ${fmtWk(D.washoutWeeks)}주 · 약효 아닌 반등</div>
+        </div>` : "";
+
+      const otherItems = (D.others || []).map(o => `<div style="font-size:9px;color:${tSub};margin-top:1px">· ${o.cfg.emoji} ${o.cfg.short}(재생·기타, 총합 제외): 동반기간 ${kgStr(o.deltaKg)} 참고용</div>`).join('');
+
+      // 🔴 합계 검증 라벨: 각 약+병용+휴지기+기저 = 실제 총변화 (중복 0 증명)
+      const sumParts = D.rows.reduce((s, r) => s + r.attrKg, 0) + D.combos.reduce((s, o) => s + o.deltaKg, 0) + D.washoutKg + (D.baselineKg || 0);
+      const sumOk = Math.abs(sumParts - D.total) < 0.05;
+
+      c.innerHTML = `<div class="card" onclick="openPeptideAnalysis()" style="margin-bottom:12px;background:${cardBg};border:1px solid ${border};cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div class="section-title" style="margin:0">💉📉 펩타이드별 체중효과</div>
+          <span style="font-size:10px;color:#60a5fa;font-weight:700">🔍 탭 → AI 상세분석</span>
+        </div>
+        <div style="font-size:10px;color:${tSub};margin-bottom:8px">🔴 <b>실제 빠진 kg</b>만 귀속(겹친 구간은 병용으로 분리, 중복 0). 각 항목 합 = 총 ${kgStr(D.total)}${sumOk ? ' ✓' : ''}</div>
         ${items}
-        ${washItems}
+        ${comboItems}
+        ${washItem}
+        ${otherItems}
       </div>`;
     }
+
+    // 🔍 펩타이드 체중효과 카드 탭 → 임상용량 기반 AI 상세분석 모달 (2026-07-18 GG '카드 누르면 상세 AI 분석글').
+    //    키는 앱에 없음 — 회사PC 백엔드(/weight_analysis, GLM-5.2)가 처리. 앱은 이름·ID 없는 익명 수치만 POST.
+    let _peptideAnalysisCache = { sig: null, text: null };
+    window.openPeptideAnalysis = async function () {
+      const D = window._peptideData;
+      if (!D || !D.rows.length) return;
+      const isL = document.body.classList.contains('light-mode');
+      const bg = isL ? '#ffffff' : '#12121e', bd = isL ? '#e2e8f0' : '#1f2937';
+      const txt = isL ? '#1e293b' : '#e2e8f0', sub = isL ? '#64748b' : '#9ca3af';
+      // 오버레이 생성/재사용
+      let ov = document.getElementById('peptide-ai-modal');
+      if (!ov) { ov = document.createElement('div'); ov.id = 'peptide-ai-modal'; document.body.appendChild(ov); }
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+      ov.onclick = (e) => { if (e.target === ov) ov.remove(); };
+      const shell = (inner) => `<div style="background:${bg};border:1px solid ${bd};border-radius:16px 16px 0 0;width:100%;max-width:640px;max-height:88vh;overflow-y:auto;padding:16px 16px 28px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <div style="font-size:15px;font-weight:800;color:${txt}">💉📉 체중효과 상세 AI 분석</div>
+            <button onclick="document.getElementById('peptide-ai-modal').remove()" style="background:none;border:none;color:${sub};font-size:22px;cursor:pointer;line-height:1">×</button>
+          </div>${inner}</div>`;
+
+      // 약물별 임상용량 요약(로컬 계산, 즉시 표시) — 용량경로·임상최대 대비 %
+      const drugLine = (r) => {
+        const info = (D.info || {})[r.drug] || {};
+        const doses = (info.doses || []).map(d => d.dose).filter(v => v != null);
+        let path = []; doses.forEach(v => { if (!path.length || path[path.length - 1] !== v) path.push(v); });
+        const cfg = r.cfg; const last = path[path.length - 1];
+        const pct = (cfg.clinicalMax && last) ? Math.round(last / cfg.clinicalMax * 100) : null;
+        const kg = `${r.attrKg > 0 ? '+' : ''}${r.attrKg.toFixed(1)}kg`;
+        return `<div style="font-size:12px;color:${txt};margin:3px 0"><b>${cfg.emoji} ${cfg.short}</b> — 실제 ${kg} · 용량 ${path.length ? path.join('→') + 'mg' : '-'}${pct != null ? ` (임상최대 ${cfg.clinicalMax}mg 대비 ${pct}%)` : ''}${r.restart ? ' · 🔁재시작' : ''}</div>`;
+      };
+      const localSummary = D.rows.map(drugLine).join('')
+        + D.combos.map(o => `<div style="font-size:12px;color:${sub};margin:3px 0">🔗 병용(${o.names.split(' + ').map(d => (DRUG_CONFIG[d] || {}).short || d).join('+')}) ${o.deltaKg > 0 ? '+' : ''}${o.deltaKg.toFixed(1)}kg — 단독 공로 아님</div>`).join('')
+        + (D.washoutWeeks > 0.5 ? `<div style="font-size:12px;color:${sub};margin:3px 0">💤 휴지기 ${D.washoutKg > 0 ? '+' : ''}${D.washoutKg.toFixed(1)}kg — 약효 아닌 반등</div>` : '');
+
+      ov.innerHTML = shell(`
+        <div style="background:${isL ? '#f8fafc' : '#0d0d1a'};border:1px solid ${bd};border-radius:10px;padding:10px 12px;margin-bottom:10px">
+          <div style="font-size:11px;color:${sub};margin-bottom:5px">📊 임상용량 요약 (실제 귀속 kg · 중복 없음)</div>
+          ${localSummary}
+        </div>
+        <div id="peptide-ai-body" style="font-size:13px;line-height:1.7;color:${txt};white-space:pre-wrap">
+          <div style="text-align:center;color:${sub};padding:18px">🤖 AI가 임상 관점에서 분석 중… (몇 초 걸려요)</div>
+        </div>
+        <div style="font-size:10px;color:${sub};margin-top:12px">⚕️ 데이터 해석일 뿐 의학적 진단·처방이 아닙니다. · AI: 엔비디아 GLM-5.2</div>`);
+
+      // payload — 이름·ID 없는 익명 수치만
+      const payload = {
+        startWeight: D.startW, latestWeight: D.latestW,
+        goalWeight: parseFloat(appData.targetWeight) || null,
+        drugs: D.rows.map(r => {
+          const info = (D.info || {})[r.drug] || {}; const doses = (info.doses || []).map(d => d.dose).filter(v => v != null);
+          let path = []; doses.forEach(v => { if (!path.length || path[path.length - 1] !== v) path.push(v); });
+          const last = path[path.length - 1];
+          return { name: r.cfg.short, cls: r.cls === 'incretin' ? 'GLP-1 계열' : r.cls === 'amylin' ? '아밀린' : '기타',
+            weeks: +r.weeks.toFixed(1), deltaKg: +r.attrKg.toFixed(1), slope: r.slope == null ? null : +r.slope.toFixed(2),
+            dosePath: path.length ? path.join('→') + 'mg' : null, clinicalMax: r.cfg.clinicalMax || null,
+            pctOfMax: (r.cfg.clinicalMax && last) ? Math.round(last / r.cfg.clinicalMax * 100) : null, restart: !!r.restart };
+        }),
+        overlaps: D.combos.map(o => ({ drugs: o.names.split(' + ').map(d => (DRUG_CONFIG[d] || {}).short || d).join('+'), days: Math.round(o.weeks * 7), deltaKg: +o.deltaKg.toFixed(1) })),
+        washouts: D.washoutWeeks > 0.5 ? [{ weeks: +D.washoutWeeks.toFixed(1), deltaKg: +D.washoutKg.toFixed(1), slope: D.washoutWeeks > 0.1 ? +(D.washoutKg / D.washoutWeeks).toFixed(2) : null }] : [],
+      };
+      const sig = JSON.stringify(payload);
+      const bodyEl = () => document.getElementById('peptide-ai-body');
+      if (_peptideAnalysisCache.sig === sig && _peptideAnalysisCache.text) {
+        if (bodyEl()) bodyEl().textContent = _peptideAnalysisCache.text; return;
+      }
+      try {
+        const resp = await fetch(`${EMS_BACKEND}/weight_analysis`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'bypass-tunnel-reminder': 'true' },
+          body: sig
+        });
+        const data = await resp.json();
+        if (!bodyEl()) return;  // 사용자가 닫음
+        if (data.ok && data.analysis) {
+          _peptideAnalysisCache = { sig, text: data.analysis };
+          bodyEl().textContent = data.analysis;
+        } else {
+          bodyEl().innerHTML = `<div style="color:#f87171">분석 실패: ${escapeHtml(data.error || '알 수 없는 오류')}<br><span style="color:${sub};font-size:11px">회사PC 백엔드·AI 키 상태를 확인하세요. 위 임상용량 요약은 정상입니다.</span></div>`;
+        }
+      } catch (e) {
+        if (bodyEl()) bodyEl().innerHTML = `<div style="color:#f87171">연결 실패 (회사PC 백엔드 미가동일 수 있음)<br><span style="color:${sub};font-size:11px">위 임상용량 요약은 정상 표시됩니다.</span></div>`;
+      }
+    };
 
     // ⑥ 감량 질(質) 스코어 카드 — 연속 인바디 간 Δ체지방(bfm) vs Δ골격근(sm)
     function renderInbodyQuality() {
@@ -7159,7 +7284,10 @@
     // 새 업데이트 배포 시 여기 맨 위에 한 줄씩 추가.
     const APP_CHANGELOG = [
       { date: "2026-07-18", items: [
-        { type: "fix", text: "💉📉 펩타이드별 체중효과 기준 개선 — 각 약물 효과를 '첫 투약일→오늘 전체'가 아니라 '활성기간(첫~마지막 투약+1주기) 내 변화'만 귀속. GLP-1 계열/아밀린/재생·기타 계열 배지 + 💤휴지기(수용체 리셋) 구간 반등을 약효와 분리 표시 + 리셋 후 재시작 라벨" },
+        { type: "feat", text: "🔍 펩타이드 체중효과 카드 탭 → 임상용량 기반 AI 상세분석 — 용량경로·임상최대 대비 %·병용/휴지기 해석을 AI(엔비디아 GLM-5.2, 회사PC 경유·익명 수치만)가 분석. 어느 약이 총량/속도로 실제 기여했는지 등" },
+        { type: "fix", text: "💉📉 체중효과 '실제 빠진 kg'로 정확화 — 겹친 기간을 양쪽에 이중 카운트하던 것 수정. 시간축을 하루 단위로 훑어 각 감량을 그때 활성인 약에만 1번 귀속(겹치면 '병용'으로 분리) → 각 항목 합 = 실제 총감량" },
+        { type: "feat", text: "📈 체중그래프에 약물 활성기간 배경음영 + 점 색상(약물별) 표시 — 1주/1달/3달/전체 줌 모두 안전. 휴지기(약물 공백)는 음영 없이 드러남" },
+        { type: "fix", text: "💉📉 펩타이드별 체중효과 기준 개선 — 각 약물 효과를 '첫 투약일→오늘 전체'가 아니라 활성기간 내 변화만 귀속. GLP-1 계열/아밀린/재생·기타 배지 + 💤휴지기(수용체 리셋) 반등 분리 + 리셋 후 재시작 라벨" },
       ] },
       { date: "2026-07-17", items: [
         { type: "fix", text: "💊 영양제 탭 시간대 순서 수정 — '자기전'이 '아침식전'보다 먼저 나오던 것을 실제 복용시각 순(아침식전→아침→…→자기전)으로 정렬 (달력 오늘할일과 통일)" },
