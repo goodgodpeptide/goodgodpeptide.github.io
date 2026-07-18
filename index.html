@@ -5045,9 +5045,6 @@
         ctx.fillText(label, PAD.l + f * gW, cH - 6);
       }
 
-      // ⑤ 약물 활성기간 음영 밴드 오버레이 (데이터 선 아래에 깔림)
-      try { drawDrugActivityBands(ctx, { PAD, gW, gH, minT, maxT, rangeT, isLight: isLightW }); } catch (e) {}
-
       // 목표 체중선
       if (target) {
         const ty = PAD.t + gH - ((target - minW) / rangeW) * gH;
@@ -5323,7 +5320,10 @@
       if (!recs.length) return;
       const alpha = o.isLight ? "26" : "1f"; // 8자리 hex 알파(라이트 약간 진하게)
       // 체중감량 약물(incretin·amylin)만 음영 — 재생·기타까지 다 칠하면 그래프가 지저분(2026-07-18)
-      const drugs = getActiveDrugs().filter(d => recs.some(r => r.drug === d)
+      // 🔴 이 밴드는 '과거 이력'이므로 현재 투약탭 토글(getActiveDrugs, 지금 선택된 칩)과 무관하게
+      //    기록이 있는 모든 약을 대상으로 한다 — getActiveDrugs()로 거르면 종료(토글 꺼짐)된 과거
+      //    약(마운자로·레타 등)이 실제 투약기록이 있어도 밴드가 안 그려지는 버그(2026-07-18 GG 발견).
+      const drugs = Object.keys(DRUG_CONFIG).filter(d => recs.some(r => r.drug === d)
         && (_wtClassOf(DRUG_CONFIG[d]) === 'incretin' || _wtClassOf(DRUG_CONFIG[d]) === 'amylin'));
       let labelRow = 0;
       drugs.forEach(drug => {
