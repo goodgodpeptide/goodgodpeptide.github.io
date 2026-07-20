@@ -6641,6 +6641,15 @@
         // 수정 모드: 기존 항목 업데이트
         const idx = appData.reconVials.findIndex(v => v.id === editId);
         if (idx !== -1) {
+          // 🔴 약물 변경 경고 (2026-07-20 GG '수정했더니 위고비가 레타로 덮어써져 사라짐') —
+          //   수정 중 약을 다른 약으로 바꾸면 기존 조제기록이 통째로 덮어써져 사라진다(footgun).
+          //   새 약을 추가하려면 '새 조제'를 써야 함. 실수 방지 확인창.
+          const orig = appData.reconVials[idx];
+          if (orig.drug && orig.drug !== drug) {
+            if (!confirm(`⚠️ 약을 '${orig.drug}' → '${drug}'로 바꾸면\n기존 ${orig.drug} 조제기록이 이 내용으로 덮어써져 사라집니다.\n\n· 확인 = 그대로 덮어쓰기\n· 취소 = 유지 (새 약을 따로 넣으려면 취소 후 '새 조제' 이용)`)) {
+              return;  // 취소 — 모달·기존기록 유지
+            }
+          }
           appData.reconVials[idx] = { ...appData.reconVials[idx], drug, vialMg, waterMl: waterMl||0, doseMg, reconDate: new Date(dateStr+'T00:00:00+09:00').getTime(), notes };
         }
         window._editingReconId = null;
