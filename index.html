@@ -80,7 +80,7 @@
     let dataLoaded = false;          // ① loadData 성공 시에만 true — false면 saveData 차단(로드실패 후 덮어쓰기 방지)
     let _pendingAllowEmpty = false;  // ④#5 사용자가 마지막 기록을 '의도적으로' 삭제한 경우 빈데이터 가드를 1회 통과시킴(삭제가 서버에 반영되도록)
     let _lastSyncedUpdatedAt = 0;    // ④ 이 클라이언트가 마지막으로 반영한 서버 updatedAt(다기기 충돌 감지 기준)
-    let appData = { records: [], weightRecords: [], gender: "남성", height: "", targetWeight: "", trackedShipments: [] };
+    let appData = { records: [], weightRecords: [], gender: "남성", height: "", targetWeight: "", trackedShipments: [], reconVialsArchive: [], trackedShipmentsArchive: [] };
 
     // ══════════════════════════════════════════════
     // KST 헬퍼 (완전 수정)
@@ -6377,7 +6377,8 @@
       const activeDrugs = getActiveDrugs();
 
       if (!vials.length) {
-        c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:16px;font-size:13px">조제된 바이알이 없습니다<br><button onclick="openReconModal()" style="margin-top:10px;padding:7px 16px;background:#1d4ed8;border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ 조제 기록하기</button></div>`;
+        c.innerHTML = `<div style="text-align:center;color:#4a5568;padding:16px;font-size:13px">조제된 바이알이 없습니다<br><button onclick="openReconModal()" style="margin-top:10px;padding:7px 16px;background:#1d4ed8;border:none;border-radius:10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">+ 조제 기록하기</button></div>`
+          + _reconArchiveHtml(isLight);  // 활성 조제 0개여도 보관함은 표시
         return;
       }
 
@@ -6431,6 +6432,7 @@
               <div style="display:flex;align-items:center;gap:6px">
                 <div style="font-size:11px;color:#6b7280">${reconDateStr} 조제 · ${v.vialMg}mg/${v.waterMl}ml</div>
                 <button onclick="openEditReconModal(${v.id})" title="수정" style="width:22px;height:22px;border-radius:5px;border:1px solid ${isLight?'#d1d5db':'#374151'};background:transparent;color:#6b7280;font-size:12px;cursor:pointer;line-height:1">✏️</button>
+                <button onclick="archiveRecon(${v.id})" title="보관함으로 (삭제 아님)" style="width:22px;height:22px;border-radius:5px;border:1px solid ${isLight?'#d1d5db':'#374151'};background:transparent;color:#6b7280;font-size:12px;cursor:pointer;line-height:1">📥</button>
                 <button onclick="deleteRecon(${v.id})" title="삭제" style="width:22px;height:22px;border-radius:5px;border:1px solid #f8717133;background:transparent;color:#f87171;font-size:12px;cursor:pointer;line-height:1">🗑</button>
               </div>
             </div>
@@ -6461,6 +6463,7 @@
           <button onclick="openReconModal('${drug}')" style="padding:5px 12px;border-radius:8px;border:1px solid ${cfg.color||'#60a5fa'}55;background:${(cfg.color||'#60a5fa')}11;color:${cfg.color||'#60a5fa'};font-size:11px;cursor:pointer;font-family:inherit">+ 조제 기록</button>
         </div>`;
       });
+      c.innerHTML += _reconArchiveHtml(isLight);  // 📦 조제 보관함 (하단)
     };
 
     window.adjustInjDone = function(vialId, delta) {
@@ -6477,6 +6480,74 @@
       appData.reconVials = (appData.reconVials || []).filter(v => v.id !== vialId);
       scheduleSave();
       renderReconSection();
+    };
+
+    // 📥 조제 재고 보관함 (2026-07-20 GG '여태 맞은거 삭제만 하기 아까우니 아카이브처럼 따로') —
+    //   소진 완료분 등을 삭제 대신 보관함(reconVialsArchive)으로 이동. 보관함에서 복구·완전삭제 가능.
+    window.archiveRecon = function(vialId) {
+      const v = (appData.reconVials || []).find(v => v.id === vialId);
+      if (!v) return;
+      if (!confirm('이 조제분을 보관함으로 옮길까요?\n(삭제가 아니라 아래 📦 조제 보관함에 따로 쌓여요 — 언제든 다시 볼 수 있어요)')) return;
+      if (!Array.isArray(appData.reconVialsArchive)) appData.reconVialsArchive = [];
+      v.archivedAt = Date.now();
+      appData.reconVialsArchive.unshift(v);
+      appData.reconVials = (appData.reconVials || []).filter(x => x.id !== vialId);
+      scheduleSave();
+      renderReconSection();
+      try { showToast('📥 조제 보관함으로 옮겼어요'); } catch (_) {}
+    };
+    window.restoreRecon = function(vialId) {
+      const arr = appData.reconVialsArchive || [];
+      const v = arr.find(x => x.id === vialId);
+      if (!v) return;
+      delete v.archivedAt;
+      appData.reconVialsArchive = arr.filter(x => x.id !== vialId);
+      if (!Array.isArray(appData.reconVials)) appData.reconVials = [];
+      appData.reconVials.unshift(v);
+      scheduleSave();
+      renderReconSection();
+      try { showToast('↩️ 조제 재고로 복구했어요'); } catch (_) {}
+    };
+    window.deleteReconArchived = function(vialId) {
+      if (!confirm('보관함에서 완전히 삭제할까요? (복구 불가)')) return;
+      appData.reconVialsArchive = (appData.reconVialsArchive || []).filter(x => x.id !== vialId);
+      scheduleSave();
+      renderReconSection();
+    };
+    // 보관함 접기/펴기(로컬 상태만 — 새로고침 시 접힘 기본)
+    window._reconArchiveOpen = false;
+    window.toggleReconArchive = function() {
+      window._reconArchiveOpen = !window._reconArchiveOpen;
+      renderReconSection();
+    };
+    // 보관함 HTML 생성 (활성 조제 유무와 무관하게 항상 하단에 표시)
+    window._reconArchiveHtml = function(isLight) {
+      const arr = appData.reconVialsArchive || [];
+      if (!arr.length) return '';
+      const border = isLight ? '#e2e8f0' : '#1f2937';
+      const sub = isLight ? '#64748b' : '#9ca3af';
+      const txt = isLight ? '#1e293b' : '#e2e8f0';
+      const rowBg = isLight ? '#f8fafc' : '#0d0d1a';
+      const open = window._reconArchiveOpen;
+      const body = !open ? '' : arr.map(v => {
+        const cfg = (typeof DRUG_CONFIG !== 'undefined' && DRUG_CONFIG[v.drug]) || {};
+        const totalInj = (v.vialMg > 0 && v.doseMg > 0) ? Math.floor(v.vialMg / v.doseMg) : 0;
+        const dateStr = (typeof kstDateStr === 'function' && v.reconDate) ? kstDateStr(v.reconDate) : '';
+        const archStr = (typeof kstDateStr === 'function' && v.archivedAt) ? kstDateStr(v.archivedAt) : '';
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:${rowBg};border:1px solid ${border};border-radius:10px;margin-top:6px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:700;color:${cfg.color||txt};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cfg.emoji||''} ${(v.drug||'').split(' ')[0]} <span style="color:${sub};font-weight:400">· ${totalInj}회분</span></div>
+            <div style="font-size:10px;color:${sub}">${dateStr} 조제 · ${v.vialMg||0}mg/${v.waterMl||0}ml${archStr?` · 📥${archStr} 보관`:''}</div>
+          </div>
+          <button onclick="restoreRecon(${v.id})" title="조제 재고로 복구" style="background:none;border:1px solid ${border};border-radius:8px;color:${sub};font-size:11px;padding:4px 9px;cursor:pointer;font-family:inherit">↩️ 복구</button>
+          <button onclick="deleteReconArchived(${v.id})" title="완전 삭제" style="background:none;border:none;color:${sub};font-size:13px;cursor:pointer;padding:2px 4px">🗑</button>
+        </div>`;
+      }).join('');
+      return `<div style="border-top:1px dashed ${border};margin-top:12px;padding-top:10px">
+        <div onclick="toggleReconArchive()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:12px;font-weight:700;color:${txt}">📦 조제 보관함 (${arr.length})</div>
+          <span style="font-size:11px;color:${sub}">${open?'▲ 접기':'▼ 펴기'}</span>
+        </div>${body}</div>`;
     };
 
     window.openEditReconModal = function(vialId) {
@@ -7460,6 +7531,7 @@
             <div style="font-size:11px;color:${sub};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subline}</div>
           </div>
           <button onclick="refreshTracked('${encodeURIComponent(s.num)}',event)" title="새로고침" style="background:none;border:1px solid ${border};border-radius:8px;color:${sub};font-size:12px;padding:4px 8px;cursor:pointer">🔄</button>
+          <button onclick="archiveTracked('${encodeURIComponent(s.num)}',event)" title="보관함으로 (배송완료분 따로 보관)" style="background:none;border:1px solid ${border};border-radius:8px;color:${sub};font-size:12px;padding:4px 8px;cursor:pointer">📥</button>
           <button onclick="deleteTracked('${encodeURIComponent(s.num)}',event)" title="삭제" style="background:none;border:none;color:${sub};font-size:14px;cursor:pointer;padding:2px 4px">🗑</button>
         </div>`;
       }).join('') : `<div style="font-size:12px;color:${sub};padding:8px 0">저장된 배송이 없어요. 조회 후 '💾 저장'을 누르면 여기 쌓여서 상태를 계속 추적해요.</div>`;
@@ -7481,6 +7553,7 @@
             ${saved.length?`<button onclick="refreshAllTracked()" style="background:none;border:1px solid ${border};border-radius:8px;color:${sub};font-size:11px;padding:3px 9px;cursor:pointer">🔄 전체 새로고침</button>`:''}
           </div>
           ${savedHtml}
+          ${_trackArchiveHtml(isL)}
           </div>
         </div>`;
     }
@@ -7583,6 +7656,66 @@
       appData.trackedShipments = _trackList().filter(s=>s.num!==num);
       await saveData();
       renderTrackSection();
+    };
+    // 📥 해외배송 보관함 (2026-07-20 GG '택배도 아카이브개념 만들어놔라') — 배송완료분 등을
+    //   삭제 대신 보관함(trackedShipmentsArchive)으로. 저장목록이 완료건으로 지저분해지지 않게.
+    function _trackArchiveList() { if (!Array.isArray(appData.trackedShipmentsArchive)) appData.trackedShipmentsArchive = []; return appData.trackedShipmentsArchive; }
+    window.archiveTracked = async function(encNum, ev) {
+      if (ev) ev.stopPropagation();
+      const num = decodeURIComponent(encNum);
+      const it = _trackList().find(s=>s.num===num); if (!it) return;
+      const arch = _trackArchiveList();
+      it.archivedAt = Date.now();
+      arch.unshift(it);
+      appData.trackedShipments = _trackList().filter(s=>s.num!==num);
+      await saveData();
+      renderTrackSection();
+      try { showToast('📥 배송 보관함으로 옮겼어요'); } catch(_) {}
+    };
+    window.restoreTracked = async function(encNum, ev) {
+      if (ev) ev.stopPropagation();
+      const num = decodeURIComponent(encNum);
+      const arch = _trackArchiveList();
+      const it = arch.find(s=>s.num===num); if (!it) return;
+      delete it.archivedAt;
+      appData.trackedShipmentsArchive = arch.filter(s=>s.num!==num);
+      _trackList().unshift(it);
+      await saveData();
+      renderTrackSection();
+      try { showToast('↩️ 저장목록으로 복구했어요'); } catch(_) {}
+    };
+    window.deleteTrackedArchived = async function(encNum, ev) {
+      if (ev) ev.stopPropagation();
+      const num = decodeURIComponent(encNum);
+      if (!await customConfirm('보관함에서 완전히 삭제할까요? (복구 불가)')) return;
+      appData.trackedShipmentsArchive = _trackArchiveList().filter(s=>s.num!==num);
+      await saveData();
+      renderTrackSection();
+    };
+    window._trackArchiveOpen = false;
+    window.toggleTrackArchive = function(ev) { if (ev) ev.stopPropagation(); window._trackArchiveOpen = !window._trackArchiveOpen; renderTrackSection(); };
+    window._trackArchiveHtml = function(isL) {
+      const arch = _trackArchiveList();
+      if (!arch.length) return '';
+      const border = isL?'#e2e8f0':'#1f2937', sub = isL?'#64748b':'#9ca3af', txt = isL?'#1e293b':'#e2e8f0';
+      const open = window._trackArchiveOpen;
+      const body = !open ? '' : arch.map(s => {
+        const name = s.label ? escapeHtml(s.label) : escapeHtml(s.num);
+        const subline = (s.label?escapeHtml(s.num)+' · ':'') + _trackBadge(s.status) + (s.archivedAt?` · 📥${_trackAgo(s.archivedAt)} 보관`:'');
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid ${border}">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="viewTracked('${encodeURIComponent(s.num)}')">
+            <div style="font-size:12px;font-weight:700;color:${txt};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+            <div style="font-size:10px;color:${sub};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${subline}</div>
+          </div>
+          <button onclick="restoreTracked('${encodeURIComponent(s.num)}',event)" title="저장목록으로 복구" style="background:none;border:1px solid ${border};border-radius:8px;color:${sub};font-size:11px;padding:4px 9px;cursor:pointer;font-family:inherit">↩️ 복구</button>
+          <button onclick="deleteTrackedArchived('${encodeURIComponent(s.num)}',event)" title="완전 삭제" style="background:none;border:none;color:${sub};font-size:13px;cursor:pointer;padding:2px 4px">🗑</button>
+        </div>`;
+      }).join('');
+      return `<div style="border-top:1px dashed ${border};margin-top:14px;padding-top:10px">
+        <div onclick="toggleTrackArchive(event)" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:12px;font-weight:700;color:${txt}">📦 배송 보관함 (${arch.length})</div>
+          <span style="font-size:11px;color:${sub}">${open?'▲ 접기':'▼ 펴기'}</span>
+        </div>${body}</div>`;
     };
     window.refreshTracked = async function(encNum, ev) {
       if (ev) ev.stopPropagation();
