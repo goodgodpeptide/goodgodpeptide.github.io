@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/sync_guard.test.mjs",
+    "test": "node --test tests/sync_guard.test.mjs tests/recovery_guard.test.mjs",
+    "test:bundle": "node --experimental-vm-modules scripts/check_index_module.mjs",
     "test:rules": "node --test tests/firestore_rules.test.mjs"
   },
   "devDependencies": {
