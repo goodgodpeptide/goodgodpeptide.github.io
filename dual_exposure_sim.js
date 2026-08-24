@@ -5,6 +5,88 @@ export const DUAL_EXPOSURE_NOTICE =
   + "동등용량·효과·안전성·병용 허용을 뜻하지 않습니다. 레타트루타이드는 임상시험 약이며 "
   + "레타트루타이드와 티르제파타이드 병용 안전성은 확립되지 않았습니다.";
 
+export const COMPACT_GLP1_WARNING_FALLBACK = "⚠️ GLP-1 계열 병용 중 · 잔류 겹침 확인";
+
+export const COMPACT_GLP1_WARNING_CSS = `
+  #remaining-cards > .glp1-compact-warning {
+    order: 999;
+    grid-column: 1 / -1;
+    width: 100%;
+    margin: 1px 0 8px !important;
+    padding: 0 4px !important;
+    min-height: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: #9ca3af !important;
+    font-size: 9px !important;
+    font-weight: 500 !important;
+    line-height: 1.3 !important;
+    text-align: center !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  body.light-mode #remaining-cards > .glp1-compact-warning {
+    color: #64748b !important;
+  }
+`;
+
+export function compactGlp1WarningText(value) {
+  const normalized = String(value ?? "").replace(/\s+/gu, " ").trim();
+  const drugMatch = normalized.match(/중복투약\s*[—–-]\s*(.*?)\s*둘\s*다\s*사용\s*중/u);
+  if (!drugMatch?.[1]) return COMPACT_GLP1_WARNING_FALLBACK;
+  const drugs = drugMatch[1]
+    .replace(/([🔵🔴🟢🟡🟣])\s+/gu, "$1")
+    .replace(/\s*\+\s*/gu, "+")
+    .trim();
+  return `⚠️ GLP-1 병용 · ${drugs} · 잔류 겹침`;
+}
+
+export function compactExistingGlp1Warning(root) {
+  if (!root?.querySelectorAll) return false;
+  const marker = [...root.querySelectorAll("*")]
+    .find((element) => String(element.textContent || "").includes("GLP-1 계열 중복투약"));
+  if (!marker) return false;
+
+  let banner = marker;
+  while (banner.parentElement && banner.parentElement !== root) banner = banner.parentElement;
+  if (banner.parentElement !== root) return false;
+
+  if (banner.dataset?.glp1Compact !== "true") {
+    const original = String(banner.textContent || "").replace(/\s+/gu, " ").trim();
+    banner.dataset.glp1Compact = "true";
+    banner.classList?.add("glp1-compact-warning");
+    banner.setAttribute?.("role", "note");
+    banner.setAttribute?.("aria-label", original);
+    banner.title = original;
+    banner.textContent = compactGlp1WarningText(original);
+  }
+  if (root.lastElementChild !== banner) root.appendChild(banner);
+  return true;
+}
+
+function ensureCompactWarningStyle(doc) {
+  if (!doc?.createElement || doc.getElementById("glp1-compact-warning-style")) return;
+  const style = doc.createElement("style");
+  style.id = "glp1-compact-warning-style";
+  style.textContent = COMPACT_GLP1_WARNING_CSS;
+  (doc.head || doc.documentElement)?.appendChild(style);
+}
+
+export function installCompactGlp1Warning({ document: doc = document } = {}) {
+  const root = doc?.getElementById?.("remaining-cards");
+  if (!root) return { installed: false, reason: "remaining_cards_missing" };
+  ensureCompactWarningStyle(doc);
+  const apply = () => compactExistingGlp1Warning(root);
+  const Observer = doc.defaultView?.MutationObserver || globalThis.MutationObserver;
+  const observer = typeof Observer === "function" ? new Observer(apply) : null;
+  observer?.observe(root, { childList: true, subtree: true });
+  apply();
+  return { installed: true, apply, observer };
+}
+
 function finitePositive(value) {
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? number : 0;
@@ -208,8 +290,9 @@ function statCard(label, color, stats) {
 }
 
 export function installDualExposureSimulator({ document: doc = document, configs = {}, getRecords = () => [] } = {}) {
+  const compactWarning = installCompactGlp1Warning({ document: doc });
   const root = doc.getElementById("dual-exposure-simulator");
-  if (!root) return { installed: false, reason: "container_missing" };
+  if (!root) return { installed: false, reason: "container_missing", compactWarning };
   const names = Object.keys(configs);
   const defaultPrimary = names.find((name) => name.includes("Retatrutide")) || names[0] || "";
   const defaultSecondary = names.find((name) => name.includes("Tirzepatide")) || names[1] || names[0] || "";
@@ -325,5 +408,5 @@ export function installDualExposureSimulator({ document: doc = document, configs
   doc.documentElement.dataset.dualExposureSimulator = "reta-tirzepatide-v1";
   prefillLatest();
   run();
-  return { installed: true, run, prefillLatest };
+  return { installed: true, run, prefillLatest, compactWarning };
 }

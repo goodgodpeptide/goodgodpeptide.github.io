@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peptide-app-v23';
+const CACHE_NAME = 'peptide-app-v24';
 const STATIC_ASSETS = [
   './',
   './index.html',
