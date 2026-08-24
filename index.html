@@ -39,6 +39,7 @@ async function enterRecoveryGate(serverData,recovery){_lastSyncedUpdatedAt=Numbe
 import * as clinicalGraphScale from './clinical_graph_scale.js';
 import { patchClinicalGraphSource } from './clinical_graph_patch.js';
 import { installDualExposureSimulator } from './dual_exposure_sim.js';
+import { installInlineWeightEntry } from './inline_weight_entry.js';
 clinicalGraphScale.applyDoseReferenceAudit(DRUG_CONFIG);
 const __jwbsPatchedRenderPeptideGraph = eval('(' + patchClinicalGraphSource(renderPeptideGraph.toString()) + ')');
 renderPeptideGraph = function () {
@@ -55,6 +56,10 @@ installDualExposureSimulator({
   document,
   configs: DRUG_CONFIG,
   getRecords: () => appData.records || [],
+});
+installInlineWeightEntry({
+  document,
+  submitNative: () => window.submitAddWeight(),
 });
 </script>
 

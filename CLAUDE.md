@@ -31,7 +31,7 @@
 ### 체중 탭 서브탭 구조
 | 서브탭 | id | 내용 |
 |---|---|---|
-| ⚖️ 기록/그래프 | `wtab-record` | 체중 기록 추가, 추이 그래프 (X축=첫 투약일~현재) |
+| ⚖️ 기록/그래프 | `wtab-record` | 상단 체중·한국시간 바로 입력 및 저장, 추이 그래프 (X축=첫 투약일~현재) |
 | 🏋️ 인바디 | `wtab-inbody` | 인바디 기록 추가·목록·골격근량/체지방 추이 그래프 |
 | 📊 분석 | `wtab-analysis` | BMR/TDEE/체지방률/이상체중, 체성분역산, 미래예측 |
 
@@ -460,6 +460,7 @@ submitSuppStock(id)               // 입고 저장
 // 기록 수정
 openEditRecordModal(id)   // 투약 기록 수정 모달 (add-modal 재활용, pre-fill)
 openEditWeightModal(id)   // 체중 기록 수정 모달 (weight-modal 재활용, pre-fill)
+installInlineWeightEntry() // 기록/그래프 상단의 체중·한국시간 바로 입력 폼 (기존 submitAddWeight 재사용)
 ```
 
 ---
