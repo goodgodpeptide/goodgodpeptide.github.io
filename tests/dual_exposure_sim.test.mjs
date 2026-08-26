@@ -104,6 +104,6 @@ test("운영 index와 서비스워커가 듀얼 시뮬레이터 모듈을 실제
   assert.match(index, /import \{ installDualExposureSimulator \} from '\.\/dual_exposure_sim\.js';/);
   assert.match(index, /id="dual-exposure-simulator"/);
   assert.match(index, /installDualExposureSimulator\(\{/);
-  assert.match(serviceWorker, /peptide-app-v25/);
+  assert.match(serviceWorker, /peptide-app-v26/);
   assert.match(serviceWorker, /'\.\/dual_exposure_sim\.js'/);
 });

@@ -40,6 +40,7 @@ import * as clinicalGraphScale from './clinical_graph_scale.js';
 import { patchClinicalGraphSource } from './clinical_graph_patch.js';
 import { installDualExposureSimulator } from './dual_exposure_sim.js';
 import { installInlineWeightEntry } from './inline_weight_entry.js';
+import { installReconInventoryGuard } from './recon_inventory_guard.js';
 clinicalGraphScale.applyDoseReferenceAudit(DRUG_CONFIG);
 const __jwbsPatchedRenderPeptideGraph = eval('(' + patchClinicalGraphSource(renderPeptideGraph.toString()) + ')');
 renderPeptideGraph = function () {
@@ -60,6 +61,17 @@ installDualExposureSimulator({
 installInlineWeightEntry({
   document,
   submitNative: () => window.submitAddWeight(),
+});
+installReconInventoryGuard({
+  document,
+  targetWindow: window,
+  getData: () => appData,
+  configs: DRUG_CONFIG,
+  getActiveDrugs,
+  getDoseCycle,
+  formatDate: kstDateStr,
+  archiveHtml: (isLight) => window._reconArchiveHtml?.(isLight) || '',
+  now: () => Date.now(),
 });
 </script>
 

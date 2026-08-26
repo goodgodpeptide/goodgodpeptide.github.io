@@ -701,6 +701,13 @@ customConfirm(msg)           // window.customConfirm — confirm() 대체 커스
 - `openEncyclopediaModal()`에서 `isLight` 감지 후 `C` 색상 객체로 모든 인라인 스타일 분기
 - `.enc-section`, `.enc-section-title`, `.enc-filter-btn`에 `body.light-mode` CSS 오버라이드
 
+### 조제 재고 다중 배치 보호 (2026-08-27)
+- 같은 약물을 다시 조제해도 최신 1건만 숨겨서 표시하지 않고 활성 배치를 전부 표시한다.
+- 이전 배치 사용량은 `조제일 이상 ~ 다음 같은 약물 조제일 미만` 기록만 반영하고, 현재 배치는 그 이후 기록을 반영한다.
+- 새 조제 진입 전 `_editingReconId`를 초기화해 취소한 편집 상태가 새 배치를 덮어쓰지 못하게 한다.
+- 편집 중에는 약물 선택을 잠가 다른 약물로 기존 배치를 덮어쓰는 실수를 막는다.
+- 구현: `recon_inventory_guard.js`, 회귀검증: `tests/recon_inventory_guard.test.mjs`
+
 ---
 
 ## 작업 방식 선호도
