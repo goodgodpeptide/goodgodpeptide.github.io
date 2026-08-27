@@ -93,6 +93,6 @@ test("운영 화면과 서비스워커가 체중 바로 입력 모듈을 연결�
   ]);
   assert.match(index, /import \{ installInlineWeightEntry \} from '\.\/inline_weight_entry\.js';/);
   assert.match(index, /installInlineWeightEntry\(\{/);
-  assert.match(serviceWorker, /peptide-app-v26/);
+  assert.match(serviceWorker, /peptide-app-v27/);
   assert.match(serviceWorker, /'\.\/inline_weight_entry\.js'/);
 });

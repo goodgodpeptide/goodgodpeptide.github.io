@@ -17,13 +17,15 @@ test("같은 레타를 두 번 조제해도 두 배치를 모두 보존한다", 
   const rows = buildReconBatchRows([first, second], []);
 
   assert.equal(rows.length, 2);
-  assert.deepEqual(rows.map((row) => row.id), [2, 1]);
-  assert.equal(rows[0].isCurrent, true);
-  assert.equal(rows[1].isCurrent, false);
-  assert.equal(rows[1].remainingMg, 20);
+  assert.deepEqual(rows.map((row) => row.id), [1, 2]);
+  assert.equal(rows[0].isCurrent, false);
+  assert.equal(rows[0].isNextToUse, true);
+  assert.equal(rows[0].remainingMg, 20);
+  assert.equal(rows[1].isCurrent, true);
+  assert.equal(rows[1].hasEarlierBalance, true);
 });
 
-test("이전 배치는 다음 조제일 전 투약만 반영하고 새 배치 사용량과 섞지 않는다", () => {
+test("새 배치 조제 뒤 투약해도 이전 잔량부터 선입선출로 차감한다", () => {
   const rows = buildReconBatchRows([
     { id: 1, drug: RETA, vialMg: 20, waterMl: 2, doseMg: 2, reconDate: 1000 },
     { id: 2, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 3000 },
@@ -34,10 +36,26 @@ test("이전 배치는 다음 조제일 전 투약만 반영하고 새 배치 �
 
   const newest = rows.find((row) => row.id === 2);
   const previous = rows.find((row) => row.id === 1);
-  assert.equal(previous.usedMg, 2);
-  assert.equal(previous.remainingMg, 18);
-  assert.equal(newest.usedMg, 3);
-  assert.equal(newest.remainingMg, 27);
+  assert.equal(previous.usedMg, 5);
+  assert.equal(previous.remainingMg, 15);
+  assert.equal(newest.usedMg, 0);
+  assert.equal(newest.remainingMg, 30);
+});
+
+test("한 번의 투약량이 이전 잔량보다 크면 남는 양만 현재 배치로 넘어간다", () => {
+  const rows = buildReconBatchRows([
+    { id: 1, drug: RETA, vialMg: 5, waterMl: 1, doseMg: 2, reconDate: 1000 },
+    { id: 2, drug: RETA, vialMg: 10, waterMl: 1, doseMg: 3, reconDate: 3000 },
+  ], [
+    { id: 11, drug: RETA, dose: 3, time: 2000 },
+    { id: 12, drug: RETA, dose: 4, time: 4000 },
+  ]);
+
+  const previous = rows.find((row) => row.id === 1);
+  const newest = rows.find((row) => row.id === 2);
+  assert.equal(previous.remainingMg, 0);
+  assert.equal(newest.usedMg, 2);
+  assert.equal(newest.remainingMg, 8);
 });
 
 test("수정 모달에서 남은 ID를 새 조제 전에 항상 초기화한다", () => {
@@ -54,7 +72,7 @@ test("운영 화면과 서비스워커가 조제 재고 보호 모듈을 연결�
   ]);
   assert.match(index, /import \{ installReconInventoryGuard \} from '\.\/recon_inventory_guard\.js';/);
   assert.match(index, /installReconInventoryGuard\(\{/);
-  assert.match(serviceWorker, /peptide-app-v26/);
+  assert.match(serviceWorker, /peptide-app-v27/);
   assert.match(serviceWorker, /'\.\/recon_inventory_guard\.js'/);
 });
 
@@ -85,6 +103,8 @@ test("조제 재고 화면에 같은 약물의 현재 배치와 이전 잔량이
   assert.equal((container.innerHTML.match(/<article /g) || []).length, 2);
   assert.match(container.innerHTML, /현재 조제/);
   assert.match(container.innerHTML, /이전 잔량/);
+  assert.ok(container.innerHTML.indexOf("이전 잔량") < container.innerHTML.indexOf("현재 조제"));
+  assert.match(container.innerHTML, /투약 시 이 잔량부터 차감/);
   assert.doesNotMatch(container.innerHTML, /onclick="openReconModal/);
 });
 

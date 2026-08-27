@@ -21,8 +21,9 @@ function safeId(value) {
 
 /**
  * 같은 약을 여러 번 조제해도 각 바이알을 독립 배치로 유지한다.
- * 투약 기록은 해당 조제일 이상, 다음 조제일 미만 구간에만 귀속한다.
- * 따라서 새 바이알을 조제한 뒤에도 이전 바이알의 남은 양이 사라지지 않는다.
+ * 투약 시점에 이미 조제된 배치 중 가장 오래된 잔량부터 선입선출로 차감한다.
+ * 따라서 새 바이알을 조제한 뒤에도 이전 잔량이 먼저 소진되고, 남는 투약량만
+ * 다음 배치로 넘어간다.
  */
 export function buildReconBatchRows(vials = [], records = []) {
   const groups = new Map();
@@ -39,25 +40,49 @@ export function buildReconBatchRows(vials = [], records = []) {
       return byDate || numberOrZero(left.id) - numberOrZero(right.id);
     });
 
-    ordered.forEach((vial, index) => {
-      const startAt = numberOrZero(vial.reconDate);
-      const nextVial = ordered[index + 1] || null;
-      const endAt = nextVial ? numberOrZero(nextVial.reconDate) : Number.POSITIVE_INFINITY;
-      const usedFromRecords = (Array.isArray(records) ? records : [])
-        .filter((record) => record?.drug === drug
-          && !record.isOverride
-          && numberOrZero(record.time) >= startAt
-          && numberOrZero(record.time) < endAt)
-        .reduce((sum, record) => sum + Math.max(0, numberOrZero(record.dose)), 0);
+    const states = ordered.map((vial, index) => {
       const vialMg = Math.max(0, numberOrZero(vial.vialMg));
       const doseMg = Math.max(0, numberOrZero(vial.doseMg));
+      const offsetMg = Math.min(vialMg, Math.max(0, numberOrZero(vial.injOffset)) * doseMg);
+      return {
+        vial,
+        index,
+        startAt: numberOrZero(vial.reconDate),
+        vialMg,
+        doseMg,
+        usedMg: offsetMg,
+        remainingMg: Math.max(0, vialMg - offsetMg),
+      };
+    });
+
+    const drugRecords = (Array.isArray(records) ? records : [])
+      .filter((record) => record?.drug === drug && !record.isOverride)
+      .sort((left, right) => numberOrZero(left.time) - numberOrZero(right.time)
+        || numberOrZero(left.id) - numberOrZero(right.id));
+
+    for (const record of drugRecords) {
+      const recordAt = numberOrZero(record.time);
+      let unallocatedMg = Math.max(0, numberOrZero(record.dose));
+      if (!unallocatedMg) continue;
+      for (const state of states) {
+        if (state.startAt > recordAt) break;
+        if (state.remainingMg <= 0) continue;
+        const usedNow = Math.min(state.remainingMg, unallocatedMg);
+        state.usedMg += usedNow;
+        state.remainingMg -= usedNow;
+        unallocatedMg -= usedNow;
+        if (unallocatedMg <= 0) break;
+      }
+    }
+
+    states.forEach((state) => {
+      const { vial, index, vialMg, doseMg, usedMg, remainingMg } = state;
       const waterMl = Math.max(0, numberOrZero(vial.waterMl));
-      const offsetMg = Math.max(0, numberOrZero(vial.injOffset)) * doseMg;
-      const usedMg = Math.min(vialMg, usedFromRecords + offsetMg);
-      const remainingMg = Math.max(0, vialMg - usedMg);
       const totalInjections = doseMg > 0 ? Math.floor(vialMg / doseMg) : 0;
       const remainingInjections = doseMg > 0 ? Math.floor(remainingMg / doseMg) : 0;
       const mgPerClick = waterMl > 0 ? (vialMg / waterMl) * 0.01 : 0;
+      const earlierBalance = states.slice(0, index).some((candidate) => candidate.remainingMg > 0);
+      const isNextToUse = remainingMg > 0 && !earlierBalance;
 
       rows.push({
         ...vial,
@@ -65,9 +90,10 @@ export function buildReconBatchRows(vials = [], records = []) {
         batchIndex: index + 1,
         batchCount: ordered.length,
         isCurrent: index === ordered.length - 1,
-        nextReconDate: nextVial ? endAt : null,
         usedMg,
         remainingMg,
+        hasEarlierBalance: earlierBalance,
+        isNextToUse,
         totalInjections,
         remainingInjections,
         remainingClicks: mgPerClick > 0 ? Math.floor(remainingMg / mgPerClick) : 0,
@@ -76,9 +102,17 @@ export function buildReconBatchRows(vials = [], records = []) {
     });
   }
 
-  return rows.sort((left, right) =>
-    numberOrZero(right.reconDate) - numberOrZero(left.reconDate)
-      || numberOrZero(right.id) - numberOrZero(left.id));
+  return rows.sort((left, right) => {
+    const priority = (row) => (!row.isCurrent && row.remainingMg > 0 ? 0 : row.isCurrent ? 1 : 2);
+    const byPriority = priority(left) - priority(right);
+    if (byPriority) return byPriority;
+    if (priority(left) === 0) {
+      return numberOrZero(left.reconDate) - numberOrZero(right.reconDate)
+        || numberOrZero(left.id) - numberOrZero(right.id);
+    }
+    return numberOrZero(right.reconDate) - numberOrZero(left.reconDate)
+      || numberOrZero(right.id) - numberOrZero(left.id);
+  });
 }
 
 export function clearStaleReconEditState(targetWindow = globalThis) {
@@ -180,7 +214,9 @@ export function renderReconInventory({
     if (row.remainingMg <= 0) {
       exhaustLabel = "소진 완료";
     } else if (!row.isCurrent) {
-      exhaustLabel = `${formatDate(row.nextReconDate)} 새 조제 전 사용분까지 반영`;
+      exhaustLabel = row.isNextToUse ? "투약 시 이 잔량부터 차감" : "앞 배치 소진 후 차감";
+    } else if (row.hasEarlierBalance) {
+      exhaustLabel = "이전 잔량 소진 후 차감";
     } else if (config.halfLifeDays < 0.1) {
       exhaustLabel = "당일 소진";
     } else if (row.remainingInjections > 0 && intervalDays > 0) {
