@@ -80,6 +80,51 @@ test("실제 총유닛 309를 기록하면 59유닛 골든도즈가 새 랏을 �
   assert.equal(newest.remainingMg, 30);
 });
 
+test("골든도즈를 쓴 이전 배치를 보관해도 새 배치 잔량은 다시 차감되지 않는다", () => {
+  const active = [
+    { id: 2, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 3000 },
+  ];
+  const archived = [
+    {
+      id: 1, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 1000,
+      actualTotalUnits: 309, goldenDoseUnits: 59, archivedAt: 5000,
+    },
+  ];
+  const records = [
+    { id: 11, drug: RETA, dose: 25, time: 2000 },
+    { id: 12, drug: RETA, dose: 5.9, time: 4000 },
+  ];
+
+  const rows = buildReconBatchRows(active, records, archived);
+
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].id, 2);
+  assert.equal(rows[0].batchIndex, 1);
+  assert.equal(rows[0].batchCount, 1);
+  assert.equal(rows[0].usedMg, 0);
+  assert.equal(rows[0].remainingMg, 30);
+  assert.equal(rows[0].remainingClicks, 300);
+});
+
+test("이전 배치 보관 이후 새 투약은 현재 배치에서 정상 차감한다", () => {
+  const rows = buildReconBatchRows([
+    { id: 2, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 3000 },
+  ], [
+    { id: 11, drug: RETA, dose: 25, time: 2000 },
+    { id: 12, drug: RETA, dose: 5.9, time: 4000 },
+    { id: 13, drug: RETA, dose: 3, time: 6000 },
+  ], [
+    {
+      id: 1, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 1000,
+      actualTotalUnits: 309, goldenDoseUnits: 59, archivedAt: 5000,
+    },
+  ]);
+
+  assert.equal(rows[0].usedMg, 3);
+  assert.equal(rows[0].remainingMg, 27);
+  assert.equal(rows[0].remainingClicks, 270);
+});
+
 test("실측 총량보다 한 번의 투약 기록이 크면 초과분을 다음 랏으로 넘기지 않고 경고한다", () => {
   const rows = buildReconBatchRows([
     { id: 1, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 1000, actualTotalUnits: 280 },
@@ -113,7 +158,7 @@ test("운영 화면과 서비스워커가 조제 재고 보호 모듈을 연결�
   assert.match(index, /import \{ installReconInventoryGuard \} from '\.\/recon_inventory_guard\.js';/);
   assert.match(index, /installReconInventoryGuard\(\{/);
   assert.match(index, /saveData: \(\) => scheduleSave\(\)/);
-  assert.match(serviceWorker, /peptide-app-v28/);
+  assert.match(serviceWorker, /peptide-app-v29/);
   assert.match(serviceWorker, /'\.\/recon_inventory_guard\.js'/);
 });
 
@@ -137,6 +182,7 @@ test("조제 재고 화면에 같은 약물의 현재 배치와 이전 잔량이
         },
         { id: 2, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 3000 },
       ],
+      reconVialsArchive: [],
       records: [],
     },
     configs: { [RETA]: { color: "#123456", halfLifeDays: 4 } },
@@ -171,6 +217,7 @@ test("실측 경계를 넘긴 랏은 화면에서 다음 랏 미차감 경고를
         { id: 1, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 1000, actualTotalUnits: 280 },
         { id: 2, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 3000 },
       ],
+      reconVialsArchive: [],
       records: [
         { id: 11, drug: RETA, dose: 27, time: 2000 },
         { id: 12, drug: RETA, dose: 3, time: 4000 },

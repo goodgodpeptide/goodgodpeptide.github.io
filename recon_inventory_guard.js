@@ -40,13 +40,24 @@ function formatSignedUnits(value) {
 /**
  * 같은 약을 여러 번 조제해도 각 바이알을 독립 배치로 유지한다.
  * 투약 시점에 이미 조제된 배치 중 가장 오래된 잔량부터 선입선출로 차감한다.
- * 따라서 새 바이알을 조제한 뒤에도 이전 잔량이 먼저 소진되고, 남는 투약량만
- * 다음 배치로 넘어간다.
+ * 보관된 배치도 보관 시각까지의 과거 투약 귀속 계산에는 남겨 둔다. 그래야
+ * 소진 배치를 보관한 뒤 그 배치의 마지막 투약이 현재 배치로 다시 붙지 않는다.
+ * 화면에는 활성 배치만 반환하며, 보관 이후 새 투약은 현재 배치에서 차감한다.
  */
-export function buildReconBatchRows(vials = [], records = []) {
+export function buildReconBatchRows(vials = [], records = [], archivedVials = []) {
+  const visibleVials = (Array.isArray(vials) ? vials : []).filter((vial) => vial?.drug);
+  const visibleKeys = new Set(visibleVials.map((vial) => `${vial.drug}\u0000${String(vial.id)}`));
+  const allocationByKey = new Map();
+  for (const vial of [
+    ...(Array.isArray(archivedVials) ? archivedVials : []),
+    ...visibleVials,
+  ]) {
+    if (!vial?.drug) continue;
+    allocationByKey.set(`${vial.drug}\u0000${String(vial.id)}`, vial);
+  }
+
   const groups = new Map();
-  for (const vial of Array.isArray(vials) ? vials : []) {
-    if (!vial || !vial.drug) continue;
+  for (const vial of allocationByKey.values()) {
     if (!groups.has(vial.drug)) groups.set(vial.drug, []);
     groups.get(vial.drug).push(vial);
   }
@@ -72,6 +83,9 @@ export function buildReconBatchRows(vials = [], records = []) {
         vial,
         index,
         startAt: numberOrZero(vial.reconDate),
+        endAt: visibleKeys.has(`${vial.drug}\u0000${String(vial.id)}`)
+          ? Number.POSITIVE_INFINITY
+          : numberOrZero(vial.archivedAt) || Number.POSITIVE_INFINITY,
         vialMg,
         doseMg,
         waterMl,
@@ -97,6 +111,7 @@ export function buildReconBatchRows(vials = [], records = []) {
       if (!unallocatedMg) continue;
       for (const state of states) {
         if (state.startAt > recordAt) break;
+        if (recordAt > state.endAt) continue;
         if (state.remainingMg <= 0) continue;
         const usedNow = Math.min(state.remainingMg, unallocatedMg);
         state.usedMg += usedNow;
@@ -113,23 +128,29 @@ export function buildReconBatchRows(vials = [], records = []) {
       }
     }
 
-    states.forEach((state) => {
+    const visibleStates = states.filter((state) => (
+      visibleKeys.has(`${state.vial.drug}\u0000${String(state.vial.id)}`)
+    ));
+
+    visibleStates.forEach((state, visibleIndex) => {
       const {
-        vial, index, vialMg, doseMg, usedMg, remainingMg, waterMl,
+        vial, vialMg, doseMg, usedMg, remainingMg, waterMl,
         theoreticalTotalUnits, actualTotalUnits, isUnitMeasured, capacityMg, overdrawMg,
       } = state;
       const totalInjections = doseMg > 0 ? Math.floor(capacityMg / doseMg) : 0;
       const remainingInjections = doseMg > 0 ? Math.floor(remainingMg / doseMg) : 0;
       const mgPerClick = waterMl > 0 ? (vialMg / waterMl) * 0.01 : 0;
-      const earlierBalance = states.slice(0, index).some((candidate) => candidate.remainingMg > 0);
+      const earlierBalance = visibleStates
+        .slice(0, visibleIndex)
+        .some((candidate) => candidate.remainingMg > 0);
       const isNextToUse = remainingMg > 0 && !earlierBalance;
 
       rows.push({
         ...vial,
         drug,
-        batchIndex: index + 1,
-        batchCount: ordered.length,
-        isCurrent: index === ordered.length - 1,
+        batchIndex: visibleIndex + 1,
+        batchCount: visibleStates.length,
+        isCurrent: visibleIndex === visibleStates.length - 1,
         usedMg,
         remainingMg,
         hasEarlierBalance: earlierBalance,
@@ -334,7 +355,7 @@ export function renderReconInventory({
   const container = doc.getElementById("recon-section");
   if (!container) return { rendered: false, reason: "container_missing" };
   const isLight = doc.body?.classList?.contains?.("light-mode") || false;
-  const rows = buildReconBatchRows(data.reconVials, data.records);
+  const rows = buildReconBatchRows(data.reconVials, data.records, data.reconVialsArchive);
   const rowBg = isLight ? "#f8fafc" : "#0d0d1a";
   const border = isLight ? "#e2e8f0" : "#1f2937";
   const valueColor = isLight ? "#111827" : "#e2e8f0";
