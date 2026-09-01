@@ -58,6 +58,46 @@ test("한 번의 투약량이 이전 잔량보다 크면 남는 양만 현재 �
   assert.equal(newest.remainingMg, 8);
 });
 
+test("실제 총유닛 309를 기록하면 59유닛 골든도즈가 새 랏을 차감하지 않는다", () => {
+  const rows = buildReconBatchRows([
+    {
+      id: 1, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 1000,
+      actualTotalUnits: 309, goldenDoseUnits: 59,
+    },
+    { id: 2, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 3000 },
+  ], [
+    { id: 11, drug: RETA, dose: 25, time: 2000 },
+    { id: 12, drug: RETA, dose: 5.9, time: 4000 },
+  ]);
+
+  const previous = rows.find((row) => row.id === 1);
+  const newest = rows.find((row) => row.id === 2);
+  assert.equal(previous.isUnitMeasured, true);
+  assert.ok(Math.abs(previous.capacityMg - 30.9) < 1e-9);
+  assert.ok(Math.abs(previous.remainingMg) < 1e-9);
+  assert.equal(previous.goldenDoseUnits, 59);
+  assert.equal(newest.usedMg, 0);
+  assert.equal(newest.remainingMg, 30);
+});
+
+test("실측 총량보다 한 번의 투약 기록이 크면 초과분을 다음 랏으로 넘기지 않고 경고한다", () => {
+  const rows = buildReconBatchRows([
+    { id: 1, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 1000, actualTotalUnits: 280 },
+    { id: 2, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 3000 },
+  ], [
+    { id: 11, drug: RETA, dose: 27, time: 2000 },
+    { id: 12, drug: RETA, dose: 3, time: 4000 },
+  ]);
+
+  const previous = rows.find((row) => row.id === 1);
+  const newest = rows.find((row) => row.id === 2);
+  assert.equal(previous.capacityMg, 28);
+  assert.equal(previous.remainingMg, 0);
+  assert.equal(previous.overdrawMg, 2);
+  assert.equal(newest.usedMg, 0);
+  assert.equal(newest.remainingMg, 30);
+});
+
 test("수정 모달에서 남은 ID를 새 조제 전에 항상 초기화한다", () => {
   const fakeWindow = { _editingReconId: 123, _reconGuardEditingId: 123 };
   clearStaleReconEditState(fakeWindow);
@@ -72,7 +112,8 @@ test("운영 화면과 서비스워커가 조제 재고 보호 모듈을 연결�
   ]);
   assert.match(index, /import \{ installReconInventoryGuard \} from '\.\/recon_inventory_guard\.js';/);
   assert.match(index, /installReconInventoryGuard\(\{/);
-  assert.match(serviceWorker, /peptide-app-v27/);
+  assert.match(index, /saveData: \(\) => scheduleSave\(\)/);
+  assert.match(serviceWorker, /peptide-app-v28/);
   assert.match(serviceWorker, /'\.\/recon_inventory_guard\.js'/);
 });
 
@@ -90,7 +131,10 @@ test("조제 재고 화면에 같은 약물의 현재 배치와 이전 잔량이
     targetWindow: {},
     data: {
       reconVials: [
-        { id: 1, drug: RETA, vialMg: 20, waterMl: 2, doseMg: 2, reconDate: 1000 },
+        {
+          id: 1, drug: RETA, vialMg: 20, waterMl: 2, doseMg: 2, reconDate: 1000,
+          actualTotalUnits: 209, goldenDoseUnits: 59, unitAuditNote: "조제 후 실측",
+        },
         { id: 2, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 3000 },
       ],
       records: [],
@@ -105,7 +149,38 @@ test("조제 재고 화면에 같은 약물의 현재 배치와 이전 잔량이
   assert.match(container.innerHTML, /이전 잔량/);
   assert.ok(container.innerHTML.indexOf("이전 잔량") < container.innerHTML.indexOf("현재 조제"));
   assert.match(container.innerHTML, /투약 시 이 잔량부터 차감/);
+  assert.match(container.innerHTML, /실측 총 209유닛/);
+  assert.match(container.innerHTML, /이론 200유닛/);
+  assert.match(container.innerHTML, /조제 차이 \+9유닛/);
+  assert.match(container.innerHTML, /골든도즈 59유닛/);
+  assert.match(container.innerHTML, /조제 후 실측/);
   assert.doesNotMatch(container.innerHTML, /onclick="openReconModal/);
+});
+
+test("실측 경계를 넘긴 랏은 화면에서 다음 랏 미차감 경고를 보여 준다", () => {
+  const container = { innerHTML: "", querySelectorAll: () => [] };
+  const fakeDocument = {
+    body: { classList: { contains: () => false } },
+    getElementById: (id) => id === "recon-section" ? container : null,
+  };
+  renderReconInventory({
+    document: fakeDocument,
+    targetWindow: {},
+    data: {
+      reconVials: [
+        { id: 1, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 1000, actualTotalUnits: 280 },
+        { id: 2, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 3000 },
+      ],
+      records: [
+        { id: 11, drug: RETA, dose: 27, time: 2000 },
+        { id: 12, drug: RETA, dose: 3, time: 4000 },
+      ],
+    },
+    configs: { [RETA]: { color: "#123456", halfLifeDays: 4 } },
+    formatDate: (value) => String(value),
+  });
+  assert.match(container.innerHTML, /투여 기록이 실측 총량보다 2\.00mg 큽니다/);
+  assert.match(container.innerHTML, /다음 랏에서는 차감하지 않았습니다/);
 });
 
 test("새 조제 버튼은 남아 있던 수정 대상을 지운 뒤 추가 모달을 연다", () => {

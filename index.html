@@ -72,6 +72,7 @@ installReconInventoryGuard({
   formatDate: kstDateStr,
   archiveHtml: (isLight) => window._reconArchiveHtml?.(isLight) || '',
   now: () => Date.now(),
+  saveData: () => scheduleSave(),
 });
 </script>
 
