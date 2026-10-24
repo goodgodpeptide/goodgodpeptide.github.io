@@ -1,5 +1,5 @@
 import { compareDoseTiming } from './schedule_comparison_model.js';
-import { buildModelInputReview } from './model_input_review.js';
+import { buildModelInputReview } from './model_input_review.js?v=32';
 
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
@@ -25,22 +25,29 @@ export function modelReviewTargets(changedTime, tmaxHours, customTime = null) {
 }
 
 export function buildModelReviewText({ drug, config, doseMg, plannedTime, changedTime,
-  intervalDays, nextMode, review, createdAt }) {
+  intervalDays, nextMode, review, createdAt, followNow = false }) {
   const lines = [
     '진료 검토용 가상 모델 입력 비교표',
     MODEL_INPUT_NOTICE,
-    `작성시각(한국시간): ${formatKstInput(createdAt)}`,
+    `작성시각(한국시간): ${formatKstTimestamp(createdAt)}`,
+    `계산 모드: ${followNow ? '현재 시각 기준 자동 계산' : '지정 변경시각 기준'}`,
     `약물: ${drug}`,
     '이 표는 선택한 약의 계산과 입력기록만 포함함. 다른 병용 약은 각각 별도 표로 검토해야 함.',
     `평소 모델 입력: ${doseMg} mg / 주기 ${intervalDays}일`,
-    `원 예정시각: ${formatKstInput(plannedTime)} / 변경시각: ${formatKstInput(changedTime)}`,
+    `원 예정시각: ${formatKstTimestamp(plannedTime)} / 변경시각: ${formatKstTimestamp(changedTime)}`,
     `후속 일정 가정: ${nextMode === 'original' ? '원래 다음 예정일로 복귀' : '변경시각부터 같은 주기로 이동'}`,
     `모델 설정: 반감기 ${config.halfLifeDays}일 / 단일입력 피크시각 ${config.tmaxHours}시간`,
     '모델 단위: 단일입력 피크를 입력 mg에 맞춰 정규화한 값. 실측 ng/mL 또는 실제 체내 잔류 mg가 아님.',
     '개인별 오차범위와 병용 상호작용은 계산하지 않음.',
     ...review.assumptions,
-    '', '목표시점별 결과 (각 행은 별개의 한 시점 일치 조건):',
   ];
+  const current = review.currentSnapshot;
+  if (current?.status === 'model_snapshot') {
+    lines.push('', `현재 모델값 계산시각: ${formatKstTimestamp(current.time)}`,
+      `원 일정 기준 ≈${reviewNumber(current.scheduledModelValue)} / 등록기록 기준 ≈${reviewNumber(current.recordedModelValue)} / 차이 ≈${signedReviewNumber(current.differenceModelValue)}`,
+      `입력 직후 일치 상태: ${current.instantMatchStatus}. 실제 농도가 아닌 모델 내 상태임.`);
+  } else if (current) lines.push('', `현재 모델값 산출하지 않음: ${current.reason}`);
+  lines.push('', '목표시점별 결과 (각 행은 별개의 한 시점 일치 조건):');
   for (const row of review.rows) {
     const time = Number.isFinite(row.time) && row.time > 0 && row.time < 8.64e15 ? formatKstInput(row.time) : '유효하지 않은 시각';
     if (row.status !== 'review_value') { lines.push(`${time}: 산출하지 않음 — ${row.reason}`); continue; }
@@ -61,6 +68,10 @@ const mg = (value) => Number.isFinite(value) ? value.toFixed(2) : '—';
 
 export function formatKstInput(time) {
   return new Date(time + KST).toISOString().slice(0, 16);
+}
+
+export function formatKstTimestamp(time) {
+  return new Date(time + KST).toISOString().slice(0, 19).replace('T', ' ');
 }
 
 export function parseKstInput(value) {
@@ -152,6 +163,7 @@ function drawComparison(canvas, result, doc, targetWindow) {
 export function installScheduleComparison({ document: doc = document, targetWindow = window,
   configs, getRecords, getDoseCycle = () => 7, contribution, now = () => Date.now() }) {
   const anchor = doc.getElementById('remaining-cards');
+  const panel = doc.getElementById('panel-peptide');
   if (!anchor || doc.getElementById('schedule-comparison')) return { installed: false };
   const drugs = Object.keys(configs || {}).filter((name) => /Tirzepatide|Retatrutide/.test(name))
     .sort((a) => a.includes('Tirzepatide') ? -1 : 1);
@@ -172,6 +184,7 @@ export function installScheduleComparison({ document: doc = document, targetWind
     #schedule-comparison th:first-child, #schedule-comparison td:first-child { text-align:left; }
     #schedule-comparison .sc-notice { background:#78350f22; color:#fcd34d; padding:9px; border-radius:8px; font-size:11px; line-height:1.65; }
     #schedule-comparison a { color:#93c5fd; }
+    #schedule-comparison .sc-current { margin:9px 0; padding:9px; border:1px solid #475569; border-radius:8px; line-height:1.7; font-size:12px; white-space:pre-line; }
     body.light-mode #schedule-comparison { color:#0f172a; }
     body.light-mode #schedule-comparison .sc-muted, body.light-mode #schedule-comparison label { color:#475569; }
     body.light-mode #schedule-comparison .sc-notice { color:#92400e; background:#fffbeb; }
@@ -192,7 +205,8 @@ export function installScheduleComparison({ document: doc = document, targetWind
       <label class="sc-wide">이번 변경 시각 (한국시간)<input id="sc-changed" class="input-field" type="datetime-local" /></label>
       <label class="sc-wide">다음 회차의 비교 가정<select id="sc-next" class="input-field"><option value="original">원래 다음 예정일로 복귀</option><option value="shifted">변경 시각부터 같은 주기로 이동</option></select></label>
     </div>
-    <div style="display:flex;gap:7px;margin-bottom:9px"><button id="sc-now" class="qbtn" type="button">변경 시각을 지금으로</button><button id="sc-reload" class="qbtn" type="button">최근 기록 다시 읽기</button></div>
+    <div style="display:flex;gap:7px;margin-bottom:9px"><button id="sc-now" class="qbtn" type="button">지금 기준으로 다시 계산</button><button id="sc-reload" class="qbtn" type="button">최근 기록 다시 읽기</button></div>
+    <div id="sc-clock" class="sc-muted" role="status"></div>
     <div id="sc-origin" class="sc-muted"></div>
     <div id="sc-error" role="status" class="sc-notice" hidden></div>
     <div id="sc-result" hidden>
@@ -204,10 +218,12 @@ export function installScheduleComparison({ document: doc = document, targetWind
       <div id="sc-warnings" class="sc-muted" style="margin:8px 0"></div>
       <div style="border-top:1px solid #475569;padding-top:12px;margin-top:12px">
         <h4 style="font-size:13px;margin-bottom:6px">의사 검토용 수학 역산표</h4>
+        <div id="sc-current-values" class="sc-current"></div>
+        <div id="sc-instant-status" class="sc-muted"></div>
         <div id="sc-review-notice" class="sc-muted">${MODEL_INPUT_NOTICE}<br>모델값은 단일 입력의 피크를 입력 mg에 맞춰 정규화한 비교값이며, 실제 체내 잔류 mg가 아닙니다. 이 앱은 임상 2구획 모델을 구현하지 않으며 개인별 변이와 병용 상호작용을 계산하지 않습니다.<br>위 그래프는 평소 입력량을 유지한 일정 비교입니다. 아래 표는 이번 변경 입력 한 번만 미지수로 두고, 기존 기록과 이후 회차는 위 입력과 일정 가정으로 고정합니다. 목표시점별로 결과가 달라질 수 있습니다.</div>
         <label style="margin:8px 0">추가로 맞출 목표 시각 (한국시간, 선택)<input id="sc-review-target" class="input-field" type="datetime-local" /></label>
         <div class="sc-muted">기본 비교 시점은 변경 시각에 단일 입력만 있다고 가정한 피크 시각과 변경 후 24시간·72시간입니다. 겹치는 시각은 48시간으로 보완합니다. 실제 이력과 이후 입력을 합친 전체 곡선의 피크를 뜻하지 않습니다.</div>
-        <button id="sc-review-calculate" class="qbtn" type="button" style="margin-top:9px;width:100%">목표시점별 가상 입력값 계산</button>
+        <button id="sc-review-calculate" class="qbtn" type="button" style="margin-top:9px;width:100%">목표시점별 가상 입력값 다시 계산</button>
         <div id="sc-review-error" role="status" class="sc-notice" hidden></div>
         <div id="sc-review-result" hidden aria-describedby="sc-review-notice">
           <table class="sc-review-table" aria-label="목표시점별 가상 모델 입력값"><thead><tr><th>목표시점</th><th>원 일정<br>모델값</th><th>가상 입력<br>(mg)</th><th>평소 입력과<br>차이 (mg)</th></tr></thead><tbody id="sc-review-table"></tbody></table>
@@ -220,25 +236,34 @@ export function installScheduleComparison({ document: doc = document, targetWind
     <div class="sc-notice" style="margin-top:10px">이 값은 기존 그래프와 같은 흡수·반감기 모델의 추정값입니다. 실제 혈중농도·약효·안전한 다음 용량이 아닙니다. 역산표는 의사가 원자료와 환자 상태를 함께 검토하기 위한 수학적 참고표입니다.</div>
     <details style="margin-top:8px;font-size:11px;line-height:1.7"><summary>공식 안내와 계산 범위</summary><div class="sc-muted" style="margin-top:6px"><a href="${FDA_URL}" target="_blank" rel="noopener noreferrer">마운자로 FDA 라벨</a>: 누락 후 96시간 이내 / 초과 시 건너뛰기, 투여 간격 최소 72시간 안내가 있습니다. 이는 레타와 병용하는 보정량이나 안전간격을 뜻하지 않습니다.<br><a href="${RETA_URL}" target="_blank" rel="noopener noreferrer">Lilly 레타트루타이드 안내</a>: 미승인 연구약으로 누락·병용 용량 규칙이 확립되지 않았습니다.<br>기존 실제기록 + 각 일정의 가상기록을 같은 모델로 비교합니다. 기록·재고·알림 일정은 저장하거나 변경하지 않습니다. 투약시각 직후에는 흡수 전이므로 그래프가 즉시 입력량만큼 뛰지 않을 수 있습니다.</div></details>
   `;
-  anchor.insertAdjacentElement('afterend', root);
+  if (panel) panel.appendChild(root);
+  else anchor.insertAdjacentElement('afterend', root);
   const byId = (id) => doc.getElementById(`sc-${id}`);
-  const fields = Object.fromEntries(['drug', 'dose', 'cycle', 'planned', 'changed', 'next', 'origin', 'error', 'result', 'summary', 'chart', 'table', 'warnings', 'review-target', 'review-error', 'review-result', 'review-table'].map((id) => [id, byId(id)]));
+  const fields = Object.fromEntries(['drug', 'dose', 'cycle', 'planned', 'changed', 'next', 'clock', 'current-values', 'instant-status', 'origin', 'error', 'result', 'summary', 'chart', 'table', 'warnings', 'review-target', 'review-error', 'review-result', 'review-table'].map((id) => [id, byId(id)]));
   const states = new Map();
   let result = null;
   let reviewSnapshot = null;
+  let lastParameters = null;
+  let followNow = true;
   let dirty = false;
-  const store = () => states.set(fields.drug.value, Object.fromEntries(['dose', 'cycle', 'planned', 'changed', 'next'].map((key) => [key, fields[key].value])));
+  const store = () => states.set(fields.drug.value, { ...Object.fromEntries(['dose', 'cycle', 'planned', 'changed', 'next'].map((key) => [key, fields[key].value])), followNow });
   const run = () => {
     reviewSnapshot = null;
     fields['review-result'].hidden = true;
     fields['review-error'].hidden = true;
+    lastParameters = null;
+    const referenceNow = now();
+    if (followNow) fields.changed.value = formatKstInput(referenceNow);
+    fields.clock.textContent = `${followNow ? '현재 시각 기준 · 1분마다 자동 갱신' : '지정 변경시각 기준 · 시각 고정'} | 계산 ${formatKstTimestamp(referenceNow)} (한국시간)`;
     const drug = fields.drug.value;
     try {
       const records = getRecords() || [];
       const config = configs[drug];
-      result = compareDoseTiming({ records, drug, config, doseMg: fields.dose.value,
-        plannedTime: parseKstInput(fields.planned.value), changedTime: parseKstInput(fields.changed.value),
-        intervalDays: fields.cycle.value, nextMode: fields.next.value, contribution, now: now() });
+      const params = { records, drug, config, doseMg: Number(fields.dose.value),
+        plannedTime: parseKstInput(fields.planned.value), changedTime: followNow ? referenceNow : parseKstInput(fields.changed.value),
+        intervalDays: Number(fields.cycle.value), nextMode: fields.next.value, contribution, now: referenceNow };
+      result = compareDoseTiming(params);
+      lastParameters = params;
       fields.error.hidden = true; fields.result.hidden = false;
       const shift = Math.abs(result.delayHours) < 1 / 60 ? '원 일정과 같은 시각'
         : `${duration(Math.abs(result.delayHours))} ${result.delayHours > 0 ? '늦춘' : '앞당긴'} 비교`;
@@ -255,6 +280,7 @@ export function installScheduleComparison({ document: doc = document, targetWind
       }
       fields.warnings.textContent = `${result.historyCount}건의 기존 기록을 공통 적용했습니다. ${notices.join(' ')}`;
       drawComparison(fields.chart, result, doc, targetWindow);
+      calculateReview();
     } catch (error) {
       result = null; fields.result.hidden = true; fields.error.hidden = false;
       fields.error.textContent = `비교하려면 입력을 확인해주세요. ${error.message}`;
@@ -266,27 +292,38 @@ export function installScheduleComparison({ document: doc = document, targetWind
     const value = !force && states.get(drug);
     const defaults = defaultScheduleFields(getRecords(), drug, getDoseCycle(drug), now());
     const state = value || { dose: defaults.dose, cycle: defaults.interval, planned: defaults.planned, changed: defaults.changed, next: 'original' };
+    followNow = value ? value.followNow !== false : true;
     for (const key of ['dose', 'cycle', 'planned', 'changed', 'next']) fields[key].value = String(state[key]);
     fields.origin.textContent = `기준: ${drugs.map((name) => `${configs[name].short || name} ${name.includes('Tirzepatide') ? '목' : '일'}요일`).join(' · ')}. ${defaults.planned ? '예정일은 마지막 기록 뒤 기준 요일로 계산하며 직접 바꿀 수 있습니다.' : '기존 투약기록이 없어 용량과 예정 시각을 직접 입력해야 합니다.'}`;
     dirty = Boolean(value); run();
   };
   fields.drug.addEventListener('change', () => load());
-  for (const key of ['dose', 'cycle', 'planned', 'changed', 'next']) fields[key].addEventListener('input', () => { dirty = true; store(); run(); });
-  byId('now').addEventListener('click', () => { fields.changed.value = formatKstInput(now()); dirty = true; store(); run(); });
+  for (const key of ['dose', 'cycle', 'planned', 'changed', 'next']) fields[key].addEventListener('input', () => {
+    if (key === 'changed') followNow = false;
+    dirty = true; store(); run();
+  });
+  byId('now').addEventListener('click', () => { followNow = true; dirty = true; run(); store(); });
   byId('reload').addEventListener('click', () => { states.delete(fields.drug.value); dirty = false; load(true); });
   const calculateReview = () => {
     reviewSnapshot = null;
     fields['review-result'].hidden = true;
     try {
-      const drug = fields.drug.value;
-      const changedTime = parseKstInput(fields.changed.value);
+      if (!lastParameters) return;
+      const { drug, changedTime } = lastParameters;
       const customTime = fields['review-target'].value ? parseKstInput(fields['review-target'].value) : null;
       if (customTime !== null && !Number.isFinite(customTime)) throw new RangeError('추가 목표시각을 올바르게 입력해주세요.');
-      const params = { records: getRecords() || [], drug, config: configs[drug], doseMg: Number(fields.dose.value),
-        plannedTime: parseKstInput(fields.planned.value), changedTime, intervalDays: Number(fields.cycle.value),
-        nextMode: fields.next.value, contribution, now: now(),
+      const params = { ...lastParameters,
         targetTimes: modelReviewTargets(changedTime, configs[drug].tmaxHours, customTime) };
       const review = buildModelInputReview(params);
+      const current = review.currentSnapshot;
+      fields['current-values'].textContent = current.status === 'model_snapshot'
+        ? `현재 계산시각 ${formatKstTimestamp(current.time)} (한국시간)\n원 일정 모델값 ≈${reviewNumber(current.scheduledModelValue)}\n등록기록 모델값 ≈${reviewNumber(current.recordedModelValue)}\n원 일정 − 등록기록 ≈${signedReviewNumber(current.differenceModelValue)}`
+        : `현재 모델값 산출하지 않음: ${current.reason}`;
+      fields['instant-status'].textContent = current.instantMatchStatus === 'zero_response'
+        ? '이 흡수 모델은 입력 직후의 기여가 0이라 지금 즉시 원 일정 값에 맞추는 입력량을 역산할 수 없습니다. 아래는 지금 변경하는 가정에서 표시된 미래 시점의 모델값을 맞춘 결과입니다.'
+        : current.instantMatchStatus === 'already_equal'
+          ? '현재 두 모델값은 이미 같습니다. 아래는 표시된 미래 시점 각각의 일치 조건입니다.'
+          : '아래는 표시된 미래 시점 각각의 모델 일치 조건이며 현재 농도나 투약 지시가 아닙니다.';
       fields['review-table'].innerHTML = review.rows.map((row) => {
         const validTime = Number.isFinite(row.time) && row.time > 0 && row.time < 8.64e15;
         const time = validTime ? `${formatTime(row.time)}<br><span class="sc-muted">변경 후 ${duration((row.time - changedTime) / HOUR)}</span>` : '유효하지 않은 시각';
@@ -295,32 +332,42 @@ export function installScheduleComparison({ document: doc = document, targetWind
       }).join('');
       fields['review-error'].hidden = true;
       fields['review-result'].hidden = false;
-      reviewSnapshot = { ...params, review, createdAt: now() };
+      reviewSnapshot = { ...params, review, createdAt: params.now, followNow };
     } catch (error) {
       fields['review-error'].textContent = `역산표를 만들 수 없습니다. ${error.message}`;
       fields['review-error'].hidden = false;
     }
   };
-  byId('review-calculate').addEventListener('click', calculateReview);
+  byId('review-calculate').addEventListener('click', run);
   fields['review-target'].addEventListener('input', () => {
-    reviewSnapshot = null; fields['review-result'].hidden = true; fields['review-error'].hidden = true;
+    dirty = true; store(); run();
   });
   byId('review-download').addEventListener('click', () => {
     if (!reviewSnapshot) return;
     const blob = new targetWindow.Blob(['\uFEFF', buildModelReviewText(reviewSnapshot)], { type: 'text/plain;charset=utf-8' });
     const url = targetWindow.URL.createObjectURL(blob);
     const link = doc.createElement('a');
-    link.href = url; link.download = `모델검토표_${formatKstInput(reviewSnapshot.createdAt).replace(/[-:T]/g, '')}.txt`;
+    link.href = url; link.download = `모델검토표_${formatKstTimestamp(reviewSnapshot.createdAt).replace(/[-: ]/g, '')}.txt`;
     link.click();
     targetWindow.setTimeout(() => targetWindow.URL.revokeObjectURL(url), 1000);
   });
   const Observer = doc.defaultView?.MutationObserver || targetWindow.MutationObserver;
   const observer = Observer ? new Observer(() => { if (!dirty) load(true); else run(); }) : null;
   observer?.observe(anchor, { childList: true });
-  targetWindow.addEventListener('resize', () => { if (result) drawComparison(fields.chart, result, doc, targetWindow); });
+  const resizeGraph = () => { if (result) drawComparison(fields.chart, result, doc, targetWindow); };
+  targetWindow.addEventListener('resize', resizeGraph);
   const themeObserver = Observer ? new Observer(() => { if (result) drawComparison(fields.chart, result, doc, targetWindow); }) : null;
   themeObserver?.observe(doc.body, { attributes: true, attributeFilter: ['class'] });
-  doc.documentElement.dataset.scheduleComparison = 'model-input-review-v2';
+  const refreshCurrent = () => { if (followNow && !doc.hidden) run(); };
+  const timer = typeof targetWindow.setInterval === 'function' ? targetWindow.setInterval(refreshCurrent, 60_000) : null;
+  doc.addEventListener?.('visibilitychange', refreshCurrent);
+  doc.documentElement.dataset.scheduleComparison = 'current-model-input-review-v3';
   load();
-  return { installed: true, run, calculateReview, reload: () => load(true), observer, themeObserver };
+  return { installed: true, run, calculateReview: run, reload: () => load(true), observer, themeObserver,
+    destroy: () => {
+      if (timer !== null) targetWindow.clearInterval?.(timer);
+      doc.removeEventListener?.('visibilitychange', refreshCurrent);
+      targetWindow.removeEventListener?.('resize', resizeGraph);
+      observer?.disconnect?.(); themeObserver?.disconnect?.();
+    } };
 }

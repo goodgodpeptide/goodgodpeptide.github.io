@@ -42,13 +42,16 @@ test("실제 계산 버튼은 목표별 역산값을 렌더하고 실제 모델�
   const review=buildModelInputReview({records:fx.records,drug:A,config:{halfLifeDays:5,tmaxHours:8},doseMg:5,plannedTime:PLANNED,changedTime:PLANNED+2*D,intervalDays:7,nextMode:"original",now:NOW,targetTimes:modelReviewTargets(PLANNED+2*D,8),contribution:pk});
   assert.ok(review.rows.every(r=>r.status==="review_value"&&Math.abs(r.equalityResidual)<1e-8));
   assert.ok(review.rows.some(r=>Math.abs(r.deltaFromReferenceMg)>1e-6));assert.deepEqual(fx.records,fx.before);
+  assert.match(fx.doc.getElementById("sc-current-values").textContent,/현재 계산시각/);
+  assert.match(fx.doc.getElementById("sc-current-values").textContent,/원 일정 모델값/);
 });
 
-test("입력 변경과 약 전환은 오래된 역산표와 다운로드를 폐기한다",()=>{
+test("입력 변경은 이전 snapshot을 새 계산으로 교체하고 약 전환은 결과를 초기화한다",async()=>{
   const fx=setup();setValid(fx);fx.doc.getElementById("sc-review-calculate").click();
   const dose=fx.doc.getElementById("sc-dose");dose.value="5.5";dose.dispatch("input");
-  assert.equal(fx.doc.getElementById("sc-review-result").hidden,true);fx.doc.getElementById("sc-review-download").click();assert.equal(fx.blobs.length,0);
-  fx.doc.getElementById("sc-review-calculate").click();const drug=fx.doc.getElementById("sc-drug");drug.value=B;drug.dispatch("change");
+  assert.equal(fx.doc.getElementById("sc-review-result").hidden,false);
+  fx.doc.getElementById("sc-review-download").click();assert.match(await fx.blobs[0].text(),/평소 모델 입력: 5.5 mg/);
+  const drug=fx.doc.getElementById("sc-drug");drug.value=B;drug.dispatch("change");
   assert.equal(fx.doc.getElementById("sc-review-result").hidden,true);assert.equal(fx.doc.getElementById("sc-review-target").value,"");
 });
 
@@ -73,6 +76,6 @@ test("검토 txt는 전 파라미터·기록·행·가정·출처와 숫자 차�
 
 test("저장 버튼은 메모리 Blob을 만들고 원자료를 바꾸지 않는다",async()=>{
   const fx=setup();setValid(fx);fx.doc.getElementById("sc-review-calculate").click();fx.doc.getElementById("sc-review-download").click();
-  assert.equal(fx.blobs.length,1);assert.equal(fx.links.length,1);assert.equal(fx.links[0].clicked,true);assert.match(fx.links[0].download,/모델검토표_203001011200\.txt/);
+  assert.equal(fx.blobs.length,1);assert.equal(fx.links.length,1);assert.equal(fx.links[0].clicked,true);assert.match(fx.links[0].download,/모델검토표_20300101120000\.txt/);
   const text=await fx.blobs[0].text();assert.match(text,/진료 검토용 가상 모델 입력 비교표/);assert.deepEqual(fx.records,fx.before);
 });

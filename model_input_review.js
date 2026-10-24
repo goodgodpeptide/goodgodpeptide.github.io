@@ -45,6 +45,48 @@ export function buildModelInputReview(options) {
     (event) => event.time !== comparison.changedTime,
   );
 
+  const buildCurrentSnapshot = () => {
+    const snapshot = {
+      time: now,
+      status: "model_snapshot",
+      scheduledModelValue: null,
+      recordedModelValue: null,
+      differenceModelValue: null,
+      instantUnitResponse: null,
+      instantMatchStatus: "unavailable",
+      reason: "현재 등록기록과 원 일정으로 계산한 모델값이며 실측 농도가 아닙니다.",
+    };
+    if (now > rangeEnd) {
+      return { ...snapshot, status: "outside_model_range",
+        reason: "현재시각이 비교 모델 범위 밖이어서 예정 투약 누락을 추정하지 않습니다." };
+    }
+    try {
+      const scheduled = sumAt([...historyEvents, ...comparison.baselineEvents], now, config, contribution);
+      const recorded = sumAt(historyEvents, now, config, contribution);
+      const gap = scheduled - recorded;
+      const response0 = contribution(0, 0, config, false);
+      const response1 = contribution(1, 0, config, false);
+      const response2 = contribution(2, 0, config, false);
+      if (![scheduled, recorded, gap, response0, response1, response2].every(Number.isFinite)) {
+        return { ...snapshot, status: "nonfinite_response",
+          reason: "현재시점 PK 모델이 유한한 값을 반환하지 않았습니다." };
+      }
+      const unit = response1 - response0;
+      let instantMatchStatus;
+      if (close(gap, 0, Math.abs(scheduled))) instantMatchStatus = "already_equal";
+      else if (!close(response0, 0) || !close(response2 - response0, 2 * unit, 2 * Math.abs(unit))) {
+        instantMatchStatus = "nonlinear_response";
+      } else if (unit === 0) instantMatchStatus = "zero_response";
+      else if (unit > 0) instantMatchStatus = "model_input_possible";
+      else instantMatchStatus = "nonpositive_response";
+      return { ...snapshot, scheduledModelValue: scheduled, recordedModelValue: recorded,
+        differenceModelValue: gap, instantUnitResponse: unit, instantMatchStatus };
+    } catch (error) {
+      return { ...snapshot, status: "response_error",
+        reason: `현재시점 PK 모델 오류: ${error?.name || "Error"}` };
+    }
+  };
+
   const rows = options.targetTimes.map((rawTime) => {
     const time = Number(rawTime);
     const base = {
@@ -114,6 +156,7 @@ export function buildModelInputReview(options) {
     comparison,
     rows,
     history,
+    currentSnapshot: buildCurrentSnapshot(),
     assumptions: [
       "같은 약의 첫 변경 이벤트 한 건만 미지수이며, 실제 기록과 이후 가상 투약은 원 입력값으로 고정합니다.",
       "각 결과는 표시된 목표시점 한 곳에서만 성립하며 전체 모델 곡선의 동일성을 뜻하지 않습니다.",

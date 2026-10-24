@@ -109,3 +109,50 @@ test("운영 index의 실제 PK 함수를 주입해 순방향 잔차를 검증�
   assert.ok(Number.isFinite(result.rows[0].modelInputMg));
   assert.ok(Math.abs(result.rows[0].equalityResidual) < 1e-8);
 });
+
+test("현재 스냅샷은 원 일정 모델값과 등록기록 모델값의 차이를 계산한다", () => {
+  const now = planned + 12 * H;
+  const records = [{ drug: "가상약A", dose: 3, time: planned - 7 * D }];
+  const before = JSON.stringify(records);
+  const result = buildModelInputReview(args({ records, now, targetTimes: [now + H] }));
+  const expectedRecorded = linear(3, 7 * 24 + 12, config, false);
+  const expectedScheduled = expectedRecorded + linear(5, 12, config, false);
+  assert.ok(Math.abs(result.currentSnapshot.recordedModelValue - expectedRecorded) < 1e-10);
+  assert.ok(Math.abs(result.currentSnapshot.scheduledModelValue - expectedScheduled) < 1e-10);
+  assert.ok(Math.abs(result.currentSnapshot.differenceModelValue - linear(5, 12, config, false)) < 1e-10);
+  assert.equal(JSON.stringify(records), before);
+  assert.match(result.currentSnapshot.reason, /실측 농도가 아닙니다/);
+});
+
+test("운영 PK는 첫 투입 순간 반응 0이며 현재 차이가 없으면 이미 일치다", async () => {
+  const pk = await productionPk();
+  const result = buildModelInputReview(args({ now: planned, targetTimes: [planned + 8 * H], contribution: pk }));
+  assert.equal(result.currentSnapshot.instantUnitResponse, 0);
+  assert.equal(result.currentSnapshot.differenceModelValue, 0);
+  assert.equal(result.currentSnapshot.instantMatchStatus, "already_equal");
+});
+
+test("운영 PK의 현재 차이가 0이 아니면 즉시 입력으로 일치시킬 수 없다", async () => {
+  const pk = await productionPk();
+  const result = buildModelInputReview(args({ now: planned + 8 * H,
+    targetTimes: [planned + 9 * H], contribution: pk }));
+  assert.ok(result.currentSnapshot.differenceModelValue > 0);
+  assert.equal(result.currentSnapshot.instantUnitResponse, 0);
+  assert.equal(result.currentSnapshot.instantMatchStatus, "zero_response");
+  assert.equal(Object.hasOwn(result.currentSnapshot, "modelInputMg"), false);
+});
+
+test("현재시각이 모델 끝 밖이면 값은 null이고 누락을 추정하지 않는다", () => {
+  const now = planned + 20 * D;
+  const result = buildModelInputReview(args({ now, targetTimes: [planned + D] }));
+  assert.equal(result.currentSnapshot.status, "outside_model_range");
+  assert.equal(result.currentSnapshot.scheduledModelValue, null);
+  assert.equal(result.currentSnapshot.recordedModelValue, null);
+  assert.match(result.currentSnapshot.reason, /누락을 추정하지 않습니다/);
+});
+
+test("현재시점 비유한 PK 응답은 값 없이 격리한다", () => {
+  const result = buildModelInputReview(args({ contribution: () => Number.NaN }));
+  assert.equal(result.currentSnapshot.status, "nonfinite_response");
+  assert.equal(result.currentSnapshot.differenceModelValue, null);
+});
