@@ -164,7 +164,7 @@ test("운영 index와 service worker가 비교 UI를 연결한다", async () => 
     readFile(new URL("../index.html", import.meta.url), "utf8"),
     readFile(new URL("../sw.js", import.meta.url), "utf8"),
   ]);
-  assert.match(index, /import \{ installScheduleComparison \} from '\.\/schedule_comparison_ui\.js';/);
+  assert.match(index, /import \{ installScheduleComparison \} from '\.\/schedule_comparison_ui\.js\?v=31';/);
   assert.match(index, /installScheduleComparison\(\{/);
   assert.match(worker, /schedule_comparison_model\.js/);
   assert.match(worker, /schedule_comparison_ui\.js/);

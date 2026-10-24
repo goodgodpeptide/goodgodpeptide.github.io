@@ -1,4 +1,4 @@
-const CACHE_NAME = 'peptide-app-v30';
+const CACHE_NAME = 'peptide-app-v31';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const STATIC_ASSETS = [
   './dual_exposure_sim.js',
   './schedule_comparison_model.js',
   './schedule_comparison_ui.js',
+  './model_input_review.js',
   './inline_weight_entry.js',
   './recon_inventory_guard.js',
   // peptides_v3.json(2.4MB)은 install 시 미리 받지 않고 첫 사용 시점에 캐시 (stale-while-revalidate 아래 참고)
