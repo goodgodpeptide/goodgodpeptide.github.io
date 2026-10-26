@@ -1,0 +1,215 @@
+{
+  "schema": "peppedia_update_audit_v1",
+  "reviewedAt": "2026-10-26T22:10:19+09:00",
+  "source": {
+    "apiUrl": "https://pep-pedia.org/api/peptides",
+    "publicUnauthenticated": true,
+    "httpStatus": 200,
+    "apiReportedCount": 88,
+    "snapshotSha256": "52c3e1a500830ab59ecdfcaa8abb7b39cb8487c6b24a103ad2dac11c4b98569f",
+    "snapshotPath": "outputs/peppedia_update_20261026/peppedia_api_current.json",
+    "itemContentUpdatedAtAvailable": false
+  },
+  "localBeforeReview": {
+    "count": 110,
+    "lastUpdated": "2026-07-04T03:45:56.222273"
+  },
+  "comparison": {
+    "apiCount": 88,
+    "localCountBefore": 110,
+    "localCountAfter": 115,
+    "commonBefore": 83,
+    "apiOnlyBefore": [
+      "aicar",
+      "cortagen",
+      "klotho",
+      "ptd-dbm",
+      "slu-pp-915"
+    ],
+    "apiOnlyAfter": [],
+    "localOnlyPreserved": [
+      "aleniglipron",
+      "amycretin",
+      "anamorelin",
+      "argireline",
+      "capromorelin",
+      "davunetide",
+      "ecnoglutide",
+      "enicepatide",
+      "ghrp-1",
+      "ghrp-2",
+      "gonadorelin",
+      "gubamy",
+      "igf-1-des",
+      "larazotide",
+      "macimorelin",
+      "maridebart-cafraglutide",
+      "matrixyl",
+      "met-097i",
+      "pdrn",
+      "pemvidutide",
+      "pentadeca-arginate",
+      "petrelintide",
+      "relamorelin",
+      "ribupatide",
+      "syn-ake",
+      "vk2735",
+      "zovaglutide"
+    ],
+    "fieldDifferenceSummaryAfterUpdateAcross88Common": {
+      "name": {
+        "localField": "nameEn",
+        "differentCount": 11,
+        "equalCount": 77
+      },
+      "subtitle": {
+        "localField": "subtitle",
+        "differentCount": 40,
+        "equalCount": 48
+      },
+      "description": {
+        "localField": "descriptionEn",
+        "differentCount": 38,
+        "equalCount": 50
+      },
+      "fdaApproved": {
+        "localField": "isApproved",
+        "differentCount": 0,
+        "equalCount": 88
+      },
+      "researchCategory": {
+        "localField": "researchStatus",
+        "differentCount": 20,
+        "equalCount": 68
+      },
+      "latestResearch": {
+        "localField": "latestResearch",
+        "differentCount": 46,
+        "equalCount": 42
+      },
+      "relatedSlugs": {
+        "localField": "relatedSlugs",
+        "differentCount": 31,
+        "equalCount": 57
+      },
+      "safetyNotes": {
+        "localField": "safetyNotes",
+        "differentCount": 62,
+        "equalCount": 26
+      },
+      "stopSigns": {
+        "localField": "stopSigns",
+        "differentCount": 60,
+        "equalCount": 28
+      },
+      "interactions": {
+        "localField": "interactions",
+        "differentCount": 73,
+        "equalCount": 15,
+        "normalization": "API peptide/status/description -> local name/type/description; API sentiment type ignored"
+      }
+    },
+    "interpretation": "Differences include schema formatting and locally source-reviewed curation; they are review candidates, not proof that the API is newer."
+  },
+  "appliedChanges": [
+    {
+      "slug": "epitalon",
+      "scope": [
+        "typicalDose",
+        "frequency",
+        "quickStart",
+        "protocols",
+        "descriptionEn",
+        "descriptionKo",
+        "safetyNotes",
+        "safetyNotesKo",
+        "latestResearch",
+        "latestResearchKo",
+        "evidenceReview",
+        "index.typicalDose",
+        "cycle",
+        "routeDetail",
+        "keyBenefits",
+        "keyBenefitsKo",
+        "mechanism",
+        "mechanismKo",
+        "protocolTiming",
+        "protocolTimingKo",
+        "effectsTimeline",
+        "effectsTimelineKo",
+        "researchIndications",
+        "researchIndicationsDetailed",
+        "researchIndicationsDetailedKo",
+        "index.cycle",
+        "evidenceReview.sourceReportedDose"
+      ],
+      "basis": "2026 FDA PCAC primary review",
+      "primarySource": "https://www.fda.gov/media/193774/download",
+      "reason": "Removed contradictory 10 mg vs 200-500 mcg regimen presentation; no established human subcutaneous dose or safety evidence. Distinguished a small sublingual biomarker study, animal data, and epithalamin."
+    },
+    {
+      "slugs": [
+        "aicar",
+        "cortagen",
+        "klotho",
+        "ptd-dbm",
+        "slu-pp-915"
+      ],
+      "scope": "research-information cards",
+      "result": "Added five cards; total 110 -> 115",
+      "safetyBoundary": "No human standard dose, self-administration schedule, injection instructions, or animal-to-human conversion published. Substance type and human/animal/cell evidence separated.",
+      "primarySources": "Stored per card in evidenceReview.primaryReferences."
+    },
+    {
+      "slugs": [
+        "aicar",
+        "cortagen",
+        "klotho",
+        "ptd-dbm",
+        "slu-pp-915",
+        "epitalon"
+      ],
+      "scope": "researchStatus enum normalization",
+      "result": "Mapped to UI-supported enum values; detailed evidence remains in evidenceReview."
+    },
+    {
+      "slugs": [
+        "ghk-cu",
+        "mazdutide",
+        "sermorelin"
+      ],
+      "scope": "FDA approval flag correction",
+      "result": "isApproved=false synchronized in item and index; current US status separated from China NMPA or historical withdrawn approval.",
+      "sources": [
+        "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks",
+        "https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/xcel-research-llc-694608-12102024",
+        "https://www.accessdata.fda.gov/drugsatfda_docs/nda/2017/205598Orig1s000MedR.pdf"
+      ]
+    },
+    {
+      "slug": "retatrutide",
+      "scope": "TRIUMPH-2/3 topline status",
+      "result": "Company release labeled non-peer-reviewed; investigational status and Q1 2027 submission plan retained."
+    },
+    {
+      "slug": "orforglipron",
+      "scope": "FDA primary-source link",
+      "result": "April 1, 2026 approval source added without presenting it as an October event."
+    }
+  ],
+  "notApplied": [
+    {
+      "scope": "27 local-only slugs",
+      "reason": "Absence from the current 88-item API does not prove deletion or invalidity; retained without change."
+    },
+    {
+      "scope": "bulk overwrite of 83 common entries",
+      "reason": "The API exposes no item update timestamp and conflicts with locally source-checked approval corrections; review date was not treated as a content update date."
+    }
+  ],
+  "evidenceBoundaries": {
+    "pepPediaIsSecondarySource": true,
+    "doseApprovalAndHumanAnimalEvidenceRequireIndependentPrimaryVerification": true,
+    "todayIsReviewDateNotSourceContentDate": true
+  }
+}

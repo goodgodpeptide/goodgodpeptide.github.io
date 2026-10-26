@@ -1,7 +1,7 @@
 {
   "version": "3.0",
-  "lastUpdated": "2026-07-04T03:45:56.222273",
-  "totalCount": 110,
+  "lastUpdated": "2026-10-26T22:16:21+09:00",
+  "totalCount": 115,
   "index": [
     {
       "id": "5-amino-1mq",
@@ -382,19 +382,19 @@
       "id": "epitalon",
       "nameEn": "Epitalon",
       "nameKo": "에피탈론",
-      "subtitle": "Synthetic Pineal Tetrapeptide | Telomerase Activator & Anti-AgingNasal",
+      "subtitle": "Synthetic AEDG Tetrapeptide | Human Evidence and Safety Not Established",
       "routes": [
         "Injectable"
       ],
-      "researchStatus": "Well Researched",
+      "researchStatus": "Limited Research",
       "isApproved": false,
       "tags": [
         "Anti Aging",
         "Neuroprotection",
         "Immunity"
       ],
-      "typicalDose": "",
-      "cycle": "10-20 days"
+      "typicalDose": "사람 피하 표준용량 미확립",
+      "cycle": "Not established"
     },
     {
       "id": "fat-blaster",
@@ -459,13 +459,13 @@
         "Injectable"
       ],
       "researchStatus": "Limited Research",
-      "isApproved": true,
+      "isApproved": false,
       "tags": [
         "Skin Regeneration",
         "Hair Growth",
         "Anti Inflammatory"
       ],
-      "typicalDose": "0.5-2%1-",
+      "typicalDose": "0.5-2% 농도",
       "cycle": "12-16 weeks"
     },
     {
@@ -749,13 +749,13 @@
         "Injectable"
       ],
       "researchStatus": "Extensively Studied",
-      "isApproved": true,
+      "isApproved": false,
       "tags": [
         "Weight Loss",
         "MASLD/MASH benefitsDiabetes",
         "Cardiovascular"
       ],
-      "typicalDose": "3-9mg weeklyOnce weekly",
+      "typicalDose": "3-9mg",
       "cycle": ""
     },
     {
@@ -895,7 +895,7 @@
         "Diabetes",
         "Cardiovascular"
       ],
-      "typicalDose": "3-36mg dailyOnce daily",
+      "typicalDose": "3-36mg",
       "cycle": ""
     },
     {
@@ -1076,7 +1076,7 @@
         "Diabetes",
         "Cardiovascular"
       ],
-      "typicalDose": "",
+      "typicalDose": "4-12mg",
       "cycle": ""
     },
     {
@@ -1141,12 +1141,12 @@
         "Injectable"
       ],
       "researchStatus": "Well Researched",
-      "isApproved": true,
+      "isApproved": false,
       "tags": [
         "Muscle Growth",
         "Hormonal"
       ],
-      "typicalDose": "",
+      "typicalDose": "200-500mcg",
       "cycle": "3-6 months"
     },
     {
@@ -1971,6 +1971,91 @@
       ],
       "typicalDose": "임상 용량(경구)",
       "cycle": "지속"
+    },
+    {
+      "id": "aicar",
+      "nameEn": "AICAR",
+      "nameKo": "AICAR",
+      "subtitle": "AMPK activator; nucleoside analogue (not a peptide)",
+      "routes": [
+        "Research information only"
+      ],
+      "researchStatus": "Clinical Research",
+      "isApproved": false,
+      "tags": [
+        "Metabolic Research",
+        "Non-peptide"
+      ],
+      "typicalDose": "사람 표준용량 미확립",
+      "cycle": "미확립"
+    },
+    {
+      "id": "cortagen",
+      "nameEn": "Cortagen",
+      "nameKo": "코르타젠",
+      "subtitle": "AEDP synthetic tetrapeptide; brain-cortex bioregulator research",
+      "routes": [
+        "Research information only"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "tags": [
+        "Tetrapeptide",
+        "Neurobiology Research"
+      ],
+      "typicalDose": "사람 표준용량 미확립",
+      "cycle": "미확립"
+    },
+    {
+      "id": "klotho",
+      "nameEn": "Klotho",
+      "nameKo": "클로토",
+      "subtitle": "Endogenous alpha-Klotho protein; recombinant protein research",
+      "routes": [
+        "Research information only"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "Protein",
+        "Aging Research"
+      ],
+      "typicalDose": "사람 표준용량 미확립",
+      "cycle": "미확립"
+    },
+    {
+      "id": "ptd-dbm",
+      "nameEn": "PTD-DBM",
+      "nameKo": "PTD-DBM",
+      "subtitle": "25-amino-acid fusion peptide; CXXC5-Dvl research",
+      "routes": [
+        "Research information only"
+      ],
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "tags": [
+        "Hair Research",
+        "Fusion Peptide"
+      ],
+      "typicalDose": "사람 표준용량 미확립",
+      "cycle": "미확립"
+    },
+    {
+      "id": "slu-pp-915",
+      "nameEn": "SLU-PP-915",
+      "nameKo": "SLU-PP-915",
+      "subtitle": "Synthetic pan-ERR agonist small molecule (not a peptide)",
+      "routes": [
+        "Research information only"
+      ],
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "tags": [
+        "Exercise Biology Research",
+        "Non-peptide"
+      ],
+      "typicalDose": "사람 표준용량 미확립",
+      "cycle": "미확립"
     }
   ],
   "peptides": {
@@ -10387,21 +10472,21 @@
     "epitalon": {
       "id": "epitalon",
       "nameEn": "Epitalon",
-      "subtitle": "Synthetic Pineal Tetrapeptide | Telomerase Activator & Anti-AgingNasal",
+      "subtitle": "Synthetic AEDG Tetrapeptide | Human Evidence and Safety Not Established",
       "nameKo": "에피탈론",
-      "researchStatus": "Well Researched",
+      "researchStatus": "Limited Research",
       "isApproved": false,
       "routes": [
         "Injectable"
       ],
-      "typicalDose": "10mg/day",
-      "frequency": "",
-      "cycle": "10-20 days",
+      "typicalDose": "사람 피하 표준용량 미확립",
+      "frequency": "Not established for human subcutaneous use",
+      "cycle": "Not established",
       "storage": "냉장 (2-8°C)",
-      "routeDetail": "Subcutaneous: abdomen, thigh, or upper arm",
-      "descriptionEn": "Epitalon (Epithalon, AEDG) is a synthetic tetrapeptide consisting of four amino acids (Ala-Glu-Asp-Gly) based on a naturally occurring pineal gland peptide. Developed by Russian scientist Vladimir Khavinson and studied for over 35 years, Epitalon is primarily researched for its ability to activate telomerase, extend telomeres, and potentially slow cellular aging through multiple mechanisms including melatonin regulation and gene expression modulation. IMPORTANT: Current Western dosing protocols may be 50-100x higher than necessary due to translation errors from Russian literature.",
-      "keyBenefits": "Telomerase activation for telomere extension, enhanced melatonin production, improved immune function, potential lifespan extension, and systemic anti-aging effects through cellular rejuvenation. CORRECTED DOSING: Evidence suggests current Western protocols use 50-100x higher doses than original Russian research.",
-      "mechanism": "Activates telomerase enzyme at extremely low concentrations (10⁻¹⁷ to 10⁻¹⁵ M) to maintain telomere length, stimulates pineal gland for melatonin production, modulates gene expression through epigenetic mechanisms, and enhances antioxidant enzyme systems.Molecular InformationWeight390.35 DaLength4 amino acidsTypeTetrapeptideAmino Acid Sequence:Ala-Glu-Asp-Gly* Synthetic analog of epithalamin from ",
+      "routeDetail": "No established human subcutaneous regimen; the FDA-reviewed human study used sublingual spray",
+      "descriptionEn": "Epitalon (also spelled epithalon; AEDG) is a synthetic tetrapeptide. It is not FDA-approved. A 2026 FDA review found one small human study using sublingual epitalon in healthy night-shift workers, but it measured a melatonin metabolite rather than sleep outcomes and did not establish clinical benefit or safety. FDA found no human safety study for subcutaneous use. Animal findings and evidence about epithalamin, a different pineal extract, cannot establish a human epitalon regimen.",
+      "keyBenefits": "No clinical benefit has been established. Human evidence reviewed by FDA was limited to a melatonin-metabolite biomarker study and did not evaluate insomnia outcomes.",
+      "mechanism": "Laboratory and animal studies explore effects on telomere biology, gene expression, and melatonin-related pathways. These findings do not establish efficacy, safety, or a human dose.",
       "pharmacokinetics": {
         "peak": "",
         "halfLife": "",
@@ -10409,42 +10494,13 @@
       },
       "researchIndications": [
         {
-          "name": "Anti Aging",
-          "effectiveness": "Most Effective",
-          "level": 4
-        },
-        {
-          "name": "Neuroprotection",
-          "effectiveness": "Effective",
-          "level": 3
-        },
-        {
-          "name": "Immunity",
-          "effectiveness": "Moderate",
-          "level": 2
+          "name": "Insomnia (evidence insufficient)",
+          "effectiveness": "Not established",
+          "level": 0
         }
       ],
-      "protocolTiming": "Morning administration aligns with natural cortisol rhythm and may enhance circadian regulation. Some prefer evening dosing for enhanced sleep effects.Peptide InteractionsMelatoninSynergisticThymalinSynergisticNAD+ PrecursorsCompatibleGrowth Hormone PeptidesCompatibleBPC-157CompatibleCortexinMonitor",
-      "protocols": [
-        {
-          "goal": "항노화 코스",
-          "dose": "10mg",
-          "frequency": "1일 1회 (10-20일)",
-          "route": "피하주사"
-        },
-        {
-          "goal": "유지 코스",
-          "dose": "5-10mg",
-          "frequency": "1일 1회 (10일)",
-          "route": "피하주사"
-        },
-        {
-          "goal": "경구 보조",
-          "dose": "20mg",
-          "frequency": "1일 1회",
-          "route": "경구"
-        }
-      ],
+      "protocolTiming": "No evidence-based human administration time has been established.",
+      "protocols": [],
       "interactions": [
         {
           "name": "Melatonin",
@@ -10497,14 +10553,7 @@
         "Yellow or discolored powderIndicates degradation or impurities - do not use",
         "Cloudy solution after mixingSuggests contamination or improper storage - discard!Dosing confusion wi"
       ],
-      "effectsTimeline": [
-        "3: Usually no immediate effects, some report subtle energy improvementDay 3",
-        "7: Better sleep quality, more vivid dreams (melatonin effect)Week 2: Enhanced morning energy, improved mood stabilityWeek 3",
-        "4: Skin quality improvements, better wound healingMonth 2",
-        "3: Laboratory markers may show telomere length changesLong",
-        "term: Cumulative anti",
-        "aging effects with repeated cyclesNOTE: Effects should be similar to high"
-      ],
+      "effectsTimeline": [],
       "sideEffects": [
         "주사 부위 경미한 통증 또는 발적",
         "두통 (드물게)",
@@ -10515,12 +10564,12 @@
         "장기 텔로미어 영향에 대한 독립적 데이터 제한적"
       ],
       "quickStart": {
-        "dose": "200-500μg per injection",
-        "frequency": "Once daily for 10-20 daysWhere to InjectSubcutaneous: abdomen, thigh, or upper armInjection TimingMorning injection pref",
-        "effectsTimeline": "Sleep: 3-7 days, Energy: 1-2 weeks, Cellular markers: 1-3 months",
-        "storageNote": "Refrigerate at 2-8°C, use within 30 days of reconstitution",
-        "cycleLength": "10-20 days per cycle",
-        "breakBetween": "4-6 months between cycles"
+        "dose": "사람 피하 표준용량 미확립",
+        "frequency": "사람 투여주기 미확립",
+        "effectsTimeline": "Human clinical benefit and timing have not been established",
+        "storageNote": "Product-specific stability was not established by the cited FDA review",
+        "cycleLength": "Not established",
+        "breakBetween": "Not established"
       },
       "tags": [
         "Anti Aging",
@@ -10529,120 +10578,20 @@
       ],
       "sourceUrl": "https://pep-pedia.org/peptides/epitalon",
       "researchIndicationsDetailed": {
-        "antiAging": [
+        "insomnia": [
           {
-            "title": "Telomere Extension",
-            "description": "Activates telomerase to lengthen telomeres and extend cellular replicative lifespan at microgram doses"
-          },
-          {
-            "title": "Cellular Rejuvenation",
-            "description": "Reverses markers of cellular aging and improves mitochondrial function through low-dose signaling"
-          },
-          {
-            "title": "Lifespan Extension",
-            "description": "Animal studies show 25-33% lifespan increase using 30-40 μg/kg doses, not milligram doses"
-          },
-          {
-            "title": "Convenience Factor",
-            "description": "Allows for anti-aging protocol without daily injections using evidence-based oral dosing"
-          },
-          {
-            "title": "Gradual Effects",
-            "description": "Slower, more gradual changes may be preferable for some users"
-          },
-          {
-            "title": "Travel-Friendly",
-            "description": "Easier to maintain protocol while traveling"
-          },
-          {
-            "title": "Efficient Delivery",
-            "description": "Nasal absorption may achieve therapeutic levels with lower doses than oral"
-          },
-          {
-            "title": "Rapid Absorption",
-            "description": "Nasal mucosa provides quick entry to circulation"
-          },
-          {
-            "title": "Pineal Proximity",
-            "description": "May enhance pineal gland effects due to anatomical closeness"
-          }
-        ],
-        "neuroprotection": [
-          {
-            "title": "Pineal Function Restoration",
-            "description": "Enhances pineal gland activity and normalizes age-related melatonin decline with microgram dosing"
-          },
-          {
-            "title": "Neurogenesis Support",
-            "description": "Upregulates neurogenic differentiation genes at nanogram concentrations, supporting brain plasticity"
-          },
-          {
-            "title": "Retinal Protection",
-            "description": "Clinical evidence shows 90% response rate using only 5μg per eye for age-related macular degeneration"
-          },
-          {
-            "title": "Direct CNS Access",
-            "description": "Some peptide may reach brain directly via olfactory route"
-          },
-          {
-            "title": "Enhanced Melatonin",
-            "description": "Proximity to pineal may improve melatonin modulation"
-          },
-          {
-            "title": "Lower Dose Efficacy",
-            "description": "Direct absorption may achieve effects with microgram doses"
-          }
-        ],
-        "immunity": [
-          {
-            "title": "Thymus Regeneration",
-            "description": "Restores thymus structure and function at low doses, improving T-cell production"
-          },
-          {
-            "title": "Immune Surveillance",
-            "description": "Enhances immune system ability to detect and eliminate abnormal cells through regulatory signaling"
-          },
-          {
-            "title": "Reduced Immunosenescence",
-            "description": "Counters age-related decline in immune function using physiological doses"
+            "title": "FDA evidence conclusion",
+            "description": "No evidence supports subcutaneous epitalon for insomnia; the small sublingual study did not evaluate sleep outcomes."
           }
         ]
       },
       "latestResearch": [
         {
-          "title": "Overview of Epitalon—Highly Bioactive Pineal Tetrapeptide with Promising Properties",
-          "excerpt": "Comprehensive 2025 review confirms geroprotective effects and highlights dosing discrepancies between Russian original studies (microgram range) and Western protocols (milligram range).",
-          "date": "March 2025",
-          "source": "International Journal of Molecular Sciences",
-          "link": "https://www.mdpi.com/1422-0067/26/6/2691"
-        },
-        {
-          "title": "Epitalon-Enhanced Bovine Oocyte Maturation",
-          "excerpt": "Telomerase activation via Epitalon at nanomolar concentrations improved oocyte quality and maturation rates, demonstrating biological activity at extremely low doses.",
-          "date": "January 2025",
-          "source": "Life Sciences",
-          "link": "https://www.mdpi.com/1422-0067/26/6/2691"
-        },
-        {
-          "title": "Translation Errors in Russian Peptide Research",
-          "excerpt": "Analysis reveals systematic unit conversion errors (mg vs μg) in translation of Russian biomedical literature, potentially explaining dosing discrepancies in Western Epitalon protocols.",
-          "date": "February 2024",
-          "source": "Journal of Medical Translation",
-          "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2584036/"
-        },
-        {
-          "title": "Dose-Response Analysis of Synthetic Epitalon",
-          "excerpt": "Molecular modeling and pharmacokinetic analysis suggests optimal biological activity occurs at 10⁻¹⁷ to 10⁻¹⁵ M concentrations, supporting microgram rather than milligram dosing protocols.",
-          "date": "June 2024",
-          "source": "Peptides Journal",
-          "link": "https://en.wikipedia.org/wiki/Epitalon"
-        },
-        {
-          "title": "Safety Profile Analysis from 30+ Years Clinical Use",
-          "excerpt": "Comprehensive safety analysis confirms favorable profile with no severe adverse events, but notes potential for overdosing with current Western protocols compared to original Russian studies.",
-          "date": "August 2024",
-          "source": "Gerontology Research",
-          "link": "https://eng.gerontology.ru/about"
+          "title": "FDA review of epitalon-related bulk drug substances",
+          "excerpt": "FDA found no evidence supporting subcutaneous epitalon for insomnia and no human clinical study establishing safety, particularly by the subcutaneous route. A 75-person night-shift-worker study included 20 people receiving sublingual epitalon for 20 days, but it measured a melatonin metabolite rather than sleep outcomes and did not report safety data.",
+          "date": "July 2026",
+          "source": "U.S. Food and Drug Administration (PCAC briefing)",
+          "link": "https://www.fda.gov/media/193774/download"
         }
       ],
       "relatedSlugs": [
@@ -10652,13 +10601,11 @@
         "nad-plus"
       ],
       "safetyNotes": [
-        "Generally well-tolerated with minimal side effects in studies",
-        "Corrected microgram dosing reduces risk of unnecessary peptide exposure",
-        "Theoretical concern about telomerase in cancer patients - avoid if active malignancy",
-        "May cause mild injection site reactions",
-        "Some users report vivid dreams due to melatonin enhancement",
-        "No severe adverse events reported in 30+ years of Russian clinical use",
-        "Current Western protocols may represent significant overdosing"
+        "No human clinical study identified by FDA established the safety of epitalon, particularly by the subcutaneous route.",
+        "The only human study summarized by FDA used sublingual epitalon in 20 healthy participants for 20 days and did not report safety data or measure sleep outcomes.",
+        "Subcutaneous administration may present immunogenicity risks related to aggregation and peptide-related impurities.",
+        "Long-term continuous exposure has unresolved carcinogenicity concerns; animal findings do not establish human safety.",
+        "Epitalon and epithalamin (a pineal extract) are different substances and their evidence or doses must not be interchanged."
       ],
       "stopSigns": [
         "Any signs of allergic reaction",
@@ -10668,18 +10615,16 @@
         "Unusual fatigue or weakness",
         "Any concerning symptoms - consult healthcare provider"
       ],
-      "descriptionKo": "Epitalon(Epithalon, AEDG)은 자연적으로 발생하는 송과선 펩타이드를 기반으로 하는 4개의 아미노산(Ala-Glu-Asp-Gly)으로 구성된 합성 테트라펩타이드입니다. 러시아 과학자 Vladimir Khavinson이 개발하고 35년 이상 연구한 Epitalon은 주로 텔로머라제를 활성화하고, 텔로미어를 확장하고, 멜라토닌 조절 및 유전자 발현 조절을 포함한 여러 메커니즘을 통해 세포 노화를 늦추는 능력에 대해 연구되었습니다. 중요: 현재 서양의 투여 프로토콜은 러시아 문헌의 번역 오류로 인해 필요한 것보다 50-100배 더 높을 수 있습니다.",
-      "keyBenefitsKo": "텔로미어 확장을 위한 텔로머라제 활성화, 멜라토닌 생성 강화, 면역 기능 개선, 수명 연장 가능성, 세포 재생을 통한 전신 노화 방지 효과. 수정된 투여량: 증거에 따르면 현재 서양 프로토콜은 원래 러시아 연구보다 50-100배 더 높은 투여량을 사용합니다.",
-      "mechanismKo": "텔로미어 길이를 유지하기 위해 매우 낮은 농도(10⁻17 ~ 10⁻1⁵ M)에서 텔로머라제 효소를 활성화하고, 멜라토닌 생성을 위해 송과선을 자극하고, 후생적 메커니즘을 통해 유전자 발현을 조절하고, 항산화 효소 시스템을 향상시킵니다. 분자 정보무게390.35 DaLength4 아미노산유형테트라펩타이드아미노산 서열:Ala-Glu-Asp-Gly* 합성 에피탈라민 유사체",
-      "subtitleKo": "합성 송과체 테트라펩타이드 | 텔로머라제 활성화제 및 노화 방지코",
+      "descriptionKo": "에피탈론(Epithalon, AEDG)은 합성 테트라펩타이드이며 FDA 승인 약물이 아닙니다. 2026년 FDA 검토에서 확인된 소규모 사람 연구는 건강한 야간근무자의 설하투여 연구였고, 수면 결과가 아니라 멜라토닌 대사체를 측정했습니다. 임상적 효과나 안전성을 확립하지 않았으며, 피하투여의 사람 안전성 연구도 확인되지 않았습니다. 동물 결과와 별도 물질인 송과선 추출물 에피탈라민의 근거로 사람 에피탈론 용법을 정할 수 없습니다.",
+      "keyBenefitsKo": "확립된 임상적 이점은 없습니다. FDA가 검토한 사람 근거는 멜라토닌 대사체 연구에 한정되며 불면증 결과를 평가하지 않았습니다.",
+      "mechanismKo": "실험실·동물 연구에서 텔로미어 생물학, 유전자 발현, 멜라토닌 관련 경로를 탐색했지만 사람에서의 효과·안전성·용량을 확립하지 않았습니다.",
+      "subtitleKo": "합성 AEDG 테트라펩타이드 | 사람 효과·안전성 미확립",
       "safetyNotesKo": [
-        "일반적으로 연구에서 부작용이 최소화되어 내약성이 우수합니다.",
-        "마이크로그램 용량을 수정하면 불필요한 펩타이드 노출 위험이 줄어듭니다.",
-        "암 환자의 텔로머라제에 대한 이론적 우려 - 활동성 악성 종양인 경우 피하십시오",
-        "경미한 주사 부위 반응을 일으킬 수 있음",
-        "일부 사용자는 멜라토닌 강화로 인해 생생한 꿈을 보고합니다.",
-        "30년 이상의 러시아 임상 사용에서 심각한 부작용은 보고되지 않았습니다.",
-        "현재 서양의 프로토콜은 심각한 과다 복용을 나타낼 수 있습니다."
+        "FDA가 확인한 자료에는 특히 피하투여 에피탈론의 사람 안전성을 확립한 임상연구가 없습니다.",
+        "FDA가 요약한 유일한 사람 연구는 건강인 20명에게 20일간 설하투여했으며 안전성 자료나 수면 결과를 보고하지 않았습니다.",
+        "피하투여는 응집 및 펩타이드 관련 불순물로 인한 면역원성 위험이 있을 수 있습니다.",
+        "장기 연속 노출의 발암성 우려는 해소되지 않았으며 동물 결과로 사람 안전성을 확정할 수 없습니다.",
+        "에피탈론과 송과선 추출물 에피탈라민은 다른 물질이므로 근거나 용량을 서로 바꿔 적용할 수 없습니다."
       ],
       "stopSignsKo": [
         "알레르기 반응의 징후",
@@ -10691,168 +10636,26 @@
       ],
       "latestResearchKo": [
         {
-          "title": "Overview of Epitalon—Highly Bioactive Pineal Tetrapeptide with Promising Properties",
-          "excerpt": "Comprehensive 2025 review confirms geroprotective effects and highlights dosing discrepancies between Russian original studies (microgram range) and Western protocols (milligram range).",
-          "date": "March 2025",
-          "source": "International Journal of Molecular Sciences",
-          "link": "https://www.mdpi.com/1422-0067/26/6/2691",
-          "titleKo": "Epitalon 개요 - 유망한 특성을 지닌 생체 활성이 높은 송과체 테트라펩타이드",
-          "excerptKo": "종합적인 2025년 검토에서는 노인 보호 효과를 확인하고 러시아의 원래 연구(마이크로그램 범위)와 서양 프로토콜(밀리그램 범위) 간의 투여량 불일치를 강조합니다."
-        },
-        {
-          "title": "Epitalon-Enhanced Bovine Oocyte Maturation",
-          "excerpt": "Telomerase activation via Epitalon at nanomolar concentrations improved oocyte quality and maturation rates, demonstrating biological activity at extremely low doses.",
-          "date": "January 2025",
-          "source": "Life Sciences",
-          "link": "https://www.mdpi.com/1422-0067/26/6/2691",
-          "titleKo": "Epitalon 강화 소 난모세포 성숙",
-          "excerptKo": "나노몰 농도에서 에피탈론을 통한 텔로머라제 활성화는 난모세포의 품질과 성숙 속도를 향상시켜 극히 낮은 용량에서도 생물학적 활성을 입증했습니다."
-        },
-        {
-          "title": "Translation Errors in Russian Peptide Research",
-          "excerpt": "Analysis reveals systematic unit conversion errors (mg vs μg) in translation of Russian biomedical literature, potentially explaining dosing discrepancies in Western Epitalon protocols.",
-          "date": "February 2024",
-          "source": "Journal of Medical Translation",
-          "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2584036/",
-          "titleKo": "러시아 펩타이드 연구의 번역 오류",
-          "excerptKo": "분석 결과 러시아 생의학 문헌 번역에서 체계적인 단위 변환 오류(mg 대 μg)가 밝혀졌으며 잠재적으로 Western Epitalon 프로토콜의 투여량 불일치를 설명합니다."
-        },
-        {
-          "title": "Dose-Response Analysis of Synthetic Epitalon",
-          "excerpt": "Molecular modeling and pharmacokinetic analysis suggests optimal biological activity occurs at 10⁻¹⁷ to 10⁻¹⁵ M concentrations, supporting microgram rather than milligram dosing protocols.",
-          "date": "June 2024",
-          "source": "Peptides Journal",
-          "link": "https://en.wikipedia.org/wiki/Epitalon",
-          "titleKo": "합성 에피탈론의 용량-반응 분석",
-          "excerptKo": "분자 모델링 및 약동학 분석에 따르면 최적의 생물학적 활성은 10⁻17~10⁻1⁵ M 농도에서 발생하며 밀리그램 투여 프로토콜이 아닌 마이크로그램을 지원합니다."
-        },
-        {
-          "title": "Safety Profile Analysis from 30+ Years Clinical Use",
-          "excerpt": "Comprehensive safety analysis confirms favorable profile with no severe adverse events, but notes potential for overdosing with current Western protocols compared to original Russian studies.",
-          "date": "August 2024",
-          "source": "Gerontology Research",
-          "link": "https://eng.gerontology.ru/about",
-          "titleKo": "30년 이상의 임상 사용을 통한 안전성 프로필 분석",
-          "excerptKo": "종합적인 안전성 분석을 통해 심각한 부작용 없이 유리한 프로필을 확인했지만, 원래의 러시아 연구와 비교하여 현재 서구 프로토콜을 사용하면 과다 복용 가능성이 있음을 지적합니다."
+          "title": "FDA review of epitalon-related bulk drug substances",
+          "excerpt": "FDA found no evidence supporting subcutaneous epitalon for insomnia and no human clinical study establishing safety, particularly by the subcutaneous route. A 75-person night-shift-worker study included 20 people receiving sublingual epitalon for 20 days, but it measured a melatonin metabolite rather than sleep outcomes and did not report safety data.",
+          "date": "July 2026",
+          "source": "U.S. Food and Drug Administration (PCAC briefing)",
+          "link": "https://www.fda.gov/media/193774/download",
+          "titleKo": "에피탈론 관련 원료의약품 FDA 검토",
+          "excerptKo": "FDA는 불면증에 대한 피하투여 에피탈론의 유효성 근거와, 특히 피하투여 시 사람 안전성을 확립한 임상연구를 확인하지 못했습니다. 야간근무자 75명 연구에서 20명이 설하 에피탈론을 20일 사용했지만 수면 결과가 아니라 멜라토닌 대사체를 측정했고 안전성 자료도 보고하지 않았습니다."
         }
       ],
       "researchIndicationsDetailedKo": {
-        "antiAging": [
+        "insomnia": [
           {
-            "title": "Telomere Extension",
-            "description": "Activates telomerase to lengthen telomeres and extend cellular replicative lifespan at microgram doses",
-            "titleKo": "텔로미어 확장",
-            "descriptionKo": "텔로머라제를 활성화하여 텔로미어를 연장하고 마이크로그램 용량으로 세포 복제 수명을 연장합니다."
-          },
-          {
-            "title": "Cellular Rejuvenation",
-            "description": "Reverses markers of cellular aging and improves mitochondrial function through low-dose signaling",
-            "titleKo": "세포 재생",
-            "descriptionKo": "저용량 신호 전달을 통해 세포 노화의 지표를 역전시키고 미토콘드리아 기능을 향상시킵니다."
-          },
-          {
-            "title": "Lifespan Extension",
-            "description": "Animal studies show 25-33% lifespan increase using 30-40 μg/kg doses, not milligram doses",
-            "titleKo": "수명 연장",
-            "descriptionKo": "동물 연구에 따르면 밀리그램 용량이 아닌 30-40 μg/kg 용량을 사용하면 수명이 25-33% 증가하는 것으로 나타났습니다."
-          },
-          {
-            "title": "Convenience Factor",
-            "description": "Allows for anti-aging protocol without daily injections using evidence-based oral dosing",
-            "titleKo": "편의요소",
-            "descriptionKo": "증거 기반 경구 투여를 통해 매일 주사하지 않고도 노화 방지 프로토콜이 가능합니다."
-          },
-          {
-            "title": "Gradual Effects",
-            "description": "Slower, more gradual changes may be preferable for some users",
-            "titleKo": "점진적인 효과",
-            "descriptionKo": "일부 사용자에게는 더 느리고 점진적인 변경이 바람직할 수 있습니다."
-          },
-          {
-            "title": "Travel-Friendly",
-            "description": "Easier to maintain protocol while traveling",
-            "titleKo": "여행 친화적",
-            "descriptionKo": "여행 중 프로토콜 유지가 더 쉬워졌습니다."
-          },
-          {
-            "title": "Efficient Delivery",
-            "description": "Nasal absorption may achieve therapeutic levels with lower doses than oral",
-            "titleKo": "효율적인 배송",
-            "descriptionKo": "비강 흡수는 경구 흡수보다 낮은 용량으로 치료 수준에 도달할 수 있습니다."
-          },
-          {
-            "title": "Rapid Absorption",
-            "description": "Nasal mucosa provides quick entry to circulation",
-            "titleKo": "빠른 흡수",
-            "descriptionKo": "코 점막은 혈액 순환에 빠른 진입을 제공합니다."
-          },
-          {
-            "title": "Pineal Proximity",
-            "description": "May enhance pineal gland effects due to anatomical closeness",
-            "titleKo": "송과체 근접",
-            "descriptionKo": "해부학적 근접성으로 인해 송과선 효과를 향상시킬 수 있음"
-          }
-        ],
-        "neuroprotection": [
-          {
-            "title": "Pineal Function Restoration",
-            "description": "Enhances pineal gland activity and normalizes age-related melatonin decline with microgram dosing",
-            "titleKo": "송과체 기능 회복",
-            "descriptionKo": "마이크로그램 투여로 송과선 활동을 강화하고 연령 관련 멜라토닌 감소를 정상화합니다."
-          },
-          {
-            "title": "Neurogenesis Support",
-            "description": "Upregulates neurogenic differentiation genes at nanogram concentrations, supporting brain plasticity",
-            "titleKo": "신경발생 지원",
-            "descriptionKo": "나노그램 농도로 신경 분화 유전자를 상향 조절하여 뇌 가소성을 지원합니다."
-          },
-          {
-            "title": "Retinal Protection",
-            "description": "Clinical evidence shows 90% response rate using only 5μg per eye for age-related macular degeneration",
-            "titleKo": "망막 보호",
-            "descriptionKo": "연령관련 황반변성에 눈당 5μg만 사용해도 반응률 90% 입증된 임상적 증거"
-          },
-          {
-            "title": "Direct CNS Access",
-            "description": "Some peptide may reach brain directly via olfactory route",
-            "titleKo": "직접 CNS 액세스",
-            "descriptionKo": "일부 펩타이드는 후각 경로를 통해 뇌에 직접 도달할 수 있습니다."
-          },
-          {
-            "title": "Enhanced Melatonin",
-            "description": "Proximity to pineal may improve melatonin modulation",
-            "titleKo": "강화된 멜라토닌",
-            "descriptionKo": "송과체에 근접하면 멜라토닌 조절이 향상될 수 있습니다."
-          },
-          {
-            "title": "Lower Dose Efficacy",
-            "description": "Direct absorption may achieve effects with microgram doses",
-            "titleKo": "더 낮은 용량 효능",
-            "descriptionKo": "직접 흡수하면 마이크로그램 용량으로 효과를 얻을 수 있습니다."
-          }
-        ],
-        "immunity": [
-          {
-            "title": "Thymus Regeneration",
-            "description": "Restores thymus structure and function at low doses, improving T-cell production",
-            "titleKo": "흉선 재생",
-            "descriptionKo": "저용량으로 흉선 구조와 기능을 복원하여 T 세포 생산을 개선합니다."
-          },
-          {
-            "title": "Immune Surveillance",
-            "description": "Enhances immune system ability to detect and eliminate abnormal cells through regulatory signaling",
-            "titleKo": "면역 감시",
-            "descriptionKo": "조절 신호 전달을 통해 비정상 세포를 탐지하고 제거하는 면역 체계 능력을 강화합니다."
-          },
-          {
-            "title": "Reduced Immunosenescence",
-            "description": "Counters age-related decline in immune function using physiological doses",
-            "titleKo": "면역노화 감소",
-            "descriptionKo": "생리학적 용량을 사용하여 노화와 관련된 면역 기능 저하를 방지합니다."
+            "title": "FDA 근거 결론",
+            "description": "불면증에 대한 피하투여 근거는 없으며 소규모 설하투여 연구는 수면 결과를 평가하지 않았습니다.",
+            "titleKo": "FDA 근거 결론",
+            "descriptionKo": "불면증에 대한 피하투여 근거는 없으며 소규모 설하투여 연구는 수면 결과를 평가하지 않았습니다."
           }
         ]
       },
-      "protocolTimingKo": "아침 투여는 자연적인 코티솔 리듬에 맞춰 일주기 조절을 강화할 수 있습니다. 일부는 향상된 수면 효과를 위해 저녁 투여를 선호합니다.펩티드 상호작용멜라토닌상승작용티말린상승작용NAD+ 전구체호환성장 호르몬 펩티드호환BPC-157호환코르텍스인모니터",
+      "protocolTimingKo": "근거에 기반한 사람 투여 시각은 확립되지 않았습니다.",
       "sideEffectsKo": [
         "주사 부위 경미한 통증 또는 발적",
         "두통 (드물게)",
@@ -10862,14 +10665,7 @@
         "전반적으로 우수한 안전성 프로파일 (수십 년 러시아 연구)",
         "장기 텔로미어 영향에 대한 독립적 데이터 제한적"
       ],
-      "effectsTimelineKo": [
-        "3: 일반적으로 즉각적인 효과는 없으며 일부는 미묘한 에너지 개선을 보고합니다. 3일차",
-        "7주차: 수면의 질 향상, 꿈이 더 선명해짐(멜라토닌 효과) 2주차: 아침 에너지 강화, 기분 안정성 향상 3주차",
-        "4: 피부 질 개선, 상처 치유 개선월 2",
-        "3: 실험실 마커는 텔로미어 길이 변화를 나타낼 수 있습니다.",
-        "용어: 누적 안티",
-        "반복 주기로 인한 노화 효과참고: 효과는 높은 수준과 유사해야 합니다."
-      ],
+      "effectsTimelineKo": [],
       "qualityGoodKo": [
         "백색의 동결건조 분말Pure Epitalon은 흰색에서 회백색의 동결건조 분말로 나타납니다.",
         "재구성 시 투명한 용액제대로 혼합된 Epitalon은 완전히 투명하고 무색이어야 합니다.",
@@ -10928,7 +10724,29 @@
           "description": "Telomerase activation in cancer context requires careful consideration - consult oncologist before use",
           "descriptionKo": "암 상황에서 텔로머라제 활성화는 신중한 고려가 필요합니다. 사용하기 전에 종양 전문의와 상담하세요"
         }
-      ]
+      ],
+      "evidenceReview": {
+        "reviewedAt": "2026-10-26",
+        "contentUpdatedAt": null,
+        "primarySource": "https://www.fda.gov/media/193774/download",
+        "humanEvidence": {
+          "route": "Sublingual",
+          "participantsTotal": 75,
+          "epitalonParticipants": 20,
+          "durationDays": 20,
+          "sleepOutcomeEvaluated": false,
+          "safetyDataReported": false
+        },
+        "subcutaneousHumanDoseEstablished": false,
+        "animalDoseIsNotHumanDose": true,
+        "distinctSubstanceWarning": "Epitalon is not epithalamin (pineal extract).",
+        "sourceReportedDose": {
+          "source": "Pep-Pedia public API snapshot reviewed 2026-10-26",
+          "reported": "200-500 μg per injection",
+          "evidenceClass": "secondary-site protocol; not an established human regimen",
+          "publishedAsRecommendation": false
+        }
+      }
     },
     "fat-blaster": {
       "id": "fat-blaster",
@@ -12180,7 +11998,7 @@
       "subtitle": "Copper Peptide | Skin Regeneration & Anti-Aging Compound",
       "nameKo": "GHK-Cu(구리펩타이드)",
       "researchStatus": "Limited Research",
-      "isApproved": true,
+      "isApproved": false,
       "routes": [
         "Injectable"
       ],
@@ -12189,7 +12007,7 @@
       "cycle": "12-16 weeks",
       "storage": "실온",
       "routeDetail": "Topical application to face, neck, scalp",
-      "descriptionEn": "GHK-Cu is a naturally occurring copper tripeptide found in human plasma, saliva, and urine. Plasma levels decline from ~200 ng/ml at age 20 to ~80 ng/ml by age 60. Research shows it affects 31.2% of human genes and promotes wound healing, collagen synthesis, and anti-aging effects. Note: Injectable GHK-Cu is not FDA-approved; most clinical evidence comes from topical studies and animal models.",
+      "descriptionEn": "GHK-Cu is a naturally occurring copper tripeptide found in human plasma, saliva, and urine. Plasma levels decline from ~200 ng/ml at age 20 to ~80 ng/ml by age 60. Research shows it affects 31.2% of human genes and promotes wound healing, collagen synthesis, and anti-aging effects. Note: Injectable GHK-Cu is not FDA-approved; most clinical evidence comes from topical studies and animal models. [Regulatory correction 2026-10-26] GHK-Cu is not an FDA-approved drug. FDA has identified safety concerns for injectable compounded GHK-Cu, including immunogenicity and impurity-characterization concerns. Cosmetic or research use must not be described as FDA approval.",
       "keyBenefits": "Enhanced collagen production, improved skin elasticity, reduced fine lines and wrinkles, accelerated wound healing, hair growth stimulation, convenient daily application",
       "mechanism": "Topical GHK-Cu penetrates skin layers to deliver copper directly to target tissues. Activates fibroblasts, stimulates collagen and elastin synthesis, promotes angiogenesis, and modulates inflammatory responses for optimal skin regenerationMolecular InformationWeight404.96 DaLength3 amino acidsTypeCopper tripeptideAmino Acid Sequence:Gly-His-Lys* Complexed with copper (Cu2+) for enhanced bioavailab",
       "pharmacokinetics": {
@@ -12444,7 +12262,7 @@
         "Persistent metallic taste (indicating absorption issues)",
         "Worsening of skin condition after 4-6 weeks"
       ],
-      "descriptionKo": "GHK-Cu는 인간 혈장, 타액 및 소변에서 발견되는 자연 발생 구리 삼중펩티드입니다. 혈장 수치는 20세에 ~200ng/ml에서 60세에는 ~80ng/ml로 감소합니다. 연구에 따르면 혈장은 인간 유전자의 31.2%에 영향을 미치고 상처 치유, 콜라겐 합성 및 노화 방지 효과를 촉진합니다. 참고: 주사 가능한 GHK-Cu는 FDA 승인을 받지 않았습니다. 대부분의 임상 증거는 국소 연구와 동물 모델에서 나옵니다.",
+      "descriptionKo": "GHK-Cu는 인간 혈장, 타액 및 소변에서 발견되는 자연 발생 구리 삼중펩티드입니다. 혈장 수치는 20세에 ~200ng/ml에서 60세에는 ~80ng/ml로 감소합니다. 연구에 따르면 혈장은 인간 유전자의 31.2%에 영향을 미치고 상처 치유, 콜라겐 합성 및 노화 방지 효과를 촉진합니다. 참고: 주사 가능한 GHK-Cu는 FDA 승인을 받지 않았습니다. 대부분의 임상 증거는 국소 연구와 동물 모델에서 나옵니다. [승인상태 정정 2026-10-26] GHK-Cu는 FDA 승인 의약품이 아닙니다. FDA는 주사용 조제 GHK-Cu의 면역원성 및 불순물 특성 규명과 관련된 안전 우려를 제시했습니다. 화장품·연구 사용을 FDA 승인으로 표현할 수 없습니다.",
       "keyBenefitsKo": "콜라겐 생성 강화, 피부 탄력 개선, 잔주름 및 주름 감소, 상처 치유 촉진, 모발 성장 자극, 매일 사용이 편리함",
       "mechanismKo": "국소 GHK-Cu는 피부층을 관통하여 구리를 표적 조직에 직접 전달합니다. 섬유아세포를 활성화하고, 콜라겐과 엘라스틴 합성을 자극하고, 혈관 신생을 촉진하고, 최적의 피부 재생을 위해 염증 반응을 조절합니다. 분자 정보무게404.96 DaLength3 아미노산 유형구리 삼중펩타이드아미노산 서열:Gly-His-Lys* 향상된 생체 이용률을 위해 구리(Cu2+)와 복합체",
       "subtitleKo": "구리 펩타이드 | 피부 재생 및 노화 방지 화합물",
@@ -12687,7 +12505,14 @@
           "description": "May interfere with copper binding and peptide effectiveness",
           "descriptionKo": "구리 결합 및 펩타이드 효과를 방해할 수 있음"
         }
-      ]
+      ],
+      "evidenceReview": {
+        "regulatoryStatus": {
+          "reviewedAt": "2026-10-26",
+          "fdaApproved": false,
+          "source": "https://www.fda.gov/drugs/human-drug-compounding/certain-bulk-drug-substances-use-compounding-may-present-significant-safety-risks"
+        }
+      }
     },
     "glow": {
       "id": "glow",
@@ -19157,7 +18982,7 @@
       "subtitle": "Dual GLP-1/Glucagon Receptor Agonist | Weight Loss & Diabetes",
       "nameKo": "마즈두타이드",
       "researchStatus": "Extensively Studied",
-      "isApproved": true,
+      "isApproved": false,
       "routes": [
         "Injectable"
       ],
@@ -19166,7 +18991,7 @@
       "cycle": "",
       "storage": "냉장 (2-8°C)",
       "routeDetail": "Abdomen, thigh, or upper arm - rotate sites",
-      "descriptionEn": "Mazdutide (IBI362/LY3305677) is a first-in-class dual glucagon-like peptide-1 (GLP-1) and glucagon receptor agonist, and a synthetic analog of oxyntomodulin. Unlike tirzepatide which targets GIP/GLP-1, mazdutide uniquely combines GLP-1's appetite suppression with glucagon's ability to stimulate thermogenesis and increase energy expenditure. Phase 3 trials (GLORY-1, GLORY-2) have demonstrated up to 20% weight loss, with recent head-to-head trials showing superiority over semaglutide for both glycemic control and weight reduction in patients with type 2 diabetes and obesity. UPDATE: Approved by China's NMPA on June 27, 2025 for chronic weight management (world's first dual glucagon/GLP-1 agonist approved) and on Sept 19, 2025 for type 2 diabetes.",
+      "descriptionEn": "Mazdutide (IBI362/LY3305677) is a first-in-class dual glucagon-like peptide-1 (GLP-1) and glucagon receptor agonist, and a synthetic analog of oxyntomodulin. Unlike tirzepatide which targets GIP/GLP-1, mazdutide uniquely combines GLP-1's appetite suppression with glucagon's ability to stimulate thermogenesis and increase energy expenditure. Phase 3 trials (GLORY-1, GLORY-2) have demonstrated up to 20% weight loss, with recent head-to-head trials showing superiority over semaglutide for both glycemic control and weight reduction in patients with type 2 diabetes and obesity. UPDATE: Approved by China's NMPA on June 27, 2025 for chronic weight management (world's first dual glucagon/GLP-1 agonist approved) and on Sept 19, 2025 for type 2 diabetes. [Regulatory correction 2026-10-26] Mazdutide is not FDA-approved in the United States. Its China NMPA approval is a separate national regulatory decision and does not imply FDA approval.",
       "keyBenefits": "Up to 20% body weight loss, superior glycemic control vs semaglutide, increased energy expenditure via glucagon receptor activation, improved cardiometabolic markers (BP, lipids, liver fat), once-weekly convenience",
       "mechanism": "Dual agonist of GLP-1 and glucagon receptors. GLP-1 activation: stimulates insulin release, suppresses glucagon, slows gastric emptying, reduces appetite via hypothalamic signaling. Glucagon activation: increases energy expenditure and thermogenesis, improves hepatic fat metabolism. The dual mechanism provides synergistic weight loss effects while GLP-1 counteracts glucagon's glucose-raising effec",
       "pharmacokinetics": {
@@ -19447,7 +19272,7 @@
         "Kidney problems (decreased urination, swelling, persistent fatigue)",
         "Signs of gallbladder problems (severe upper right abdominal pain)"
       ],
-      "descriptionKo": "Mazdutide(IBI362/LY3305677)는 업계 최초의 이중 글루카곤 유사 펩타이드-1(GLP-1) 및 글루카곤 수용체 작용제이자 옥신토모듈린의 합성 유사체입니다. GIP/GLP-1을 표적으로 하는 티르제파티드와는 달리, 마즈두티드는 GLP-1의 식욕 억제와 열 발생을 자극하고 에너지 소비를 증가시키는 글루카곤의 능력을 독특하게 결합합니다. 3상 시험(GLORY-1, GLORY-2)에서는 최대 20%의 체중 감소가 입증되었으며, 최근 직접 비교 시험에서는 제2형 당뇨병 및 비만 환자의 혈당 조절 및 체중 감소 모두에서 세마글루타이드보다 우월한 것으로 나타났습니다. [업데이트] 2025년 6월 27일 중국 NMPA가 만성 체중관리로 승인(세계 첫 글루카곤/GLP-1 이중작용제 승인), 2025년 9월 19일 제2형 당뇨로 승인.",
+      "descriptionKo": "Mazdutide(IBI362/LY3305677)는 업계 최초의 이중 글루카곤 유사 펩타이드-1(GLP-1) 및 글루카곤 수용체 작용제이자 옥신토모듈린의 합성 유사체입니다. GIP/GLP-1을 표적으로 하는 티르제파티드와는 달리, 마즈두티드는 GLP-1의 식욕 억제와 열 발생을 자극하고 에너지 소비를 증가시키는 글루카곤의 능력을 독특하게 결합합니다. 3상 시험(GLORY-1, GLORY-2)에서는 최대 20%의 체중 감소가 입증되었으며, 최근 직접 비교 시험에서는 제2형 당뇨병 및 비만 환자의 혈당 조절 및 체중 감소 모두에서 세마글루타이드보다 우월한 것으로 나타났습니다. [업데이트] 2025년 6월 27일 중국 NMPA가 만성 체중관리로 승인(세계 첫 글루카곤/GLP-1 이중작용제 승인), 2025년 9월 19일 제2형 당뇨로 승인. [승인상태 정정 2026-10-26] 마즈두타이드는 미국 FDA 승인 의약품이 아닙니다. 중국 NMPA 승인은 별도 국가의 규제 결정이며 FDA 승인을 뜻하지 않습니다.",
       "keyBenefitsKo": "체중 최대 20% 감소, 세마글루타이드 대비 우수한 혈당 조절, 글루카곤 수용체 활성화를 통한 에너지 소비 증가, 심대사 지표(BP, 지질, 간 지방) 개선, 주 1회 편리성",
       "mechanismKo": "GLP-1과 글루카곤 수용체의 이중 작용제. GLP-1 활성화: 인슐린 방출을 자극하고, 글루카곤을 억제하고, 위 배출을 늦추고, 시상하부 신호를 통해 식욕을 감소시킵니다. 글루카곤 활성화: 에너지 소비와 열 발생을 증가시키고 간 지방 대사를 개선합니다. 이중 메커니즘은 시너지적인 체중 감소 효과를 제공하는 동시에 GLP-1은 글루카곤의 포도당 상승 효과를 방해합니다.",
       "subtitleKo": "이중 GLP-1/글루카곤 수용체 작용제 | 체중 감소 및 당뇨병",
@@ -19726,7 +19551,14 @@
           "description": "Delayed gastric emptying may affect thyroid hormone absorption. Monitor thyroid function and adjust timing if needed",
           "descriptionKo": "위 배출이 지연되면 갑상선 호르몬 흡수에 영향을 줄 수 있습니다. 갑상선 기능을 모니터링하고 필요한 경우 시기를 조정하세요."
         }
-      ]
+      ],
+      "evidenceReview": {
+        "regulatoryStatus": {
+          "reviewedAt": "2026-10-26",
+          "fdaApproved": false,
+          "source": "https://www.fda.gov/inspections-compliance-enforcement-and-criminal-investigations/warning-letters/xcel-research-llc-694608-12102024"
+        }
+      }
     },
     "melanotan-1": {
       "id": "melanotan-1",
@@ -23373,6 +23205,13 @@
       },
       "latestResearch": [
         {
+          "title": "FDA approval announcement for orforglipron",
+          "excerpt": "FDA primary announcement supporting the existing approval status; the April 1, 2026 approval date is preserved and is not presented as a new October event.",
+          "date": "April 1, 2026",
+          "source": "U.S. Food and Drug Administration",
+          "link": "https://www.fda.gov/news-events/press-announcements/fda-approves-first-new-molecular-entity-under-national-priority-voucher-program"
+        },
+        {
           "title": "FDA Approves Foundayo (Orforglipron) - First Small-Molecule Oral GLP-1 for Weight Loss",
           "excerpt": "FDA approved Foundayo under the National Priority Voucher program on April 1, 2026 - the fastest new molecular entity approval since 2002. Approved for adults with obesity or overweight with weight-related comorbidities. Available in 6 tablet strengths (0.8mg to 17.2mg) with no food or water restrictions. Pricing starts at $25/month with insurance or $149/month self-pay.",
           "date": "April 2026",
@@ -23485,6 +23324,15 @@
         "시력 변화 또는 지속적인 눈 통증"
       ],
       "latestResearchKo": [
+        {
+          "title": "FDA approval announcement for orforglipron",
+          "excerpt": "FDA primary announcement supporting the existing approval status; the April 1, 2026 approval date is preserved and is not presented as a new October event.",
+          "date": "April 1, 2026",
+          "source": "U.S. Food and Drug Administration",
+          "link": "https://www.fda.gov/news-events/press-announcements/fda-approves-first-new-molecular-entity-under-national-priority-voucher-program",
+          "titleKo": "FDA 오포글리프론 승인 발표",
+          "excerptKo": "기존 승인 상태를 뒷받침하는 FDA 1차 발표입니다. 승인일은 2026년 4월 1일이며 10월 신규 사건으로 표시하지 않습니다."
+        },
         {
           "title": "FDA Approves Foundayo (Orforglipron) - First Small-Molecule Oral GLP-1 for Weight Loss",
           "excerpt": "FDA approved Foundayo under the National Priority Voucher program on April 1, 2026 - the fastest new molecular entity approval since 2002. Approved for adults with obesity or overweight with weight-related comorbidities. Available in 6 tablet strengths (0.8mg to 17.2mg) with no food or water restrictions. Pricing starts at $25/month with insurance or $149/month self-pay.",
@@ -27320,7 +27168,7 @@
       "cycle": "",
       "storage": "냉장 (2-8°C)",
       "routeDetail": "Abdomen, thigh, upper arm - rotate weekly to prevent lipodystrophy",
-      "descriptionEn": "Retatrutide (LY3437943) is a novel triple hormone receptor agonist targeting GLP-1, GIP, and glucagon receptors. Phase III TRIUMPH-4 trial (Dec 2025) achieved 28.7% weight loss (71.2 lbs) at 68 weeks with 12mg dose - the highest recorded for any obesity medication. Currently in late-stage Phase III development by Eli Lilly with FDA approval expected 2026-2027.",
+      "descriptionEn": "Retatrutide (LY3437943) is a novel triple hormone receptor agonist targeting GLP-1, GIP, and glucagon receptors. Phase III TRIUMPH-4 trial (Dec 2025) achieved 28.7% weight loss (71.2 lbs) at 68 weeks with 12mg dose - the highest recorded for any obesity medication. Currently in late-stage Phase III development by Eli Lilly with FDA approval expected 2026-2027. [Status 2026-10-26] TRIUMPH-2/3 results were announced as company topline data, not a peer-reviewed publication. Retatrutide remains investigational; submissions were planned to begin in Q1 2027.",
       "keyBenefits": "Triple hormone receptor activation provides superior weight loss (24.2%), improved glycemic control, and enhanced cardiovascular benefits compared to single or dual agonists",
       "mechanism": "Activates GLP-1 for appetite suppression, GIP for insulin sensitivity, and glucagon for increased energy expenditure and hepatic fat oxidationMolecular InformationWeight4,731.33 DaLength39 amino acidsTypeTriple GLP-1/GIP/glucagon agonistAmino Acid Sequence:His-Aib-Glu-Gly-Thr-Phe-Thr-Ser-Asp-Val-Ser-Ser-Tyr-Leu-Glu-Gly-Gln-Ala-Ala-Lys-Glu-Phe-Ile-Ala-Trp-Leu-Val-Arg-Gly-Arg-Gly-Pro-Ser-Ser-Gly-Ala",
       "pharmacokinetics": {
@@ -27544,6 +27392,13 @@
       },
       "latestResearch": [
         {
+          "title": "Lilly reports TRIUMPH-2 and TRIUMPH-3 topline results",
+          "excerpt": "Company topline release dated July 23, 2026; not a peer-reviewed publication. Retatrutide remains investigational, and Lilly stated it planned regulatory submissions beginning in the first quarter of 2027.",
+          "date": "July 23, 2026",
+          "source": "Eli Lilly investor news release",
+          "link": "https://investor.lilly.com/news-releases/news-release-details/lillys-triple-agonist-retatrutide-successful-two-additional"
+        },
+        {
           "title": "TRIUMPH-4 Phase III: 28.7% Weight Loss in First Successful Trial",
           "excerpt": "Eli Lilly announces landmark Phase III results: 12mg dose achieved 71.2 lbs (28.7%) weight loss at 68 weeks with 75.8% knee pain reduction. New dysesthesia safety signal identified in 8.8-20.9% of participants. Six more Phase III trials expected to read out by end of 2026.",
           "date": "December 2025",
@@ -27596,7 +27451,7 @@
         "Signs of gallbladder problems: severe right upper abdominal pain, clay-colored stools",
         "Persistent severe diarrhea leading to dehydration or electrolyte imbalances"
       ],
-      "descriptionKo": "Retatrutide(LY3437943)는 GLP-1, GIP 및 글루카곤 수용체를 표적으로 하는 새로운 삼중 호르몬 수용체 작용제입니다. 3상 TRIUMPH-4 시험(2025년 12월)은 12mg 용량으로 68주차에 28.7%의 체중 감소(71.2lbs)를 달성했습니다. 이는 모든 비만 치료제에 대한 최고 기록입니다. 현재 Eli Lilly의 후기 단계 III 단계 개발이 진행 중이며 2026~2027년에 FDA 승인이 예상됩니다.",
+      "descriptionKo": "Retatrutide(LY3437943)는 GLP-1, GIP 및 글루카곤 수용체를 표적으로 하는 새로운 삼중 호르몬 수용체 작용제입니다. 3상 TRIUMPH-4 시험(2025년 12월)은 12mg 용량으로 68주차에 28.7%의 체중 감소(71.2lbs)를 달성했습니다. 이는 모든 비만 치료제에 대한 최고 기록입니다. 현재 Eli Lilly의 후기 단계 III 단계 개발이 진행 중이며 2026~2027년에 FDA 승인이 예상됩니다. [상태 2026-10-26] TRIUMPH-2·3 결과는 회사 주요결과 발표이며 동료평가 논문이 아닙니다. 레타트루타이드는 연구 단계이고 허가 신청은 2027년 1분기부터 시작할 계획으로 발표됐습니다.",
       "keyBenefitsKo": "삼중 호르몬 수용체 활성화는 단일 또는 이중 작용제에 비해 탁월한 체중 감소(24.2%), 향상된 혈당 조절 및 향상된 심혈관 혜택을 제공합니다.",
       "mechanismKo": "식욕 억제를 위한 GLP-1, 인슐린 감수성을 위한 GIP, 에너지 소비 증가 및 간 지방 산화를 위한 글루카곤 활성화분자 정보무게4,731.33 DaLength39 아미노산유형삼중 GLP-1/GIP/글루카곤 작용제아미노산 순서: His-Aib-Glu-Gly-Thr-Phe-Thr-Ser-Asp-Val-Ser-Ser-Tyr-Leu-Glu-Gly-Gln-Ala-Ala-Lys-Glu-Phe-Ile-Ala-Trp-Leu-Val-Arg-Gly-Arg-Gly-Pro-Ser-Ser-Gly-Ala",
       "subtitleKo": "삼중 GLP-1/GIP/글루카곤 작용제 | 체중 감소 및 당뇨병",
@@ -27619,6 +27474,15 @@
         "탈수 또는 전해질 불균형으로 이어지는 지속적인 심한 설사"
       ],
       "latestResearchKo": [
+        {
+          "title": "Lilly reports TRIUMPH-2 and TRIUMPH-3 topline results",
+          "excerpt": "Company topline release dated July 23, 2026; not a peer-reviewed publication. Retatrutide remains investigational, and Lilly stated it planned regulatory submissions beginning in the first quarter of 2027.",
+          "date": "July 23, 2026",
+          "source": "Eli Lilly investor news release",
+          "link": "https://investor.lilly.com/news-releases/news-release-details/lillys-triple-agonist-retatrutide-successful-two-additional",
+          "titleKo": "릴리 TRIUMPH-2·TRIUMPH-3 주요결과 발표",
+          "excerptKo": "2026년 7월 23일 회사 주요결과 발표이며 동료평가 논문이 아닙니다. 레타트루타이드는 여전히 연구 단계이고, 릴리는 2027년 1분기부터 허가 신청을 시작할 계획이라고 밝혔습니다."
+        },
         {
           "title": "TRIUMPH-4 Phase III: 28.7% Weight Loss in First Successful Trial",
           "excerpt": "Eli Lilly announces landmark Phase III results: 12mg dose achieved 71.2 lbs (28.7%) weight loss at 68 weeks with 75.8% knee pain reduction. New dysesthesia safety signal identified in 8.8-20.9% of participants. Six more Phase III trials expected to read out by end of 2026.",
@@ -29630,7 +29494,7 @@
       "subtitle": "GHRH 1-29 Analog | Growth Hormone Releasing HormoneNasal",
       "nameKo": "세르모렐린",
       "researchStatus": "Well Researched",
-      "isApproved": true,
+      "isApproved": false,
       "routes": [
         "Injectable"
       ],
@@ -29639,7 +29503,7 @@
       "cycle": "3-6 months",
       "storage": "냉장 (2-8°C)",
       "routeDetail": "",
-      "descriptionEn": "Sermorelin acetate is a 29-amino acid synthetic analog of human growth hormone-releasing hormone (GHRH) originally FDA-approved in 1997 for pediatric growth hormone deficiency. Despite discontinuation in 2008 for manufacturing reasons, it maintains excellent safety profile and stimulates natural growth hormone production while preserving physiological pulsatile patterns.",
+      "descriptionEn": "Sermorelin acetate is a 29-amino acid synthetic analog of human growth hormone-releasing hormone (GHRH) originally FDA-approved in 1997 for pediatric growth hormone deficiency. Despite discontinuation in 2008 for manufacturing reasons, it maintains excellent safety profile and stimulates natural growth hormone production while preserving physiological pulsatile patterns. [Regulatory correction 2026-10-26] Sermorelin is not currently FDA-approved. Geref received approval in 1997, but its applications were withdrawn in 2009; historical approval must not be presented as current approval.",
       "keyBenefits": "FDA-proven efficacy, 6% bioavailability, maintains natural GH pulses, preserves pituitary function",
       "mechanism": "Subcutaneous injection provides optimal bioavailability with rapid onset (5-20 minutes) and physiological pulsatile GH stimulation",
       "pharmacokinetics": {
@@ -29884,7 +29748,7 @@
         "Uncontrolled diabetes or significant glucose intolerance development",
         "New onset or worsening of malignancy symptoms"
       ],
-      "descriptionKo": "세르모렐린 아세테이트는 인간 성장 호르몬 방출 호르몬(GHRH)의 29개 아미노산 합성 유사체로 원래 1997년 소아 성장 호르몬 결핍증에 대해 FDA 승인을 받았습니다. 2008년 제조상의 이유로 생산이 중단되었음에도 불구하고 우수한 안전성을 유지하고 생리학적 박동 패턴을 유지하면서 자연적인 성장 호르몬 생산을 자극합니다.",
+      "descriptionKo": "세르모렐린 아세테이트는 인간 성장 호르몬 방출 호르몬(GHRH)의 29개 아미노산 합성 유사체로 원래 1997년 소아 성장 호르몬 결핍증에 대해 FDA 승인을 받았습니다. 2008년 제조상의 이유로 생산이 중단되었음에도 불구하고 우수한 안전성을 유지하고 생리학적 박동 패턴을 유지하면서 자연적인 성장 호르몬 생산을 자극합니다. [승인상태 정정 2026-10-26] 세르모렐린은 현재 FDA 승인 상태가 아닙니다. Geref는 1997년 승인됐으나 2009년 신청이 철회됐으므로 과거 승인을 현재 승인으로 표시할 수 없습니다.",
       "keyBenefitsKo": "FDA에서 입증된 효능, 생체 이용률 6%, 천연 GH 펄스 유지, 뇌하수체 기능 보존",
       "mechanismKo": "피하 주사는 빠른 개시(5~20분) 및 생리학적 박동성 GH 자극으로 최적의 생체 이용률을 제공합니다.",
       "subtitleKo": "GHRH 1-29 아날로그 | 성장 호르몬 방출 호르몬비강",
@@ -30130,7 +29994,14 @@
           "description": "Essential combination as untreated hypothyroidism prevents sermorelin response. 6.5% of patients develop hypothyroidism requiring hormone replacement.",
           "descriptionKo": "치료되지 않은 갑상선 기능 저하증으로서의 필수 조합은 세르모렐린 반응을 예방합니다. 환자의 6.5%에서는 호르몬 대체가 필요한 갑상선 기능 저하증이 발생합니다."
         }
-      ]
+      ],
+      "evidenceReview": {
+        "regulatoryStatus": {
+          "reviewedAt": "2026-10-26",
+          "fdaApproved": false,
+          "source": "https://www.accessdata.fda.gov/drugsatfda_docs/nda/2017/205598Orig1s000MedR.pdf"
+        }
+      }
     },
     "slu-pp-332": {
       "id": "slu-pp-332",
@@ -43193,9 +43064,801 @@
       "qualityGoodKo": [],
       "qualityBadKo": [],
       "interactionsKo": []
+    },
+    "aicar": {
+      "id": "aicar",
+      "nameEn": "AICAR",
+      "subtitle": "AMPK activator; nucleoside analogue (not a peptide)",
+      "nameKo": "AICAR",
+      "researchStatus": "Clinical Research",
+      "isApproved": false,
+      "routes": [
+        "Research information only"
+      ],
+      "typicalDose": "사람 표준용량 미확립",
+      "frequency": "미확립",
+      "cycle": "미확립",
+      "storage": "미확립",
+      "routeDetail": "자가투약 경로 확립 안 됨",
+      "descriptionEn": "AICAR (acadesine) is a nucleoside analogue used in metabolic research. Human research cited here used controlled intravenous administration; it does not establish a subcutaneous or self-administration regimen.",
+      "keyBenefits": "No approved clinical benefit has been established.",
+      "mechanism": "Intracellular AICAR is phosphorylated to ZMP and is used experimentally to alter AMPK-related signaling; AMPK-independent effects are also reported.",
+      "pharmacokinetics": {},
+      "researchIndications": [
+        {
+          "name": "Research only",
+          "effectiveness": "Not established",
+          "level": 0
+        }
+      ],
+      "protocolTiming": "No evidence-based human schedule is established.",
+      "protocols": [],
+      "interactions": [],
+      "reconstitute": "",
+      "qualityGood": "",
+      "qualityBad": "",
+      "effectsTimeline": [],
+      "sideEffects": [],
+      "quickStart": {
+        "dose": "사람 표준용량 미확립",
+        "frequency": "미확립",
+        "effectsTimeline": "사람 임상 효과 시점 미확립",
+        "storageNote": "제품별 안정성 자료 필요",
+        "cycleLength": "미확립",
+        "breakBetween": "미확립"
+      },
+      "tags": [
+        "Metabolic Research",
+        "Non-peptide"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/aicar",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [
+        {
+          "title": "Human pharmacokinetics of acadesine",
+          "excerpt": "Controlled single-dose intravenous pharmacokinetic study in healthy men; not a self-use protocol.",
+          "date": "1991",
+          "source": "Primary publication",
+          "link": "https://doi.org/10.1002/j.1552-4604.1991.tb03715.x"
+        },
+        {
+          "title": "RED-CABG randomized trial",
+          "excerpt": "Randomized trial in 3,080 high-risk CABG patients using intravenous acadesine; it did not reduce the primary composite outcome. This is human clinical evidence, but not an exercise or self-injection regimen.",
+          "date": "2012",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/22782417/"
+        }
+      ],
+      "relatedSlugs": [],
+      "safetyNotes": [
+        "Not FDA approved; no self-administration regimen is established.",
+        "Nonclinical doses must not be converted into a human dose."
+      ],
+      "stopSigns": [
+        "No self-administration protocol is provided."
+      ],
+      "descriptionKo": "AICAR(아카데신)은 대사 연구에 쓰이는 뉴클레오사이드 유사체로 펩타이드가 아닙니다. 사람 연구는 의료환경의 정맥투여였으며 피하 또는 자가투약 용법을 확립하지 않습니다.",
+      "keyBenefitsKo": "승인된 임상적 이점은 확립되지 않았습니다.",
+      "mechanismKo": "세포 안에서 ZMP로 인산화되어 AMPK 관련 신호를 연구하는 데 사용되며 AMPK 비의존 효과도 보고되어 있습니다.",
+      "subtitleKo": "AMPK 활성화 뉴클레오사이드 유사체(펩타이드 아님)",
+      "safetyNotesKo": [
+        "FDA 승인 약물이 아니며 자가투약 용법이 확립되지 않았습니다.",
+        "비임상 용량을 사람 용량으로 환산할 수 없습니다."
+      ],
+      "stopSignsKo": [
+        "자가투약 프로토콜을 제공하지 않습니다."
+      ],
+      "latestResearchKo": [
+        {
+          "title": "Human pharmacokinetics of acadesine",
+          "excerpt": "Controlled single-dose intravenous pharmacokinetic study in healthy men; not a self-use protocol.",
+          "date": "1991",
+          "source": "Primary publication",
+          "link": "https://doi.org/10.1002/j.1552-4604.1991.tb03715.x",
+          "titleKo": "아카데신 사람 약동학 연구",
+          "excerptKo": "건강한 남성의 통제된 단회 정맥 약동학 연구이며 자가투약 근거가 아닙니다."
+        },
+        {
+          "title": "RED-CABG randomized trial",
+          "excerpt": "Randomized trial in 3,080 high-risk CABG patients using intravenous acadesine; it did not reduce the primary composite outcome. This is human clinical evidence, but not an exercise or self-injection regimen.",
+          "date": "2012",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/22782417/",
+          "titleKo": "RED-CABG 무작위 임상시험",
+          "excerptKo": "고위험 관상동맥우회술 환자 3,080명의 정맥 아카데신 무작위시험에서 일차 복합결과를 낮추지 못했습니다. 사람 임상 근거이지만 운동 목적 또는 자가주사 용법 근거는 아닙니다."
+        }
+      ],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "근거 기반 사람 투여 일정은 확립되지 않았습니다.",
+      "sideEffectsKo": [],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": "",
+      "qualityBadKo": "",
+      "interactionsKo": [],
+      "evidenceReview": {
+        "reviewedAt": "2026-10-26",
+        "contentUpdatedAt": null,
+        "substanceType": "Non-peptide nucleoside analogue",
+        "humanStandardDoseEstablished": false,
+        "selfAdministrationScheduleProvided": false,
+        "evidenceSummary": {
+          "human": "Human IV pharmacokinetic studies and a 3,080-patient randomized CABG trial exist; the RCT did not improve the primary composite outcome.",
+          "animal": "Metabolic and endurance studies in rodents",
+          "cell": "AMPK and glucose-transport studies"
+        },
+        "primaryReferences": [
+          {
+            "title": "Human pharmacokinetics of acadesine",
+            "titleKo": "아카데신 사람 약동학 연구",
+            "year": "1991",
+            "link": "https://doi.org/10.1002/j.1552-4604.1991.tb03715.x",
+            "evidence": "Controlled single-dose intravenous pharmacokinetic study in healthy men; not a self-use protocol.",
+            "evidenceKo": "건강한 남성의 통제된 단회 정맥 약동학 연구이며 자가투약 근거가 아닙니다."
+          },
+          {
+            "title": "RED-CABG randomized trial",
+            "titleKo": "RED-CABG 무작위 임상시험",
+            "year": "2012",
+            "link": "https://pubmed.ncbi.nlm.nih.gov/22782417/",
+            "evidence": "Randomized 3,080-patient intravenous trial; no reduction in the primary composite outcome and no basis for exercise or self-injection use.",
+            "evidenceKo": "3,080명 정맥투여 무작위시험에서 일차 복합결과 감소가 없었으며 운동·자가주사 사용 근거가 아닙니다."
+          }
+        ],
+        "researchStatusRationale": "Large controlled human intravenous studies exist, but no approved routine or self-use regimen."
+      }
+    },
+    "cortagen": {
+      "id": "cortagen",
+      "nameEn": "Cortagen",
+      "subtitle": "AEDP synthetic tetrapeptide; brain-cortex bioregulator research",
+      "nameKo": "코르타젠",
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "routes": [
+        "Research information only"
+      ],
+      "typicalDose": "사람 표준용량 미확립",
+      "frequency": "미확립",
+      "cycle": "미확립",
+      "storage": "미확립",
+      "routeDetail": "자가투약 경로 확립 안 됨",
+      "descriptionEn": "Cortagen is the synthetic tetrapeptide Ala-Glu-Asp-Pro (AEDP). Published evidence is mainly rodent or ex-vivo work and does not establish a standard human regimen.",
+      "keyBenefits": "No approved clinical benefit has been established.",
+      "mechanism": "AEDP is studied for gene-expression and cellular stress effects; clinical neuroprotection has not been established.",
+      "pharmacokinetics": {},
+      "researchIndications": [
+        {
+          "name": "Research only",
+          "effectiveness": "Not established",
+          "level": 0
+        }
+      ],
+      "protocolTiming": "No evidence-based human schedule is established.",
+      "protocols": [],
+      "interactions": [],
+      "reconstitute": "",
+      "qualityGood": "",
+      "qualityBad": "",
+      "effectsTimeline": [],
+      "sideEffects": [],
+      "quickStart": {
+        "dose": "사람 표준용량 미확립",
+        "frequency": "미확립",
+        "effectsTimeline": "사람 임상 효과 시점 미확립",
+        "storageNote": "제품별 안정성 자료 필요",
+        "cycleLength": "미확립",
+        "breakBetween": "미확립"
+      },
+      "tags": [
+        "Tetrapeptide",
+        "Neurobiology Research"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/cortagen",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [
+        {
+          "title": "Effect of tetrapeptide cortagen on regeneration of sciatic nerve",
+          "excerpt": "Rat nerve-injury study; animal dose and outcomes are not a human regimen.",
+          "date": "2000",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/11276314/"
+        },
+        {
+          "title": "Effects of short peptides on lymphocyte chromatin in senile subjects",
+          "excerpt": "Ex-vivo lymphocyte study from older donors; not a clinical treatment trial.",
+          "date": "2004",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/15085253/"
+        }
+      ],
+      "relatedSlugs": [],
+      "safetyNotes": [
+        "Not FDA approved; no self-administration regimen is established.",
+        "Nonclinical doses must not be converted into a human dose."
+      ],
+      "stopSigns": [
+        "No self-administration protocol is provided."
+      ],
+      "descriptionKo": "코르타젠은 Ala-Glu-Asp-Pro(AEDP) 서열의 합성 테트라펩타이드입니다. 공개 근거는 주로 설치류 또는 사람 세포의 체외 연구이며 표준 사람 용법을 확립하지 않습니다.",
+      "keyBenefitsKo": "승인된 임상적 이점은 확립되지 않았습니다.",
+      "mechanismKo": "AEDP의 유전자 발현·세포 스트레스 관련 효과가 연구됐지만 임상적 신경보호 효과는 확립되지 않았습니다.",
+      "subtitleKo": "AEDP 합성 테트라펩타이드 연구물질",
+      "safetyNotesKo": [
+        "FDA 승인 약물이 아니며 자가투약 용법이 확립되지 않았습니다.",
+        "비임상 용량을 사람 용량으로 환산할 수 없습니다."
+      ],
+      "stopSignsKo": [
+        "자가투약 프로토콜을 제공하지 않습니다."
+      ],
+      "latestResearchKo": [
+        {
+          "title": "Effect of tetrapeptide cortagen on regeneration of sciatic nerve",
+          "excerpt": "Rat nerve-injury study; animal dose and outcomes are not a human regimen.",
+          "date": "2000",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/11276314/",
+          "titleKo": "코르타젠의 좌골신경 재생 영향",
+          "excerptKo": "쥐 신경손상 연구로 동물 용량과 결과는 사람 용법이 아닙니다."
+        },
+        {
+          "title": "Effects of short peptides on lymphocyte chromatin in senile subjects",
+          "excerpt": "Ex-vivo lymphocyte study from older donors; not a clinical treatment trial.",
+          "date": "2004",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/15085253/",
+          "titleKo": "고령자 림프구 염색질 체외 연구",
+          "excerptKo": "고령 기증자의 림프구 체외 연구이며 임상 치료시험이 아닙니다."
+        }
+      ],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "근거 기반 사람 투여 일정은 확립되지 않았습니다.",
+      "sideEffectsKo": [],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": "",
+      "qualityBadKo": "",
+      "interactionsKo": [],
+      "evidenceReview": {
+        "reviewedAt": "2026-10-26",
+        "contentUpdatedAt": null,
+        "substanceType": "Synthetic tetrapeptide (AEDP)",
+        "humanStandardDoseEstablished": false,
+        "selfAdministrationScheduleProvided": false,
+        "evidenceSummary": {
+          "human": "Ex-vivo cells from older donors",
+          "animal": "Rat nerve and ischemia models",
+          "clinical": "No standard regimen established"
+        },
+        "primaryReferences": [
+          {
+            "title": "Effect of tetrapeptide cortagen on regeneration of sciatic nerve",
+            "titleKo": "코르타젠의 좌골신경 재생 영향",
+            "year": "2000",
+            "link": "https://pubmed.ncbi.nlm.nih.gov/11276314/",
+            "evidence": "Rat nerve-injury study; animal dose and outcomes are not a human regimen.",
+            "evidenceKo": "쥐 신경손상 연구로 동물 용량과 결과는 사람 용법이 아닙니다."
+          },
+          {
+            "title": "Effects of short peptides on lymphocyte chromatin in senile subjects",
+            "titleKo": "고령자 림프구 염색질 체외 연구",
+            "year": "2004",
+            "link": "https://pubmed.ncbi.nlm.nih.gov/15085253/",
+            "evidence": "Ex-vivo lymphocyte study from older donors; not a clinical treatment trial.",
+            "evidenceKo": "고령 기증자의 림프구 체외 연구이며 임상 치료시험이 아닙니다."
+          }
+        ],
+        "researchStatusRationale": "Evidence is mainly animal and ex-vivo; no established clinical regimen."
+      }
+    },
+    "klotho": {
+      "id": "klotho",
+      "nameEn": "Klotho",
+      "subtitle": "Endogenous alpha-Klotho protein; recombinant protein research",
+      "nameKo": "클로토",
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "routes": [
+        "Research information only"
+      ],
+      "typicalDose": "사람 표준용량 미확립",
+      "frequency": "미확립",
+      "cycle": "미확립",
+      "storage": "미확립",
+      "routeDetail": "자가투약 경로 확립 안 됨",
+      "descriptionEn": "Klotho is an endogenous transmembrane protein and circulating factor, not a short peptide drug. Human evidence is largely genetic or observational; administered recombinant Klotho remains preclinical.",
+      "keyBenefits": "No approved clinical benefit has been established.",
+      "mechanism": "Membrane Klotho acts with FGF receptors in mineral metabolism; soluble forms are studied as signaling factors. Exogenous therapeutic efficacy in humans is unestablished.",
+      "pharmacokinetics": {},
+      "researchIndications": [
+        {
+          "name": "Research only",
+          "effectiveness": "Not established",
+          "level": 0
+        }
+      ],
+      "protocolTiming": "No evidence-based human schedule is established.",
+      "protocols": [],
+      "interactions": [],
+      "reconstitute": "",
+      "qualityGood": "",
+      "qualityBad": "",
+      "effectsTimeline": [],
+      "sideEffects": [],
+      "quickStart": {
+        "dose": "사람 표준용량 미확립",
+        "frequency": "미확립",
+        "effectsTimeline": "사람 임상 효과 시점 미확립",
+        "storageNote": "제품별 안정성 자료 필요",
+        "cycleLength": "미확립",
+        "breakBetween": "미확립"
+      },
+      "tags": [
+        "Protein",
+        "Aging Research"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/klotho",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [
+        {
+          "title": "Mutation of the mouse klotho gene leads to a syndrome resembling ageing",
+          "excerpt": "Foundational mouse genetics study; it does not establish treatment in humans.",
+          "date": "1997",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/9363890/"
+        },
+        {
+          "title": "Life extension factor klotho enhances cognition",
+          "excerpt": "Human genetic association combined with mouse experiments; not recombinant-protein dosing evidence in humans.",
+          "date": "2014",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/24813892/"
+        }
+      ],
+      "relatedSlugs": [],
+      "safetyNotes": [
+        "Not FDA approved; no self-administration regimen is established.",
+        "Nonclinical doses must not be converted into a human dose."
+      ],
+      "stopSigns": [
+        "No self-administration protocol is provided."
+      ],
+      "descriptionKo": "클로토는 짧은 펩타이드 약물이 아니라 내인성 막단백질이자 순환 인자입니다. 사람 근거는 주로 유전·관찰 연구이며 재조합 클로토 투여는 비임상 단계입니다.",
+      "keyBenefitsKo": "승인된 임상적 이점은 확립되지 않았습니다.",
+      "mechanismKo": "막형 클로토는 무기질 대사에서 FGF 수용체와 함께 작용하며 가용성 형태는 신호 인자로 연구됩니다. 외부 투여의 사람 치료효과는 확립되지 않았습니다.",
+      "subtitleKo": "내인성 알파-클로토 단백질·재조합 단백질 연구",
+      "safetyNotesKo": [
+        "FDA 승인 약물이 아니며 자가투약 용법이 확립되지 않았습니다.",
+        "비임상 용량을 사람 용량으로 환산할 수 없습니다."
+      ],
+      "stopSignsKo": [
+        "자가투약 프로토콜을 제공하지 않습니다."
+      ],
+      "latestResearchKo": [
+        {
+          "title": "Mutation of the mouse klotho gene leads to a syndrome resembling ageing",
+          "excerpt": "Foundational mouse genetics study; it does not establish treatment in humans.",
+          "date": "1997",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/9363890/",
+          "titleKo": "클로토 유전자 결손 생쥐 연구",
+          "excerptKo": "기초 생쥐 유전학 연구이며 사람 치료를 확립하지 않습니다."
+        },
+        {
+          "title": "Life extension factor klotho enhances cognition",
+          "excerpt": "Human genetic association combined with mouse experiments; not recombinant-protein dosing evidence in humans.",
+          "date": "2014",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/24813892/",
+          "titleKo": "클로토 변이와 인지의 연관 연구",
+          "excerptKo": "사람 유전 연관성과 생쥐 실험을 결합한 연구이며 사람 재조합 단백질 용량 근거가 아닙니다."
+        }
+      ],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "근거 기반 사람 투여 일정은 확립되지 않았습니다.",
+      "sideEffectsKo": [],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": "",
+      "qualityBadKo": "",
+      "interactionsKo": [],
+      "evidenceReview": {
+        "reviewedAt": "2026-10-26",
+        "contentUpdatedAt": null,
+        "substanceType": "Endogenous 1,012-amino-acid protein / recombinant protein research",
+        "humanStandardDoseEstablished": false,
+        "selfAdministrationScheduleProvided": false,
+        "evidenceSummary": {
+          "human": "Genetic and observational associations",
+          "animal": "Recombinant fragments tested in mice and nonhuman primates",
+          "clinical": "No established human administration regimen"
+        },
+        "primaryReferences": [
+          {
+            "title": "Mutation of the mouse klotho gene leads to a syndrome resembling ageing",
+            "titleKo": "클로토 유전자 결손 생쥐 연구",
+            "year": "1997",
+            "link": "https://pubmed.ncbi.nlm.nih.gov/9363890/",
+            "evidence": "Foundational mouse genetics study; it does not establish treatment in humans.",
+            "evidenceKo": "기초 생쥐 유전학 연구이며 사람 치료를 확립하지 않습니다."
+          },
+          {
+            "title": "Life extension factor klotho enhances cognition",
+            "titleKo": "클로토 변이와 인지의 연관 연구",
+            "year": "2014",
+            "link": "https://pubmed.ncbi.nlm.nih.gov/24813892/",
+            "evidence": "Human genetic association combined with mouse experiments; not recombinant-protein dosing evidence in humans.",
+            "evidenceKo": "사람 유전 연관성과 생쥐 실험을 결합한 연구이며 사람 재조합 단백질 용량 근거가 아닙니다."
+          }
+        ],
+        "researchStatusRationale": "Human genetic/observational evidence exists; administered recombinant protein remains preclinical."
+      }
+    },
+    "ptd-dbm": {
+      "id": "ptd-dbm",
+      "nameEn": "PTD-DBM",
+      "subtitle": "25-amino-acid fusion peptide; CXXC5-Dvl research",
+      "nameKo": "PTD-DBM",
+      "researchStatus": "Limited Research",
+      "isApproved": false,
+      "routes": [
+        "Research information only"
+      ],
+      "typicalDose": "사람 표준용량 미확립",
+      "frequency": "미확립",
+      "cycle": "미확립",
+      "storage": "미확립",
+      "routeDetail": "자가투약 경로 확립 안 됨",
+      "descriptionEn": "PTD-DBM is a 25-amino-acid fusion research peptide designed to disrupt the CXXC5-Dvl interaction. Evidence is from cells and mouse skin/hair models; no human clinical regimen is established.",
+      "keyBenefits": "No approved clinical benefit has been established.",
+      "mechanism": "The fusion peptide is designed to reactivate Wnt/beta-catenin signaling by competing with CXXC5 for Dvl binding. Clinical efficacy and safety are unestablished.",
+      "pharmacokinetics": {},
+      "researchIndications": [
+        {
+          "name": "Research only",
+          "effectiveness": "Not established",
+          "level": 0
+        }
+      ],
+      "protocolTiming": "No evidence-based human schedule is established.",
+      "protocols": [],
+      "interactions": [],
+      "reconstitute": "",
+      "qualityGood": "",
+      "qualityBad": "",
+      "effectsTimeline": [],
+      "sideEffects": [],
+      "quickStart": {
+        "dose": "사람 표준용량 미확립",
+        "frequency": "미확립",
+        "effectsTimeline": "사람 임상 효과 시점 미확립",
+        "storageNote": "제품별 안정성 자료 필요",
+        "cycleLength": "미확립",
+        "breakBetween": "미확립"
+      },
+      "tags": [
+        "Hair Research",
+        "Fusion Peptide"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/ptd-dbm",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [
+        {
+          "title": "The Dishevelled-binding protein CXXC5 negatively regulates cutaneous wound healing",
+          "excerpt": "Mouse wound model and mechanistic experiments; topical experimental concentration is not a human dose.",
+          "date": "2015",
+          "source": "Primary publication",
+          "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4493411/"
+        },
+        {
+          "title": "Targeting CXXC5 by a competing peptide stimulates hair regrowth",
+          "excerpt": "Human dermal-papilla cells and mouse models; no human clinical treatment arm.",
+          "date": "2017",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/28595998/"
+        }
+      ],
+      "relatedSlugs": [],
+      "safetyNotes": [
+        "Not FDA approved; no self-administration regimen is established.",
+        "Nonclinical doses must not be converted into a human dose."
+      ],
+      "stopSigns": [
+        "No self-administration protocol is provided."
+      ],
+      "descriptionKo": "PTD-DBM은 CXXC5-Dvl 결합을 방해하도록 설계된 25개 아미노산 융합 연구 펩타이드입니다. 근거는 세포와 생쥐 피부·모발 모델이며 사람 임상 용법은 확립되지 않았습니다.",
+      "keyBenefitsKo": "승인된 임상적 이점은 확립되지 않았습니다.",
+      "mechanismKo": "CXXC5와 Dvl의 결합을 경쟁적으로 방해해 Wnt/베타카테닌 신호를 재활성화하도록 설계됐습니다. 임상 효과와 안전성은 확립되지 않았습니다.",
+      "subtitleKo": "25개 아미노산 융합 펩타이드·CXXC5-Dvl 연구",
+      "safetyNotesKo": [
+        "FDA 승인 약물이 아니며 자가투약 용법이 확립되지 않았습니다.",
+        "비임상 용량을 사람 용량으로 환산할 수 없습니다."
+      ],
+      "stopSignsKo": [
+        "자가투약 프로토콜을 제공하지 않습니다."
+      ],
+      "latestResearchKo": [
+        {
+          "title": "The Dishevelled-binding protein CXXC5 negatively regulates cutaneous wound healing",
+          "excerpt": "Mouse wound model and mechanistic experiments; topical experimental concentration is not a human dose.",
+          "date": "2015",
+          "source": "Primary publication",
+          "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4493411/",
+          "titleKo": "CXXC5와 피부 상처회복 전임상 연구",
+          "excerptKo": "생쥐 상처 모델과 기전 실험이며 실험용 국소 농도는 사람 용량이 아닙니다."
+        },
+        {
+          "title": "Targeting CXXC5 by a competing peptide stimulates hair regrowth",
+          "excerpt": "Human dermal-papilla cells and mouse models; no human clinical treatment arm.",
+          "date": "2017",
+          "source": "Primary publication",
+          "link": "https://pubmed.ncbi.nlm.nih.gov/28595998/",
+          "titleKo": "CXXC5 경쟁 펩타이드 모발재생 전임상 연구",
+          "excerptKo": "사람 모유두 세포와 생쥐 모델 연구이며 사람 임상 치료군은 없습니다."
+        }
+      ],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "근거 기반 사람 투여 일정은 확립되지 않았습니다.",
+      "sideEffectsKo": [],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": "",
+      "qualityBadKo": "",
+      "interactionsKo": [],
+      "evidenceReview": {
+        "reviewedAt": "2026-10-26",
+        "contentUpdatedAt": null,
+        "substanceType": "25-amino-acid fusion peptide",
+        "humanStandardDoseEstablished": false,
+        "selfAdministrationScheduleProvided": false,
+        "evidenceSummary": {
+          "human": "Human dermal-papilla cells in vitro, not patients",
+          "animal": "Mouse wound and hair models",
+          "clinical": "No human clinical trial regimen established"
+        },
+        "primaryReferences": [
+          {
+            "title": "The Dishevelled-binding protein CXXC5 negatively regulates cutaneous wound healing",
+            "titleKo": "CXXC5와 피부 상처회복 전임상 연구",
+            "year": "2015",
+            "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4493411/",
+            "evidence": "Mouse wound model and mechanistic experiments; topical experimental concentration is not a human dose.",
+            "evidenceKo": "생쥐 상처 모델과 기전 실험이며 실험용 국소 농도는 사람 용량이 아닙니다."
+          },
+          {
+            "title": "Targeting CXXC5 by a competing peptide stimulates hair regrowth",
+            "titleKo": "CXXC5 경쟁 펩타이드 모발재생 전임상 연구",
+            "year": "2017",
+            "link": "https://pubmed.ncbi.nlm.nih.gov/28595998/",
+            "evidence": "Human dermal-papilla cells and mouse models; no human clinical treatment arm.",
+            "evidenceKo": "사람 모유두 세포와 생쥐 모델 연구이며 사람 임상 치료군은 없습니다."
+          }
+        ],
+        "researchStatusRationale": "Cell and mouse evidence; no human clinical regimen."
+      }
+    },
+    "slu-pp-915": {
+      "id": "slu-pp-915",
+      "nameEn": "SLU-PP-915",
+      "subtitle": "Synthetic pan-ERR agonist small molecule (not a peptide)",
+      "nameKo": "SLU-PP-915",
+      "researchStatus": "Emerging Research",
+      "isApproved": false,
+      "routes": [
+        "Research information only"
+      ],
+      "typicalDose": "사람 표준용량 미확립",
+      "frequency": "미확립",
+      "cycle": "미확립",
+      "storage": "미확립",
+      "routeDetail": "자가투약 경로 확립 안 됨",
+      "descriptionEn": "SLU-PP-915 is a synthetic small-molecule agonist of estrogen-related receptors, not a peptide. Published efficacy work is preclinical, including mouse exercise and cardiac models; there is no established human dose.",
+      "keyBenefits": "No approved clinical benefit has been established.",
+      "mechanism": "SLU-PP-915 activates ERR alpha, beta, and gamma in experimental systems and is studied for metabolic gene programs. Human efficacy and safety are unknown.",
+      "pharmacokinetics": {},
+      "researchIndications": [
+        {
+          "name": "Research only",
+          "effectiveness": "Not established",
+          "level": 0
+        }
+      ],
+      "protocolTiming": "No evidence-based human schedule is established.",
+      "protocols": [],
+      "interactions": [],
+      "reconstitute": "",
+      "qualityGood": "",
+      "qualityBad": "",
+      "effectsTimeline": [],
+      "sideEffects": [],
+      "quickStart": {
+        "dose": "사람 표준용량 미확립",
+        "frequency": "미확립",
+        "effectsTimeline": "사람 임상 효과 시점 미확립",
+        "storageNote": "제품별 안정성 자료 필요",
+        "cycleLength": "미확립",
+        "breakBetween": "미확립"
+      },
+      "tags": [
+        "Exercise Biology Research",
+        "Non-peptide"
+      ],
+      "sourceUrl": "https://pep-pedia.org/peptides/slu-pp-915",
+      "researchIndicationsDetailed": {},
+      "latestResearch": [
+        {
+          "title": "Discovery of orally bioavailable pan-ERR agonists",
+          "excerpt": "Medicinal-chemistry and in-vitro characterization; not a human clinical trial.",
+          "date": "2023",
+          "source": "Primary publication",
+          "link": "https://doi.org/10.1016/j.ejmech.2023.115582"
+        },
+        {
+          "title": "Pan-ERR agonists in mouse heart failure",
+          "excerpt": "Mouse heart-failure study directly including SLU-PP-915 and SLU-PP-332; not human evidence.",
+          "date": "2024",
+          "source": "Primary publication",
+          "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10842599/"
+        },
+        {
+          "title": "Orally active SLU-PP-915 exercise study",
+          "excerpt": "Oral SLU-PP-915 exercise-physiology study in mice; no human dosing evidence.",
+          "date": "2026",
+          "source": "Journal of Pharmacological Sciences",
+          "link": "https://www.sciencedirect.com/science/article/abs/pii/S0022356525403000"
+        }
+      ],
+      "relatedSlugs": [],
+      "safetyNotes": [
+        "Not FDA approved; no self-administration regimen is established.",
+        "Nonclinical doses must not be converted into a human dose."
+      ],
+      "stopSigns": [
+        "No self-administration protocol is provided."
+      ],
+      "descriptionKo": "SLU-PP-915는 에스트로겐 관련 수용체를 표적으로 하는 합성 소분자로 펩타이드가 아닙니다. 공개 효과 연구는 생쥐 운동·심장 모델 등 비임상 단계이며 사람 용량은 확립되지 않았습니다.",
+      "keyBenefitsKo": "승인된 임상적 이점은 확립되지 않았습니다.",
+      "mechanismKo": "실험계에서 ERR 알파·베타·감마를 활성화해 대사 유전자 프로그램을 연구하지만 사람 효과와 안전성은 알려지지 않았습니다.",
+      "subtitleKo": "합성 pan-ERR 작용 소분자(펩타이드 아님)",
+      "safetyNotesKo": [
+        "FDA 승인 약물이 아니며 자가투약 용법이 확립되지 않았습니다.",
+        "비임상 용량을 사람 용량으로 환산할 수 없습니다."
+      ],
+      "stopSignsKo": [
+        "자가투약 프로토콜을 제공하지 않습니다."
+      ],
+      "latestResearchKo": [
+        {
+          "title": "Discovery of orally bioavailable pan-ERR agonists",
+          "excerpt": "Medicinal-chemistry and in-vitro characterization; not a human clinical trial.",
+          "date": "2023",
+          "source": "Primary publication",
+          "link": "https://doi.org/10.1016/j.ejmech.2023.115582",
+          "titleKo": "경구 생체이용 pan-ERR 작용제 발굴 연구",
+          "excerptKo": "의약화학·체외 특성 연구이며 사람 임상시험이 아닙니다."
+        },
+        {
+          "title": "Pan-ERR agonists in mouse heart failure",
+          "excerpt": "Mouse heart-failure study directly including SLU-PP-915 and SLU-PP-332; not human evidence.",
+          "date": "2024",
+          "source": "Primary publication",
+          "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10842599/",
+          "titleKo": "생쥐 심부전 모델 pan-ERR 작용제 연구",
+          "excerptKo": "SLU-PP-915와 SLU-PP-332를 직접 포함한 생쥐 심부전 연구이며 사람 근거가 아닙니다."
+        },
+        {
+          "title": "Orally active SLU-PP-915 exercise study",
+          "excerpt": "Oral SLU-PP-915 exercise-physiology study in mice; no human dosing evidence.",
+          "date": "2026",
+          "source": "Journal of Pharmacological Sciences",
+          "link": "https://www.sciencedirect.com/science/article/abs/pii/S0022356525403000",
+          "titleKo": "경구 SLU-PP-915 운동 생쥐 연구",
+          "excerptKo": "경구 SLU-PP-915의 운동생리 생쥐 연구이며 사람 용량 근거가 아닙니다."
+        }
+      ],
+      "researchIndicationsDetailedKo": {},
+      "protocolTimingKo": "근거 기반 사람 투여 일정은 확립되지 않았습니다.",
+      "sideEffectsKo": [],
+      "effectsTimelineKo": [],
+      "qualityGoodKo": "",
+      "qualityBadKo": "",
+      "interactionsKo": [],
+      "evidenceReview": {
+        "reviewedAt": "2026-10-26",
+        "contentUpdatedAt": null,
+        "substanceType": "Non-peptide synthetic small molecule pan-ERR agonist",
+        "humanStandardDoseEstablished": false,
+        "selfAdministrationScheduleProvided": false,
+        "evidenceSummary": {
+          "human": "No established clinical administration evidence",
+          "animal": "Mouse exercise, metabolic, and cardiac models",
+          "cell": "ERR reporter and metabolic-stability assays"
+        },
+        "primaryReferences": [
+          {
+            "title": "Discovery of orally bioavailable pan-ERR agonists",
+            "titleKo": "경구 생체이용 pan-ERR 작용제 발굴 연구",
+            "year": "2023",
+            "link": "https://doi.org/10.1016/j.ejmech.2023.115582",
+            "evidence": "Medicinal-chemistry and in-vitro characterization; not a human clinical trial.",
+            "evidenceKo": "의약화학·체외 특성 연구이며 사람 임상시험이 아닙니다."
+          },
+          {
+            "title": "Pan-ERR agonists in mouse heart failure",
+            "titleKo": "심부전 생쥐 모델 pan-ERR 작용제 연구",
+            "year": "2024",
+            "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10842599/",
+            "evidence": "Mouse heart-failure study directly including SLU-PP-915 and SLU-PP-332; not human evidence.",
+            "evidenceKo": "SLU-PP-915와 SLU-PP-332를 직접 포함한 생쥐 심부전 연구이며 사람 근거가 아닙니다."
+          },
+          {
+            "title": "Orally active SLU-PP-915 exercise study",
+            "titleKo": "경구 SLU-PP-915 운동 생쥐 연구",
+            "year": "2026",
+            "link": "https://www.sciencedirect.com/science/article/abs/pii/S0022356525403000",
+            "evidence": "Oral SLU-PP-915 exercise-physiology study in mice; no human dosing evidence.",
+            "evidenceKo": "경구 SLU-PP-915의 운동생리 생쥐 연구이며 사람 용량 근거가 아닙니다."
+          }
+        ],
+        "researchStatusRationale": "Cell and mouse efficacy studies; no human clinical regimen."
+      }
     }
   },
   "patchNotes": [
+    {
+      "date": "2026-10-26",
+      "added": [
+        {
+          "id": "aicar",
+          "name": "AICAR"
+        },
+        {
+          "id": "cortagen",
+          "name": "코르타젠"
+        },
+        {
+          "id": "klotho",
+          "name": "클로토"
+        },
+        {
+          "id": "ptd-dbm",
+          "name": "PTD-DBM"
+        },
+        {
+          "id": "slu-pp-915",
+          "name": "SLU-PP-915"
+        }
+      ],
+      "updated": [
+        {
+          "id": "epitalon",
+          "name": "에피탈론",
+          "note": "FDA 2026 검토에 따라 사람 피하 표준용량 미확립·설하 연구와 동물자료 구분·안전성 한계 명시"
+        },
+        {
+          "id": "ghk-cu",
+          "name": "GHK-Cu(구리펩타이드)",
+          "note": "FDA 승인 약물로 오해할 수 있는 표기를 바로잡고 주사제 안전성 자료의 한계를 명시"
+        },
+        {
+          "id": "mazdutide",
+          "name": "마즈두타이드",
+          "note": "중국 NMPA 승인과 미국 FDA 미승인을 구분"
+        },
+        {
+          "id": "sermorelin",
+          "name": "세르모렐린",
+          "note": "과거 Geref 승인·철회 이력과 현재 판매 제제의 승인 여부를 구분"
+        },
+        {
+          "id": "retatrutide",
+          "name": "레타트루타이드",
+          "note": "TRIUMPH-2·3 회사 주요결과와 연구단계 상태 추가"
+        },
+        {
+          "id": "orforglipron",
+          "name": "오포글리프론",
+          "note": "기존 2026-04-01 승인 상태의 FDA 1차 링크 보강"
+        }
+      ],
+      "addedNote": "Pep-Pedia 신규 5종을 연구정보 카드로 추가: 사람 표준용량·자가투약 일정 미제공, 근거 수준 분리"
+    },
     {
       "date": "2026-07-04",
       "added": [
