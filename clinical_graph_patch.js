@@ -27,11 +27,13 @@ export function patchClinicalGraphSource(functionSource) {
   const curvesVar = curvesMatch[1];
 
   const plotReplacement =
-    `const __jwbsAxisMaxPercent=${normalizeVar}`
+    `clinicalGraphScale.prepareDisplayCurves(${curvesVar},appData.records||[],Date.now());`
+    + `const __jwbsAxisMaxPercent=${normalizeVar}`
     + `?clinicalGraphScale.axisMaxPercentFromCurves(${curvesVar}):100;`
+    + `const __jwbsAxisMaxMg=${normalizeVar}?null:clinicalGraphScale.singleAxisMaxMgFromCurves(${curvesVar});`
     + `function ${plotFunction}(${valueVar},${referenceVar}){`
     + `if(${normalizeVar})return clinicalGraphScale.plotRatio(${valueVar},${referenceVar},__jwbsAxisMaxPercent);`
-    + `return ${valueVar}/${globalMaxVar};}`;
+    + `return clinicalGraphScale.singlePlotRatio(${valueVar},__jwbsAxisMaxMg);}`;
   source = source.replace(plotPattern, plotReplacement);
 
   const axisLabelPattern = new RegExp(
@@ -41,7 +43,7 @@ export function patchClinicalGraphSource(functionSource) {
   source = replaceExactlyOnce(
     source,
     axisLabelPattern,
-    `$1${normalizeVar}?clinicalGraphScale.axisTickPercent($2,4,__jwbsAxisMaxPercent)+'%'$3`,
+    `$1${normalizeVar}?clinicalGraphScale.axisTickPercent($2,4,__jwbsAxisMaxPercent)+'%':clinicalGraphScale.formatMass(clinicalGraphScale.axisTickMg($2,4,__jwbsAxisMaxMg),__jwbsAxisMaxMg);`,
     "동적 Y축 레이블",
   );
 
@@ -64,6 +66,22 @@ export function patchClinicalGraphSource(functionSource) {
       `clinicalGraphScale.formatResidualPercent(${rawValueVar},${rawReferenceVar})`,
     );
     if (source !== before) percentReplacementCount += 1;
+  }
+  let massReplacementCount = 0;
+  for (const [, , rawValueVar] of ratioAssignments) {
+    const rawMassPattern = new RegExp(
+      `${escapeRegExp(rawValueVar)}(?:\\['toFixed'\\]|\\[[^\\]]+\\])\\(0x3\\)\\+'mg'`,
+      "g",
+    );
+    const before = source;
+    source = source.replace(
+      rawMassPattern,
+      `clinicalGraphScale.formatMass(${rawValueVar},${normalizeVar}?null:__jwbsAxisMaxMg)`,
+    );
+    if (source !== before) massReplacementCount += 1;
+  }
+  if (massReplacementCount !== 2) {
+    throw new Error(`현재값/툴팁 질량 단위 패치 지점 수 불일치: ${massReplacementCount}`);
   }
   if (percentReplacementCount !== 2) {
     throw new Error(`현재값/툴팁 원시 % 패치 지점 수 불일치: ${percentReplacementCount}`);

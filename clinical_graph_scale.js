@@ -128,6 +128,55 @@ export function axisMaxPercentFromCurves(curves, { minimum = 100, step = 25 } = 
   return Math.max(minimum, Math.ceil((peakPercent * 1.05) / step) * step);
 }
 
+export function singleAxisMaxMgFromCurves(curves, { headroom = 1.1 } = {}) {
+  let peakMg = 0;
+  for (const curve of curves || []) {
+    for (const point of curve?.points || []) {
+      const value = Number(point?.val);
+      if (Number.isFinite(value) && value > peakMg) peakMg = value;
+    }
+  }
+  if (!(peakMg > 0)) return 1;
+  const target = peakMg * Math.max(1, Number(headroom) || 1);
+  const magnitude = 10 ** Math.floor(Math.log10(target));
+  const normalized = target / magnitude;
+  const nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10;
+  return nice * magnitude;
+}
+
+export function singlePlotRatio(valueMg, axisMaxMg) {
+  const value = Number(valueMg);
+  const ceiling = Number(axisMaxMg);
+  if (!Number.isFinite(value) || value <= 0 || !Number.isFinite(ceiling) || ceiling <= 0) return 0;
+  return value / ceiling;
+}
+
+export function axisTickMg(index, divisions, axisMaxMg) {
+  const i = Number(index);
+  const count = Number(divisions);
+  const ceiling = Number(axisMaxMg);
+  if (![i, count, ceiling].every(Number.isFinite) || count <= 0 || ceiling < 0) return 0;
+  return (i / count) * ceiling;
+}
+
+export function massDisplayUnit(axisMaxMg) {
+  const ceiling = Number(axisMaxMg);
+  return Number.isFinite(ceiling) && ceiling > 0 && ceiling <= 1 ? "µg" : "mg";
+}
+
+export function formatMass(valueMg, axisMaxMg = null) {
+  const value = Number(valueMg);
+  if (!Number.isFinite(value)) return "0mg";
+  const displayCeiling = axisMaxMg == null ? Math.abs(value) : axisMaxMg;
+  if (massDisplayUnit(displayCeiling) === "µg") {
+    const micrograms = value * 1000;
+    return `${Number(micrograms.toFixed(1))}µg`;
+  }
+  const abs = Math.abs(value);
+  const digits = abs < 0.01 ? 4 : abs < 1 ? 3 : 2;
+  return `${value.toFixed(digits).replace(/\.?0+$/, "")}mg`;
+}
+
 export function plotRatio(valueMg, referenceMg, axisMaxPercent) {
   const ceiling = Number(axisMaxPercent);
   if (!Number.isFinite(ceiling) || ceiling <= 0) return 0;
@@ -155,13 +204,33 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-function latestDose(records, drug) {
+export function latestActualDose(records, drug, now = Date.now()) {
+  const ceiling = Number(now);
   let latest = null;
   for (const record of records || []) {
+    const time = Number(record?.time);
+    const dose = Number(record?.dose);
     if (record?.drug !== drug || record?.isOverride) continue;
-    if (!latest || Number(record.time) > Number(latest.time)) latest = record;
+    if (!Number.isFinite(time) || time <= 0 || time > ceiling || !Number.isFinite(dose) || dose <= 0) continue;
+    if (!latest || time > Number(latest.time)) latest = record;
   }
-  return latest && Number.isFinite(Number(latest.dose)) ? Number(latest.dose) : null;
+  return latest ? Number(latest.dose) : null;
+}
+
+export function resolveDoseReferenceMg(cfg, records, drug, now = Date.now()) {
+  const configured = Number(cfg?.doseReferenceMg ?? cfg?.clinicalMax);
+  if (cfg?.doseReferenceKind !== "app_display") return configured;
+  return latestActualDose(records, drug, now) ?? configured;
+}
+
+// 렌더링용 복사본만 바꾼다. 원본 약물 설정·저장 기록·계산된 잔류량은 보존한다.
+export function prepareDisplayCurves(curves, records, now = Date.now()) {
+  for (const curve of curves || []) {
+    const reference = resolveDoseReferenceMg(curve?.cfg, records, curve?.drug, now);
+    if (!Number.isFinite(reference) || reference <= 0) continue;
+    curve.cfg = { ...curve.cfg, clinicalMax: reference, doseReferenceMg: reference };
+  }
+  return curves;
 }
 
 export function updateGraphLegendHint({ document, configs, records, filter }) {
@@ -187,13 +256,16 @@ export function updateGraphLegendHint({ document, configs, records, filter }) {
 
   const rows = activeNames.map((name) => {
     const cfg = configs[name];
-    const reference = Number(cfg.doseReferenceMg ?? cfg.clinicalMax);
-    const dose = latestDose(records, name);
+    const reference = resolveDoseReferenceMg(cfg, records, name);
+    const dose = latestActualDose(records, name);
+    const label = cfg.doseReferenceKind === "app_display" && dose != null
+      ? "최근 실투여 1회량을 표시 기준으로 사용"
+      : cfg.doseReferenceLabel;
     const latest = dose == null
       ? "최근 실투여 없음"
-      : `최근 실투여 ${dose}mg = 기준의 ${formatResidualPercent(dose, reference)}%`;
+      : `최근 실투여 ${formatMass(dose)} = 기준의 ${formatResidualPercent(dose, reference)}%`;
     return `<span style="color:${escapeHtml(cfg.color)};font-weight:700">${escapeHtml(cfg.short)}</span> `
-      + `${escapeHtml(reference)}mg (${escapeHtml(cfg.doseReferenceLabel)}) · ${escapeHtml(latest)}`;
+      + `${escapeHtml(formatMass(reference))} (${escapeHtml(label)}) · ${escapeHtml(latest)}`;
   });
 
   hint.innerHTML = `<span style="color:${heading};font-weight:700">% 그래프:</span> `

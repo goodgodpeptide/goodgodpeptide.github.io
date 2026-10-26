@@ -158,7 +158,7 @@ test("운영 화면과 서비스워커가 조제 재고 보호 모듈을 연결�
   assert.match(index, /import \{ installReconInventoryGuard \} from '\.\/recon_inventory_guard\.js';/);
   assert.match(index, /installReconInventoryGuard\(\{/);
   assert.match(index, /saveData: \(\) => scheduleSave\(\)/);
-  assert.match(serviceWorker, /peptide-app-v33/);
+  assert.match(serviceWorker, /peptide-app-v34/);
   assert.match(serviceWorker, /'\.\/recon_inventory_guard\.js'/);
 });
 

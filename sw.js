@@ -1,11 +1,11 @@
-const CACHE_NAME = 'peptide-app-v33';
+const CACHE_NAME = 'peptide-app-v34';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './sync_guard.js',
   './recovery_guard.js',
-  './clinical_graph_scale.js',
-  './clinical_graph_patch.js',
+  './clinical_graph_scale.js?v=34',
+  './clinical_graph_patch.js?v=34',
   './dual_exposure_sim.js',
   './schedule_comparison_model.js',
   './schedule_comparison_ui.js',
