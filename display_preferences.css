@@ -1,0 +1,65 @@
+.display-preferences-dialog {
+  width: min(420px, calc(100vw / var(--display-scale, 1) - 28px));
+  max-width: calc(100vw / var(--display-scale, 1) - 28px);
+  max-height: calc(100dvh / var(--display-scale, 1) - 28px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  border: 1px solid #374151;
+  border-radius: 16px;
+  background: #1e293b;
+  color: #e2e8f0;
+  box-shadow: 0 20px 60px #0009;
+  font: 14px 'Noto Sans KR', sans-serif;
+}
+
+.display-preferences-dialog::backdrop { background: #000b; }
+.display-preferences-dialog button,
+.display-preferences-dialog input { font: inherit; }
+.display-preferences-dialog button { cursor: pointer; }
+.display-preferences-dialog button:focus-visible,
+.display-preferences-dialog input:focus-visible { outline: 2px solid #60a5fa; outline-offset: 2px; }
+.display-preferences-dialog button:disabled { cursor: not-allowed; opacity: .45; }
+.display-preferences-head,
+.display-preferences-actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 16px; }
+.display-preferences-head { border-bottom: 1px solid #374151; }
+.display-preferences-head h2 { margin: 0; font-size: 17px; }
+.display-preferences-head .display-icon-button { border: 0; background: transparent; color: inherit; font-size: 24px; line-height: 1; }
+.display-preferences-content { padding: 18px 16px 10px; }
+.display-section-label { display: block; font-weight: 700; }
+.display-section-label span { color: #94a3b8; font-weight: 400; }
+#display-scale-value { display: block; margin: 10px 0; color: #93c5fd; font-size: 27px; font-weight: 800; text-align: center; }
+.display-scale-controls { display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; align-items: center; gap: 10px; }
+.display-scale-controls button { min-height: 40px; border: 1px solid #475569; border-radius: 9px; background: #334155; color: inherit; font-size: 20px; }
+.display-scale-controls input { width: 100%; min-width: 0; accent-color: #60a5fa; }
+.display-preset-controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 12px 0 18px; }
+.display-preset-controls button { min-height: 38px; padding: 4px; border: 1px solid #475569; border-radius: 9px; background: #334155; color: inherit; }
+.display-preset-controls button[aria-pressed="true"] { border-color: #60a5fa; background: #1d4ed8; color: #fff; font-weight: 700; }
+.display-unsupported { margin: 0 0 16px; color: #fca5a5; }
+.display-unsupported[hidden] { display: none; }
+.display-bigfont-label { display: flex; align-items: center; gap: 10px; padding: 13px 0; border-top: 1px solid #374151; cursor: pointer; }
+.display-bigfont-label input { width: 18px; height: 18px; accent-color: #60a5fa; }
+.display-preferences-note { margin: 0; color: #94a3b8; font-size: 11px; line-height: 1.5; }
+.display-preferences-actions { border-top: 1px solid #374151; }
+.display-preferences-actions button { min-height: 40px; padding: 8px 14px; border: 1px solid #475569; border-radius: 9px; background: #334155; color: inherit; }
+#display-done { border-color: #2563eb; background: #2563eb; color: #fff; font-weight: 700; }
+
+body.light-mode .display-preferences-dialog { border-color: #cbd5e1; background: #fff; color: #1e293b; }
+body.light-mode .display-preferences-head,
+body.light-mode .display-preferences-actions,
+body.light-mode .display-bigfont-label { border-color: #e2e8f0; }
+body.light-mode .display-section-label span,
+body.light-mode .display-preferences-note { color: #64748b; }
+body.light-mode #display-scale-value { color: #1d4ed8; }
+body.light-mode .display-scale-controls button,
+body.light-mode .display-preset-controls button,
+body.light-mode .display-preferences-actions button:not(#display-done) { border-color: #cbd5e1; background: #f1f5f9; color: #1e293b; }
+body.light-mode .display-preset-controls button[aria-pressed="true"] { border-color: #1d4ed8; background: #1d4ed8; color: #fff; }
+body.light-mode .display-unsupported { color: #b91c1c; }
+
+/* Keep navigation reachable when the app layout is enlarged on a narrow screen. */
+@media (max-width: 520px) {
+  .top-bar { flex-wrap: wrap; gap: 8px; }
+  .top-bar-right { max-width: 100%; min-width: 0; flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
+  .tabs .tab-btn { flex: 1 0 auto; }
+}
