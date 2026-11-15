@@ -332,6 +332,8 @@ installReconInventoryGuard({
     }
     .drug-card:has(input:focus) { border-color: var(--drug-color); }
     .drug-card input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    /* 좁은 화면에서도 입력 영역이 줄어들어 투약 버튼이 카드 안에 남도록 한다. */
+    .drug-card div:has(> input[id^="quick-dose-"]) { min-width: 0; }
 
     /* ── 라이트 모드 ─────────────────────────── */
     body.light-mode { background: #f0f2f5; color: #1a1a2e; }
