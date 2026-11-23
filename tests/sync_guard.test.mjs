@@ -115,3 +115,48 @@ test('동시 갱신으로 트랜잭션이 재실행되면 두 번째 서버 버�
   );
   assert.equal(writeCount, 1);
 });
+
+for (const collectionName of ['reconVials', 'reconVialsArchive']) {
+  test(`${collectionName}만 있는 서버도 빈 로컬 덮어쓰기를 차단한다`, async () => {
+    let writes = 0;
+    await assert.rejects(commitUserDocument({
+      db: {}, ref: {}, expectedRevision: 2,
+      runTransaction: fakeRunTransaction({
+        syncRevision: 2, records: [], weightRecords: [],
+        [collectionName]: [{ id: 1, drug: '시험 약물' }],
+      }, () => { writes += 1; }),
+      data: { records: [], weightRecords: [], reconVials: [], reconVialsArchive: [] },
+    }), error => error.code === EMPTY_OVERWRITE_CODE
+      && error.serverCount === 1 && error.localCount === 0);
+    assert.equal(writes, 0);
+  });
+
+  test(`${collectionName}만 있는 정상 로컬은 빈 데이터로 오판하지 않는다`, async () => {
+    const vials = [{ id: 1, drug: '시험 약물' }];
+    let written;
+    const result = await commitUserDocument({
+      db: {}, ref: {}, expectedRevision: 2,
+      runTransaction: fakeRunTransaction({
+        syncRevision: 2, [collectionName]: vials,
+      }, data => { written = data; }),
+      data: { records: [], weightRecords: [], [collectionName]: vials },
+    });
+    assert.equal(result.revision, 3);
+    assert.deepEqual(written[collectionName], vials);
+  });
+}
+
+test('명시적인 전체 비우기와 새 빈 문서 생성은 계속 허용한다', async () => {
+  for (const [server, allowEmpty] of [
+    [{ syncRevision: 0, reconVialsArchive: [{ id: 1 }] }, true],
+    [null, false],
+  ]) {
+    let writes = 0;
+    await commitUserDocument({
+      db: {}, ref: {}, expectedRevision: 0, allowEmpty,
+      runTransaction: fakeRunTransaction(server, () => { writes += 1; }),
+      data: { records: [], weightRecords: [], reconVials: [], reconVialsArchive: [] },
+    });
+    assert.equal(writes, 1);
+  }
+});

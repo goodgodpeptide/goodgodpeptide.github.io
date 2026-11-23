@@ -8,7 +8,9 @@ export function normalizeSyncRevision(value) {
 
 function countPrimaryRecords(data) {
   return (Array.isArray(data?.records) ? data.records.length : 0)
-    + (Array.isArray(data?.weightRecords) ? data.weightRecords.length : 0);
+    + (Array.isArray(data?.weightRecords) ? data.weightRecords.length : 0)
+    + (Array.isArray(data?.reconVials) ? data.reconVials.length : 0)
+    + (Array.isArray(data?.reconVialsArchive) ? data.reconVialsArchive.length : 0);
 }
 
 function syncError(code, message, details = {}) {

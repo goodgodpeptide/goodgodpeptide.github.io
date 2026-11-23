@@ -86,7 +86,7 @@ async function _tryAutoConnectFirebase() {
   if (_fbConnectPromise) return _fbConnectPromise;
   _fbConnectPromise = (async () => {
     try {
-      const base = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VER}/`;
+      const base = new URL(`../vendor/firebase-${FIREBASE_SDK_VER}/`, import.meta.url).href;
       const [{ getApp }, authMod, fsMod] = await Promise.all([
         import(/* webpackIgnore: true */ base + 'firebase-app.js'),
         import(/* webpackIgnore: true */ base + 'firebase-auth.js'),

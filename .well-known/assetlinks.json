@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.goodgodpeptide.weightmanager",
+      "sha256_cert_fingerprints": [
+        "4C:29:13:5A:A3:92:0E:75:D1:0A:54:5E:40:70:4A:06:94:48:62:73:72:33:A3:CA:AD:66:91:4B:40:7D:2F:1A"
+      ]
+    }
+  }
+]

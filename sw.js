@@ -1,96 +1,77 @@
-const CACHE_NAME = 'peptide-app-v36';
+// 공개 정적 자산만 캐시한다. 인증/API/개인 데이터는 저장하지 않는다.
+const CACHE_NAME = 'peptide-app-v37';
 const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './display_preferences.js?v=36',
-  './display_preferences.css?v=36',
-  './sync_guard.js',
-  './recovery_guard.js',
-  './clinical_graph_scale.js?v=34',
-  './clinical_graph_patch.js?v=34',
-  './dual_exposure_sim.js',
-  './schedule_comparison_model.js',
-  './schedule_comparison_ui.js',
-  './model_input_review.js',
-  './inline_weight_entry.js',
-  './recon_inventory_guard.js',
-  // peptides_v3.json(2.4MB)은 install 시 미리 받지 않고 첫 사용 시점에 캐시 (stale-while-revalidate 아래 참고)
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
+  './index.html', './manifest.json', './icon-192.png', './icon-512.png',
+  './kakao_qr.png', './login_bg.png.jpg', './display_preferences.js', './display_preferences.css',
+  './sync_guard.js', './recovery_guard.js', './offline_sync.js', './offline_app.js',
+  './clinical_graph_scale.js', './clinical_graph_patch.js', './dual_exposure_sim.js',
+  './schedule_comparison_model.js', './schedule_comparison_ui.js', './model_input_review.js',
+  './inline_weight_entry.js', './recon_inventory_guard.js', './peptides_v3.json',
+  './saju/saju_engine.obf.js', './saju/toitjeong.obf.js', './saju/saju_ui.obf.js', './saju/saju.css',
+  './vendor/firebase-10.12.0/firebase-app.js', './vendor/firebase-10.12.0/firebase-auth.js',
+  './vendor/firebase-10.12.0/firebase-firestore.js', './vendor/qrcode-1.0.0.min.js', './vendor/jsQR-1.4.0.min.js'
 ];
-
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
-  );
-  self.skipWaiting();
+const assetURLs = new Set(STATIC_ASSETS.map(path => new URL(path, self.registration.scope).href));
+function publicAssetKey(request) {
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return null;
+  url.search = ''; url.hash = '';
+  return assetURLs.has(url.href) ? url.href : null;
+}
+self.addEventListener('install', event => {
+  event.waitUntil((async () => {
+    // 모든 자산을 먼저 받는다. 하나라도 실패하면 기존 캐시/활성 SW를 유지한다.
+    const responses = await Promise.all(STATIC_ASSETS.map(async path => {
+      const response = await fetch(new Request(new URL(path, self.registration.scope), {cache:'reload'}));
+      if (!response.ok || response.type === 'opaque') throw new Error('Precache failed: ' + path);
+      return response;
+    }));
+    const cache = await caches.open(CACHE_NAME);
+    try {
+      await Promise.all(STATIC_ASSETS.map((path, index) => cache.put(new URL(path, self.registration.scope).href, responses[index])));
+    } catch (error) { await caches.delete(CACHE_NAME); throw error; }
+    await self.skipWaiting();
+  })());
+});
+self.addEventListener('activate', event => {
+  event.waitUntil((async () => {
+    await Promise.all((await caches.keys()).filter(key => key.startsWith('peptide-app-') && key !== CACHE_NAME).map(key => caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  const url = new URL(request.url);
+  // API/Auth 및 외부 요청은 브라우저 네트워크 처리에 맡기며 캐시 조회도 하지 않는다.
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  const scope = new URL(self.registration.scope);
+  const navigation = request.mode === 'navigate' && (url.pathname === scope.pathname || url.pathname === new URL('index.html', scope).pathname);
+  if (navigation) {
+    event.respondWith((async () => {
+      const cached = await (await caches.open(CACHE_NAME)).match(new URL('index.html', scope).href);
+      if (cached) return cached;
+      const response = await fetch(request);
+      if (!response.ok) throw new Error('Navigation failed: ' + response.status);
+      return response;
+    })());
+    return;
+  }
+  const key = publicAssetKey(request);
+  if (!key) return;
+  // 버전 쿼리는 같은 설치 버전의 정규 자산으로 처리한다. 활성 버전 내 파일 혼합을 막는다.
+  event.respondWith((async () => (await (await caches.open(CACHE_NAME)).match(key)) || fetch(request))());
 });
 
-self.addEventListener('activate', e => {
-  // 🔴 SW_UPDATED postMessage 브로드캐스트 제거 (2026-07-15 GG '킬때마다 배너 2-3번'):
-  //    클라이언트의 updatefound 경로와 이중으로 배너를 띄우던 원인. 캐시 정리만 수행.
-  e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
-
-  // Firebase / Google API 등 외부 요청은 네트워크 우선 (캐시 X — 인증 응답 캐시 금지)
-  if (url.origin !== self.location.origin) {
-    e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-    return;
-  }
-
-  // HTML 네비게이션은 networkFirst — 새 배포 즉시 반영, 오프라인 시만 캐시
-  // (CACHE_NAME 수동 갱신 의존하던 stale HTML 버그 해소)
-  const isNav = e.request.mode === 'navigate'
-    || (e.request.method === 'GET' && (e.request.headers.get('accept') || '').includes('text/html'));
-  if (isNav) {
-    e.respondWith(
-      fetch(e.request).then(res => {
-        if (res && res.ok) {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone)).catch(() => {});
-        }
-        return res;
-      }).catch(() => caches.match(e.request).then(c => c || caches.match('/index.html')))
-    );
-    return;
-  }
-
-  // peptides_v3.json: stale-while-revalidate (즉시 캐시 응답 + 백그라운드 갱신)
-  // — 2.4MB라 네트워크 우선이면 매번 로드 지연됨. 캐시 있으면 즉시 응답 후 백그라운드로 최신화.
-  if (url.pathname.endsWith('peptides_v3.json')) {
-    e.respondWith(
-      caches.match(e.request).then(cached => {
-        const fetchPromise = fetch(e.request).then(res => {
-          if (res && res.ok) {
-            caches.open(CACHE_NAME).then(cache => cache.put(e.request, res.clone())).catch(() => {});
-          }
-          return res;
-        }).catch(() => cached);
-        return cached || fetchPromise;
-      })
-    );
-    return;
-  }
-
-  // 나머지 정적 파일: stale-while-revalidate (즉시 캐시 응답 + 백그라운드 갱신)
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fetchPromise = fetch(e.request).then(res => {
-        if (res && res.ok) {
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, res.clone())).catch(() => {});
-        }
-        return res;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
-  );
+// UI는 ready만 보지 않고 이 응답으로 전체 선캐시 상태를 확인한다.
+self.addEventListener('message', event => {
+  if (event.data?.type !== 'OFFLINE_CACHE_STATUS' || !event.ports?.[0]) return;
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const missing = [];
+    for (const asset of STATIC_ASSETS) {
+      if (!await cache.match(new URL(asset, self.registration.scope).href)) missing.push(asset);
+    }
+    event.ports[0].postMessage({type:'OFFLINE_CACHE_STATUS', version:CACHE_NAME,
+      ready:missing.length === 0, total:STATIC_ASSETS.length, missing});
+  })());
 });

@@ -1,0 +1,50 @@
+[
+  {
+    "path": "vendor/firebase-10.12.0/firebase-app.js",
+    "url": "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js",
+    "downloadSha256": "6cf917206f4da022ef68d66b94ccd41cd253adc6bc84b5a2e4ea0cbde45e7046",
+    "bundledSha256": "5724d7a31a8feeba6b254358205bacdc8c31f18dd295eee4186476d93704332f"
+  },
+  {
+    "path": "vendor/firebase-10.12.0/firebase-auth.js",
+    "url": "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js",
+    "downloadSha256": "b58bafb904d77dd077d508bc7cb19106be8a9290b7331b0a0f068b5d1d55a42a",
+    "bundledSha256": "c59396d0c7c77ee46b5d684232b476a5df9d58cf2875470bf5dc27c89d90d321"
+  },
+  {
+    "path": "vendor/firebase-10.12.0/firebase-firestore.js",
+    "url": "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js",
+    "downloadSha256": "531bac221fb729cadb54bfddfb901c5f00c5614fe2f2cdfd9b632c9c03a7f329",
+    "bundledSha256": "120a6c806ee450cda184842116c3aecff88799c29ec368b1811bb6f205fd16da"
+  },
+  {
+    "path": "vendor/qrcode-1.0.0.min.js",
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js",
+    "downloadSha256": "c541ef06327885a8415bca8df6071e14189b4855336def4f36db54bde8484f36",
+    "bundledSha256": "c541ef06327885a8415bca8df6071e14189b4855336def4f36db54bde8484f36"
+  },
+  {
+    "path": "vendor/jsQR-1.4.0.min.js",
+    "url": "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js",
+    "downloadSha256": "32214c74ee92d37de6d88276987690d996ce757668e82ca1709dba5e0be9fcce",
+    "bundledSha256": "32214c74ee92d37de6d88276987690d996ce757668e82ca1709dba5e0be9fcce"
+  },
+  {
+    "path": "vendor/LICENSE-qrcode.txt",
+    "url": "https://raw.githubusercontent.com/davidshimjs/qrcodejs/master/LICENSE",
+    "downloadSha256": "aaa1f349028a59432eb00222b8ddfe4d2ccebdce04cf8348dcb8d41b7068107b",
+    "bundledSha256": "aaa1f349028a59432eb00222b8ddfe4d2ccebdce04cf8348dcb8d41b7068107b"
+  },
+  {
+    "path": "vendor/LICENSE-jsQR.txt",
+    "url": "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/LICENSE",
+    "downloadSha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08",
+    "bundledSha256": "c6596eb7be8581c18be736c846fb9173b69eccf6ef94c5135893ec56bd92ba08"
+  },
+  {
+    "path": "vendor/LICENSE-firebase.txt",
+    "url": "https://raw.githubusercontent.com/firebase/firebase-js-sdk/firebase%4010.12.0/LICENSE",
+    "downloadSha256": "065e45b5674f9bf76670496e5472611b3fbd87fbeaf99336725430a9909cb687",
+    "bundledSha256": "065e45b5674f9bf76670496e5472611b3fbd87fbeaf99336725430a9909cb687"
+  }
+]
