@@ -60,7 +60,7 @@ export function createApprovalCache(storage) {
   };
 }
 
-export function createOfflineApp({ storage, archive, locks, readRemote, commitRemote, getUser, getData, applyData, isOnline, onStatus = () => {}, onConflict = () => {}, onError = () => {}, events = null }) {
+export function createOfflineApp({ storage, archive, locks, readRemote, commitRemote, getUser, getData, applyData, isOnline, onStatus = () => {}, onConflict = () => {}, onReviewed = () => {}, onError = () => {}, events = null }) {
   const engine = createOfflineSync({ storage, archive, locks, readRemote, commitRemote });
   const approvals = createApprovalCache(storage);
   let view = null;
@@ -94,6 +94,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     applyData(clone(state.data), state);
     onStatus(state.conflicts?.length ? 'conflict' : state.pending ? 'local' : offline ? 'offline' : 'saved');
     if (state.conflicts?.length) onConflict(state.conflicts);
+    else if (state.reviewedHold) onReviewed(state);
     return true;
   }
   function stage({ base, resetBase = false } = {}) {
@@ -117,19 +118,20 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     await stage({ base, resetBase: true });
     return isOnline() ? flush() : { status: 'pending', state: engine.load(user.uid) };
   }
-  async function flush() {
+  async function flush(options) {
     const user = getUser();
     if (!user?.uid || !current(user.uid) || !serverAuthorized || !isOnline()) return { status: 'offline' };
     await staged;
     if (!current(user.uid) || !serverAuthorized || !isOnline()) return { status: 'offline' };
     onStatus('saving');
     try {
-      const result = await engine.flush(user.uid);
+      const result = await engine.flush(user.uid, options);
       if (current(user.uid)) {
         const latest = engine.load(user.uid);
         if (latest) { view = clone(latest.data); applyData(clone(latest.data), latest); }
         onStatus(result.status === 'conflict' ? 'conflict' : latest?.pending ? 'local' : 'saved');
         if (result.status === 'conflict') onConflict(result.conflicts);
+        else if (latest?.reviewedHold) onReviewed(latest);
       }
       return result;
     } catch (error) {
@@ -147,6 +149,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
         view = clone(state.data); applyData(clone(state.data), state);
         onStatus(state.conflicts?.length ? 'conflict' : state.pending ? 'local' : 'saved');
         if (state.conflicts?.length) onConflict(state.conflicts);
+        else if (state.reviewedHold) onReviewed(state);
       }
     }
   });
@@ -155,5 +158,21 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     if (!user?.uid || !current(user.uid)) throw new Error('현재 계정 확인이 필요합니다.');
     return { schema: 'jwbs-offline-recovery-v1', uid: user.uid, exportedAt: Date.now(), state: engine.load(user.uid), archives: await archive.list(`jwbs_offline_v1:${encodeURIComponent(user.uid)}:`) };
   }
-  return { engine, approvals, activate, authorize, restore, stage, seed, flush, retry, exportBundle };
+  async function recheckConflicts() {
+    const uid = getUser()?.uid;
+    const assertCurrent = () => {
+      if (!uid || !current(uid) || !serverAuthorized || !isOnline()) throw new Error('현재 계정의 온라인 승인 확인이 필요합니다.');
+    };
+    assertCurrent();
+    await staged;
+    assertCurrent();
+    const result = await engine.recheck(uid, { assertCurrent });
+    assertCurrent();
+    if (result.state) { view = clone(result.state.data); applyData(clone(result.state.data), result.state); }
+    onStatus(result.state?.conflicts?.length ? 'conflict' : 'local');
+    if (result.state?.conflicts?.length) onConflict(result.state.conflicts);
+    else if (result.state?.reviewedHold) onReviewed(result.state);
+    return result;
+  }
+  return { engine, approvals, activate, authorize, restore, stage, seed, flush, retry, exportBundle, recheckConflicts };
 }

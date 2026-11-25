@@ -10,6 +10,20 @@ function fixture() {
   const archive = { put: async (key, value) => { assert.equal(snapshots.has(key), false); snapshots.set(key, structuredClone(value)); } };
   return { storage, locks, archive, values, snapshots };
 }
+
+test('재대조 보류 안내는 재시작과 다른 창 갱신에도 복원하고 승인 전에는 저장하지 않는다', async () => {
+  const f = fixture(); const user = { uid: 'one', email: 'one@example.invalid' }; let reviewed = 0, writes = 0; const handlers = new Map();
+  const state = { version: 1, uid: user.uid, base: {}, data: {}, revision: 0, generation: 1, pending: true, conflicts: [], reviewedHold: true };
+  f.storage.setItem('jwbs_offline_v1:one', JSON.stringify(state));
+  const options = { ...f, getUser: () => user, getData: () => ({}), applyData: () => {}, isOnline: () => true, onReviewed: value => { assert.equal(value.reviewedHold, true); reviewed++; },
+    events: { addEventListener: (name, fn) => handlers.set(name, fn) }, readRemote: async () => ({}), commitRemote: async () => { writes++; } };
+  const app = createOfflineApp(options); app.approvals.record(user, true);
+  assert.equal(app.restore(user, { offline: true }), true); assert.equal(reviewed, 1);
+  await assert.rejects(app.recheckConflicts()); assert.equal(writes, 0);
+  app.authorize(user);
+  handlers.get('storage')({ key: 'jwbs_offline_v1:one' }); assert.equal(reviewed, 2);
+  assert.equal((await app.flush()).status, 'reviewed'); assert.equal(reviewed, 3); assert.equal(writes, 0);
+});
 test('승인 캐시는 UID와 이메일을 함께 확인하며 거절 시 해제한다', () => {
   const { storage } = fixture(); const cache = createApprovalCache(storage);
   const user = { uid: 'one', email: 'one@example.invalid' };

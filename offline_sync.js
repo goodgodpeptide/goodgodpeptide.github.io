@@ -1,6 +1,22 @@
 // UI/Firebase 독립: 원본 보존과 서버 버전 검사는 어댑터 경계에서도 유지한다.
 const copy = value => JSON.parse(JSON.stringify(value));
-const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+// 저장 가능한 JSON 값으로 비교하되 객체의 속성 삽입 순서는 변경으로 보지 않는다.
+// 배열 순서와 JSON 직렬화의 undefined/NaN/toJSON 처리는 기존 기준을 유지한다.
+const equal = (a, b) => {
+  const left = JSON.stringify(a), right = JSON.stringify(b);
+  if (left === right) return true;
+  if (left === undefined || right === undefined) return false;
+  const same = (x, y) => {
+    if (x === y) return true;
+    if (x === null || y === null || typeof x !== 'object' || typeof y !== 'object') return false;
+    if (Array.isArray(x) !== Array.isArray(y)) return false;
+    if (Array.isArray(x)) return x.length === y.length && x.every((value, i) => same(value, y[i]));
+    const keys = Object.keys(x);
+    return keys.length === Object.keys(y).length
+      && keys.every(key => Object.prototype.hasOwnProperty.call(y, key) && same(x[key], y[key]));
+  };
+  return same(JSON.parse(left), JSON.parse(right));
+};
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const managed = key => key === 'updatedAt' || key === 'syncRevision';
 const keyOf = row => {
@@ -119,11 +135,12 @@ export function createOfflineSync({ storage, readRemote, commitRemote, archive, 
       return persist(uid, load(uid));
     });
   }
-  async function performFlush(uid) {
+  async function performFlush(uid, { confirmReviewed = false } = {}) {
     const start = load(uid);
     if (!start?.pending) return { status: 'idle', state: start };
     await persist(uid, start);
     if (start.conflicts?.length) return { status: 'conflict', conflicts: start.conflicts, state: start };
+    if (start.reviewedHold && !confirmReviewed) return { status: 'reviewed', state: start };
     const remoteResult = await readRemote(uid);
     const remote = remoteResult?.data ?? remoteResult ?? {};
     const revision = remoteResult?.revision ?? Number(remote.syncRevision || 0);
@@ -150,16 +167,53 @@ export function createOfflineSync({ storage, readRemote, commitRemote, archive, 
       await persist(uid, state, latestEntries);
       return { status: state.conflicts.length ? 'conflict' : 'pending', conflicts: state.conflicts, state: copy(state) };
     }
-    const state = { ...latest, base: copy(committed), data: copy(committed), revision: nextRevision, pending: false, conflicts: [] };
+    const state = { ...latest, base: copy(committed), data: copy(committed), revision: nextRevision, pending: false, conflicts: [], reviewedHold: false };
     await persist(uid, state, latestEntries);
     return { status: 'synced', state: copy(state) };
   }
-  function flush(uid) {
+  function flush(uid, options) {
     checkUid(uid);
     if (flights.has(uid)) return flights.get(uid);
-    const flight = locked(uid, () => performFlush(uid)).finally(() => flights.delete(uid));
+    const flight = locked(uid, () => performFlush(uid, options)).finally(() => flights.delete(uid));
     flights.set(uid, flight);
     return flight;
   }
-  return { load, stage, flush };
+  function recheck(uid, { assertCurrent = () => {} } = {}) {
+    checkUid(uid);
+    return locked(uid, async () => {
+      assertCurrent();
+      const start = load(uid);
+      if (!start?.conflicts?.length) return { status: 'idle', state: start, cleared: 0 };
+      // 삭제/출처 불명은 추정하지 않는다. 세 원본이 모두 남은 값의 동등성만 재검토한다.
+      const falseConflict = item => ['base', 'local', 'remote'].every(name => Object.prototype.hasOwnProperty.call(item, name))
+        && keyOf(item.base) !== null && keyOf(item.base) === keyOf(item.local) && keyOf(item.base) === keyOf(item.remote)
+        && typeof item.path === 'string' && item.path.endsWith(`[${keyOf(item.base)}]`)
+        && (equal(item.local, item.remote) || equal(item.local, item.base) || equal(item.remote, item.base));
+      await snapshot(uid, 'before-conflict-recheck', start);
+      assertCurrent();
+      const response = await readRemote(uid);
+      assertCurrent();
+      const remote = response?.data ?? response ?? {};
+      const revision = response?.revision ?? Number(remote.syncRevision || 0);
+      if (!object(remote) || !Number.isSafeInteger(revision) || revision < 0) throw new Error('재대조할 서버 기준이 올바르지 않습니다.');
+      await snapshot(uid, 'conflict-recheck-remote', remote);
+      assertCurrent();
+      const latest = load(uid);
+      if (latest.generation !== start.generation || !equal(latest, start)) return { status: 'changed', state: latest, cleared: 0 };
+      const remaining = start.conflicts.filter(item => !falseConflict(item));
+      const merged = mergeOfflineData(start.base, start.data, remote);
+      const conflicts = [...remaining];
+      for (const item of merged.conflicts) if (!conflicts.some(old => equal(old, item))) conflicts.push(item);
+      const state = { ...start, base: copy(remote), revision, data: merged.data, pending: true, generation: start.generation + 1, conflicts, reviewedHold: true };
+      await snapshot(uid, 'conflict-recheck-result', state);
+      assertCurrent();
+      // await 중 생긴 새 저널은 덮거나 지우지 않고 다시 대조하도록 남긴다.
+      const final = load(uid);
+      if (final.generation !== start.generation || !equal(final, start)) return { status: 'changed', state: final, cleared: 0 };
+      if (journals(uid).length) return { status: 'changed', state: final, cleared: 0 };
+      write(key(uid), state);
+      return { status: conflicts.length ? 'conflict' : 'reviewed', state: copy(state), conflicts: copy(conflicts), cleared: start.conflicts.filter(falseConflict).length };
+    });
+  }
+  return { load, stage, flush, recheck };
 }
