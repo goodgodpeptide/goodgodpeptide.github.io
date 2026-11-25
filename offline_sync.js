@@ -135,13 +135,16 @@ export function createOfflineSync({ storage, readRemote, commitRemote, archive, 
       return persist(uid, load(uid));
     });
   }
-  async function performFlush(uid, { confirmReviewed = false } = {}) {
+  async function performFlush(uid, { confirmReviewed = false, assertCurrent = () => {} } = {}) {
+    assertCurrent();
     const start = load(uid);
     if (!start?.pending) return { status: 'idle', state: start };
     await persist(uid, start);
     if (start.conflicts?.length) return { status: 'conflict', conflicts: start.conflicts, state: start };
     if (start.reviewedHold && !confirmReviewed) return { status: 'reviewed', state: start };
+    assertCurrent();
     const remoteResult = await readRemote(uid);
+    assertCurrent();
     const remote = remoteResult?.data ?? remoteResult ?? {};
     const revision = remoteResult?.revision ?? Number(remote.syncRevision || 0);
     await snapshot(uid, 'remote-before-commit', remote);
@@ -152,7 +155,8 @@ export function createOfflineSync({ storage, readRemote, commitRemote, archive, 
       await persist(uid, { ...latest, conflicts: [...latest.conflicts || [], ...merged.conflicts] });
       return { status: 'conflict', conflicts: merged.conflicts, state: load(uid) };
     }
-    const response = await commitRemote(uid, merged.data, revision);
+    assertCurrent();
+    const response = await commitRemote(uid, merged.data, revision, { assertCurrent });
     const committed = response?.data;
     const nextRevision = response?.revision ?? committed?.syncRevision;
     if (!object(committed) || !Number.isSafeInteger(nextRevision) || nextRevision <= revision) throw new Error('서버 저장 성공 응답이 올바르지 않습니다.');

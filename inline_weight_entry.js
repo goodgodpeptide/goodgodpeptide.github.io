@@ -86,6 +86,9 @@ export const INLINE_WEIGHT_ENTRY_CSS = `
     }
     #inline-weight-entry .inline-weight-save { grid-column: 1 / -1; }
   }
+  @media (max-width: 380px) {
+    #inline-weight-entry .inline-weight-form { grid-template-columns: minmax(0, 1fr); }
+  }
 `;
 
 export const INLINE_WEIGHT_ENTRY_MARKUP = `
@@ -125,6 +128,10 @@ export function validateInlineWeightEntry(weightValue, timeValue) {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/u.test(String(timeValue || ""))) {
     return { valid: false, reason: "time", message: "날짜와 시간을 지정하세요." };
   }
+  const epoch = Date.parse(`${timeValue}:00+09:00`);
+  if (!Number.isFinite(epoch) || new Date(epoch + 9 * 60 * 60 * 1000).toISOString().slice(0, 16) !== String(timeValue)) {
+    return { valid: false, reason: "time", message: "실제로 존재하는 한국시간 날짜와 시간을 입력하세요." };
+  }
   return { valid: true, weight, time: String(timeValue) };
 }
 
@@ -162,7 +169,12 @@ export async function submitInlineWeightEntry({
   saveButton.disabled = true;
   setStatus(status, "저장 중…");
   try {
-    await Promise.resolve(submitNative());
+    const result = await Promise.resolve(submitNative());
+    // 기존 native 함수의 undefined 성공 계약은 유지하되 명시적 실패는 보존한다.
+    if (result === false || result?.saved === false || result?.status === "failed") {
+      setStatus(status, "저장하지 못했습니다. 입력값을 보존했으니 다시 시도하세요.", true);
+      return { saved: false, reason: "submit_failed" };
+    }
     weightInput.value = "";
     timeInput.value = kstDateTimeInputValue(now());
     setStatus(status, "✓ 체중 기록 저장됨");

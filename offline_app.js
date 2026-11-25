@@ -75,6 +75,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
   let authorized = false;
   let serverAuthorized = false;
   let staged = Promise.resolve();
+  let authorizationEpoch = 0;
   let stageFailed = false;
   function applyChanged(state) {
     if (!state) return;
@@ -88,6 +89,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     else onNoticeCleared(state);
   }
   function activate(user) {
+    authorizationEpoch++;
     const nextUid = user?.uid || null;
     if (nextUid !== activeUid) onNoticeCleared({ uid: nextUid, reason: 'account-change' });
     activeUid = nextUid;
@@ -147,6 +149,8 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
   async function flush(options) {
     const user = getUser();
     if (!user?.uid || !current(user.uid) || !serverAuthorized || !isOnline()) return { status: 'offline' };
+    const epoch = authorizationEpoch;
+    const assertCurrent = () => { if (epoch !== authorizationEpoch || !current(user.uid) || !serverAuthorized || !isOnline()) throw new Error('계정 또는 온라인 승인이 변경되어 이전 저장을 중단했습니다.'); };
     await staged;
     if (!current(user.uid) || !serverAuthorized || !isOnline()) return { status: 'offline' };
     const start = engine.load(user.uid);
@@ -159,7 +163,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     }
     onStatus('saving');
     try {
-      const result = await engine.flush(user.uid, options);
+      const result = await engine.flush(user.uid, { ...options, assertCurrent });
       if (current(user.uid)) {
         const latest = engine.load(user.uid);
         applyChanged(latest);
@@ -188,12 +192,16 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
   async function exportBundle() {
     const user = getUser();
     if (!user?.uid || !current(user.uid)) throw new Error('현재 계정 확인이 필요합니다.');
-    return { schema: 'jwbs-offline-recovery-v1', uid: user.uid, exportedAt: Date.now(), state: engine.load(user.uid), archives: await archive.list(`jwbs_offline_v1:${encodeURIComponent(user.uid)}:`) };
+    const epoch = authorizationEpoch, state = engine.load(user.uid);
+    const archives = await archive.list(`jwbs_offline_v1:${encodeURIComponent(user.uid)}:`);
+    if (epoch !== authorizationEpoch || !current(user.uid)) throw new Error('계정이 변경되어 이전 계정의 내보내기를 중단했습니다.');
+    return { schema: 'jwbs-offline-recovery-v1', uid: user.uid, exportedAt: Date.now(), state, archives };
   }
   async function recheckConflicts() {
     const uid = getUser()?.uid;
+    const epoch = authorizationEpoch;
     const assertCurrent = () => {
-      if (!uid || !current(uid) || !serverAuthorized || !isOnline()) throw new Error('현재 계정의 온라인 승인 확인이 필요합니다.');
+      if (epoch !== authorizationEpoch || !uid || !current(uid) || !serverAuthorized || !isOnline()) throw new Error('현재 계정의 온라인 승인 확인이 필요합니다.');
     };
     assertCurrent();
     await staged;

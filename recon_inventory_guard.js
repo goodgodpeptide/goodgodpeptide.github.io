@@ -15,6 +15,7 @@ function escapeHtml(value) {
 }
 
 function safeId(value) {
+  if (value === null || value === undefined || String(value).trim() === "") return "";
   const id = Number(value);
   return Number.isSafeInteger(id) ? String(id) : "";
 }
@@ -46,14 +47,18 @@ function formatSignedUnits(value) {
  */
 export function buildReconBatchRows(vials = [], records = [], archivedVials = []) {
   const visibleVials = (Array.isArray(vials) ? vials : []).filter((vial) => vial?.drug);
-  const visibleKeys = new Set(visibleVials.map((vial) => `${vial.drug}\u0000${String(vial.id)}`));
+  const visibleObjects = new Set(visibleVials);
+  const visibleKeys = new Set(visibleVials.filter(vial => safeId(vial.id) !== "")
+    .map((vial) => `${vial.drug}\u0000${String(vial.id)}`));
   const allocationByKey = new Map();
   for (const vial of [
     ...(Array.isArray(archivedVials) ? archivedVials : []),
     ...visibleVials,
   ]) {
     if (!vial?.drug) continue;
-    allocationByKey.set(`${vial.drug}\u0000${String(vial.id)}`, vial);
+    // 식별자가 없는 원본끼리 합치거나 원본에 임의 ID를 만들지 않는다.
+    const key = safeId(vial.id) !== "" ? `${vial.drug}\u0000${String(vial.id)}` : Symbol();
+    allocationByKey.set(key, vial);
   }
 
   const groups = new Map();
@@ -64,6 +69,7 @@ export function buildReconBatchRows(vials = [], records = [], archivedVials = []
 
   const rows = [];
   for (const [drug, drugVials] of groups) {
+    const allocationUnverified = drugVials.some(vial => safeId(vial.id) === "");
     const ordered = [...drugVials].sort((left, right) => {
       const byDate = numberOrZero(left.reconDate) - numberOrZero(right.reconDate);
       return byDate || numberOrZero(left.id) - numberOrZero(right.id);
@@ -83,7 +89,7 @@ export function buildReconBatchRows(vials = [], records = [], archivedVials = []
         vial,
         index,
         startAt: numberOrZero(vial.reconDate),
-        endAt: visibleKeys.has(`${vial.drug}\u0000${String(vial.id)}`)
+        endAt: (visibleObjects.has(vial) || visibleKeys.has(`${vial.drug}\u0000${String(vial.id)}`))
           ? Number.POSITIVE_INFINITY
           : numberOrZero(vial.archivedAt) || Number.POSITIVE_INFINITY,
         vialMg,
@@ -106,6 +112,8 @@ export function buildReconBatchRows(vials = [], records = [], archivedVials = []
         || numberOrZero(left.id) - numberOrZero(right.id));
 
     for (const record of drugRecords) {
+      // 배치 구분이 불명확하면 다른 배치까지 임의 FIFO 차감하지 않는다.
+      if (allocationUnverified) break;
       const recordAt = numberOrZero(record.time);
       let unallocatedMg = Math.max(0, numberOrZero(record.dose));
       if (!unallocatedMg) continue;
@@ -129,7 +137,7 @@ export function buildReconBatchRows(vials = [], records = [], archivedVials = []
     }
 
     const visibleStates = states.filter((state) => (
-      visibleKeys.has(`${state.vial.drug}\u0000${String(state.vial.id)}`)
+      visibleObjects.has(state.vial) || visibleKeys.has(`${state.vial.drug}\u0000${String(state.vial.id)}`)
     ));
 
     visibleStates.forEach((state, visibleIndex) => {
@@ -148,23 +156,28 @@ export function buildReconBatchRows(vials = [], records = [], archivedVials = []
       rows.push({
         ...vial,
         drug,
+        vialMg,
+        waterMl,
+        doseMg,
+        identityIssue: safeId(vial.id) === "",
+        allocationUnverified,
         batchIndex: visibleIndex + 1,
         batchCount: visibleStates.length,
         isCurrent: visibleIndex === visibleStates.length - 1,
-        usedMg,
-        remainingMg,
+        usedMg: allocationUnverified ? null : usedMg,
+        remainingMg: allocationUnverified ? null : remainingMg,
         hasEarlierBalance: earlierBalance,
         isNextToUse,
         totalInjections,
-        remainingInjections,
+        remainingInjections: allocationUnverified ? null : remainingInjections,
         theoreticalTotalUnits,
         actualTotalUnits,
         isUnitMeasured,
         capacityMg,
         overdrawMg,
         goldenDoseUnits: positiveNumberOrNull(vial.goldenDoseUnits),
-        remainingClicks: mgPerClick > 0 ? Math.max(0, Math.round(remainingMg / mgPerClick)) : 0,
-        percentRemaining: capacityMg > 0 ? Math.min(100, Math.round((remainingMg / capacityMg) * 100)) : 0,
+        remainingClicks: allocationUnverified ? null : mgPerClick > 0 ? Math.max(0, Math.round(remainingMg / mgPerClick)) : 0,
+        percentRemaining: allocationUnverified ? null : capacityMg > 0 ? Math.min(100, Math.round((remainingMg / capacityMg) * 100)) : 0,
       });
     });
   }
@@ -368,6 +381,9 @@ export function renderReconInventory({
 
   const currentDrugs = new Set(rows.map((row) => row.drug));
   const cards = rows.map((row) => {
+    if (row.allocationUnverified) {
+      return `<article style="padding:12px;border:1px solid #f59e0b;border-radius:10px;margin-bottom:8px" role="status"><strong>${escapeHtml(row.drug)} · 배치 식별 확인 필요</strong><div>원본 조제량 ${row.vialMg}mg / ${row.waterMl}ml · ${escapeHtml(formatDate(row.reconDate))}</div><div>식별자가 없는 배치가 있어 이 약의 잔량·차감 계산과 배치 수정·삭제를 보류했습니다. 원본 기록은 그대로 보존됩니다.</div></article>`;
+    }
     const config = configs[row.drug] || {};
     const color = config.color || "#60a5fa";
     const badge = row.isCurrent ? "현재 조제" : "이전 잔량";

@@ -7,10 +7,8 @@ export function normalizeSyncRevision(value) {
 }
 
 function countPrimaryRecords(data) {
-  return (Array.isArray(data?.records) ? data.records.length : 0)
-    + (Array.isArray(data?.weightRecords) ? data.weightRecords.length : 0)
-    + (Array.isArray(data?.reconVials) ? data.reconVials.length : 0)
-    + (Array.isArray(data?.reconVialsArchive) ? data.reconVialsArchive.length : 0);
+  // 문서 전체를 저장하므로 영양제 등 알려지지 않은 기록 배열도 빈 덮어쓰기에서 보호한다.
+  return Object.values(data || {}).reduce((count, value) => count + (Array.isArray(value) ? value.length : 0), 0);
 }
 
 function syncError(code, message, details = {}) {
@@ -32,11 +30,14 @@ export async function commitUserDocument({
   expectedRevision,
   allowEmpty = false,
   now = () => Date.now(),
+  assertCurrent = () => {},
 }) {
   const expected = normalizeSyncRevision(expectedRevision);
 
   return runTransaction(db, async (transaction) => {
+    assertCurrent();
     const snapshot = await transaction.get(ref);
+    assertCurrent();
     const serverData = snapshot.exists() ? snapshot.data() : {};
     const serverRevision = normalizeSyncRevision(serverData.syncRevision);
 
@@ -61,6 +62,7 @@ export async function commitUserDocument({
     const updatedAt = now();
     const revision = serverRevision + 1;
     const nextData = { ...data, updatedAt, syncRevision: revision };
+    assertCurrent();
     transaction.set(ref, nextData);
 
     return { data: nextData, revision, updatedAt };

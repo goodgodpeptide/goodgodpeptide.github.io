@@ -27,7 +27,7 @@ export function buildModelInputReview(options) {
   }
   if (!Array.isArray(options.targetTimes)) throw new TypeError("targetTimes는 배열이어야 합니다.");
   const originalRecords = clone(options.records);
-  const comparison = compareDoseTiming(options);
+  const comparison = compareDoseTiming({ ...options, nonfinitePolicy: "isolate" });
   const config = options.config;
   const contribution = options.contribution;
   const now = Number(options.now ?? Date.now());
@@ -110,8 +110,8 @@ export function buildModelInputReview(options) {
       const response1 = contribution(1, elapsed, config, false);
       const response2 = contribution(2, elapsed, config, false);
       if (![baseline, background, response0, response1, response2].every(Number.isFinite)) {
-        return { ...base, status: "nonfinite_response", baselineModelValue: baseline,
-          backgroundModelValue: background, reason: "PK 기여함수가 유한한 값을 반환하지 않았습니다." };
+        return { ...base, status: "nonfinite_response",
+          reason: "PK 기여함수가 유한한 값을 반환하지 않았습니다." };
       }
       const unit = response1 - response0;
       if (!close(response0, 0) || !close(response2 - response0, 2 * unit, 2 * Math.abs(unit))) {

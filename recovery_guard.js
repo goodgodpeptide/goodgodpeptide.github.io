@@ -13,7 +13,9 @@ function itemKey(collectionName, item, index) {
 function collectCoreItems(data) {
   return CORE_COLLECTIONS.flatMap(collectionName => {
     const rows = Array.isArray(data?.[collectionName]) ? data[collectionName] : [];
-    return rows.map((item, index) => ({
+    let distinct = rows;
+    try { distinct = uniqueCoreRows(collectionName, rows); } catch { /* 충돌 원본은 아래에서 수동 대조 대상으로 유지한다. */ }
+    return distinct.map((item, index) => ({
       collectionName,
       item,
       key: itemKey(collectionName, item, index),
@@ -28,13 +30,27 @@ function latestCoreTime(items) {
   }, 0);
 }
 
+function uniqueCoreRows(collectionName, rows) {
+  const byKey = new Map();
+  for (const [index, row] of rows.entries()) {
+    const key = itemKey(collectionName, row, index);
+    if (byKey.has(key)) {
+      // 원본은 보존하며 서로 다른 중복값 중 어느 것도 임의로 선택하지 않는다.
+      if (JSON.stringify(byKey.get(key)) !== JSON.stringify(row)) throw new Error('복구 원본에 값이 다른 동일 ID 기록이 있습니다. 원본 대조가 필요합니다.');
+      continue;
+    }
+    byKey.set(key, row);
+  }
+  return [...byKey.values()];
+}
+
 function mergeCoreRows(collectionName, serverData, backupData) {
-  const serverRows = Array.isArray(serverData?.[collectionName])
+  const serverRows = uniqueCoreRows(collectionName, Array.isArray(serverData?.[collectionName])
     ? serverData[collectionName]
-    : [];
-  const backupRows = Array.isArray(backupData?.[collectionName])
+    : []);
+  const backupRows = uniqueCoreRows(collectionName, Array.isArray(backupData?.[collectionName])
     ? backupData[collectionName]
-    : [];
+    : []);
   const serverByKey = new Map(
     serverRows.map((item, index) => [itemKey(collectionName, item, index), item]),
   );
@@ -86,6 +102,13 @@ function mergeReconCollections(serverData, backupData) {
 }
 
 export function analyzeRecoveryCandidate(serverData, backupData) {
+  let ambiguous = false;
+  try {
+    for (const name of CORE_COLLECTIONS) {
+      uniqueCoreRows(name, Array.isArray(serverData?.[name]) ? serverData[name] : []);
+      uniqueCoreRows(name, Array.isArray(backupData?.[name]) ? backupData[name] : []);
+    }
+  } catch { ambiguous = true; }
   const serverItems = collectCoreItems(serverData);
   const backupItems = collectCoreItems(backupData);
   const backupKeys = new Set(backupItems.map(row => row.key));
@@ -102,11 +125,14 @@ export function analyzeRecoveryCandidate(serverData, backupData) {
     row => !backupKeys.has(row.key),
   ).length;
   const mergedCount = serverCount + backupMissingFromServer;
+  const knownOlder = (Number(backupData?.updatedAt) > 0 && Number(serverData?.updatedAt) > Number(backupData.updatedAt))
+    || (Number.isSafeInteger(backupData?.syncRevision) && Number.isSafeInteger(serverData?.syncRevision)
+      && backupData.syncRevision < serverData.syncRevision);
 
   return {
     shouldRecover:
-      backupMissingFromServer > 0 &&
-      backupLatestTime >= serverLatestTime,
+      !ambiguous && backupMissingFromServer > 0 &&
+      backupLatestTime >= serverLatestTime && !(knownOlder && backupLatestTime === serverLatestTime),
     serverIsContained,
     serverCount,
     backupCount,

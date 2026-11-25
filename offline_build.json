@@ -1,9 +1,9 @@
 {
-  "version": "peptide-app-v42-4158e4ce9fe0",
+  "version": "peptide-app-v42-039477ac515c",
   "assets": {
     "./index.html": {
-      "sha256": "1460286d39d4e2bc8c7c6f6b22e28bdf9ea6df3548d0c39b70f380ff11236375",
-      "bytes": 914787
+      "sha256": "819a7df395fc77f664a1159b75ed0b6af0bdfded05c9f6e4a79c0507accbcf74",
+      "bytes": 918186
     },
     "./manifest.json": {
       "sha256": "340544bed3d9708834e7e2d339a564851233ad5bd9467e5863f216569337a1d2",
@@ -34,20 +34,24 @@
       "bytes": 4266
     },
     "./sync_guard.js": {
-      "sha256": "9bd8b9acd00e82abe1d709934bbeb6f8fae30d30156686769e7b2fd6bab8999a",
-      "bytes": 2371
+      "sha256": "fd42a034e2355aa71fe4f41c8d03f364cbcf44e5a71ef43b529aec9fa70e72ba",
+      "bytes": 2409
     },
     "./recovery_guard.js": {
-      "sha256": "16d2e3c9e400ccbd78665f499e60f21aa075fd33b62758ee104caa2bf1d1a471",
-      "bytes": 4566
+      "sha256": "5fcfd4eb5e8c7a777819d5050d8e1f561322332dbcb0ceecc108d4aba32c2140",
+      "bytes": 6032
     },
     "./offline_sync.js": {
-      "sha256": "b32ce383b573484f4a5937491465f105c1fc4be3de259b6aef538da0f689b352",
-      "bytes": 12924
+      "sha256": "d2a734f4c320bcbbc89a0677671791eabcb63d22f397fa2a533a276569c82a6e",
+      "bytes": 13053
     },
     "./offline_app.js": {
-      "sha256": "7a8ebd0f94e168f422a2ed98644fbf16a5cf848d9e8440a28d82da25172a8500",
-      "bytes": 9765
+      "sha256": "eb90e950fef962c69acb64fd3c3f33c6dbec25d8b03548a6e3576a50938da821",
+      "bytes": 10407
+    },
+    "./app_backend_client.js": {
+      "sha256": "6d74642e04f4160f735eb1e84d93a078804acaeed56df109d02f4cc571bc2f62",
+      "bytes": 1418
     },
     "./offline_notice.js": {
       "sha256": "c355280f359527db2f1483abeb6d7f46353010bf4644804235256777b3562a73",
@@ -70,24 +74,24 @@
       "bytes": 18881
     },
     "./schedule_comparison_model.js": {
-      "sha256": "0fa5ff1827fed4d8cc35fd7bb509f74862bf3bb77a9bd4b73b60707035edf634",
-      "bytes": 7454
+      "sha256": "bee5bb969e4f11fd3c922f8f86406ad7b8f93135a4b1bdbbcdbc767392ba761a",
+      "bytes": 7980
     },
     "./schedule_comparison_ui.js": {
       "sha256": "fcf191f569534337faeaddcf69d00c1d9b58df6eedbe7925131a02015f09282f",
       "bytes": 28695
     },
     "./model_input_review.js": {
-      "sha256": "febafc09e88897db7aca27da1a20ea5fd5f1ffc34f5e9c02c6fc9b99ec54919f",
-      "bytes": 8648
+      "sha256": "df876257cb59f79825db5ee68955e47f223e8def8fb909ddc01b7c2ac97123a5",
+      "bytes": 8619
     },
     "./inline_weight_entry.js": {
-      "sha256": "07d438350c3fd439148d1f8d8c8d3cceb3decdcebb6db0e79475b84e752819f2",
-      "bytes": 7546
+      "sha256": "e6bcd9b012aa99c19e903d5e97ba0db0533f2dcd9c779f36daa06d0d06e0fdf7",
+      "bytes": 8362
     },
     "./recon_inventory_guard.js": {
-      "sha256": "c37ba99484b37418840b8c6532afc09358060bfa753b79e49a188010ec54a880",
-      "bytes": 26501
+      "sha256": "9ba42b0e802fbf35d951d20e7983f422448fb118d270bd651f9f67c5d6c3c524",
+      "bytes": 27958
     },
     "./peptides_v3.json": {
       "sha256": "c3660d9679142cc577334b1a9d0c8c2fd762ccdae5911378211386f2dacdc150",

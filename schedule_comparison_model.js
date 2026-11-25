@@ -76,6 +76,7 @@ export function compareDoseTiming({
   now = Date.now(),
   horizonDays = 14,
   contribution = defaultContribution,
+  nonfinitePolicy = "reject",
 }) {
   if (!Array.isArray(records)) throw new TypeError("records는 배열이어야 합니다.");
   if (typeof drug !== "string" || !drug.trim()) throw new TypeError("drug가 필요합니다.");
@@ -145,7 +146,12 @@ export function compareDoseTiming({
   const points = uniqueSortedTimes([...grid, ...special], start, end).map((time) => {
     const baselineMg = exposureAt(time, history, baselineEvents, dose, config, contribution);
     const changedMg = exposureAt(time, history, changedEvents, dose, config, contribution);
-    return { time, baselineMg, changedMg, deltaMg: changedMg - baselineMg };
+    const deltaMg = changedMg - baselineMg;
+    if (![baselineMg, changedMg, deltaMg].every(Number.isFinite)) {
+      if (nonfinitePolicy === "isolate") return { time, baselineMg: null, changedMg: null, deltaMg: null, status: "nonfinite_response" };
+      throw new RangeError("모델 계산값이 유한한 수가 아닙니다. 입력과 계산 함수를 확인하세요.");
+    }
+    return { time, baselineMg, changedMg, deltaMg };
   });
   const atChangePoint = points.find((point) => point.time === changed);
 
@@ -169,8 +175,8 @@ export function compareDoseTiming({
       deltaMg: atChangePoint.deltaMg,
     },
     peak: {
-      baselineMg: Math.max(...points.map((point) => point.baselineMg)),
-      changedMg: Math.max(...points.map((point) => point.changedMg)),
+      baselineMg: points.some(point => point.status === "nonfinite_response") ? null : Math.max(...points.map((point) => point.baselineMg)),
+      changedMg: points.some(point => point.status === "nonfinite_response") ? null : Math.max(...points.map((point) => point.changedMg)),
     },
     warnings,
   };
