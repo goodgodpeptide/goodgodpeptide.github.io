@@ -10,6 +10,23 @@ import {
 const injection = (id, time) => ({ id, time, dose: 1 });
 const weight = (id, time) => ({ id, time, weight: 80 });
 
+test('의도적 삭제와 구분할 수 없는 오래된 동일 최신시각 백업은 자동 복구하지 않는다', () => {
+  const server = { updatedAt: 100, syncRevision: 3, records: [injection(2, 10)] };
+  const backup = { updatedAt: 50, syncRevision: 2, records: [injection(1, 1), injection(2, 10)] };
+  assert.equal(analyzeRecoveryCandidate(server, backup).shouldRecover, false);
+  assert.equal(backup.records.length, 2);
+});
+
+test('복구는 완전히 같은 중복 ID를 한 번만 담고 값이 다르면 임의로 선택하지 않는다', () => {
+  const server = { records: [injection(1, 10)] };
+  const backup = { records: [injection(1, 10), injection(1, 10), injection(2, 20)] };
+  assert.deepEqual(buildRecoveryData(server, backup).records.map(row => row.id), [1, 2]);
+  const ambiguous = { records: [injection(2, 20), { ...injection(2, 20), dose: 2 }] };
+  assert.equal(analyzeRecoveryCandidate(server, ambiguous).shouldRecover, false);
+  assert.throws(() => buildRecoveryData(server, ambiguous), /동일 ID/);
+  assert.equal(ambiguous.records.length, 2);
+});
+
 test('백업이 서버 기록을 모두 포함하고 더 최신이면 복구 후보가 된다', () => {
   const server = {
     records: [injection(1, 100), injection(2, 200)],

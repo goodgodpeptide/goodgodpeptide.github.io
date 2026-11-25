@@ -11,6 +11,35 @@ function fixture() {
   return { storage, locks, archive, values, snapshots };
 }
 
+test('원격 읽기 중 승인 철회나 같은 계정 재승인이 발생하면 이전 저장은 중단한다', async () => {
+  for (const reauthorize of [false, true]) {
+    const f = fixture(), user = { uid: 'one', email: 'one@example.invalid' }; let release, writes = 0;
+    const state = { version: 1, uid: user.uid, base: { records: [] }, data: { records: [{ id: 1 }] }, revision: 0, generation: 1, pending: true, conflicts: [] };
+    f.storage.setItem('jwbs_offline_v1:one', JSON.stringify(state));
+    const app = createOfflineApp({ ...f, getUser: () => user, getData: () => state.data, applyData() {}, isOnline: () => true,
+      readRemote: async () => { await new Promise(resolve => { release = resolve; }); return { data: state.base, revision: 0 }; },
+      commitRemote: async () => { writes++; },
+    });
+    app.approvals.record(user, true); app.restore(user, { offline: true }); app.authorize(user);
+    const flight = app.flush();
+    while (!release) await new Promise(resolve => setImmediate(resolve));
+    app.activate(user);
+    if (reauthorize) app.authorize(user); else app.approvals.record(user, false);
+    release(); await assert.rejects(flight);
+    assert.equal(writes, 0); assert.equal(app.engine.load(user.uid).pending, true);
+  }
+});
+
+test('원본 내보내기 대기 중 계정이 바뀌면 이전 계정 파일을 반환하지 않는다', async () => {
+  const f = fixture(); let user = { uid: 'one', email: 'one@example.invalid' }, release;
+  f.storage.setItem('jwbs_offline_v1:one', JSON.stringify({ version: 1, uid: 'one', base: {}, data: {}, pending: false }));
+  f.archive.list = async () => { await new Promise(resolve => { release = resolve; }); return [{ original: 'synthetic' }]; };
+  const app = createOfflineApp({ ...f, getUser: () => user, getData: () => ({}), applyData() {}, isOnline: () => true });
+  app.approvals.record(user, true); app.restore(user, { offline: true });
+  const result = app.exportBundle(); user = { uid: 'two', email: 'two@example.invalid' }; app.activate(user);
+  release(); await assert.rejects(result, /계정이 변경/);
+});
+
 function noticeFixture() {
   const f = fixture(), handlers = new Map();
   let user = { uid: 'one', email: 'one@example.invalid' }, data = { records: [{ id: 1 }] };

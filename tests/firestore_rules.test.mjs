@@ -10,14 +10,15 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const projectId = 'demo-weight-sync';
+const [host, port] = (process.env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080').split(':');
 let environment;
 
 before(async () => {
   environment = await initializeTestEnvironment({
     projectId,
     firestore: {
-      host: '127.0.0.1',
-      port: 8080,
+      host,
+      port: Number(port),
       rules: await readFile(new URL('../firestore.rules', import.meta.url), 'utf8'),
     },
   });

@@ -4,10 +4,12 @@ service cloud.firestore {
     function isSignedIn() { return request.auth != null; }
     function isAdmin() {
       return isSignedIn() &&
+        request.auth.token.get('email_verified', false) == true &&
         request.auth.token.email in get(/databases/$(db)/documents/config/admins).data.emails;
     }
     function isApproved() {
       return isSignedIn() &&
+        request.auth.token.get('email_verified', false) == true &&
         request.auth.token.email in get(/databases/$(db)/documents/config/approved_users).data.emails;
     }
 
@@ -41,7 +43,10 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
     }
     match /config/{doc} {
-      allow read: if isSignedIn();
+      // 현재 로그인 화면은 이 두 문서의 이메일 목록으로 자신의 권한을 확인한다.
+      // rejected_users 및 그 밖의 설정은 관리 화면에서만 읽을 수 있다.
+      allow get: if isAdmin() || (isSignedIn() && doc in ['admins', 'approved_users']);
+      allow list: if isAdmin();
       allow write: if isAdmin();
     }
     match /login_logs/{id} {
@@ -50,10 +55,13 @@ service cloud.firestore {
     }
     match /posts/{postId} {
       allow read: if isApproved();
-      allow create: if isApproved() && request.resource.data.uid == request.auth.uid;
+      allow create: if isApproved() && request.resource.data.uid == request.auth.uid
+        && request.resource.data.likes is list && request.resource.data.likes.size() == 0;
       allow update: if isApproved() && (
         (request.resource.data.uid == resource.data.uid &&
          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']) &&
+         request.resource.data.likes is list &&
+         request.resource.data.likes.size() == request.resource.data.likes.toSet().size() &&
          request.resource.data.likes.toSet().difference(resource.data.likes.toSet())
            .hasOnly([request.auth.uid]) &&
          resource.data.likes.toSet().difference(request.resource.data.likes.toSet())

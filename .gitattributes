@@ -3,3 +3,4 @@
 *.mjs text eol=lf
 *.css text eol=lf
 *.json text eol=lf
+app_backend_client.js text eol=lf

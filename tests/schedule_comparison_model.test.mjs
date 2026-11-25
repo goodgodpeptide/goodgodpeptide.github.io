@@ -14,6 +14,14 @@ function args(extra = {}) {
     plannedTime: base, changedTime: base, now: base - H, ...extra };
 }
 
+test("유한한 입력이어도 누적 오버플로가 발생하면 무한대 그래프를 반환하지 않는다", () => {
+  assert.throws(() => compareDoseTiming(args({
+    doseMg: 1e308,
+    records: [{ drug: "마운자로", dose: 1e308, time: base - H }, { drug: "마운자로", dose: 1e308, time: base - H }],
+  })), /유한한 수/);
+  assert.throws(() => compareDoseTiming(args({ contribution: () => NaN })), /유한한 수/);
+});
+
 test("같은 일정은 원안과 변경안 곡선이 완전히 같다", () => {
   const result = compareDoseTiming(args());
   assert.ok(result.points.length > 100);

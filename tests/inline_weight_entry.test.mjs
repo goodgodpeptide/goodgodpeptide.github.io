@@ -24,6 +24,29 @@ test("체중과 날짜·시간을 모두 지정해야 바로 저장할 수 있�
   assert.equal(validateInlineWeightEntry("89.7", "").reason, "time");
 });
 
+test("존재하지 않는 한국시간 날짜와 시각은 저장하지 않는다", () => {
+  for (const time of ["2026-02-31T10:30", "2026-13-01T10:30", "2026-01-01T99:99", "2025-02-29T10:30"]) {
+    assert.equal(validateInlineWeightEntry("70", time).valid, false, time);
+  }
+  assert.equal(validateInlineWeightEntry("70", "2024-02-29T23:59").valid, true);
+});
+
+test("native가 명시적으로 실패하면 성공 표시와 입력 삭제를 하지 않는다", async () => {
+  for (const failure of [false, { saved: false }, { status: "failed" }]) {
+    const fields = {
+      "inline-weight-value": { value: "70" }, "inline-weight-time": { value: "2026-11-25T10:30" },
+      "inline-weight-save": { disabled: false }, "inline-weight-status": { textContent: "", dataset: {} },
+      "add-weight": { value: "" }, "add-weight-time": { value: "" },
+    };
+    const result = await submitInlineWeightEntry({ document: { getElementById: id => fields[id] }, submitNative: () => failure });
+    assert.equal(result.saved, false);
+    assert.equal(fields["inline-weight-value"].value, "70");
+    assert.equal(fields["inline-weight-time"].value, "2026-11-25T10:30");
+    assert.equal(fields["inline-weight-status"].dataset.error, "true");
+    assert.equal(fields["inline-weight-save"].disabled, false);
+  }
+});
+
 test("버튼 자리 입력 폼에 체중·날짜시간·저장 제어가 모두 있다", () => {
   assert.match(INLINE_WEIGHT_ENTRY_MARKUP, /id="inline-weight-value"/);
   assert.match(INLINE_WEIGHT_ENTRY_MARKUP, /type="datetime-local"/);

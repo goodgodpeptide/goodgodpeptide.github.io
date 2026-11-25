@@ -11,6 +11,33 @@ import {
 
 const RETA = "레타 (Retatrutide)";
 
+test("식별자 없는 여러 원본을 합치지 않고 같은 약의 차감 산출을 보류한다", () => {
+  const vials = [
+    { drug: RETA, vialMg: 10, waterMl: 1, doseMg: 1, reconDate: 1000 },
+    { drug: RETA, vialMg: 20, waterMl: 2, doseMg: 1, reconDate: 2000 },
+    { id: 3, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 1, reconDate: 3000 },
+  ];
+  const original = structuredClone(vials);
+  const rows = buildReconBatchRows(vials, [{ drug: RETA, dose: 4, time: 4000 }]);
+  assert.equal(rows.length, 3);
+  assert.equal(rows.filter(row => row.identityIssue).length, 2);
+  assert.ok(rows.every(row => row.allocationUnverified && row.remainingMg === null));
+  assert.deepEqual(vials, original);
+  assert.deepEqual(rows.filter(row => row.id === undefined).map(row => row.vialMg).sort((a,b)=>a-b), [10,20]);
+  const container = { innerHTML: "", querySelectorAll: () => [] };
+  renderReconInventory({ document: { getElementById: id => id === "recon-section" ? container : null, body: { classList: { contains: () => false } } }, data: { reconVials: vials } });
+  assert.match(container.innerHTML, /배치 식별 확인 필요/);
+  assert.match(container.innerHTML, /원본 기록은 그대로 보존/);
+  assert.doesNotMatch(container.innerHTML, /data-recon-action="(?:delete|edit|archive)"/);
+});
+
+test("백업의 숫자 필드가 HTML이어도 조제 표시에서 태그로 삽입하지 않는다", () => {
+  const payload = '<img src=x onerror="alert(1)">';
+  const container = { innerHTML: "", querySelectorAll: () => [] };
+  renderReconInventory({ document: { getElementById: id => id === "recon-section" ? container : null, body: { classList: { contains: () => false } } }, data: { reconVials: [{ id: 1, drug: RETA, vialMg: payload, waterMl: payload, doseMg: 1, reconDate: 1000 }] } });
+  assert.doesNotMatch(container.innerHTML, /<img|onerror/);
+});
+
 test("같은 레타를 두 번 조제해도 두 배치를 모두 보존한다", () => {
   const first = { id: 1, drug: RETA, vialMg: 20, waterMl: 2, doseMg: 2, reconDate: 1000 };
   const second = { id: 2, drug: RETA, vialMg: 30, waterMl: 3, doseMg: 3, reconDate: 3000 };

@@ -18,6 +18,30 @@ function fakeRunTransaction(serverData, onSet = () => {}) {
   });
 }
 
+test('영양제나 다른 기록 배열만 있는 서버도 빈 문서 덮어쓰기를 막는다', async () => {
+  for (const collection of ['supplements', 'waterRecords', 'customRecords']) {
+    let writes = 0;
+    await assert.rejects(commitUserDocument({ db: {}, ref: {}, expectedRevision: 1, data: {},
+      runTransaction: fakeRunTransaction({ syncRevision: 1, [collection]: [{ id: 1 }] }, () => { writes++; }),
+    }), error => error.code === EMPTY_OVERWRITE_CODE);
+    assert.equal(writes, 0);
+  }
+});
+
+test('트랜잭션 읽기 대기 중 승인이 바뀌면 set 직전에 중단한다', async () => {
+  let active = true, release, writes = 0;
+  const result = commitUserDocument({ db: {}, ref: {}, data: { records: [{ id: 1 }] }, expectedRevision: 1,
+    assertCurrent: () => { if (!active) throw Error('approval changed'); },
+    runTransaction: async (_db, callback) => callback({
+      get: async () => { await new Promise(resolve => { release = resolve; }); return { exists: () => true, data: () => ({ syncRevision: 1 }) }; },
+      set: () => { writes++; },
+    }),
+  });
+  while (!release) await new Promise(resolve => setImmediate(resolve));
+  active = false; release();
+  await assert.rejects(result, /approval changed/); assert.equal(writes, 0);
+});
+
 test('버전이 같으면 정확히 한 단계 증가시켜 저장한다', async () => {
   let written;
   const result = await commitUserDocument({

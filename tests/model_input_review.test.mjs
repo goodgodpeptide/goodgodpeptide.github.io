@@ -155,4 +155,8 @@ test("현재시점 비유한 PK 응답은 값 없이 격리한다", () => {
   const result = buildModelInputReview(args({ contribution: () => Number.NaN }));
   assert.equal(result.currentSnapshot.status, "nonfinite_response");
   assert.equal(result.currentSnapshot.differenceModelValue, null);
+  assert.equal(result.comparison.peak.baselineMg, null);
+  assert.ok(result.comparison.points.some(point => point.status === "nonfinite_response"));
+  assert.ok(result.comparison.points.every(point => point.baselineMg === null || Number.isFinite(point.baselineMg)));
+  assert.ok(result.rows.every(row => row.modelInputMg === null && row.baselineModelValue === null));
 });

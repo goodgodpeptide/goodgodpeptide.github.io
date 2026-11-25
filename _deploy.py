@@ -5,8 +5,9 @@
 누락된 채 읽기가능 원본이 index.html로 커밋·push돼 5분간 노출된 사고가 있었다(force push로 제거).
 기존 방어는 `.git/hooks/pre-commit` 하나뿐인데 로컬 훅이라 새 PC 이전 시 사라진다.
 
-이 스크립트는 배포 전 과정을 하나의 원자적 파이프라인으로 묶고, 각 단계 실패 시
-즉시 중단 + index.html을 실행 전 상태로 원상복구한다. 또한 pre-commit 훅이 없으면
+이 스크립트는 커밋 전 실패 시 배포 자산을 실행 전 상태로 복구한다.
+커밋 뒤 push가 실패하면 검증한 로컬 커밋과 파일을 유지하며 원격 상태를 미확인으로 보고한다.
+이미 stage된 파일이 있으면 시작하지 않는다. 또한 pre-commit 훅이 없으면
 스스로 설치해 새 PC에서도 `_deploy.py` 하나만 있으면 방어가 복원되도록 한다.
 
 흐름:
@@ -16,11 +17,14 @@
   ③ _obf_verify.py 실행 — 원본 vs 난독화본 JS에러 프로필 비교, 통과해야 다음 단계로
   ④ index.obf.html → index.html 승격
   ⑤ 승격 검증 — index.html에 _0x 존재 + 파일크기가 index.obf.html과 동일
-  ⑥ git add index.html + saju/*.obf.js(빌드가 함께 갱신) + git commit (-m 메시지, Co-Authored-By 자동 첨부)
+  ⑥ 공개 자산 해시 manifest 갱신·검증 → 모든 공개 자산과 sw/manifest만 커밋
   ⑦ git push — --push 플래그가 있을 때만
-  ⑧ 위 어느 단계든 실패하면 index.html·saju/*.obf.js를 스크립트 시작 시점 상태로 원상복구 후 중단
+  ⑧ 커밋 전 실패만 작업 파일·stage 복구. 커밋 뒤 실패는 검증한 로컬 배포 상태 유지
 
 사용법:
+  python _deploy.py -m "현재 파일 배포" --current-tree --push
+      # 현재 저장소의 난독화 index와 공개 모듈을 구문·해시 검사해 배포한다.
+      # 없는 과거 .bak/빌더를 재생성하거나 현재 파일을 과거 원본으로 덮어쓰지 않는다.
   python _deploy.py -m "커밋 메시지"              # 로컬 커밋까지
   python _deploy.py -m "커밋 메시지" --push        # 커밋 + push
   python _deploy.py -m "테스트" --dry-run          # 빌드·검증·승격검증까지 실행하되
@@ -28,7 +32,10 @@
                                                      # index.html을 실행 전 상태로 복원
 """
 import argparse
+import hashlib
+import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -48,6 +55,7 @@ HOOK_PATH = os.path.join(REPO, ".git", "hooks", "pre-commit")
 # "워킹트리 원상복구"·"배포 커밋"이 실제로 완결된다 (실측 중 발견 — saju obf.js가
 # 빌드마다 랜덤 회전으로 바뀌는데 index.html만 되돌리면 이 3개가 M 상태로 남는 사고).
 SAJU_OBF_REL = ["saju/saju_engine.obf.js", "saju/toitjeong.obf.js", "saju/saju_ui.obf.js"]
+RELEASE_SUPPORT_REL = ["update.html", "app_update.js", ".well-known/assetlinks.json"]
 
 # 🔴 기존 .git/hooks/pre-commit과 100% 동일한 내용 — 새 PC에서 훅이 없을 때 이걸로 복원한다.
 PRE_COMMIT_HOOK_CONTENT = (
@@ -101,15 +109,55 @@ def write_bytes(path, data):
         f.write(data)
 
 
-def managed_artifact_paths():
-    """빌드가 직접 덮어쓰는 '트래킹된' 산출물 절대경로 목록 — index.html + saju obf.js(존재하는 것만).
-    index.obf.html은 git 미추적 스크래치 산출물이라 제외(원상복구·커밋 대상 아님)."""
-    paths = [INDEX]
-    for rel in SAJU_OBF_REL:
-        p = os.path.join(REPO, *rel.split("/"))
-        if os.path.exists(p):
-            paths.append(p)
+def public_asset_paths():
+    """서비스워커가 실제로 설치하는 자산만 배포 대상으로 삼는다."""
+    worker = read_bytes(os.path.join(REPO, "sw.js")).decode("utf-8")
+    match = re.search(r"const STATIC_ASSETS = \[([\s\S]*?)\];", worker)
+    if not match:
+        raise DeployError("sw.js의 STATIC_ASSETS를 읽지 못했습니다.")
+    paths = re.findall(r"'([^']+)'", match[1])
+    if "./index.html" not in paths or len(paths) != len(set(paths)):
+        raise DeployError("공개 자산 목록에 index.html이 없거나 중복 경로가 있습니다.")
+    for path in paths:
+        if not path.startswith("./") or "\\" in path or any(part in ("", ".", "..") for part in path[2:].split("/")):
+            raise DeployError(f"안전하지 않은 공개 자산 경로: {path}")
     return paths
+
+
+def managed_artifact_paths():
+    paths = public_asset_paths() + ["./sw.js", "./offline_build.json"] + ["./" + path for path in RELEASE_SUPPORT_REL]
+    return [os.path.join(REPO, *path[2:].split("/")) for path in dict.fromkeys(paths)]
+
+
+def verify_inputs(current_tree=False):
+    required = [os.path.join(REPO, "scripts", "build_offline_manifest.mjs")]
+    if current_tree:
+        required += [INDEX, os.path.join(REPO, "scripts", "check_index_module.mjs")]
+    else:
+        required += [BAK, OBF_BUILD_SCRIPT, OBF_VERIFY_SCRIPT]
+    missing = [os.path.relpath(path, REPO) for path in required if not os.path.isfile(path)]
+    if missing:
+        raise DeployError("배포 필수 파일이 없습니다: " + ", ".join(missing)
+                          + ". 원본·빌더를 복구해야 하며 소스를 추정해 생성하지 않습니다.")
+    staged = subprocess.run(["git", "diff", "--cached", "--name-only", "-z"],
+                            cwd=REPO, check=True, capture_output=True).stdout
+    if staged:
+        names = staged.decode("utf-8", errors="replace").strip("\0").replace("\0", ", ")
+        raise DeployError("이미 stage된 파일이 있어 배포를 중단합니다: " + names)
+
+
+def build_offline_release():
+    script = os.path.join(REPO, "scripts", "build_offline_manifest.mjs")
+    for args in (["node", script], ["node", script, "--check"]):
+        subprocess.run(args, cwd=REPO, check=True)
+    manifest = json.loads(read_bytes(os.path.join(REPO, "offline_build.json")))
+    if set(manifest.get("assets", {})) != set(public_asset_paths()):
+        raise DeployError("서비스워커와 manifest의 공개 자산 목록이 다릅니다.")
+    for path, expected in manifest["assets"].items():
+        data = read_bytes(os.path.join(REPO, *path[2:].split("/")))
+        if hashlib.sha256(data).hexdigest() != expected.get("sha256") or len(data) != expected.get("bytes"):
+            raise DeployError("배포할 실제 파일의 해시/크기가 manifest와 다릅니다: " + path)
+    log("⑤ 공개 자산 전체의 실제 바이트와 서비스워커 배포 해시 검증 완료")
 
 
 def verify_source():
@@ -155,63 +203,66 @@ def verify_promotion():
     log(f"⑤ 승격 검증 OK — index.html에 _0x 존재, 크기 일치({idx_size:,}bytes)")
 
 
-def deploy(message, dry_run=False, push=False, build_fn=run_obf_build, verify_fn=run_obf_verify):
+def deploy(message, dry_run=False, push=False, build_fn=run_obf_build, verify_fn=run_obf_verify, current_tree=False):
     """전체 배포 파이프라인. build_fn/verify_fn은 실패주입 테스트용 주입 지점(기본은 실제 스크립트 호출)."""
+    verify_inputs(current_tree=current_tree)
+    if not current_tree:
+        verify_source()
+    elif b"_0x" not in read_bytes(INDEX):
+        raise DeployError("현재 index.html에 난독화 식별자가 없습니다. 공개 원본 노출 여부를 먼저 검토해야 합니다.")
     ensure_pre_commit_hook()
-
-    # ① — 여기서 실패하면 index.html은 아직 전혀 건드리지 않은 상태이므로 복구 불필요
-    verify_source()
 
     # 롤백용 백업 — 스크립트 시작 시점(=현재 배포된 상태)의 index.html + saju obf.js 3종
     managed = managed_artifact_paths()
+    if any(not os.path.isfile(path) for path in managed):
+        raise DeployError("배포 자산이 누락되어 기존 파일을 변경하지 않았습니다.")
     originals = {p: read_bytes(p) for p in managed}
+    staged_by_deploy = False
+    committed = False
     try:
-        # ② .bak(읽기가능 원본) → index.html 배치 후 빌드
-        shutil.copyfile(BAK, INDEX)
-        log("② index.html.bak → index.html 복사 완료 (빌드용 소스 배치)")
-        r = build_fn()
-        if r.stdout:
-            log(r.stdout.strip())
-        if r.returncode != 0 or not os.path.exists(OBF):
-            if r.stderr:
-                log(r.stderr.strip())
-            raise DeployError(f"_obfuscate_build.py 실패 (returncode={r.returncode})")
-        log("② _obfuscate_build.py 실행 완료 — index.obf.html 생성됨")
-
-        # ③ 검증 — 통과 판정 문자열이 있어야만 다음 단계 진행
-        r = verify_fn()
-        if r.stdout:
-            log(r.stdout.strip())
-        if r.returncode != 0 or "✅" not in r.stdout or "❌" in r.stdout:
-            if r.stderr:
-                log(r.stderr.strip())
-            raise DeployError("_obf_verify.py 검증 실패 — '✅ 통과' 판정을 확인하지 못함")
-        log("③ _obf_verify.py 검증 통과")
-
-        # ④ 승격
-        shutil.copyfile(OBF, INDEX)
-        log("④ index.obf.html → index.html 승격 완료")
-
-        # ⑤ 승격 검증
-        verify_promotion()
+        if current_tree:
+            subprocess.run(["node", "--experimental-vm-modules",
+                            os.path.join(REPO, "scripts", "check_index_module.mjs")], cwd=REPO, check=True)
+            log("② 현재 index.html 구문 검증 완료 — 기존 파일을 그대로 사용")
+        else:
+            shutil.copyfile(BAK, INDEX)
+            log("② index.html.bak → index.html 복사 완료 (빌드용 소스 배치)")
+            r = build_fn()
+            if r.stdout:
+                log(r.stdout.strip())
+            if r.returncode != 0 or not os.path.exists(OBF):
+                if r.stderr:
+                    log(r.stderr.strip())
+                raise DeployError(f"_obfuscate_build.py 실패 (returncode={r.returncode})")
+            r = verify_fn()
+            if r.stdout:
+                log(r.stdout.strip())
+            if r.returncode != 0 or "✅" not in r.stdout or "❌" in r.stdout:
+                if r.stderr:
+                    log(r.stderr.strip())
+                raise DeployError("_obf_verify.py 검증 실패 — '✅ 통과' 판정을 확인하지 못함")
+            shutil.copyfile(OBF, INDEX)
+            verify_promotion()
+        build_offline_release()
 
         if dry_run:
             for p, data in originals.items():
                 write_bytes(p, data)
-            log("\U0001F535 DRY RUN — index.html+saju obf.js를 실행 전 상태로 원상복구, git add/commit/push는 생략")
+            log("\U0001F535 DRY RUN — 모든 공개 배포 자산을 실행 전 상태로 복구, git add/commit/push는 생략")
             return True
 
         # ⑥ git add + commit (index.html + saju obf.js 3종, 빌드가 함께 갱신한 산출물 전부)
         rel_paths = [os.path.relpath(p, REPO).replace("\\", "/") for p in managed]
-        subprocess.run(["git", "add"] + rel_paths, cwd=REPO, check=True)
+        staged_by_deploy = True
+        subprocess.run(["git", "add", "--"] + rel_paths, cwd=REPO, check=True)
         no_change = subprocess.run(
             ["git", "diff", "--cached", "--quiet", "--"] + rel_paths, cwd=REPO
         ).returncode == 0
         if no_change:
             log("⑥ 기존 커밋과 동일 — 변경사항 없음, 커밋 생략")
         else:
-            full_msg = message + "\n\nCo-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
-            subprocess.run(["git", "commit", "-m", full_msg], cwd=REPO, check=True)
+            subprocess.run(["git", "commit", "--only", "-m", message, "--"] + rel_paths, cwd=REPO, check=True)
+            committed = True
             log(f"⑥ git commit 완료 ({', '.join(rel_paths)}): {message}")
 
         # ⑦ push (플래그가 있을 때만)
@@ -223,10 +274,17 @@ def deploy(message, dry_run=False, push=False, build_fn=run_obf_build, verify_fn
 
         return True
 
-    except Exception:
+    except Exception as error:
+        if committed:
+            raise DeployError("검증한 로컬 배포 커밋과 파일은 유지했습니다. 원격 push 완료 여부는 미확인입니다. "
+                              "작업 파일을 이전 버전으로 되돌리지 않았습니다. 원인: " + str(error)) from error
         for p, data in originals.items():
             write_bytes(p, data)
-        log("\U0001F519 실패 감지 — index.html+saju obf.js를 실행 전 상태로 원상복구 완료")
+        if staged_by_deploy:
+            subprocess.run(["git", "reset", "--quiet", "HEAD", "--"]
+                           + [os.path.relpath(p, REPO).replace("\\", "/") for p in managed],
+                           cwd=REPO, check=True)
+        log("\U0001F519 커밋 전 실패 — 공개 배포 자산과 해당 stage를 실행 전 상태로 복구 완료")
         raise
 
 
@@ -235,10 +293,11 @@ def main():
     ap.add_argument("-m", "--message", required=True, help="git 커밋 메시지")
     ap.add_argument("--dry-run", action="store_true", help="git add/commit/push 생략, 나머지 전 단계 실행 후 원상복구")
     ap.add_argument("--push", action="store_true", help="커밋 후 git push까지 실행")
+    ap.add_argument("--current-tree", action="store_true", help="현재 난독화 index와 공개 모듈을 그대로 검사·배포")
     args = ap.parse_args()
 
     try:
-        deploy(args.message, dry_run=args.dry_run, push=args.push)
+        deploy(args.message, dry_run=args.dry_run, push=args.push, current_tree=args.current_tree)
     except DeployError as e:
         log(f"\U0001F6D1 배포 중단: {e}")
         sys.exit(1)
