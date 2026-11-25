@@ -1,9 +1,9 @@
 // 공개 정적 자산만 캐시한다. 인증/API/개인 데이터는 저장하지 않는다.
-const CACHE_NAME = 'peptide-app-v38';
+const CACHE_NAME = 'peptide-app-v39';
 const STATIC_ASSETS = [
   './index.html', './manifest.json', './icon-192.png', './icon-512.png',
   './kakao_qr.png', './login_bg.png.jpg', './display_preferences.js', './display_preferences.css',
-  './sync_guard.js', './recovery_guard.js', './offline_sync.js', './offline_app.js',
+  './sync_guard.js', './recovery_guard.js', './offline_sync.js', './offline_app.js', './offline_notice.js', './offline_notice.css',
   './clinical_graph_scale.js', './clinical_graph_patch.js', './dual_exposure_sim.js',
   './schedule_comparison_model.js', './schedule_comparison_ui.js', './model_input_review.js',
   './inline_weight_entry.js', './recon_inventory_guard.js', './peptides_v3.json',

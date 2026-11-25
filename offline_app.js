@@ -60,7 +60,7 @@ export function createApprovalCache(storage) {
   };
 }
 
-export function createOfflineApp({ storage, archive, locks, readRemote, commitRemote, getUser, getData, applyData, isOnline, onStatus = () => {}, onConflict = () => {}, onReviewed = () => {}, onError = () => {}, events = null }) {
+export function createOfflineApp({ storage, archive, locks, readRemote, commitRemote, getUser, getData, applyData, isOnline, onStatus = () => {}, onConflict = () => {}, onReviewed = () => {}, onNoticeCleared = () => {}, onError = () => {}, events = null }) {
   const engine = createOfflineSync({ storage, archive, locks, readRemote, commitRemote });
   const approvals = createApprovalCache(storage);
   let view = null;
@@ -68,8 +68,15 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
   let authorized = false;
   let serverAuthorized = false;
   let staged = Promise.resolve();
+  function updateNotice(state) {
+    if (state?.conflicts?.length) onConflict(state.conflicts, state);
+    else if (state?.reviewedHold) onReviewed(state);
+    else onNoticeCleared(state);
+  }
   function activate(user) {
-    activeUid = user?.uid || null;
+    const nextUid = user?.uid || null;
+    if (nextUid !== activeUid) onNoticeCleared({ uid: nextUid, reason: 'account-change' });
+    activeUid = nextUid;
     authorized = false;
     serverAuthorized = false;
     view = null;
@@ -93,8 +100,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     view = clone(state.data);
     applyData(clone(state.data), state);
     onStatus(state.conflicts?.length ? 'conflict' : state.pending ? 'local' : offline ? 'offline' : 'saved');
-    if (state.conflicts?.length) onConflict(state.conflicts);
-    else if (state.reviewedHold) onReviewed(state);
+    updateNotice(state);
     return true;
   }
   function stage({ base, resetBase = false } = {}) {
@@ -130,8 +136,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
         const latest = engine.load(user.uid);
         if (latest) { view = clone(latest.data); applyData(clone(latest.data), latest); }
         onStatus(result.status === 'conflict' ? 'conflict' : latest?.pending ? 'local' : 'saved');
-        if (result.status === 'conflict') onConflict(result.conflicts);
-        else if (latest?.reviewedHold) onReviewed(latest);
+        updateNotice(latest);
       }
       return result;
     } catch (error) {
@@ -148,8 +153,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
       if (state) {
         view = clone(state.data); applyData(clone(state.data), state);
         onStatus(state.conflicts?.length ? 'conflict' : state.pending ? 'local' : 'saved');
-        if (state.conflicts?.length) onConflict(state.conflicts);
-        else if (state.reviewedHold) onReviewed(state);
+        updateNotice(state);
       }
     }
   });
@@ -170,8 +174,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     assertCurrent();
     if (result.state) { view = clone(result.state.data); applyData(clone(result.state.data), result.state); }
     onStatus(result.state?.conflicts?.length ? 'conflict' : 'local');
-    if (result.state?.conflicts?.length) onConflict(result.state.conflicts);
-    else if (result.state?.reviewedHold) onReviewed(result.state);
+    updateNotice(result.state);
     return result;
   }
   return { engine, approvals, activate, authorize, restore, stage, seed, flush, retry, exportBundle, recheckConflicts };

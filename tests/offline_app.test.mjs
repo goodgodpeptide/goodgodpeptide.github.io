@@ -11,6 +11,68 @@ function fixture() {
   return { storage, locks, archive, values, snapshots };
 }
 
+function noticeFixture() {
+  const f = fixture(), handlers = new Map();
+  let user = { uid: 'one', email: 'one@example.invalid' }, data = { records: [{ id: 1 }] };
+  const notices = [], conflicts = [], cleared = [];
+  const state = { version: 1, uid: user.uid, base: { records: [] }, data, revision: 0, generation: 1, pending: true, conflicts: [], reviewedHold: true };
+  f.storage.setItem('jwbs_offline_v1:one', JSON.stringify(state));
+  const options = { ...f, getUser: () => user, getData: () => data, applyData: value => { data = value; }, isOnline: () => true,
+    events: { addEventListener: (name, callback) => handlers.set(name, callback) }, onReviewed: value => notices.push(value), onConflict: (rows, value) => conflicts.push({ rows, state: value }), onNoticeCleared: value => cleared.push(value) };
+  return { ...f, handlers, options, state, notices, conflicts, cleared, getData: () => data, setData: value => { data = value; }, setUser: value => { user = value; }, getUser: () => user };
+}
+
+test('다른 탭의 저장 성공은 오래된 안내만 해제하고 실제 충돌에는 원본 상태를 전달한다', () => {
+  const f = noticeFixture(); let writes = 0;
+  const app = createOfflineApp({ ...f.options, commitRemote: async () => { writes++; } });
+  app.approvals.record(f.getUser(), true); app.restore(f.getUser(), { offline: true });
+  const initial = f.cleared.length;
+  const done = { ...f.state, pending: false, reviewedHold: false, revision: 1 };
+  f.storage.setItem('jwbs_offline_v1:one', JSON.stringify(done));
+  f.handlers.get('storage')({ key: 'jwbs_offline_v1:one' });
+  assert.equal(f.cleared.length, initial + 1); assert.deepEqual(f.cleared.at(-1), done);
+  const conflict = { ...done, conflicts: [{ path: 'records', local: [], remote: [{ id: 1 }] }] };
+  f.storage.setItem('jwbs_offline_v1:one', JSON.stringify(conflict));
+  f.handlers.get('storage')({ key: 'jwbs_offline_v1:one' });
+  assert.deepEqual(f.conflicts.at(-1), { rows: conflict.conflicts, state: conflict });
+  assert.equal(f.cleared.length, initial + 1); assert.equal(writes, 0);
+});
+
+test('계정 전환은 이전 안내를 해제하되 같은 계정 활성화는 hold 표시 상태를 초기화하지 않는다', () => {
+  const f = noticeFixture(); const app = createOfflineApp(f.options);
+  app.approvals.record(f.getUser(), true); app.restore(f.getUser(), { offline: true });
+  const count = f.cleared.length;
+  app.activate(f.getUser()); assert.equal(f.cleared.length, count);
+  f.setUser({ uid: 'two', email: 'two@example.invalid' }); app.activate(f.getUser());
+  assert.equal(f.cleared.at(-1).uid, 'two'); assert.equal(f.cleared.at(-1).reason, 'account-change');
+  assert.equal(app.engine.load('one').reviewedHold, true);
+});
+
+test('hold 반복 알림과 자동 flush는 쓰기나 안내 해제를 유발하지 않는다', async () => {
+  const f = noticeFixture(); let writes = 0;
+  const app = createOfflineApp({ ...f.options, readRemote: async () => ({}), commitRemote: async () => { writes++; } });
+  app.approvals.record(f.getUser(), true); app.restore(f.getUser(), { offline: true }); app.authorize(f.getUser());
+  const clearCount = f.cleared.length;
+  for (let i = 0; i < 3; i++) { assert.equal((await app.flush()).status, 'reviewed'); f.handlers.get('storage')({ key: 'jwbs_offline_v1:one' }); }
+  assert.equal(writes, 0); assert.equal(f.cleared.length, clearCount);
+  assert.equal(app.engine.load('one').reviewedHold, true);
+});
+
+test('명시 저장 도중 새 입력이 있으면 pending과 보호 안내를 보존한다', async () => {
+  const f = noticeFixture(); let release;
+  const app = createOfflineApp({ ...f.options, readRemote: async () => ({ data: { records: [] }, revision: 0 }), commitRemote: async (_uid, data) => { await new Promise(resolve => { release = resolve; }); return { data: { ...data, syncRevision: 1 }, revision: 1 }; } });
+  app.approvals.record(f.getUser(), true); app.restore(f.getUser(), { offline: true }); app.authorize(f.getUser());
+  const clearCount = f.cleared.length;
+  const flush = app.flush({ confirmReviewed: true });
+  while (!release) await new Promise(resolve => setImmediate(resolve));
+  f.setData({ records: [{ id: 1 }, { id: 2 }] }); const stage = app.stage();
+  release(); const result = await flush; await stage;
+  assert.equal(result.status, 'pending');
+  assert.deepEqual(new Set(app.engine.load('one').data.records.map(row => row.id)), new Set([1, 2]));
+  assert.equal(app.engine.load('one').pending, true); assert.equal(app.engine.load('one').reviewedHold, true);
+  assert.equal(f.cleared.length, clearCount);
+});
+
 test('재대조 보류 안내는 재시작과 다른 창 갱신에도 복원하고 승인 전에는 저장하지 않는다', async () => {
   const f = fixture(); const user = { uid: 'one', email: 'one@example.invalid' }; let reviewed = 0, writes = 0; const handlers = new Map();
   const state = { version: 1, uid: user.uid, base: {}, data: {}, revision: 0, generation: 1, pending: true, conflicts: [], reviewedHold: true };
