@@ -1,6 +1,13 @@
 import { createOfflineSync } from './offline_sync.js';
 
 const clone = value => JSON.parse(JSON.stringify(value));
+// JSON 저장 의미와 배열 순서를 유지하고 객체 속성 순서는 무시한다.
+const dataSignature = value => JSON.stringify(value, (_key, item) => {
+  if (item && typeof item === 'object' && !Array.isArray(item)) {
+    return Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]]));
+  }
+  return item;
+});
 export function createIndexedArchive(indexedDB) {
   let database;
   function open() {
@@ -68,6 +75,13 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
   let authorized = false;
   let serverAuthorized = false;
   let staged = Promise.resolve();
+  let stageFailed = false;
+  function applyChanged(state) {
+    if (!state) return;
+    const changed = dataSignature(view) !== dataSignature(state.data);
+    view = clone(state.data);
+    if (changed) applyData(clone(state.data), state);
+  }
   function updateNotice(state) {
     if (state?.conflicts?.length) onConflict(state.conflicts, state);
     else if (state?.reviewedHold) onReviewed(state);
@@ -81,6 +95,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     serverAuthorized = false;
     view = null;
     staged = Promise.resolve();
+    stageFailed = false;
   }
   function current(uid) { return authorized && activeUid === uid && getUser()?.uid === uid; }
   function authorize(user) {
@@ -107,9 +122,14 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     const user = getUser();
     if (!user?.uid || !current(user.uid)) throw new Error('현재 계정을 먼저 확인해야 합니다.');
     const data = clone(getData());
+    if (!resetBase && !stageFailed && view !== null && engine.load(user.uid)
+        && dataSignature(data) === dataSignature(view)) {
+      // 앞선 원본 보존 실패는 성공으로 바꾸지 않는다. 진행 중 stage도 먼저 기다린다.
+      return staged.then(() => engine.load(user.uid));
+    }
     const promise = engine.stage(user.uid, data, { base, editBase: view ?? base, resetBase });
     view = clone(data);
-    staged = Promise.all([staged.catch(() => {}), promise]).then(() => {});
+    staged = Promise.all([staged.catch(() => {}), promise]).then(() => { stageFailed = false; }, error => { stageFailed = true; throw error; });
     promise.then(() => { if (current(user.uid)) onStatus('local'); }, error => { if (current(user.uid)) { onStatus('error'); onError(error); } });
     return promise;
   }
@@ -129,12 +149,20 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     if (!user?.uid || !current(user.uid) || !serverAuthorized || !isOnline()) return { status: 'offline' };
     await staged;
     if (!current(user.uid) || !serverAuthorized || !isOnline()) return { status: 'offline' };
+    const start = engine.load(user.uid);
+    if (!start?.pending) { applyChanged(start); updateNotice(start); return { status: 'idle', state: start }; }
+    if (start.conflicts?.length || (start.reviewedHold && !options?.confirmReviewed)) {
+      applyChanged(start);
+      onStatus(start.conflicts?.length ? 'conflict' : 'local');
+      updateNotice(start);
+      return { status: start.conflicts?.length ? 'conflict' : 'reviewed', state: start, conflicts: start.conflicts };
+    }
     onStatus('saving');
     try {
       const result = await engine.flush(user.uid, options);
       if (current(user.uid)) {
         const latest = engine.load(user.uid);
-        if (latest) { view = clone(latest.data); applyData(clone(latest.data), latest); }
+        applyChanged(latest);
         onStatus(result.status === 'conflict' ? 'conflict' : latest?.pending ? 'local' : 'saved');
         updateNotice(latest);
       }
@@ -151,7 +179,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
       if (!user?.uid || !current(user.uid)) return;
       const state = engine.load(user.uid);
       if (state) {
-        view = clone(state.data); applyData(clone(state.data), state);
+        applyChanged(state);
         onStatus(state.conflicts?.length ? 'conflict' : state.pending ? 'local' : 'saved');
         updateNotice(state);
       }
@@ -172,7 +200,7 @@ export function createOfflineApp({ storage, archive, locks, readRemote, commitRe
     assertCurrent();
     const result = await engine.recheck(uid, { assertCurrent });
     assertCurrent();
-    if (result.state) { view = clone(result.state.data); applyData(clone(result.state.data), result.state); }
+    applyChanged(result.state);
     onStatus(result.state?.conflicts?.length ? 'conflict' : 'local');
     updateNotice(result.state);
     return result;

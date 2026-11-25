@@ -1,5 +1,5 @@
 // 공개 정적 자산만 캐시한다. 인증/API/개인 데이터는 저장하지 않는다.
-const CACHE_NAME = 'peptide-app-v40';
+const CACHE_NAME = 'peptide-app-v41';
 const STATIC_ASSETS = [
   './index.html', './manifest.json', './icon-192.png', './icon-512.png',
   './kakao_qr.png', './login_bg.png.jpg', './display_preferences.js', './display_preferences.css',

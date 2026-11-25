@@ -58,6 +58,69 @@ test('hold 반복 알림과 자동 flush는 쓰기나 안내 해제를 유발하
   assert.equal(app.engine.load('one').reviewedHold, true);
 });
 
+test('변경 없는 stage와 idle flush 반복은 저장상태 전환·렌더·원본 추가·서버쓰기를 하지 않는다', async () => {
+  const f = noticeFixture(); let applies = 0, reads = 0, writes = 0; const statuses = [];
+  const state = { ...f.state, base: f.state.data, pending: false, reviewedHold: false };
+  f.storage.setItem('jwbs_offline_v1:one', JSON.stringify(state));
+  const app = createOfflineApp({ ...f.options, onStatus: value => statuses.push(value), applyData: (data, meta) => { applies++; f.options.applyData(data, meta); }, readRemote: async () => { reads++; return {}; }, commitRemote: async () => { writes++; } });
+  app.approvals.record(f.getUser(), true); app.restore(f.getUser(), { offline: true }); app.authorize(f.getUser());
+  const before = f.storage.getItem('jwbs_offline_v1:one'); const count = applies; statuses.length = 0;
+  for (let i = 0; i < 3; i++) { await app.stage(); assert.equal((await app.flush()).status, 'idle'); f.handlers.get('storage')({ key: 'jwbs_offline_v1:one' }); }
+  assert.equal(applies, count); assert.equal(reads, 0); assert.equal(writes, 0); assert.equal(f.snapshots.size, 0);
+  assert.equal(f.storage.getItem('jwbs_offline_v1:one'), before);
+  assert.ok(!statuses.includes('saving')); assert.ok(!statuses.includes('local'));
+});
+
+test('hold와 실제 충돌은 자동 재시도에서 저장중으로 바뀌거나 전체 렌더하지 않는다', async () => {
+  for (const conflicts of [[], [{ path: 'records', base: [], local: [{ id: 1 }], remote: [{ id: 2 }] }]]) {
+    const f = noticeFixture(); let applies = 0, writes = 0; const statuses = [];
+    f.storage.setItem('jwbs_offline_v1:one', JSON.stringify({ ...f.state, conflicts }));
+    const app = createOfflineApp({ ...f.options, onStatus: value => statuses.push(value), applyData: (data, state) => { applies++; f.options.applyData(data, state); }, commitRemote: async () => { writes++; } });
+    app.approvals.record(f.getUser(), true); app.restore(f.getUser(), { offline: true }); app.authorize(f.getUser());
+    const count = applies; statuses.length = 0;
+    for (let i = 0; i < 3; i++) await app.flush();
+    assert.equal(applies, count); assert.equal(writes, 0); assert.ok(!statuses.includes('saving'));
+  }
+});
+
+test('다른 탭의 최신 기록과 화면이 달라도 무입력 stage가 그 기록을 덮지 않는다', async () => {
+  const f = noticeFixture();
+  const app = createOfflineApp(f.options); app.approvals.record(f.getUser(), true); app.restore(f.getUser(), { offline: true });
+  const latest = { ...f.state, data: { records: [{ id: 1 }, { id: 2 }] }, generation: 2 };
+  f.storage.setItem('jwbs_offline_v1:one', JSON.stringify(latest));
+  await app.stage();
+  assert.deepEqual(app.engine.load('one').data, latest.data); assert.equal(f.snapshots.size, 0);
+  assert.equal(app.engine.load('one').generation, 2);
+});
+
+test('다른 탭 저장의 storage 이벤트를 놓쳐도 idle flush가 최신 변경만 한 번 반영한다', async () => {
+  const f = noticeFixture(); let applies = 0, writes = 0;
+  const initial = { ...f.state, pending: false, reviewedHold: false };
+  f.storage.setItem('jwbs_offline_v1:one', JSON.stringify(initial));
+  const app = createOfflineApp({ ...f.options, applyData: (data, state) => { applies++; f.options.applyData(data, state); }, commitRemote: async () => { writes++; } });
+  app.approvals.record(f.getUser(), true); app.restore(f.getUser(), { offline: true }); app.authorize(f.getUser());
+  const count = applies;
+  const newest = { ...initial, data: { records: [{ id: 1 }, { id: 2 }], syncRevision: 2 }, revision: 2, generation: 2 };
+  f.storage.setItem('jwbs_offline_v1:one', JSON.stringify(newest));
+  await app.stage();
+  assert.equal((await app.flush()).status, 'idle');
+  assert.equal(applies, count + 1); assert.deepEqual(f.getData(), newest.data);
+  await app.flush(); assert.equal(applies, count + 1); assert.equal(writes, 0);
+});
+
+test('앞선 stage 원본 보존 실패는 동일값 no-op으로 성공 처리하지 않고 재시도한다', async () => {
+  const f = noticeFixture(); let fail = true;
+  const put = f.archive.put; f.archive.put = async (...args) => { if (fail) throw Error('archive unavailable'); return put(...args); };
+  const app = createOfflineApp(f.options); app.approvals.record(f.getUser(), true); app.restore(f.getUser(), { offline: true }); app.authorize(f.getUser());
+  f.setData({ records: [{ id: 1 }, { id: 2 }] });
+  await assert.rejects(app.stage());
+  await assert.rejects(app.flush());
+  fail = false; await app.stage();
+  assert.deepEqual(app.engine.load('one').data.records.map(row => row.id), [1, 2]);
+  assert.ok(f.snapshots.size > 0);
+  assert.equal([...f.values.keys()].filter(key => key.includes(':journal:')).length, 0);
+});
+
 test('명시 저장 도중 새 입력이 있으면 pending과 보호 안내를 보존한다', async () => {
   const f = noticeFixture(); let release;
   const app = createOfflineApp({ ...f.options, readRemote: async () => ({ data: { records: [] }, revision: 0 }), commitRemote: async (_uid, data) => { await new Promise(resolve => { release = resolve; }); return { data: { ...data, syncRevision: 1 }, revision: 1 }; } });
