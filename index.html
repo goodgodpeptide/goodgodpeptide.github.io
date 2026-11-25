@@ -39,7 +39,7 @@ const _offlineInitialData=JSON.parse(JSON.stringify(appData));let _offlineLastSe
 const offlineNotice=createOfflineNotice({document,storage:localStorage,getUser:()=>currentUser,place:panel=>{
  const app=document.getElementById('app-screen');if(!app)return;
  const anchor=document.getElementById('jwbs-offline-ready')||app.querySelector('.top-bar');
- if(anchor&&anchor.parentElement===app)anchor.after(panel);else app.prepend(panel);
+ if(anchor&&anchor.parentElement===app){if(anchor.nextElementSibling!==panel)anchor.after(panel);}else if(app.firstElementChild!==panel)app.prepend(panel);
 }});
 function offlineExportOriginals(){return offlineApp.exportBundle().then(bundle=>{const url=URL.createObjectURL(new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='weight_offline_recovery_'+new Date().toISOString().slice(0,10)+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),30000);});}
 function offlineConflictNotice(conflicts,state){
